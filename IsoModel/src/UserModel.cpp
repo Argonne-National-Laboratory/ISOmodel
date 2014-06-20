@@ -31,6 +31,168 @@ namespace isomodel {
   {
   }
   
+  ISOHourly UserModel::toHourlyModel() const
+  {
+    ISOHourly sim = ISOHourly();
+    if(!_valid){
+      return *((ISOHourly*)NULL);
+    }
+    boost::shared_ptr<Population> pop(new Population);
+    pop->setDaysStart(_buildingOccupancyFrom);
+    pop->setDaysEnd(_buildingOccupancyTo);
+    pop->setHoursEnd(_equivFullLoadOccupancyTo);
+    pop->setHoursStart(_equivFullLoadOccupancyFrom);
+    pop->setDensityOccupied(_peopleDensityOccupied);
+    pop->setDensityUnoccupied(_peopleDensityUnoccupied);
+    pop->setHeatGainPerPerson(_heatGainPerPerson);
+    sim.setPop(pop);
+
+    boost::shared_ptr<Building> building(new Building);
+    building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
+    building->setElectricApplianceHeatGainUnoccupied(_elecPowerAppliancesUnoccupied);
+    building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
+    sim.setBuilding(building);
+
+    boost::shared_ptr<Cooling> cooling(new Cooling);
+    cooling->setCOP(_coolingSystemCOP);
+    cooling->setHvacLossFactor(_hvacCoolingLossFactor);
+    cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
+    cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
+    sim.setCooling(cooling);
+
+    boost::shared_ptr<Heating> heating(new Heating);
+    heating->setEfficiency(_heatingSystemEfficiency);
+    heating->setHvacLossFactor(_hvacHeatingLossFactor);
+    heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
+    heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
+    sim.setHeating(heating);
+
+    boost::shared_ptr<Lighting> lighting(new Lighting);
+    lighting->setExteriorEnergy(_exteriorLightingPower);
+    lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
+    lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
+    sim.setLights(lighting);
+
+    boost::shared_ptr<Structure> structure(new Structure);
+    structure->setFloorArea(_floorArea);
+    structure->setBuildingHeight(_buildingHeight);
+    structure->setInfiltrationRate(_buildingAirLeakage);
+    structure->setInteriorHeatCapacity(_interiorHeatCapacity);
+    //directions in the order [S, SE, E, NE, N, NW, W, SW, roof/skylight]
+    Vector wallArea(9);
+    wallArea[0] = _wallAreaS;
+    wallArea[1] = _wallAreaSE;
+    wallArea[2] = _wallAreaE;
+    wallArea[3] = _wallAreaNE;
+    wallArea[4] = _wallAreaN;
+    wallArea[5] = _wallAreaNW;
+    wallArea[6] = _wallAreaW;
+    wallArea[7] = _wallAreaSW;
+    wallArea[8] = _roofArea;
+    structure->setWallArea(wallArea);//vector
+    structure->setWallHeatCapacity(_exteriorHeatCapacity);//??
+
+    Vector wallSolar(9);
+    wallSolar[0] = _wallSolarAbsorptionS;
+    wallSolar[1] = _wallSolarAbsorptionSE;
+    wallSolar[2] = _wallSolarAbsorptionE;
+    wallSolar[3] = _wallSolarAbsorptionNE;
+    wallSolar[4] = _wallSolarAbsorptionN;
+    wallSolar[5] = _wallSolarAbsorptionNW;
+    wallSolar[6] = _wallSolarAbsorptionW;
+    wallSolar[7] = _wallSolarAbsorptionSW;
+    wallSolar[8] = _roofSolarAbsorption;
+    structure->setWallSolarAbsorbtion(wallSolar);//vector
+
+    Vector wallTherm(9);
+    wallTherm[0] = _wallThermalEmissivityS;
+    wallTherm[1] = _wallThermalEmissivitySE;
+    wallTherm[2] = _wallThermalEmissivityE;
+    wallTherm[3] = _wallThermalEmissivityNE;
+    wallTherm[4] = _wallThermalEmissivityN;
+    wallTherm[5] = _wallThermalEmissivityNW;
+    wallTherm[6] = _wallThermalEmissivityW;
+    wallTherm[7] = _wallThermalEmissivitySW;
+    wallTherm[8] = _roofThermalEmissivity;
+    structure->setWallThermalEmissivity(wallTherm);//vector
+
+    Vector wallU(9);
+    wallU[0] = _wallUvalueS;
+    wallU[1] = _wallUvalueSE;
+    wallU[2] = _wallUvalueE;
+    wallU[3] = _wallUvalueNE;
+    wallU[4] = _wallUvalueN;
+    wallU[5] = _wallUvalueNW;
+    wallU[6] = _wallUvalueW;
+    wallU[7] = _wallUvalueSW;
+    wallU[8] = _roofUValue;
+    structure->setWallUniform(wallU);//vector
+
+
+    Vector windowArea(9);
+    windowArea[0] = _windowAreaS ;
+    windowArea[1] = _windowAreaSE;
+    windowArea[2] = _windowAreaE ;
+    windowArea[3] = _windowAreaNE;
+    windowArea[4] = _windowAreaN ;
+    windowArea[5] = _windowAreaNW;
+    windowArea[6] = _windowAreaW ;
+    windowArea[7] = _windowAreaSW;
+    windowArea[8] = _skylightArea ;
+    structure->setWindowArea(windowArea);//vector
+
+    Vector winSHGC(9);
+    winSHGC[0] = _windowSHGCS ;
+    winSHGC[1] = _windowSHGCSE;
+    winSHGC[2] = _windowSHGCE ;
+    winSHGC[3] = _windowSHGCNE;
+    winSHGC[4] = _windowSHGCN ;
+    winSHGC[5] = _windowSHGCNW;
+    winSHGC[6] = _windowSHGCW ;
+    winSHGC[7] = _windowSHGCSW;
+    winSHGC[8] = _skylightSHGC;
+    structure->setWindowNormalIncidenceSolarEnergyTransmittance(winSHGC);//vector
+    
+    Vector winSCF(9);
+    winSCF[0] = _windowSCFS ;
+    winSCF[1] = _windowSCFSE;
+    winSCF[2] = _windowSCFE ;
+    winSCF[3] = _windowSCFNE;
+    winSCF[4] = _windowSCFN ;
+    winSCF[5] = _windowSCFNW;
+    winSCF[6] = _windowSCFW ;
+    winSCF[7] = _windowSCFSW;
+    winSCF[8] = _windowSCFN;
+    structure->setWindowShadingCorrectionFactor(winSCF);//vector
+    structure->setWindowShadingDevice(_windowSDFN);
+
+    Vector winU(9);
+    winU[0] = _windowUvalueS ;
+    winU[1] = _windowUvalueSE;
+    winU[2] = _windowUvalueE ;
+    winU[3] = _windowUvalueNE;
+    winU[4] = _windowUvalueN ;
+    winU[5] = _windowUvalueNW;
+    winU[6] = _windowUvalueW ;
+    winU[7] = _windowUvalueSW;
+    winU[8] = _skylightUvalue;
+    structure->setWindowUniform(winU);//vector
+    sim.setStructure(structure);
+
+    boost::shared_ptr<Ventilation> ventilation(new Ventilation);
+    ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
+    ventilation->setFanControlFactor(_fanFlowControlFactor);
+    ventilation->setFanPower(_specificFanPower);
+    ventilation->setHeatRecoveryEfficiency(_heatRecovery);
+    ventilation->setSupplyDifference(_supplyExhaustRate);
+    ventilation->setSupplyRate(_freshAirFlowRate);
+    sim.setVentilation(ventilation);
+
+    boost::shared_ptr<EpwData> wdata((EpwData*)&this->_edata);
+    sim.setWeatherData(wdata);
+
+    return sim;
+  }
   SimModel UserModel::toSimModel() const
   {
     SimModel sim = SimModel();
@@ -639,8 +801,7 @@ namespace isomodel {
       }
     }
     string line;
-    EpwData edata;       
-    edata.loadData(weatherFilename);
+    _edata.loadData(weatherFilename);
 
     int state = 0, row=0;
     Matrix _msolar(12,8);
@@ -650,7 +811,7 @@ namespace isomodel {
     Vector _mdbt(12);
     Vector _mwind(12);
     
-    std::stringstream inputFile(edata.toISOData());
+    std::stringstream inputFile(_edata.toISOData());
 
     while (inputFile.good()) {
       getline (inputFile,line);

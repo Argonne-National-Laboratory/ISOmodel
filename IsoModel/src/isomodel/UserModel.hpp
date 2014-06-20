@@ -23,6 +23,7 @@
 #include "ISOModelAPI.hpp"
 #include <isomodel/EpwData.hpp>
 #include <isomodel/SimModel.hpp>
+#include <isomodel/ISOHourly.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
@@ -39,6 +40,7 @@ namespace isomodel {
     void parseStructure(std::string attributeName, const char* attributeValue);
 
     boost::shared_ptr<WeatherData> _weather; 
+    EpwData _edata;
     bool _valid;
     double _terrainClass;
     double _floorArea;
@@ -211,6 +213,7 @@ namespace isomodel {
      * UserModel
      */  
     SimModel toSimModel() const;
+    ISOHourly toHourlyModel() const;
 
     /**
      * Indicates whether or not the user model loaded in correctly

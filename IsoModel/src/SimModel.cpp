@@ -20,7 +20,6 @@
 //to run main
 #include <isomodel/UserModel.hpp>
 
-
 using namespace openstudio::isomodel;
 using namespace openstudio;
 
@@ -43,7 +42,6 @@ void printVector(const char* vecName, Vector vec){
     std::cout << "]" << std::endl;
   }
 }
-
 void printMatrix(const char* matName, Matrix mat){
   if(DEBUG_ISO_MODEL_SIMULATION)
   {
@@ -2542,6 +2540,8 @@ int main(int argc, char* argv[]) {
     printVector("mdbt", mdbt);
     printVector("mwind", mwind);
   }
+  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  hourly.calculateHourly();
   openstudio::isomodel::SimModel simModel = umodel.toSimModel();
   ISOResults results = simModel.simulate();
   if(DEBUG_ISO_MODEL_SIMULATION)
