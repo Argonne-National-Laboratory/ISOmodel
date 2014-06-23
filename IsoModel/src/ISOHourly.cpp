@@ -78,6 +78,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 
 
 	double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH * (naturalLightRatioH + K146 * CA150 * std::min(shadingRatioWtoM2, solarRadiationH));//0
+        //XXX I think this should be 'W' for west, not 'O' -- Brendan.
 	double lightingContributionO = 53 / areaNaturallyLightedRatio * solarRadiationW * (naturalLightRatioW + K146 * BZ150 * std::min(shadingRatioWtoM2, solarRadiationW));//0
 	double lightingContributionS = 53 / areaNaturallyLightedRatio * solarRadiationS * (naturalLightRatioS + K146 * BY150 * std::min(shadingRatioWtoM2, solarRadiationS));//0
 	double lightingContributionE = 53 / areaNaturallyLightedRatio * solarRadiationE * (naturalLightRatioE + K146 * BX150 * std::min(shadingRatioWtoM2, solarRadiationE));//0
