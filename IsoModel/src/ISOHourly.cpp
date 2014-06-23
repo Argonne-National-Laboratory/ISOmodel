@@ -88,18 +88,23 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;//1
 	double defaultLightingHeatGain = electricForTotalLightArea*lighting->powerDensityOccupied()*internalLightingEnabled*electInternalGains;//0.538
 	double actualLightingHeatGain = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? (1-lightControlStrategy*lightLoadReductionFactor)*defaultLightingHeatGain : defaultLightingHeatGain;
+        // Phi_{int,L}/A_{f}, ISO 13790 10.4.3.
 	double interiorLightingEnergyWperm2 = electricForTotalLightArea*permLightPowerDensityWperM2*internalLightingEnabled;
 	interiorLightingEnergyWperm2 = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? interiorLightingEnergyWperm2*(1-lightControlStrategy*lightLoadReductionFactor) : interiorLightingEnergyWperm2;//0.538
 
 
+        // Phi_{int,A}/A_{f}, ISO 13790 10.4.2.
 	double actualInteriorEquipmentHeatGain = actualPlugEquipmentPower*building->electricApplianceHeatGainOccupied();//1.215
 	double qInteriorHeatGain = actualInteriorEquipmentHeatGain+actualLightingHeatGain;//1.753
 	//TODO -- expand solar heat calculations to array format to include diagonals.
+        // Phi_{sol,k}/A_{f}, ISO 13790 11.3.2 eq. 43. 
+        // Note: method of calculating A_{sol,k} is non-standard.
 	double solarHeatGainH = solarRadiationH*(solarRatioH+O150*K146*std::min(solarRadiationH,shadingRatioWtoM2));//0
 	double solarHeatGainW = solarRadiationW*(solarRatioW+N150*K146*std::min(solarRadiationW,shadingRatioWtoM2));//0
 	double solarHeatGainS = solarRadiationS*(solarRatioS+M150*K146*std::min(solarRadiationS,shadingRatioWtoM2));//0
 	double solarHeatGainE = solarRadiationE*(solarRatioE+L150*K146*std::min(solarRadiationE,shadingRatioWtoM2));//0
 	double solarHeatGainN = solarRadiationN*(solarRatioN+K150*K146*std::min(solarRadiationN,shadingRatioWtoM2));//0
+        // Phi_{sol}/A_{f}, ISO 13790 11.2.2 eq. 41.
 	double qSolarHeatGain = (solarHeatGainN+solarHeatGainE+solarHeatGainS+solarHeatGainW+solarHeatGainH);//0
 	double phii = solarPair*qSolarHeatGain+intPair*qInteriorHeatGain;//0.8765
 	double phii10 = phii+10;//10.8765
@@ -117,6 +122,9 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double h1 = 1/(1/hei+1/his);//0.402051964790249
 	double h2 = h1+hwindowWperkm2;//0.726440377838674
 	//ExcelFunctions.printOut("h2",h2,0.726440377838674);
+        // XXX: Subscript '0' seems to indicate the free-floating condition and
+        // sub '10' indicates the the condition after applying 10 W/m^s. This
+        // procedure is outlined in ISO 13790 C.4.2.
 	double phisPhi0 = prsSolar*qSolarHeatGain+prsInterior*qInteriorHeatGain;//-0.00694325870664089
 	double phimPhi0 = prmSolar*qSolarHeatGain+prmInterior*qInteriorHeatGain;//0.8765
 	double h3 = 1/(1/h2+1/hms);//0.713778173058944
