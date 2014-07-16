@@ -380,19 +380,24 @@ void ISOHourly::initialize() {
 	// eq. C.3. When used in phisPhi0.
 	prsInterior = (1-intPair)*prs;//-0.00396078648410775
 	prsSolar = (1-solarPair)*prs;//-0.0079215729682155
+
 	// Constant portion of \Phi_{m}, i.e. without dividing by
 	// (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.2.
 	prm = inertiaAm/AtPerAFloor;//1
 	prmInterior = (1-intPair)*prm;//0.5
 	prmSolar = (1-solarPair)*prm;//1
 
+	// ISO 13790 12.2.2 eq. 64
 	hms = P97*inertiaAm;//40.95
+
 	hOpaqueWperkm2 = std::max(hWall/structure->floorArea(),0.000001);//0.14073662888776
+
+	// ISO 13790 12.2.2 eq. 63
 	hem = 1/(1/hOpaqueWperkm2-1/hms);//0.141221979444827
+
 	double hzone = 39;//XXX SingleBuilding.N6
 	windImpactHz = std::max(0.1,hzone);//39
 	windImpactSupplyRatio = std::max(0.00001,vent->fanControlFactor());//XXX ventSupplyExhaustRatio = SingleBuilding.P40 ?
-
 
 }
 

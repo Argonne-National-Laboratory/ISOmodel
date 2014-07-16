@@ -23,6 +23,8 @@ namespace isomodel {
 
 
 class ISOHourly {
+	// Variables that correspond to symbols in ISO13790 have the symbols noted in
+	// LaTeX format in the comments.
 	double fanDeltaPinPa;//Calculation.T15
 	double fanN;//Calculation.T16
 	double provisionalCFlowad;//Calculation.S106
@@ -99,8 +101,8 @@ class ISOHourly {
 	double P97;//XXX BAA@20140716: heatTransferCoefficientMassToSurfWPerM2K ??? - h_{ms}
 	double P98;//XXX BAA@20140716: heatTransferCoefficientAirToSurfWPerM2K ??? - h_{is}
 	double his;
-	double P89;//XXX BAA@20140716: effectiveMassAreaM2 - C_{m}
-	double inertiaAm;
+	double P89;// A_{m} XXX BAA@20140716: effectiveMassAreaM2 - redundant, only used to set inertiaAm.
+	double inertiaAm; // A_{m}.
 	double hwindowWperkm2;
 	double prs;
 	double prsInterior;
@@ -108,11 +110,11 @@ class ISOHourly {
 	double prm;
 	double prmInterior;
 	double prmSolar;
-	double hms;//XXX BAA@20140716: Is this the same as P97?
-	double hOpaqueWperkm2;
-	double hem;
-	double P90;//XXX BAA@20140716: internalHeatCapacityJPerK - A_{m}
-	double calculationCm;
+	double hms; //XXX H_{ms} which is different from h_{ms} (P97). See ISO 13790 eq. 64.
+	double hOpaqueWperkm2; // H_{op}
+	double hem; // H_{em}
+	double P90; // C_{m} XXX BAA@20140716: internalHeatCapacityJPerK - appears unused.
+	double calculationCm; // C_{m} XXX BAA@20140716: only gets set with thermalMass > 11 ???
 	double windImpactHz;//H119
 	static const int NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,SOUTHWEST,WEST,NORTHWEST,ROOF;
 
