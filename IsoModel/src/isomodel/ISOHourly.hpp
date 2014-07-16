@@ -1,8 +1,8 @@
 /*
  * ISOHourly.h
  *
- *  Created on: Apr 28, 2014
- *      Author: craig
+ *	Created on: Apr 28, 2014
+ *			Author: craig
  */
 
 #ifndef ISOHOURLY_H_
@@ -67,39 +67,39 @@ class ISOHourly {
 	double nlaWMovableShadingW;
 	double naturalLightRatioW;
 	double nlaWMovableShadingS;
-	double K146;//XXX Calculation Sheet: What variable is this?
-	double CA150;//XXX Calculation Sheet: What variable is this?
-	double BZ150;//XXX Calculation Sheet: What variable is this?
+	double K146;//XXX BAA@20140716: shadingUsePerWPerM2
+	double CA150;//XXX BAA@20140716: naturalLightShadeRatioReductionH
+	double BZ150;//XXX BAA@20140716: naturalLightShadeRatioReductionW
 	double naturalLightRatioS;
-	double BY150;//XXX Calculation Sheet: What variable is this?
+	double BY150;//XXX BAA@20140716: naturalLightShadeRatioReductionS
 	double nlaWMovableShadingE;
 	double naturalLightRatioE;
-	double BX150;//XXX Calculation Sheet: What variable is this?
+	double BX150;//XXX BAA@20140716: naturalLightShadeRatioReductionE
 	double nlaWMovableShadingN;
 	double naturalLightRatioN;
-	double BW150;//XXX Calculation Sheet: What variable is this?
+	double BW150;//XXX BAA@20140716: naturalLightShadeRatioReductionN
 	double saWMovableShadingH;
 	double solarRatioH;
-	double O150;//XXX Calculation Sheet: What variable is this?
+	double O150;//XXX BAA@20140716: solarShadeRatioReductionH
 	double saWMovableShadingW;
 	double solarRatioW;
-	double N150;//XXX Calculation Sheet: What variable is this?
+	double N150;//XXX BAA@20140716: solarShadeRatioReductionW
 	double saWMovableShadingS;
 	double solarRatioS;
-	double M150;//XXX Calculation Sheet: What variable is this?
+	double M150;//XXX BAA@20140716: solarShadeRatioReductionS
 	double saWMovableShadingE;
 	double solarRatioE;
-	double L150;//XXX Calculation Sheet: What variable is this?
+	double L150;//XXX BAA@20140716: solarShadeRatioReductionE
 	double saWMovableShadingN;
 	double solarRatioN;
-	double K150;//XXX Calculation Sheet: What variable is this?
+	double K150;//XXX BAA@20140716: solarShadeRatioReductionN
 	double windImpactSupplyRatio;//I119
-	double q4Pa;//XXX SingleBldg.Q6
+	double q4Pa;//XXX BAA@20140716: infiltrationM3PerHourAt4Pa - NEED TO CONFIRM.
 	double P96;//XXX Calculation Sheet: What variable is this?
-	double P97;//XXX Calculation Sheet: What variable is this?
-	double P98;//XXX Calculation Sheet: What variable is this?
+	double P97;//XXX BAA@20140716: heatTransferCoefficientMassToSurfWPerM2K ??? - h_{ms}
+	double P98;//XXX BAA@20140716: heatTransferCoefficientAirToSurfWPerM2K ??? - h_{is}
 	double his;
-	double P89;
+	double P89;//XXX BAA@20140716: effectiveMassAreaM2 - C_{m}
 	double inertiaAm;
 	double hwindowWperkm2;
 	double prs;
@@ -108,10 +108,10 @@ class ISOHourly {
 	double prm;
 	double prmInterior;
 	double prmSolar;
-	double hms;
+	double hms;//XXX BAA@20140716: Is this the same as P97?
 	double hOpaqueWperkm2;
 	double hem;
-	double P90;//XXX Calculation Sheet: What variable is this?
+	double P90;//XXX BAA@20140716: internalHeatCapacityJPerK - A_{m}
 	double calculationCm;
 	double windImpactHz;//H119
 	static const int NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,SOUTHWEST,WEST,NORTHWEST,ROOF;
@@ -171,8 +171,17 @@ class ISOHourly {
 protected:
 
 
+	/** Populates the ventilation, fan, exterior equipment, interior equipment,
+	 * exterior lighting, interior lighting, heating setpoint, and cooling
+	 * setpoint schedules. */
 	void populateSchedules();
 
+	/** Calculates the energy use for one hour and sets the state for the next
+	 * hour. The hourly calculations largely correspond to those described by the
+	 * simple hourly method in ISO 13790 Annex C. A key difference is that this
+	 * implementation describes everything in terms of EUI (i.e., per area). Any
+	 * discrepency in units where this code uses "units per area" while the
+	 * standard just uses "units" is likely due to this difference. */
 	std::vector<double > calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
 			double windMps,	double temperature, double electPriceUSDperMWh,
 			double solarRadiationN, double solarRadiationE,
@@ -195,34 +204,51 @@ protected:
 		hWindow[direction] = windowAreaM2 * windowUValue;
 	}
 
+	/** Returns the fan schedule. */
 	virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedFanSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the ventilation schedule. */
 	virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedVentilationSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the exterior equipment schedule. */
 	virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedExteriorEquipmentSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the interior equipment schedule. */
 	virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedInteriorEquipmentSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the exterior lighting schedule. */
 	virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedExteriorLightingSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the interior lighting schedule. */
 	virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return fixedInteriorLightingSchedule[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the heating setpoint schedule. */
 	virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return (electPriceUSDperMWh[hourOfYear]>=heatSetpointUSDperMWh) ?
 				(fixedActualHeatingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1]-heatSetpointStrategy*heatSetpointIncreaseDegC) :
 				fixedActualHeatingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the cooling setpoint schedule. */
 	virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
 		return (electPriceUSDperMWh[hourOfYear]>=coolSetpointUSDperMWh) ?
 				(fixedActualCoolingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1]+coolSetpointStrategy*coolSetpointReductionDegC) :
 				fixedActualCoolingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
+
+	/** Returns the cooling enabled schedule. */
 	virtual double coolingEnabledSchedule(int hourOfYear, int month){
 		if(coolMonthBegin<coolMonthEnd) {
 			return (month>=coolMonthBegin && month<=coolMonthEnd) ? 1 : 0;
@@ -230,6 +256,8 @@ protected:
 			return (month>=coolMonthBegin || month<=coolMonthEnd) ? 1 : 0;
 		}
 	}
+
+	/** Returns the heating enabled schedule. */
 	virtual double heatingEnabledSchedule(int hourOfYear, int month){
 		if(heatMonthBegin<heatMonthEnd){
 			return (month>=heatMonthBegin && month<=heatMonthEnd) ? 1 : 0;
@@ -237,7 +265,7 @@ protected:
 			return (month>=heatMonthBegin || month<=heatMonthEnd) ? 1 : 0;
 		}
 	}
-  boost::shared_ptr<Structure> structure;
+	boost::shared_ptr<Structure> structure;
 	boost::shared_ptr<Building> building;
 	boost::shared_ptr<Lighting> lighting;
 	boost::shared_ptr<Ventilation> vent;
@@ -248,15 +276,37 @@ protected:
 public:
 	ISOHourly();
 	virtual ~ISOHourly();
+
+	/** Calculates the building's hourly EUI using the "simple hourly method"
+	 * described in ISO 13790:2008. The hourly calculations largely correspond to
+	 * those described by the simple hourly method in ISO 13790 Annex C. A key
+	 * difference is that this implementation describes everything in terms of
+	 * EUI (i.e., per area). */
 	void calculateHourly();
-  void setPop(boost::shared_ptr<Population> value){pop=value;}
-  void setLights(boost::shared_ptr<Lighting> value){lighting=value;}
-  void setBuilding(boost::shared_ptr<Building> value){building=value;}
-  void setStructure(boost::shared_ptr<Structure> value){structure=value;}
-  void setHeating(boost::shared_ptr<Heating> value){heat=value;}
-  void setCooling(boost::shared_ptr<Cooling> value){cool=value;}
-  void setVentilation(boost::shared_ptr<Ventilation> value){vent=value;}
-  void setWeatherData(boost::shared_ptr<EpwData> value) {weatherData = value;}
+
+	/** Set the population. */
+	void setPop(boost::shared_ptr<Population> value){pop=value;}
+
+	/** Set the lighting. */
+	void setLights(boost::shared_ptr<Lighting> value){lighting=value;}
+
+	/** Set the building. */
+	void setBuilding(boost::shared_ptr<Building> value){building=value;}
+
+	/** Set the structure. */
+	void setStructure(boost::shared_ptr<Structure> value){structure=value;}
+
+	/** Set the heating. */
+	void setHeating(boost::shared_ptr<Heating> value){heat=value;}
+
+	/** Set the cooling. */
+	void setCooling(boost::shared_ptr<Cooling> value){cool=value;}
+
+	/** Set the ventilation. */
+	void setVentilation(boost::shared_ptr<Ventilation> value){vent=value;}
+
+	/** Set the weather data. */
+	void setWeatherData(boost::shared_ptr<EpwData> value) {weatherData = value;}
 };
 }
 }
