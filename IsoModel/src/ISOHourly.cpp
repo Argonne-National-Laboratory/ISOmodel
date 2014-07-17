@@ -336,7 +336,18 @@ void ISOHourly::initialize() {
 	P96 = hri*1.2;//6.6
 	P97 = hci+P96;//9.1
 	P98 = 1/hci-1/P97;//0.29010989010989
-	his = AtPerAFloor/P98;//15.5113636363636
+	
+	// ISO 13790 7.2.2.2 eq. 9 
+	//
+	// Eq in ISO is H_{tr,is} = h_{is} * A_{tot}
+	// where A_{tot} = \Lambda_{at} * A_{f}
+	//
+	// P98 is 1/h_{is} (not sure why its done this way).
+	// Eq here is H_{tr,is} = \Lambda_{at} / (1/h_{is})
+	//						H_{tr,is} = \Lambda_{at} * h_{is}
+	//
+	// This is the "per floor area" version of eq. 9.
+	his = AtPerAFloor/P98; //15.5113636363636
 
 	double thermalMass = 5;//XXX inertia? based off building age, EMCAC_UI.N2
 

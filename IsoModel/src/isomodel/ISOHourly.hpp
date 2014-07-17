@@ -41,7 +41,7 @@ class ISOHourly {
 	double shadingRatioWtoM2;//E102
 	double shadingMaximumUseRatio;//E101
 	double ventDcpWindImpact;//G119
-	double AtPerAFloor;//J97
+	double AtPerAFloor; // \Lambda_{at} (Spreadsheet: J97)
 	double hci;//P94
 	double hri;//P95
 	double inertialAm15;//K88 table *******************
@@ -98,9 +98,9 @@ class ISOHourly {
 	double windImpactSupplyRatio;//I119
 	double q4Pa;//XXX BAA@20140716: infiltrationM3PerHourAt4Pa - NEED TO CONFIRM.
 	double P96;//XXX Calculation Sheet: What variable is this?
-	double P97;//XXX BAA@20140716: heatTransferCoefficientMassToSurfWPerM2K ??? - h_{ms}
-	double P98;//XXX BAA@20140716: heatTransferCoefficientAirToSurfWPerM2K ??? - h_{is}
-	double his;
+	double P97; // h_{ms} XXX BAA@20140716: heatTransferCoefficientMassToSurfWPerM2K ???
+	double P98; // 1/h_{is} XXX BAA@20140716: heatTransferCoefficientAirToSurfWPerM2K ???
+	double his; // H_{tr,is}
 	double P89;// A_{m} XXX BAA@20140716: effectiveMassAreaM2 - redundant, only used to set inertiaAm.
 	double inertiaAm; // A_{m}.
 	double hwindowWperkm2;
