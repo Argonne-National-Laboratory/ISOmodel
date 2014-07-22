@@ -23,28 +23,43 @@ namespace isomodel {
 
 
 class ISOHourly {
-	// Variables that correspond to symbols in ISO13790 have the symbols noted in
-	// LaTeX format in the comments.
-	double fanDeltaPinPa;//Calculation.T15
-	double fanN;//Calculation.T16
-	double provisionalCFlowad;//Calculation.S106
-	double solarPair;//Calculation.V95
-	double intPair;//Calc.T95
-	double presenceSensorAd;//Calc.E92 table **************
+	// BAA@20150717: Variables that correspond to symbols in ISO 13790 have the symbols noted
+	// in LaTeX format in the comments. Symbols from other standards have their
+	// standard noted. Symbols are case sensitive, e.g., H_{ms} is different than
+	// h_{ms}. References to spreadsheet cells are from the Gerogia Tech
+	// ISOHourly spreadsheet.  Suggested name changes are marked with XXX. If I'm
+	// not confident in the suggested name, it's followed with '???'.	
+
+	// Fans. http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html
+	double fanDeltaPinPa; // dp. Total pressure increase in the fan. Calculation.T15
+	double fanN; // \mu_{f}. Fan efficiency. Calculation.T16
+
+	// Lighting controls.
+	// Occupancy based lighting control lighting use adjustment factors.
+	double presenceSensorAd; // Calc.E92 table **************
 	double automaticAd;
 	double presenceAutoAd;
 	double manualSwitchAd;
+	// Daylight based lighting control target lux levels.
 	double presenceSensorLux;
 	double automaticLux;
 	double presenceAutoLux;
-	double manualSwitchLux;//Finish Calc.E92 table ************
-	double shadingRatioWtoM2;//E102
-	double shadingMaximumUseRatio;//E101
-	double ventDcpWindImpact;//G119
-	double AtPerAFloor; // \Lambda_{at} (Spreadsheet: J97)
-	double hci;//P94
-	double hri;//P95
-	double inertialAm15;//K88 table *******************
+	double manualSwitchLux; // Finish Calc.E92 table ************
+	// Used to determine the amount of electric light used.
+	double maxRatioElectricLighting; // Ratio of electric light used due to lighting controls.
+	double elightNatural; // Target lux level in naturally lit area.
+
+	// Ventilation from wind. ISO 15242
+	double ventDcpWindImpact; // ISO 15242 dcp. G119
+	double windImpactSupplyRatio;//I119
+	double q4Pa; // ISO 15242 Q_{4Pa}. XXX infiltrationM3PerHourAt4Pa ???
+	double windImpactHz; // ISO 15242 H_{z}. H119
+
+	// Geometry
+	double AtPerAFloor; // \Lambda_{at}. Ratio of total interior surface area to floor area. J97
+
+	// Thermal mass (inertia).
+	double inertialAm15; // K88 table *******************
 	double inertialAm14;
 	double inertialAm12;
 	double inertiaParameter5AM;
@@ -59,9 +74,21 @@ class ISOHourly {
 	double inertiaParameter4CM;
 	double inertiaParameter3CM;
 	double inertiaParameter2CM;
-	double inertiaParameter1CM;//end K88 table *************
-	double maxRatioElectricLighting;
-	double elightNatural;
+	double inertiaParameter1CM; // end K88 table *************
+
+	double P89;// A_{m}. XXX: Redundant, only used to set inertiaAm. XXX: effectiveMassAreaM2
+	double inertiaAm; // A_{m}.
+	double P90; // C_{m}. XXX: Unused? XXX: internalHeatCapacityJPerK
+	double calculationCm; // C_{m}. XXX: Seems like it only gets initialized with thermalMass > 11.
+
+	// Movable shading.
+	// These three variables are used to model movable shading. ISO 13790 does it
+	// by switching between g_{gl} and g_{gl+sh}. The method here allows varying
+	// degrees of shading rather than just on or off.
+	double shadingMaximumUseRatio; // The shading factor of the movable shading when in full use. E101
+	double shadingRatioWtoM2; // The irradiance at which shading is in full use. E102
+	double K146; // The shading factor per unit irradiance. XXX: shadingUsePerWPerM2
+
 	double areaNaturallyLighted;
 	double areaNaturallyLightedRatio;
 	double nlaWMovableShadingH;
@@ -69,55 +96,59 @@ class ISOHourly {
 	double nlaWMovableShadingW;
 	double naturalLightRatioW;
 	double nlaWMovableShadingS;
-	double K146;//XXX BAA@20140716: shadingUsePerWPerM2
-	double CA150;//XXX BAA@20140716: naturalLightShadeRatioReductionH
-	double BZ150;//XXX BAA@20140716: naturalLightShadeRatioReductionW
+	double CA150; // XXX naturalLightShadeRatioReductionH
+	double BZ150; // XXX naturalLightShadeRatioReductionW
 	double naturalLightRatioS;
-	double BY150;//XXX BAA@20140716: naturalLightShadeRatioReductionS
+	double BY150; // XXX naturalLightShadeRatioReductionS
 	double nlaWMovableShadingE;
 	double naturalLightRatioE;
-	double BX150;//XXX BAA@20140716: naturalLightShadeRatioReductionE
+	double BX150; // XXX naturalLightShadeRatioReductionE
 	double nlaWMovableShadingN;
 	double naturalLightRatioN;
-	double BW150;//XXX BAA@20140716: naturalLightShadeRatioReductionN
+	double BW150; // XXX naturalLightShadeRatioReductionN
 	double saWMovableShadingH;
 	double solarRatioH;
-	double O150;//XXX BAA@20140716: solarShadeRatioReductionH
+	double O150; // XXX solarShadeRatioReductionH
 	double saWMovableShadingW;
 	double solarRatioW;
-	double N150;//XXX BAA@20140716: solarShadeRatioReductionW
+	double N150; // XXX solarShadeRatioReductionW
 	double saWMovableShadingS;
 	double solarRatioS;
-	double M150;//XXX BAA@20140716: solarShadeRatioReductionS
+	double M150; // XXX solarShadeRatioReductionS
 	double saWMovableShadingE;
 	double solarRatioE;
-	double L150;//XXX BAA@20140716: solarShadeRatioReductionE
+	double L150; // XXX solarShadeRatioReductionE
 	double saWMovableShadingN;
 	double solarRatioN;
-	double K150;//XXX BAA@20140716: solarShadeRatioReductionN
-	double windImpactSupplyRatio;//I119
-	double q4Pa;//XXX BAA@20140716: infiltrationM3PerHourAt4Pa - NEED TO CONFIRM.
-	double P96;//XXX Calculation Sheet: What variable is this?
-	double P97; // h_{ms} XXX BAA@20140716: heatTransferCoefficientMassToSurfWPerM2K ???
-	double P98; // 1/h_{is} XXX BAA@20140716: heatTransferCoefficientAirToSurfWPerM2K ???
+	double K150; // XXX solarShadeRatioReductionN
+
+	double hci; // =2.5. P94
+	double hri; // =5.5. P95
+	double P96; // =hri*1.2 XXX Calculation Sheet: What variable is this?
+	double P97; // h_{ms} XXX heatTransferCoefficientMassToSurfWPerM2K ???
+	double P98; // 1/h_{is}. Not sure why inverted. XXX heatTransferCoefficientAirToSurfWPerM2K ???
+
 	double his; // H_{tr,is}
-	double P89;// A_{m} XXX BAA@20140716: effectiveMassAreaM2 - redundant, only used to set inertiaAm.
-	double inertiaAm; // A_{m}.
-	double hwindowWperkm2;
-	double prs;
-	double prsInterior;
-	double prsSolar;
-	double prm;
-	double prmInterior;
-	double prmSolar;
-	double hms; //XXX H_{ms} which is different from h_{ms} (P97). See ISO 13790 eq. 64.
+	double hwindowWperkm2; // H_{tr,w}.
+
+	// \Phi_{st} and \Phi_{m} are calculated differently than in ISO 13790 to
+	// allow variation in the values that factor the amount of interior and solar
+	// heat gain that heats the air. These variables are used in those
+	// calculations.
+	double solarPair; // Fraction of solar heat gain that heats the air. Calculation.V95
+	double intPair; // Fraction of interior heat gain that heats the air. Calc.T95
+	double prs; // Constant part of \Phi_{st}.
+	double prsInterior; // Interior part of \Phi_{st}.
+	double prsSolar; // Solar part of \Phi_{st}.
+	double prm; // Constant part of \Phi_{m}.
+	double prmInterior; // Interior part of \Phi_{m}.
+	double prmSolar; // Solar part of \Phi_{m}.
+
+	double hms; // H_{ms}
 	double hOpaqueWperkm2; // H_{op}
 	double hem; // H_{em}
-	double P90; // C_{m} XXX BAA@20140716: internalHeatCapacityJPerK - appears unused.
-	double calculationCm; // C_{m} XXX BAA@20140716: only gets set with thermalMass > 11 ???
-	double windImpactHz;//H119
-	static const int NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,SOUTHWEST,WEST,NORTHWEST,ROOF;
 
+	static const int NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,SOUTHWEST,WEST,NORTHWEST,ROOF;
 
 	//Calculated surface values
 	double nlams[9];
@@ -160,7 +191,6 @@ class ISOHourly {
 	//XXX Unknown Vent Variables
 	double ventPreheatDegC;
 
-
 	double fixedVentilationSchedule[24][7];
 	double fixedFanSchedule[24][7];
 	double fixedExteriorEquipmentSchedule[24][7];
@@ -170,8 +200,10 @@ class ISOHourly {
 	double fixedActualHeatingSetpoint[24][7];
 	double fixedActualCoolingSetpoint[24][7];
 
-protected:
+	// XXX Unused variables.
+	double provisionalCFlowad; // Appears to be unused. Calculation.S106
 
+protected:
 
 	/** Populates the ventilation, fan, exterior equipment, interior equipment,
 	 * exterior lighting, interior lighting, heating setpoint, and cooling

@@ -71,6 +71,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear,hourOfDay,scheduleOffset);//15.6
 	double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear,hourOfDay,scheduleOffset);//30
 
+	// http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
 	double fanEnergyWperm2 = ventExhaustM3phpm2/3600*fanEnabled*fanDeltaPinPa/fanN;//0
 
 	double externalEquipmentEnergyWperm2 = externalEquipmentEnabled*externalEquipment/structure->floorArea();//0.263382986063586
@@ -78,7 +79,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double actualPlugEquipmentPower = (electPriceUSDperMWh>=equipLoadReductionUSDperMWh) ? (1-equipControlStrategy*equipLoadReductionFactor)*internalEquipmentEnergyWperm2 : internalEquipmentEnergyWperm2;//2.43
 
 	double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH * (naturalLightRatioH + K146 * CA150 * std::min(shadingRatioWtoM2, solarRadiationH));//0
-	// BAA@20140626: I think this should be 'W' for west, not 'O'.
+	// XXX BAA@20140626: I think this should be 'W' for west, not 'O'.
 	double lightingContributionO = 53 / areaNaturallyLightedRatio * solarRadiationW * (naturalLightRatioW + K146 * BZ150 * std::min(shadingRatioWtoM2, solarRadiationW));//0
 	double lightingContributionS = 53 / areaNaturallyLightedRatio * solarRadiationS * (naturalLightRatioS + K146 * BY150 * std::min(shadingRatioWtoM2, solarRadiationS));//0
 	double lightingContributionE = 53 / areaNaturallyLightedRatio * solarRadiationE * (naturalLightRatioE + K146 * BX150 * std::min(shadingRatioWtoM2, solarRadiationE));//0
@@ -117,15 +118,21 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	// applying 10 W/m^2 to the building because all the values in this
 	// implementation are expressed in terms of EUI (i.e., per area).
 	double phii10 = phii+10;//10.8765
+
+	// Ventilation from wind. ISO 15242.
 	double qSupplyBySystem = ventExhaustM3phpm2*windImpactSupplyRatio;//1E-05
-	double exhaustSupply = -(qSupplyBySystem-ventExhaustM3phpm2);//0
+	double exhaustSupply = -(qSupplyBySystem-ventExhaustM3phpm2); // ISO 15242 q_{v-diff}. 0
 	double tAfterExchange = (1-vent->heatRecoveryEfficiency())*temperature+vent->heatRecoveryEfficiency()*20;//-1
 	double tSuppliedAir = std::max(ventPreheatDegC,tAfterExchange);//-1
+	// ISO 15242 6.7.1 Step 1.
 	double qWind = 0.0769*q4Pa*std::pow((ventDcpWindImpact*windMps*windMps),0.667);//0.341700355961478
 	double qStackPrevIntTemp = 0.0146*q4Pa*std::pow((0.5*windImpactHz*(std::max(0.00001,std::abs(temperature-tiHeatCool)))),0.667);//1.21396172390701
+	// ISO 15242 6.7.1 Step 2.
 	double qExfiltration = std::max(0.0,std::max(qStackPrevIntTemp,qWind)-std::abs(exhaustSupply)*(0.5*qStackPrevIntTemp+0.667*(qWind)/(qStackPrevIntTemp+qWind)));//1.21396172390701
 	double qEnvelope = std::max(0.0,exhaustSupply)+qExfiltration;//1.21396172390701
+	// ISO 15242 6.7.2.
 	double qEnteringTotal = qEnvelope+qSupplyBySystem;//1.21397172390701
+
 	// \theta_{sup} ISO 13790 9.3.
 	double tEnteringAndSupplied = (temperature*qEnvelope+tSuppliedAir*qSupplyBySystem)/qEnteringTotal;//-1
 	// I think hei is H_{ve,adj} or H_{ve} ISO 13790 9.3.1 eq. 21. I'm not sure
@@ -137,11 +144,11 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double h2 = h1+hwindowWperkm2;//0.726440377838674
 	//ExcelFunctions.printOut("h2",h2,0.726440377838674);
 
-	// XXX: Subscript '0' seems to indicate the free-floating condition and sub
-	// '10' indicates the the condition after applying 10 W/m^s. This procedure
-	// is outlined in ISO 13790 C.4.2 and is used to calculate the temperature
-	// when insuficient heating or cooling power is available to get the temp
-	// between the heating and cooling setpoints.
+	// Subscript '0' indicates the free-floating condition and sub '10' indicates
+	// the the condition after applying 10 W/m^s. This procedure is outlined in
+	// ISO 13790 C.4.2 and is used to calculate the temperature when insuficient
+	// heating or cooling power is available to get the temp between the heating
+	// and cooling setpoints.
 	
 	// \Phi_{st}, ISO 13790 C.2 eq. C.3 
 	// In generalized form from Georgia Tech spreadsheet.
@@ -229,11 +236,7 @@ void ISOHourly::initialize() {
 	fanDeltaPinPa = 800;//800
 	fanN = 0.8;//0.8
 	provisionalCFlowad = 1;//1
-	// Fraction of solar heat gain that heats the air.	This is a constant
-	// in ISO 13790.
 	solarPair = 0;//0
-	// Fraction of interior heat gain that heats the air.	This is a
-	// constant in ISO 13790.
 	intPair = 0.5;//0.5
 	presenceSensorAd = 0.6;//0.6
 	automaticAd = 0.8;//0.8
@@ -328,14 +331,19 @@ void ISOHourly::initialize() {
 	solarRatioN = sa[NORTH]/structure->floorArea();//0.0193808819012279
 	K150 = saWMovableShadingN-solarRatioN;//-0.00600534796994325
 
-	double n50 = 2;//XXX some sort of ratio? SingleBldg.V4
+	// ISO 15242 Air leakage values.
+	// Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
+	double n50 = 2; // SingleBldg.V4
+	// Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
 	double buildingv8 = 0.19 * (n50 *	(structure->floorArea() * structure->buildingHeight()));
+	// Air leakage per area at 4Pa (m3/hr/m2).
+	q4Pa = std::max(0.000001,buildingv8/structure->floorArea()); // 1.5048
 
-
-	q4Pa = std::max(0.000001,buildingv8/structure->floorArea());//1.5048
-	P96 = hri*1.2;//6.6
-	P97 = hci+P96;//9.1
-	P98 = 1/hci-1/P97;//0.29010989010989
+	P96 = hri*1.2; // 6.6
+	// ISO 13790 12.2.2
+	P97 = hci+P96; // 9.1 XXX Does it make sense to do P97=hci+hri*1.2 and eliminate P96?
+	// ISO 13790 7.2.2.2
+	P98 = 1/hci-1/P97; // 0.29010989010989 (or 1/3.45).
 	
 	// ISO 13790 7.2.2.2 eq. 9 
 	//
@@ -384,7 +392,7 @@ void ISOHourly::initialize() {
 	}
 	hwindowWperkm2 = hWind/structure->floorArea();//0.324388413048425
 	
-	// Constant portion of \Phi_{st}, i.e. without dividing by
+	// Constant portion of \Phi_{st}, i.e. without multiplying by
 	// (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.3.
 	prs = (AtPerAFloor-inertiaAm-hwindowWperkm2/P97)/AtPerAFloor;//-0.0079215729682155
 	// intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
@@ -392,7 +400,7 @@ void ISOHourly::initialize() {
 	prsInterior = (1-intPair)*prs;//-0.00396078648410775
 	prsSolar = (1-solarPair)*prs;//-0.0079215729682155
 
-	// Constant portion of \Phi_{m}, i.e. without dividing by
+	// Constant portion of \Phi_{m}, i.e. without multiplying by
 	// (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.2.
 	prm = inertiaAm/AtPerAFloor;//1
 	prmInterior = (1-intPair)*prm;//0.5
