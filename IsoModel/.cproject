@@ -12,37 +12,41 @@
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334" name="Debug" parent="cdt.managedbuild.config.gnu.cross.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334." name="/" resourcePath="">
-						<toolChain id="org.eclipse.cdt.msvc.toolchain.dll.debug.741892234" name="Microsoft Visual C++" superClass="org.eclipse.cdt.msvc.toolchain.dll.debug">
-							<targetPlatform id="org.eclipse.cdt.msvc.targetPlatform.dll.debug.828271493" superClass="org.eclipse.cdt.msvc.targetPlatform.dll.debug"/>
-							<builder buildPath="${workspace_loc:/IsoModelEclipse}/Debug" id="org.eclipse.cdt.msvc.builder.1750037205" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" superClass="org.eclipse.cdt.msvc.builder"/>
-							<tool id="org.eclipse.cdt.msvc.cl.c.dll.debug.1899862428" name="C Compiler (cl)" superClass="org.eclipse.cdt.msvc.cl.c.dll.debug">
-								<option id="org.eclipse.cdt.msvc.cl.option.includes.958816346" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;C:\EECalc\isomodel\ISOModelSALinux\IsoModelEclipse\src&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Boost\boost_1_55_0b1&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Boost\boost_1_55_0b1\boost&quot;"/>
+						<toolChain id="org.eclipse.cdt.msvc.toolchain.dll.debug.1935460475" name="Microsoft Visual C++" superClass="org.eclipse.cdt.msvc.toolchain.dll.debug">
+							<targetPlatform id="org.eclipse.cdt.msvc.targetPlatform.dll.debug.1025886836" superClass="org.eclipse.cdt.msvc.targetPlatform.dll.debug"/>
+							<builder buildPath="${workspace_loc:/IsoModelEclipse}/Debug" id="org.eclipse.cdt.msvc.builder.1910868566" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" superClass="org.eclipse.cdt.msvc.builder"/>
+							<tool id="org.eclipse.cdt.msvc.cl.c.dll.debug.1968040575" name="C Compiler (cl)" superClass="org.eclipse.cdt.msvc.cl.c.dll.debug">
+								<option id="org.eclipse.cdt.msvc.cl.option.includes.1003944509" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;D:\Brendan\Dropbox\Argonne\ISOHourly\repo\IsoModel\src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0\boost&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0\stage\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include&quot;"/>
 								</option>
-								<option id="org.eclipse.cdt.msvc.cl.option.optimization.1089037075" name="Optimization" superClass="org.eclipse.cdt.msvc.cl.option.optimization" value="org.eclipse.cdt.msvc.cl.option.optimization.default" valueType="enumerated"/>
-								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.1550709210" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat" value="org.eclipse.cdt.msvc.cl.option.debugFormat.complete" valueType="enumerated"/>
-								<inputType id="org.eclipse.cdt.msvc.cl.inputType.c.1009631052" superClass="org.eclipse.cdt.msvc.cl.inputType.c"/>
+								<option id="org.eclipse.cdt.msvc.cl.option.optimization.2015361501" name="Optimization" superClass="org.eclipse.cdt.msvc.cl.option.optimization" value="org.eclipse.cdt.msvc.cl.option.optimization.default" valueType="enumerated"/>
+								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.1764152572" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat" value="org.eclipse.cdt.msvc.cl.option.debugFormat.complete" valueType="enumerated"/>
+								<inputType id="org.eclipse.cdt.msvc.cl.inputType.c.30280518" superClass="org.eclipse.cdt.msvc.cl.inputType.c"/>
 							</tool>
-							<tool id="org.eclipse.cdt.msvc.cl.dll.debug.175039803" name="C++ Compiler (cl)" superClass="org.eclipse.cdt.msvc.cl.dll.debug">
-								<option id="org.eclipse.cdt.msvc.cl.option.includes.983767427" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;C:\Boost\boost_1_55_0b1\boost&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Boost\boost_1_55_0b1&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\EECalc\isomodel\ISOModelSALinux\IsoModelEclipse\src&quot;"/>
+							<tool id="org.eclipse.cdt.msvc.cl.dll.debug.2129128949" name="C++ Compiler (cl)" superClass="org.eclipse.cdt.msvc.cl.dll.debug">
+								<option id="org.eclipse.cdt.msvc.cl.option.includes.1820794814" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;D:\Brendan\Dropbox\Argonne\ISOHourly\repo\IsoModel\src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0\boost&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\boost_1_55_0\stage\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include&quot;"/>
 								</option>
-								<option id="org.eclipse.cdt.msvc.cl.option.optimization.337257822" name="Optimization" superClass="org.eclipse.cdt.msvc.cl.option.optimization" value="org.eclipse.cdt.msvc.cl.option.optimization.default" valueType="enumerated"/>
-								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.2127811555" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat" value="org.eclipse.cdt.msvc.cl.option.debugFormat.complete" valueType="enumerated"/>
-								<inputType id="org.eclipse.cdt.msvc.cl.inputType.1757959668" superClass="org.eclipse.cdt.msvc.cl.inputType"/>
+								<option id="org.eclipse.cdt.msvc.cl.option.optimization.137522383" name="Optimization" superClass="org.eclipse.cdt.msvc.cl.option.optimization" value="org.eclipse.cdt.msvc.cl.option.optimization.default" valueType="enumerated"/>
+								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.990083928" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat" value="org.eclipse.cdt.msvc.cl.option.debugFormat.complete" valueType="enumerated"/>
+								<inputType id="org.eclipse.cdt.msvc.cl.inputType.1396558985" superClass="org.eclipse.cdt.msvc.cl.inputType"/>
 							</tool>
-							<tool id="org.eclipse.cdt.msvc.rc.dll.debug.1263521213" name="Resource Compiler (rc)" superClass="org.eclipse.cdt.msvc.rc.dll.debug">
-								<inputType id="org.eclipse.cdt.msvc.rc.inputType.1965215521" superClass="org.eclipse.cdt.msvc.rc.inputType"/>
+							<tool id="org.eclipse.cdt.msvc.rc.dll.debug.1290576258" name="Resource Compiler (rc)" superClass="org.eclipse.cdt.msvc.rc.dll.debug">
+								<inputType id="org.eclipse.cdt.msvc.rc.inputType.1086023497" superClass="org.eclipse.cdt.msvc.rc.inputType"/>
 							</tool>
-							<tool id="org.eclipse.cdt.msvc.link.dll.debug.1355995867" name="Linker (link)" superClass="org.eclipse.cdt.msvc.link.dll.debug">
-								<option id="org.eclipse.cdt.msvc.link.option.debug.333870894" name="Generate Debug Info (/debug)" superClass="org.eclipse.cdt.msvc.link.option.debug" value="true" valueType="boolean"/>
-								<inputType id="org.eclipse.cdt.msvc.link.inputType.435506824" superClass="org.eclipse.cdt.msvc.link.inputType"/>
+							<tool id="org.eclipse.cdt.msvc.link.dll.debug.186797847" name="Linker (link)" superClass="org.eclipse.cdt.msvc.link.dll.debug">
+								<option id="org.eclipse.cdt.msvc.link.option.debug.1834464315" name="Generate Debug Info (/debug)" superClass="org.eclipse.cdt.msvc.link.option.debug" value="true" valueType="boolean"/>
+								<inputType id="org.eclipse.cdt.msvc.link.inputType.727053104" superClass="org.eclipse.cdt.msvc.link.inputType"/>
 							</tool>
-							<tool id="org.eclipse.cdt.msvc.lib.809992076" name="Library Manager (lib)" superClass="org.eclipse.cdt.msvc.lib"/>
+							<tool id="org.eclipse.cdt.msvc.lib.546233260" name="Library Manager (lib)" superClass="org.eclipse.cdt.msvc.lib"/>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
@@ -113,9 +117,19 @@
 			<resource resourceType="PROJECT" workspacePath="/IsoModelEclipse"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;org.eclipse.cdt.msvc.cl.c.dll.debug.1167538261;org.eclipse.cdt.msvc.cl.inputType.c.2072634667">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;org.eclipse.cdt.msvc.cl.c.dll.debug.1899862428;org.eclipse.cdt.msvc.cl.inputType.c.1009631052">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.1636649871;cdt.managedbuild.tool.gnu.c.compiler.input.744381926">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;org.eclipse.cdt.msvc.cl.c.dll.debug.1968040575;org.eclipse.cdt.msvc.cl.inputType.c.30280518">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.934068502;cdt.managedbuild.config.gnu.cross.exe.release.934068502.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1286591619;cdt.managedbuild.tool.gnu.cpp.compiler.input.1801216145">
@@ -130,9 +144,17 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.934068502;cdt.managedbuild.config.gnu.cross.exe.release.934068502.;cdt.managedbuild.tool.gnu.cross.c.compiler.380980530;cdt.managedbuild.tool.gnu.c.compiler.input.1138918412">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;org.eclipse.cdt.msvc.cl.dll.debug.2129128949;org.eclipse.cdt.msvc.cl.inputType.1396558985">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;cdt.managedbuild.tool.gnu.cross.c.compiler.1692826923;cdt.managedbuild.tool.gnu.c.compiler.input.1007977434">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;org.eclipse.cdt.msvc.cl.dll.debug.175039803;org.eclipse.cdt.msvc.cl.inputType.1757959668">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1035062334;cdt.managedbuild.config.gnu.cross.exe.debug.1035062334.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.1129539199;cdt.managedbuild.tool.gnu.cpp.compiler.input.982394613">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
