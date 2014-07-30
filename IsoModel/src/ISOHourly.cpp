@@ -40,6 +40,7 @@ ISOHourly::ISOHourly() {
 	equipLoadReductionFactor = 0.2;
 
 	//XXX External Equipment usage Q56
+	// XXX BAA@20140730: I don't think this should be a constant.
 	externalEquipment = 244000;
 
 	//XXX Lighting variables based off price reductions -- EMCAC_UI
@@ -94,6 +95,10 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	interiorLightingEnergyWperm2 = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? interiorLightingEnergyWperm2*(1-lightControlStrategy*lightLoadReductionFactor) : interiorLightingEnergyWperm2;//0.538
 
 	// \Phi_{int,A}, ISO 13790 10.4.2.
+	// phi_I_app in monthly.
+	// XXX BAA@20140730: actualPlugEquipmentPower is
+	// building->electricApplianceHeatGainOccupied(). Why multiply it by
+	// building->electricApplianceHeatGainOccupied() again?
 	double actualInteriorEquipmentHeatGain = actualPlugEquipmentPower*building->electricApplianceHeatGainOccupied();//1.215
 	// \Phi_{int}, ISO 13790 10.2.2 eq. 35.
 	double qInteriorHeatGain = actualInteriorEquipmentHeatGain+actualLightingHeatGain;//1.753
@@ -176,6 +181,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double phiHeating = 10*(actualHeatingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*heatingEnabled;//-40.6603229894958
 	double phiActual = std::max(0.0,phiHeating)+std::min(phiCooling,0.0);//0
 	double pCoolActual = std::max(0.0,-phiActual);//0
+	// XXX BAA@20140730: Divides by zero if hvacLossFactor or cop are zero!
 	double coolingEnergyWperm2 = pCoolActual/cool->hvacLossFactor()/cool->cop();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H39
 	double pHeatActual = std::max(0.0,phiActual);//0
 	double heatingEnergyWperm2 = pHeatActual/heat->hvacLossFactor()/heat->efficiency();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H38

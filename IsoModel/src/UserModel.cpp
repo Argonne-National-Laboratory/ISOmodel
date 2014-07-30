@@ -567,6 +567,10 @@ namespace isomodel {
       return;
     string attributeName = lcase(linesplit[0]);
     
+		// XXX BAA@20140730: atof() returns 0.0 when no valid conversion can be
+		// performed. This seems like it makes it impossible to differentiate
+		// between corrupted input data and intentional values of 0.0. Is this a
+		// problem?
     const char* attributeValue = linesplit[1].c_str();
     if(!attributeName.compare("terrainclass")){
       setTerrainClass(atof(attributeValue));
