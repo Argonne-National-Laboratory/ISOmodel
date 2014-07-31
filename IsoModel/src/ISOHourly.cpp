@@ -75,8 +75,10 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double fanEnergyWperm2 = ventExhaustM3phpm2/3600*fanEnabled*fanDeltaPinPa/fanN;//0
 
 	double externalEquipmentEnergyWperm2 = externalEquipmentEnabled*externalEquipment/structure->floorArea();//0.263382986063586
-	double internalEquipmentEnergyWperm2 = internalEquipmentEnabled*building->electricApplianceHeatGainOccupied();//2.43
-	double actualPlugEquipmentPower = (electPriceUSDperMWh>=equipLoadReductionUSDperMWh) ? (1-equipControlStrategy*equipLoadReductionFactor)*internalEquipmentEnergyWperm2 : internalEquipmentEnergyWperm2;//2.43
+	
+	// \Phi_{int,A}, ISO 13790 10.4.2.
+	// Monthly name: phi_plug_occ and phi_plug_unocc.
+	double phi_plug = internalEquipmentEnabled * building->electricApplianceHeatGainOccupied();
 
 	double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH * (naturalLightRatioH + K146 * CA150 * std::min(shadingRatioWtoM2, solarRadiationH));//0
 	// XXX BAA@20140626: I think this should be 'W' for west, not 'O'.
@@ -93,14 +95,8 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double interiorLightingEnergyWperm2 = electricForTotalLightArea*permLightPowerDensityWperM2*internalLightingEnabled;
 	interiorLightingEnergyWperm2 = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? interiorLightingEnergyWperm2*(1-lightControlStrategy*lightLoadReductionFactor) : interiorLightingEnergyWperm2;//0.538
 
-	// \Phi_{int,A}, ISO 13790 10.4.2.
-	// phi_I_app in monthly.
-	// XXX BAA@20140730: actualPlugEquipmentPower is
-	// building->electricApplianceHeatGainOccupied(). Why multiply it by
-	// building->electricApplianceHeatGainOccupied() again?
-	double actualInteriorEquipmentHeatGain = actualPlugEquipmentPower*building->electricApplianceHeatGainOccupied();//1.215
 	// \Phi_{int}, ISO 13790 10.2.2 eq. 35.
-	double qInteriorHeatGain = actualInteriorEquipmentHeatGain+actualLightingHeatGain;//1.753
+	double qInteriorHeatGain = phi_plug + actualLightingHeatGain;//1.753
 
 	//TODO -- expand solar heat calculations to array format to include diagonals.
 	// \Phi_{sol,k}, ISO 13790 11.3.2 eq. 43. 
@@ -180,9 +176,10 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double phiHeating = 10*(actualHeatingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*heatingEnabled;//-40.6603229894958
 	double phiActual = std::max(0.0,phiHeating)+std::min(phiCooling,0.0);//0
 	double pCoolActual = std::max(0.0,-phiActual);//0
-	// XXX BAA@20140730: Divides by zero if hvacLossFactor or cop are zero!
+	// XXX BAA@20140730: Divides by zero if hvacLossFactor is zero!
 	double coolingEnergyWperm2 = pCoolActual/cool->hvacLossFactor()/cool->cop();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H39
 	double pHeatActual = std::max(0.0,phiActual);//0
+	// XXX BAA@20140731: Divides by zero if hvacLossFactor is zero!
 	double heatingEnergyWperm2 = pHeatActual/heat->hvacLossFactor()/heat->efficiency();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H38
 	double exteriorLightingEnergyWperm2 =lighting->exteriorEnergy()*exteriorLightingEnabled/structure->floorArea();//0.0539503346043362
 	//ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
@@ -193,11 +190,11 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	results.push_back(exteriorLightingEnergyWperm2);
 	results.push_back(heatingEnergyWperm2);
 	results.push_back(coolingEnergyWperm2);
-	results.push_back(actualPlugEquipmentPower);
+	results.push_back(phi_plug);
 	results.push_back(externalEquipmentEnergyWperm2);
 	results.push_back(fanEnergyWperm2);
 	results.push_back(DHW);
-	double totalEnergyWperm2 = (interiorLightingEnergyWperm2+exteriorLightingEnergyWperm2+heatingEnergyWperm2+coolingEnergyWperm2+actualPlugEquipmentPower+externalEquipmentEnergyWperm2+fanEnergyWperm2+DHW);//3.28533332066792
+	double totalEnergyWperm2 = (interiorLightingEnergyWperm2+exteriorLightingEnergyWperm2+heatingEnergyWperm2+coolingEnergyWperm2+phi_plug+externalEquipmentEnergyWperm2+fanEnergyWperm2+DHW);//3.28533332066792
 	//ExcelFunctions.printOut("CZ156",totalEnergyWperm2,3.28533332066792);
 	results.push_back(totalEnergyWperm2);
 
