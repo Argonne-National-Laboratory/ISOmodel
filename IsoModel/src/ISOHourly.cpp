@@ -40,7 +40,6 @@ ISOHourly::ISOHourly() {
 	equipLoadReductionFactor = 0.2;
 
 	//XXX External Equipment usage Q56
-	// XXX BAA@20140730: I don't think this should be a constant.
 	externalEquipment = 244000;
 
 	//XXX Lighting variables based off price reductions -- EMCAC_UI
