@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3782B6BA-CF51-4059-B975-B669055CDD78}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\boost_1_55_0;D:\Brendan\Dropbox\Argonne\ISOHourlyRepo\IsoModel\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>C:\boost_1_55_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.c" />
+    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.cpp" />
+    <ClCompile Include="src\Building.cpp" />
+    <ClCompile Include="src\Cooling.cpp" />
+    <ClCompile Include="src\EndUses.cpp" />
+    <ClCompile Include="src\EpwData.cpp" />
+    <ClCompile Include="src\ForwardTranslator.cpp" />
+    <ClCompile Include="src\Heating.cpp" />
+    <ClCompile Include="src\ISOHourly.cpp" />
+    <ClCompile Include="src\Lighting.cpp" />
+    <ClCompile Include="src\Location.cpp" />
+    <ClCompile Include="src\Matrix.cpp" />
+    <ClCompile Include="src\Population.cpp" />
+    <ClCompile Include="src\SimModel.cpp" />
+    <ClCompile Include="src\SolarRadiation.cpp" />
+    <ClCompile Include="src\Structure.cpp" />
+    <ClCompile Include="src\TimeFrame.cpp" />
+    <ClCompile Include="src\UserModel.cpp" />
+    <ClCompile Include="src\Vector.cpp" />
+    <ClCompile Include="src\Ventilation.cpp" />
+    <ClCompile Include="src\WeatherData.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\isomodel\Building.hpp" />
+    <ClInclude Include="src\isomodel\Cooling.hpp" />
+    <ClInclude Include="src\isomodel\EpwData.hpp" />
+    <ClInclude Include="src\isomodel\ForwardTranslator.hpp" />
+    <ClInclude Include="src\isomodel\Heating.hpp" />
+    <ClInclude Include="src\isomodel\ISOHourly.hpp" />
+    <ClInclude Include="src\isomodel\ISOModelAPI.hpp" />
+    <ClInclude Include="src\isomodel\Lighting.hpp" />
+    <ClInclude Include="src\isomodel\Location.hpp" />
+    <ClInclude Include="src\isomodel\Population.hpp" />
+    <ClInclude Include="src\isomodel\SimModel.hpp" />
+    <ClInclude Include="src\isomodel\SolarRadiation.hpp" />
+    <ClInclude Include="src\isomodel\Structure.hpp" />
+    <ClInclude Include="src\isomodel\TimeFrame.hpp" />
+    <ClInclude Include="src\isomodel\UserModel.hpp" />
+    <ClInclude Include="src\isomodel\Ventilation.hpp" />
+    <ClInclude Include="src\isomodel\WeatherData.hpp" />
+    <ClInclude Include="src\utilities\data\EndUses.hpp" />
+    <ClInclude Include="src\utilities\data\Matrix.hpp" />
+    <ClInclude Include="src\utilities\data\Vector.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
