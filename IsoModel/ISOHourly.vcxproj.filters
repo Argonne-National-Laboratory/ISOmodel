@@ -15,12 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Building.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

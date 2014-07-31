@@ -73,8 +73,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.c" />
-    <ClCompile Include=".metadata\.plugins\org.eclipse.cdt.make.core\specs.cpp" />
     <ClCompile Include="src\Building.cpp" />
     <ClCompile Include="src\Cooling.cpp" />
     <ClCompile Include="src\EndUses.cpp" />
