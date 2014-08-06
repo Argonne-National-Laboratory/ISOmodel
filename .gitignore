@@ -1,4 +1,4 @@
-# Ignore outputs of running the simulation
+# Ignore outputs of running the simulation.
 SimulationResults/
 
 # Created by http://www.gitignore.io
