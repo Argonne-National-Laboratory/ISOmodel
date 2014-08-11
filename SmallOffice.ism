@@ -38,7 +38,7 @@ constantIlluminationControl = 1
 coolingSystemCOP = 3.21030372594672
 coolingSystemIPLVToCopRatio =1.04773541524309
 #energycarrier is 1 if electric, 2 if gas
-heatingEnergyCarrier = 
+heatingEnergyCarrier = 2
 heatingSystemEfficiency = 2.13505737091766
 # vent type is 1 if mech, 2 if natural, 3 if mixed
 ventilationType = 1

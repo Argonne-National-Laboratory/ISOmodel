@@ -10,6 +10,10 @@
 
 #include <isomodel/ISOHourly.hpp>
 #include <isomodel/SimModel.hpp>
+#include <numeric>
+#include <algorithm>
+#include <vector>
+
 namespace openstudio {
 namespace isomodel {
 
@@ -175,26 +179,24 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double phiCooling = 10*(actualCoolingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*coolingEnabled;//124.45680714884
 	double phiHeating = 10*(actualHeatingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*heatingEnabled;//-40.6603229894958
 	double phiActual = std::max(0.0,phiHeating)+std::min(phiCooling,0.0);//0
-	double pCoolActual = std::max(0.0,-phiActual);//0
-	// XXX BAA@20140730: Divides by zero if hvacLossFactor is zero!
-	double coolingEnergyWperm2 = pCoolActual/cool->hvacLossFactor()/cool->cop();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H39
-	double pHeatActual = std::max(0.0,phiActual);//0
-	// XXX BAA@20140731: Divides by zero if hvacLossFactor is zero!
-	double heatingEnergyWperm2 = pHeatActual/heat->hvacLossFactor()/heat->efficiency();//0 XXX SINGLEBLDG.G38/SINGLEBLDG.H38
+	double Qneed_cl = std::max(0.0,-phiActual);// Raw need. Not adjusted for efficiency.
+	double Qneed_ht = std::max(0.0,phiActual); // Raw need. Not adjusted for efficiency.
+
 	double exteriorLightingEnergyWperm2 =lighting->exteriorEnergy()*exteriorLightingEnabled/structure->floorArea();//0.0539503346043362
 	//ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
+
 	double DHW=0;//XXX no DHW calculations
 
 	std::vector<double > results;
 	results.push_back(interiorLightingEnergyWperm2);
 	results.push_back(exteriorLightingEnergyWperm2);
-	results.push_back(heatingEnergyWperm2);
-	results.push_back(coolingEnergyWperm2);
+	results.push_back(Qneed_ht);
+	results.push_back(Qneed_cl);
 	results.push_back(phi_plug);
 	results.push_back(externalEquipmentEnergyWperm2);
 	results.push_back(fanEnergyWperm2);
 	results.push_back(DHW);
-	double totalEnergyWperm2 = (interiorLightingEnergyWperm2+exteriorLightingEnergyWperm2+heatingEnergyWperm2+coolingEnergyWperm2+phi_plug+externalEquipmentEnergyWperm2+fanEnergyWperm2+DHW);//3.28533332066792
+	double totalEnergyWperm2 = (interiorLightingEnergyWperm2+exteriorLightingEnergyWperm2+Qneed_ht+Qneed_cl+phi_plug+externalEquipmentEnergyWperm2+fanEnergyWperm2+DHW);//3.28533332066792
 	//ExcelFunctions.printOut("CZ156",totalEnergyWperm2,3.28533332066792);
 	results.push_back(totalEnergyWperm2);
 
@@ -488,7 +490,9 @@ void ISOHourly::calculateHourly() {
 	pos.Calculate();
 	std::vector<std::vector<double > > radiation = pos.eglobe();
 	electPriceUSDperMWh[0] = 24;
+
 	std::vector<std::vector<double > > results;
+
 	for(int i = 0;i<TIMESLICES;i++){
 		electPriceUSDperMWh[i] = 24;
 		month = frame.Month[i];
@@ -504,7 +508,6 @@ void ISOHourly::calculateHourly() {
 			double solarRadiationH,
 			double& , double&
 		 */
-		std::cout << "Hour: " << i << " = \t";
 		std::vector<double> hourResults = calculateHour(i+1, //hourOfYear
 				month, //month
 				dayOfWeek, //dayOfWeek
@@ -519,16 +522,64 @@ void ISOHourly::calculateHourly() {
 				0,//radiation[i][8],//roof is 0 for some reason
 				TMT1,//TMT1
 				tiHeatCool);//tiHeatCool
-		for(unsigned int j = 0;j<hourResults.size();j++){
-			std::cout << hourResults[j] << "\t";	
-		}
-		std::cout << std::endl;
 		results.push_back(hourResults);
 	}
+
+	// Factor the raw need results by the distribution efficiencies.
+	double a_ht_loss = heat->hvacLossFactor();
+	double a_cl_loss = cool->hvacLossFactor();
+	double f_waste = heat->hotcoldWasteFactor();
+	double cop = cool->cop();
+	double efficiency_ht = heat->efficiency();
+
+	// Pull out the heating and cooling needs.
+	std::vector<double> v_Qneed_ht;
+	std::vector<double> v_Qneed_cl;
+
+	for (auto hourResult : results) {
+		v_Qneed_ht.push_back(hourResult[2]);
+		v_Qneed_cl.push_back(hourResult[3]);
+	}
+
+	// Calculate the yearly totals.
+	double Qneed_ht_yr = std::accumulate(v_Qneed_ht.begin(), v_Qneed_ht.end(), 0.0);
+	double Qneed_cl_yr = std::accumulate(v_Qneed_cl.begin(), v_Qneed_cl.end(), 0.0);
+
+	double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1); // .25
+	double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1); // .75
+	
+	double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste/f_dem_ht); // .667
+	double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste/f_dem_cl); // .811
+
+	// Create unary functions to factor the heating and cooling values for use
+	// with transform().
+	auto factorHeating = [=](double need){return need / eta_dist_ht / efficiency_ht; };
+	auto factorCooling = [=](double need){return need / eta_dist_cl / cop; };
+	
+	// Create containers for factored heating and cooling values.
+	std::vector<double> v_Qht_sys(v_Qneed_ht.size());
+	std::vector<double> v_Qcl_sys(v_Qneed_cl.size());
+
+	// Factor the heating and cooling values.
+	std::transform(v_Qneed_ht.begin(), v_Qneed_ht.end(), v_Qht_sys.begin(), factorHeating); // 1.66667, 3.33333, 5, 6.66667
+	std::transform(v_Qneed_cl.begin(), v_Qneed_cl.end(), v_Qcl_sys.begin(), factorCooling); // 2.46667 2.87778 3.28889 3.7
+
+	std::vector<std::vector<double>> factoredResults;
+
+	// Update the heating, cooling and total results with the factored values.
+	for(int i = 0; i < TIMESLICES; ++i){
+		results[i][2] = v_Qht_sys[i];
+		results[i][3] = v_Qcl_sys[i];
+		results[i][8] = std::accumulate(results[i].begin(), results[i].begin() + 8, 0.0);
+
+		// Output the results.
+		std::cout << "Hour: " << i << " = \t";
+		for(int j = 0; j < results[i].size(); ++j){
+			std::cout << results[i][j] << "\t";	
+		}
+		std::cout << std::endl;
+	}
 }
-
-
-
 
 }
 }

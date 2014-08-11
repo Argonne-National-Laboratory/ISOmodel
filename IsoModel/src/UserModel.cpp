@@ -63,6 +63,7 @@ namespace isomodel {
     boost::shared_ptr<Heating> heating(new Heating);
     heating->setEfficiency(_heatingSystemEfficiency);
     heating->setHvacLossFactor(_hvacHeatingLossFactor);
+	heating->setHotcoldWasteFactor(_hvacWasteFactor);
     heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
     heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
     sim.setHeating(heating);
@@ -237,7 +238,7 @@ namespace isomodel {
     boost::shared_ptr<Heating> heating(new Heating);
     heating->setEfficiency(_heatingSystemEfficiency);
     heating->setEnergyType(_heatingEnergyCarrier);
-    heating->setHotcoldWasteFactor(_hvacWasteFactor);//??
+    heating->setHotcoldWasteFactor(_hvacWasteFactor); // Used in hvac distribution efficiency.
     heating->setHotWaterDemand(_dhwDemand);
     heating->setHotWaterDistributionEfficiency(_dhwDistributionEfficiency);
     heating->setHotWaterEnergyType(_dhwEnergyCarrier);
