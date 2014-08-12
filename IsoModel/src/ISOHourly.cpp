@@ -93,14 +93,17 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double lightingLevel = (lightingContributionN+lightingContributionE+lightingContributionS+lightingContributionO+lightingContributionH);//0
 	double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));//1
 	double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;//1
-	double defaultLightingHeatGain = electricForTotalLightArea*lighting->powerDensityOccupied()*internalLightingEnabled*electInternalGains;//0.538
-	// \Phi_{int,L}, ISO 13790 10.4.3.
-	double actualLightingHeatGain = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? (1-lightControlStrategy*lightLoadReductionFactor)*defaultLightingHeatGain : defaultLightingHeatGain;
+	// Heat produced by lighting.
+	// \Phi_{int,L}, ISO 13790 10.4.3. 
+	// Monthly name: phi_illum_occ, phi_illum_unocc
+	double phi_illum = electricForTotalLightArea*lights->powerDensityOccupied()*internalLightingEnabled*electInternalGains;//0.538
+
+	// XXX: permLightPowerDensityWperM2 is hardcoded to 0, so this will always be zero.
 	double interiorLightingEnergyWperm2 = electricForTotalLightArea*permLightPowerDensityWperM2*internalLightingEnabled;
-	interiorLightingEnergyWperm2 = (electPriceUSDperMWh>=lightLoadReductionUSDperMWh) ? interiorLightingEnergyWperm2*(1-lightControlStrategy*lightLoadReductionFactor) : interiorLightingEnergyWperm2;//0.538
 
 	// \Phi_{int}, ISO 13790 10.2.2 eq. 35.
-	double qInteriorHeatGain = phi_plug + actualLightingHeatGain;//1.753
+	// Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
+	double phi_int = phi_plug + phi_illum;//1.753
 
 	//TODO -- expand solar heat calculations to array format to include diagonals.
 	// \Phi_{sol,k}, ISO 13790 11.3.2 eq. 43. 
@@ -115,7 +118,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double qSolarHeatGain = (solarHeatGainN+solarHeatGainE+solarHeatGainS+solarHeatGainW+solarHeatGainH);//0
 	// \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
 	// (Note that solarPair = 0 and intPair = 0.5).
-	double phii = solarPair*qSolarHeatGain+intPair*qInteriorHeatGain;//0.8765
+	double phii = solarPair*qSolarHeatGain+intPair*phi_int;//0.8765
 	// \Phi_{ia10}, ISO 13790 C.4.2. 
 	// Used to calculate \theta_{air,ac} when available heating or cooling power
 	// is insufficient to achieve the setpoint. Adding 10 is equivalent to
@@ -126,7 +129,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	// Ventilation from wind. ISO 15242.
 	double qSupplyBySystem = ventExhaustM3phpm2*windImpactSupplyRatio;//1E-05
 	double exhaustSupply = -(qSupplyBySystem-ventExhaustM3phpm2); // ISO 15242 q_{v-diff}. 0
-	double tAfterExchange = (1-vent->heatRecoveryEfficiency())*temperature+vent->heatRecoveryEfficiency()*20;//-1
+	double tAfterExchange = (1-ventilation->heatRecoveryEfficiency())*temperature+ventilation->heatRecoveryEfficiency()*20;//-1
 	double tSuppliedAir = std::max(ventPreheatDegC,tAfterExchange);//-1
 	// ISO 15242 6.7.1 Step 1.
 	double qWind = 0.0769*q4Pa*std::pow((ventDcpWindImpact*windMps*windMps),0.667);//0.341700355961478
@@ -156,10 +159,10 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	
 	// \Phi_{st}, ISO 13790 C.2 eq. C.3 
 	// In generalized form from Georgia Tech spreadsheet.
-	double phisPhi0 = prsSolar*qSolarHeatGain+prsInterior*qInteriorHeatGain;//-0.00694325870664089
+	double phisPhi0 = prsSolar*qSolarHeatGain+prsInterior*phi_int;//-0.00694325870664089
 	// \Phi_{m}, ISO 13790 C.2 eq. C.2.
 	// In generalized form from Georgia Tech spreadsheet.
-	double phimPhi0 = prmSolar*qSolarHeatGain+prmInterior*qInteriorHeatGain;//0.8765
+	double phimPhi0 = prmSolar*qSolarHeatGain+prmInterior*phi_int;//0.8765
 	// H_{tr,3}, ISO 13790 C.3 eq. C.9.
 	double h3 = 1/(1/h2+1/hms);//0.713778173058944
 	// \Phi_{mtot}, ISO 13790 C.3 eq. C.5.
@@ -182,7 +185,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double Qneed_cl = std::max(0.0,-phiActual);// Raw need. Not adjusted for efficiency.
 	double Qneed_ht = std::max(0.0,phiActual); // Raw need. Not adjusted for efficiency.
 
-	double exteriorLightingEnergyWperm2 =lighting->exteriorEnergy()*exteriorLightingEnabled/structure->floorArea();//0.0539503346043362
+	double exteriorLightingEnergyWperm2 =lights->exteriorEnergy()*exteriorLightingEnabled/structure->floorArea();//0.0539503346043362
 	//ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
 
 	double DHW=0;//XXX no DHW calculations
@@ -420,7 +423,7 @@ void ISOHourly::initialize() {
 
 	double hzone = 39;//XXX SingleBuilding.N6
 	windImpactHz = std::max(0.1,hzone);//39
-	windImpactSupplyRatio = std::max(0.00001,vent->fanControlFactor());//XXX ventSupplyExhaustRatio = SingleBuilding.P40 ?
+	windImpactSupplyRatio = std::max(0.00001,ventilation->fanControlFactor());//XXX ventSupplyExhaustRatio = SingleBuilding.P40 ?
 
 }
 
@@ -437,14 +440,14 @@ void ISOHourly::populateSchedules() {
 		for(int d = 0;d<7;d++){
 			doccupied = (d >= dayStart && d < dayEnd);
 			popoccupied = hoccupied && doccupied;
-			fixedVentilationSchedule[h][d] = hoccupied ? vent->supplyRate() : 0.0;
+			fixedVentilationSchedule[h][d] = hoccupied ? ventilation->supplyRate() : 0.0;
 			fixedFanSchedule[h][d] = hoccupied ? 1 : 0.0;
 			fixedExteriorEquipmentSchedule[h][d] = hoccupied ? 0.3 : 0.12;
 			fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 0.9 : 0.3;
 			fixedExteriorLightingSchedule[h][d] = !hoccupied ? 1.0 : 0.0;
 			fixedInteriorLightingSchedule[h][d] = popoccupied ? 0.9 : 0.05;
-			fixedActualHeatingSetpoint[h][d] = popoccupied ? heat->temperatureSetPointOccupied() : heat->temperatureSetPointUnoccupied();
-			fixedActualCoolingSetpoint[h][d] = popoccupied ? cool->temperatureSetPointOccupied() : cool->temperatureSetPointUnoccupied();
+			fixedActualHeatingSetpoint[h][d] = popoccupied ? heating->temperatureSetPointOccupied() : heating->temperatureSetPointUnoccupied();
+			fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling->temperatureSetPointOccupied() : cooling->temperatureSetPointUnoccupied();
 		}
 	}
 
@@ -526,11 +529,11 @@ void ISOHourly::calculateHourly() {
 	}
 
 	// Factor the raw need results by the distribution efficiencies.
-	double a_ht_loss = heat->hvacLossFactor();
-	double a_cl_loss = cool->hvacLossFactor();
-	double f_waste = heat->hotcoldWasteFactor();
-	double cop = cool->cop();
-	double efficiency_ht = heat->efficiency();
+	double a_ht_loss = heating->hvacLossFactor();
+	double a_cl_loss = cooling->hvacLossFactor();
+	double f_waste = heating->hotcoldWasteFactor();
+	double cop = cooling->cop();
+	double efficiency_ht = heating->efficiency();
 
 	// Pull out the heating and cooling needs.
 	std::vector<double> v_Qneed_ht;

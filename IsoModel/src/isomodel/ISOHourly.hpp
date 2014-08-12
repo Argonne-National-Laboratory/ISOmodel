@@ -299,13 +299,13 @@ protected:
 			return (month>=heatMonthBegin || month<=heatMonthEnd) ? 1 : 0;
 		}
 	}
-	boost::shared_ptr<Structure> structure;
-	boost::shared_ptr<Building> building;
-	boost::shared_ptr<Lighting> lighting;
-	boost::shared_ptr<Ventilation> vent;
-	boost::shared_ptr<Cooling> cool;
-	boost::shared_ptr<Heating> heat;
 	boost::shared_ptr<Population> pop;
+	boost::shared_ptr<Lighting> lights;
+	boost::shared_ptr<Building> building;
+	boost::shared_ptr<Structure> structure;
+	boost::shared_ptr<Heating> heating;
+	boost::shared_ptr<Cooling> cooling;
+	boost::shared_ptr<Ventilation> ventilation;
 	boost::shared_ptr<EpwData> weatherData;
 public:
 	ISOHourly();
@@ -322,7 +322,7 @@ public:
 	void setPop(boost::shared_ptr<Population> value){pop=value;}
 
 	/** Set the lighting. */
-	void setLights(boost::shared_ptr<Lighting> value){lighting=value;}
+	void setLights(boost::shared_ptr<Lighting> value){lights=value;}
 
 	/** Set the building. */
 	void setBuilding(boost::shared_ptr<Building> value){building=value;}
@@ -331,13 +331,13 @@ public:
 	void setStructure(boost::shared_ptr<Structure> value){structure=value;}
 
 	/** Set the heating. */
-	void setHeating(boost::shared_ptr<Heating> value){heat=value;}
+	void setHeating(boost::shared_ptr<Heating> value){heating=value;}
 
 	/** Set the cooling. */
-	void setCooling(boost::shared_ptr<Cooling> value){cool=value;}
+	void setCooling(boost::shared_ptr<Cooling> value){cooling=value;}
 
 	/** Set the ventilation. */
-	void setVentilation(boost::shared_ptr<Ventilation> value){vent=value;}
+	void setVentilation(boost::shared_ptr<Ventilation> value){ventilation=value;}
 
 	/** Set the weather data. */
 	void setWeatherData(boost::shared_ptr<EpwData> value) {weatherData = value;}
