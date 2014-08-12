@@ -159,30 +159,8 @@ class ISOHourly {
 	double hWindow[9];
 	double electPriceUSDperMWh[TIMESLICES];
 
-	//XXX Heat variables based off price reductions & monthly schedules -- EMCAC_UI
-	double heatMonthBegin, heatMonthEnd;
-	double heatSetpointStrategy;
-	double heatSetpointUSDperMWh;
-	double heatSetpointIncreaseDegC;
-
-	//XXX Cooling variables based off price reductions & monthly schedules -- EMCAC_UI
-	double coolMonthBegin, coolMonthEnd;
-	double coolSetpointStrategy;
-	double coolSetpointUSDperMWh;
-	double coolSetpointReductionDegC;
-
-	//XXX Equipment variables based off price reductionss -- EMCAC_UI
-	double equipLoadReductionUSDperMWh;
-	double equipControlStrategy;
-	double equipLoadReductionFactor;
-
 	//XXX External Equipment usage Q56
 	double externalEquipment;
-
-	//XXX Lighting variables based off price reductions -- EMCAC_UI
-	double lightLoadReductionUSDperMWh;
-	double lightControlStrategy;
-	double lightLoadReductionFactor;
 
 	//XXX Unknown Lighting Variables
 	double electInternalGains;
@@ -270,35 +248,14 @@ protected:
 
 	/** Returns the heating setpoint schedule. */
 	virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
-		return (electPriceUSDperMWh[hourOfYear]>=heatSetpointUSDperMWh) ?
-				(fixedActualHeatingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1]-heatSetpointStrategy*heatSetpointIncreaseDegC) :
-				fixedActualHeatingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
+		return fixedActualHeatingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
 
 	/** Returns the cooling setpoint schedule. */
 	virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset){
-		return (electPriceUSDperMWh[hourOfYear]>=coolSetpointUSDperMWh) ?
-				(fixedActualCoolingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1]+coolSetpointStrategy*coolSetpointReductionDegC) :
-				fixedActualCoolingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
+		return fixedActualCoolingSetpoint[(int)hourOfDay-1][(int)scheduleOffset-1];
 	}
 
-	/** Returns the cooling enabled schedule. */
-	virtual double coolingEnabledSchedule(int hourOfYear, int month){
-		if(coolMonthBegin<coolMonthEnd) {
-			return (month>=coolMonthBegin && month<=coolMonthEnd) ? 1 : 0;
-		} else {
-			return (month>=coolMonthBegin || month<=coolMonthEnd) ? 1 : 0;
-		}
-	}
-
-	/** Returns the heating enabled schedule. */
-	virtual double heatingEnabledSchedule(int hourOfYear, int month){
-		if(heatMonthBegin<heatMonthEnd){
-			return (month>=heatMonthBegin && month<=heatMonthEnd) ? 1 : 0;
-		} else {
-			return (month>=heatMonthBegin || month<=heatMonthEnd) ? 1 : 0;
-		}
-	}
 	boost::shared_ptr<Population> pop;
 	boost::shared_ptr<Lighting> lights;
 	boost::shared_ptr<Building> building;

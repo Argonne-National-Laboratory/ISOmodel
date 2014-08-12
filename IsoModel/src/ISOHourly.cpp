@@ -18,39 +18,12 @@ namespace openstudio {
 namespace isomodel {
 
 ISOHourly::ISOHourly() {
-
-	heatMonthBegin = 1;
-	heatMonthEnd = 12;
-	coolMonthBegin = 1;
-	coolMonthEnd = 12;
-
 	electInternalGains = 1;//SingleBldg.L51
 	permLightPowerDensityWperM2 = 0;//SingleBldg.L50
 	ventPreheatDegC = -50;//SingleBldg.Q40
 
-	//XXX Heating variables based off price reductions & monthly schedules -- EMCAC_UI
-	heatSetpointStrategy = 0;
-	heatSetpointUSDperMWh = 45.0;
-	heatSetpointIncreaseDegC = 2;
-
-	//XXX Cooling variables based off price reductions & monthly schedules -- EMCAC_UI
-	coolSetpointStrategy = 1;
-	coolSetpointUSDperMWh = 45.0;
-	coolSetpointReductionDegC = 2;
-
-	//XXX Equipment variables based off price reductionss -- EMCAC_UI
-	equipLoadReductionUSDperMWh = 55.0;
-	equipControlStrategy = 1;
-	equipLoadReductionFactor = 0.2;
-
 	//XXX External Equipment usage Q56
 	externalEquipment = 244000;
-
-	//XXX Lighting variables based off price reductions -- EMCAC_UI
-	lightLoadReductionUSDperMWh = 50.0;
-	lightControlStrategy = 1;
-	lightLoadReductionFactor = 0.2;
-
 }
 
 std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
@@ -64,8 +37,6 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	
 	// Extract schedules to a function so that we can populate them based on
 	// timeslice instead of fixed schedules.
-	double coolingEnabled = coolingEnabledSchedule(hourOfYear,month);
-	double heatingEnabled = heatingEnabledSchedule(hourOfYear,month);
 	double fanEnabled = fanSchedule(hourOfYear,hourOfDay,scheduleOffset);//ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1);//0
 	double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear,hourOfDay,scheduleOffset);//ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1);//1E-05
 	double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear,hourOfDay,scheduleOffset);//ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1);//0.05
@@ -179,8 +150,8 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double tmPhi0 = 0.5*(TMT1+tmt1Phi0);//19.9708013699199
 	double tsPhi0 = (hms*tmPhi0+phisPhi0+hwindowWperkm2*temperature+h1*(tEnteringAndSupplied+phii/hei))/(hms+hwindowWperkm2+h1);//19.6255895732024
 	double tiPhi0 = (his*tsPhi0+hei*tEnteringAndSupplied+phii)/(his+hei);//19.1460200317084
-	double phiCooling = 10*(actualCoolingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*coolingEnabled;//124.45680714884
-	double phiHeating = 10*(actualHeatingSetpoint-tiPhi0)/(tiPhi10-tiPhi0)*heatingEnabled;//-40.6603229894958
+	double phiCooling = 10*(actualCoolingSetpoint-tiPhi0)/(tiPhi10-tiPhi0);//124.45680714884
+	double phiHeating = 10*(actualHeatingSetpoint-tiPhi0)/(tiPhi10-tiPhi0);//-40.6603229894958
 	double phiActual = std::max(0.0,phiHeating)+std::min(phiCooling,0.0);//0
 	double Qneed_cl = std::max(0.0,-phiActual);// Raw need. Not adjusted for efficiency.
 	double Qneed_ht = std::max(0.0,phiActual); // Raw need. Not adjusted for efficiency.
