@@ -76,10 +76,10 @@ class ISOHourly {
 	double inertiaParameter2CM;
 	double inertiaParameter1CM; // end K88 table *************
 
-	double P89;// A_{m}. XXX: Redundant, only used to set inertiaAm. XXX: effectiveMassAreaM2
-	double inertiaAm; // A_{m}.
-	double P90; // C_{m}. XXX: Unused? XXX: internalHeatCapacityJPerK
-	double calculationCm; // C_{m}. XXX: Seems like it only gets initialized with thermalMass > 11.
+	double P89;// A_{m}. XXX: Redundant, only used to set inertiaAm.
+	double inertiaAm; // A_{m}. XXX: effectiveMassAreaM2
+	double P90; // Redundant, only used to set calculationCm
+	double calculationCm; // C_{m}. XXX: internalHeatCapacityJPerK 
 
 	// Movable shading.
 	// These three variables are used to model movable shading. ISO 13790 does it

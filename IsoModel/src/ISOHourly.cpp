@@ -352,7 +352,10 @@ void ISOHourly::initialize() {
 		P89 = inertiaParameter2AM;
 		P90 = inertiaParameter2CM;
 	}
+	// Is there any reason P89 and P90 need to be used as intermediate values for
+	// setting inertiaAm and calculationCm?
 	inertiaAm = P89;
+	calculationCm = P90;
 	if(thermalMass > 14.5) {
 		inertiaAm = inertialAm15;
 		calculationCm = calculationCm15;
