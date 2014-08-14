@@ -77,9 +77,9 @@ class ISOHourly {
 	double inertiaParameter1CM; // end K88 table *************
 
 	double P89;// A_{m}. XXX: Redundant, only used to set inertiaAm.
-	double inertiaAm; // A_{m}. XXX: effectiveMassAreaM2
+	double effectiveMassAreaM2; // A_{m}. XXX: effectiveMassAreaM2
 	double P90; // Redundant, only used to set calculationCm
-	double calculationCm; // C_{m}. XXX: internalHeatCapacityJPerK 
+	double internalHeatCapacityJPerK; // C_{m}. XXX: internalHeatCapacityJPerK 
 
 	// Movable shading.
 	// These three variables are used to model movable shading. ISO 13790 does it
@@ -87,7 +87,7 @@ class ISOHourly {
 	// degrees of shading rather than just on or off.
 	double shadingMaximumUseRatio; // The shading factor of the movable shading when in full use. E101
 	double shadingRatioWtoM2; // The irradiance at which shading is in full use. E102
-	double K146; // The shading factor per unit irradiance. XXX: shadingUsePerWPerM2
+	double shadingUsePerWPerM2; // K146. The shading factor per unit irradiance. XXX: shadingUsePerWPerM2
 
 	double areaNaturallyLighted;
 	double areaNaturallyLightedRatio;
@@ -96,31 +96,31 @@ class ISOHourly {
 	double nlaWMovableShadingW;
 	double naturalLightRatioW;
 	double nlaWMovableShadingS;
-	double CA150; // XXX naturalLightShadeRatioReductionH
-	double BZ150; // XXX naturalLightShadeRatioReductionW
+	double naturalLightShadeRatioReductionH; // CA150 XXX naturalLightShadeRatioReductionH
+	double naturalLightShadeRatioReductionW; // BZ150 XXX naturalLightShadeRatioReductionW
 	double naturalLightRatioS;
-	double BY150; // XXX naturalLightShadeRatioReductionS
+	double naturalLightShadeRatioReductionS; // BY150 XXX naturalLightShadeRatioReductionS
 	double nlaWMovableShadingE;
 	double naturalLightRatioE;
-	double BX150; // XXX naturalLightShadeRatioReductionE
+	double naturalLightShadeRatioReductionE; // BX150 XXX naturalLightShadeRatioReductionE
 	double nlaWMovableShadingN;
 	double naturalLightRatioN;
-	double BW150; // XXX naturalLightShadeRatioReductionN
+	double naturalLightShadeRatioReductionN; // BW150 XXX naturalLightShadeRatioReductionN
 	double saWMovableShadingH;
 	double solarRatioH;
-	double O150; // XXX solarShadeRatioReductionH
+	double solarShadeRatioReductionH; // O150 XXX solarShadeRatioReductionH
 	double saWMovableShadingW;
 	double solarRatioW;
-	double N150; // XXX solarShadeRatioReductionW
+	double solarShadeRatioReductionW; // N150 XXX solarShadeRatioReductionW
 	double saWMovableShadingS;
 	double solarRatioS;
-	double M150; // XXX solarShadeRatioReductionS
+	double solarShadeRatioReductionS; // M150 XXX solarShadeRatioReductionS
 	double saWMovableShadingE;
 	double solarRatioE;
-	double L150; // XXX solarShadeRatioReductionE
+	double solarShadeRatioReductionE; // L150 XXX solarShadeRatioReductionE
 	double saWMovableShadingN;
 	double solarRatioN;
-	double K150; // XXX solarShadeRatioReductionN
+	double solarShadeRatioReductionN; // K150 XXX solarShadeRatioReductionN
 
 	double hci; // =2.5. P94
 	double hri; // =5.5. P95
