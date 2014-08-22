@@ -20,7 +20,7 @@ namespace openstudio {
 namespace isomodel {
 
 // Utility functions.
-std::vector<double> sumVectors(std::vector<double> v1, std::vector<double> v2) {
+std::vector<double> addVectors(std::vector<double> v1, std::vector<double> v2) {
 	std::vector<double> v3;
 	std::transform(v1.begin(), v1.end(), v2.begin(), std::back_inserter(v3), std::plus<double>());
 	return v3;
@@ -160,13 +160,13 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double phimTotalPhi10 = phimPhi0+hem*temperature+h3*(phisPhi0+hwindowWperkm2*temperature+h1*(phii10/hei+tEnteringAndSupplied))/h2;//10.4245918723996
 	double phimTotalPhi0	= phimPhi0+hem*temperature+h3*(phisPhi0+hwindowWperkm2*temperature+h1*(phii/hei+tEnteringAndSupplied))/h2;//0.853577061315981
 	// \theta_{m,t10}, ISO 13790 C.3 eq. C.4.
-	double tmt1Phi10 = (TMT1*(internalHeatCapacityJPerK/3.6-0.5*(h3+hem))+phimTotalPhi10)/(internalHeatCapacityJPerK/3.6+0.5*(h3+hem));//19.9760054473834
+	double tmt1Phi10 = (TMT1*(Cm/3.6-0.5*(h3+hem))+phimTotalPhi10)/(Cm/3.6+0.5*(h3+hem));//19.9760054473834
 	double tmPhi10 = 0.5*(TMT1+tmt1Phi10);//19.9880027236917
 	double tsPhi10 = (hms*tmPhi10+phisPhi0+hwindowWperkm2*temperature+h1*(tEnteringAndSupplied+phii10/hei))/(hms+hwindowWperkm2+h1);//19.8762155145252
 	//ExcelFunctions.printOut("BA156",tsPhi10,19.8762155145252);
 	double tiPhi10 = (his*tsPhi10+hei*tEnteringAndSupplied+phii10)/(his+hei);//20.0181282126061
 	// \theta_{m,t}, ISO 13790 C.3 eq. C.4.
-	double tmt1Phi0 = (TMT1*(internalHeatCapacityJPerK/3.6-0.5*(h3+hem))+phimTotalPhi0)/(internalHeatCapacityJPerK/3.6+0.5*(h3+hem));//19.9416027398399
+	double tmt1Phi0 = (TMT1*(Cm/3.6-0.5*(h3+hem))+phimTotalPhi0)/(Cm/3.6+0.5*(h3+hem));//19.9416027398399
 	double tmPhi0 = 0.5*(TMT1+tmt1Phi0);//19.9708013699199
 	double tsPhi0 = (hms*tmPhi0+phisPhi0+hwindowWperkm2*temperature+h1*(tEnteringAndSupplied+phii/hei))/(hms+hwindowWperkm2+h1);//19.6255895732024
 	double tiPhi0 = (his*tsPhi0+hei*tEnteringAndSupplied+phii)/(his+hei);//19.1460200317084
@@ -205,7 +205,7 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double tmt = TMT1;
 	// \theta_{m,t}, ISO 13790 C.3 eq. C.4.
 	// Set TMT1 to next hour's \theta_{m,t-1} (this hour's \theta_{m,t}).
-	TMT1 = (TMT1*(internalHeatCapacityJPerK/3.6-0.5*(h3+hem))+phimHeatCoolTotal)/(internalHeatCapacityJPerK/3.6+0.5*(h3+hem));//19.9416027398399
+	TMT1 = (TMT1*(Cm/3.6-0.5*(h3+hem))+phimHeatCoolTotal)/(Cm/3.6+0.5*(h3+hem));//19.9416027398399
 	// \theta_{m}, ISO 13790 C.3 eq. C.9.
 	double tmHeatCool = 0.5*(TMT1+tmt);//19.9708013699199
 	// \theta_{s}, ISO 13790 C.3 eq. C.10.
@@ -251,22 +251,6 @@ void ISOHourly::initialize() {
 	AtPerAFloor = 4.5;//4.5
 	hci = 2.5;//2.5
 	hri = 5.5;//5.5
-	inertialAm15 = 2.17;//2.17
-	inertialAm14 = 2;//2
-	inertialAm12 = 1.7;//1.7
-	inertiaParameter5AM = 4.5;//4.5
-	inertiaParameter4AM = 3;//3
-	inertiaParameter3AM = 2.5;//2.5
-	inertiaParameter2AM = 2.5;//2.5
-	inertiaParameter1AM = 2;//2
-	calculationCm15 = 404;//404
-	calculationCm14 = 383;//383
-	calculationCm12 = 147;//147
-	inertiaParameter5CM = 1000;//1000
-	inertiaParameter4CM = 260;//260
-	inertiaParameter3CM = 165;//165
-	inertiaParameter2CM = 110;//110
-	inertiaParameter1CM = 80;//80
 
 	switch((int)building->lightingOccupancySensor()){
 		case 2:
@@ -356,37 +340,27 @@ void ISOHourly::initialize() {
 	// This is the "per floor area" version of eq. 9.
 	his = AtPerAFloor/P98; //15.5113636363636
 
-	double thermalMass = 5;//XXX inertia? based off building age, EMCAC_UI.N2
+	// Calculate Cm from the data in the .ism file.
+	// Units seem to need to be in KJ, so divide by 1000.
+	double Cm_int = structure->interiorHeatCapacity() / 1000.0;
+	// Convert env Cm to per floor area.
+	double Cm_env = (structure->wallHeatCapacity()*sum(structure->wallArea())/structure->floorArea()) / 1000.0;
+	Cm = Cm_int + Cm_env;
 
-	P89 = inertiaParameter1AM;
-	P90 = inertiaParameter1CM;
-	if(thermalMass > 4.5){
-		P89 = inertiaParameter5AM;
-		P90 = inertiaParameter5CM;
-	} else if(thermalMass > 3.5) {
-		P89 = inertiaParameter4AM;
-		P90 = inertiaParameter4CM;
-	} else if(thermalMass > 2.5) {
-		P89 = inertiaParameter3AM;
-		P90 = inertiaParameter3CM;
-	} else if(thermalMass > 1.5) {
-		P89 = inertiaParameter2AM;
-		P90 = inertiaParameter2CM;
+	// Calculate Am based the Cm value and the default values in ISO 13790 12.3.1.2 Table 12.
+	if (Cm > 370.0) {
+		Am = 3.5;
+	} else if (Cm > 260.0) {
+		// Am = 3.0 @ Cm = 260; Am = 3.5 @ Cm = 370.
+		Am = 3.0 + 0.5 * ((Cm - 260) / 110);
+	} else if (Cm > 165.0) {
+		// Am = 2.5 @ Cm = 165; Am = 3.0 @ Cm = 260.
+		Am = 2.5 + 0.5 * ((Cm - 165) / 95);
 	}
-	// Is there any reason P89 and P90 need to be used as intermediate values for
-	// setting inertiaAm and calculationCm?
-	effectiveMassAreaM2 = P89;
-	internalHeatCapacityJPerK = P90;
-	if(thermalMass > 14.5) {
-		effectiveMassAreaM2 = inertialAm15;
-		internalHeatCapacityJPerK = calculationCm15;
-	} else if(thermalMass > 13.5) {
-		effectiveMassAreaM2 = inertialAm14;
-		internalHeatCapacityJPerK = calculationCm14;
-	} else if(thermalMass > 11) {
-		effectiveMassAreaM2 = inertialAm12;
-		internalHeatCapacityJPerK = calculationCm14;
+	else {
+		Am = 2.5;
 	}
+
 	double hWind = 0, hWall = 0;
 	for(int i = 0;i<ROOF+1;i++){
 		hWind += hWindow[i];
@@ -396,7 +370,7 @@ void ISOHourly::initialize() {
 	
 	// Constant portion of \Phi_{st}, i.e. without multiplying by
 	// (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.3.
-	prs = (AtPerAFloor-effectiveMassAreaM2-hwindowWperkm2/P97)/AtPerAFloor;//-0.0079215729682155
+	prs = (AtPerAFloor-Am-hwindowWperkm2/P97)/AtPerAFloor;//-0.0079215729682155
 	// intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
 	// eq. C.3. When used in phisPhi0.
 	prsInterior = (1-intPair)*prs;//-0.00396078648410775
@@ -404,12 +378,12 @@ void ISOHourly::initialize() {
 
 	// Constant portion of \Phi_{m}, i.e. without multiplying by
 	// (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.2.
-	prm = effectiveMassAreaM2/AtPerAFloor;//1
+	prm = Am/AtPerAFloor;//1
 	prmInterior = (1-intPair)*prm;//0.5
 	prmSolar = (1-solarPair)*prm;//1
 
 	// ISO 13790 12.2.2 eq. 64
-	hms = P97*effectiveMassAreaM2;//40.95
+	hms = P97*Am;//40.95
 
 	hOpaqueWperkm2 = std::max(hWall/structure->floorArea(),0.000001);//0.14073662888776
 
@@ -566,7 +540,7 @@ void ISOHourly::calculateHourly() {
 	results[3] = v_Qcl_sys;
 
 	// Update the totals
-	results[8] = std::accumulate(results.begin(), results.end() - 1, std::vector<double>(rawResults[0].size(), 0.0), sumVectors);
+	results[8] = std::accumulate(results.begin(), results.end() - 1, std::vector<double>(rawResults[0].size(), 0.0), addVectors);
 
 	// Convert to EUI in MJ/m^2
 	auto wattsPerHourToMJ = [](double watts){return watts * .0036; }; // 3.6 = (3600 s/hr)/(1000000 J/MJ)

@@ -58,28 +58,9 @@ class ISOHourly {
 	// Geometry
 	double AtPerAFloor; // \Lambda_{at}. Ratio of total interior surface area to floor area. J97
 
-	// Thermal mass (inertia).
-	double inertialAm15; // K88 table *******************
-	double inertialAm14;
-	double inertialAm12;
-	double inertiaParameter5AM;
-	double inertiaParameter4AM;
-	double inertiaParameter3AM;
-	double inertiaParameter2AM;
-	double inertiaParameter1AM;
-	double calculationCm15;
-	double calculationCm14;
-	double calculationCm12;
-	double inertiaParameter5CM;
-	double inertiaParameter4CM;
-	double inertiaParameter3CM;
-	double inertiaParameter2CM;
-	double inertiaParameter1CM; // end K88 table *************
-
-	double P89;// A_{m}. XXX: Redundant, only used to set inertiaAm.
-	double effectiveMassAreaM2; // A_{m}. XXX: effectiveMassAreaM2
-	double P90; // Redundant, only used to set calculationCm
-	double internalHeatCapacityJPerK; // C_{m}. XXX: internalHeatCapacityJPerK 
+	// Thermal Mass
+	double Am; // A_{m}. XXX: effectiveMassAreaM2
+	double Cm; // C_{m}. XXX: internalHeatCapacityJPerK 
 
 	// Movable shading.
 	// These three variables are used to model movable shading. ISO 13790 does it
