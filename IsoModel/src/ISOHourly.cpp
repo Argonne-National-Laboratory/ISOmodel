@@ -543,10 +543,10 @@ void ISOHourly::calculateHourly() {
 	results[8] = std::accumulate(results.begin(), results.end() - 1, std::vector<double>(rawResults[0].size(), 0.0), addVectors);
 
 	// Convert to EUI in MJ/m^2
-	auto wattsPerHourToMJ = [](double watts){return watts * .0036; }; // 3.6 = (3600 s/hr)/(1000000 J/MJ)
+	auto wattsPerHourTokWh = [](double watts){return watts / 1000.0; };
 
 	for (auto& resultType : results) {
-		std::transform(resultType.begin(), resultType.end(), resultType.begin(), wattsPerHourToMJ);
+		std::transform(resultType.begin(), resultType.end(), resultType.begin(), wattsPerHourTokWh);
 	}
 
 	// Calculate monthly results
@@ -563,7 +563,7 @@ void ISOHourly::calculateHourly() {
 	}
 
 	// Output the monthly results.
-	std::cout << "\t\tIntLights, ExtLights, Heat, Cool, IntEquip, ExtEquip, Fans, DHW, Total Energy (MJ/m^2)" << std::endl;
+	std::cout << "\t\tIntLights, ExtLights, Heat, Cool, IntEquip, ExtEquip, Fans, DHW, Total Energy (kWh/m^2)" << std::endl;
 	for (int i = 0; i < 12; ++i){
 		std::cout << "Month: " << i << " = \t";
 		for (int j = 0; j < numResultTypes; ++j){
