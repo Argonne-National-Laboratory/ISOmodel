@@ -89,8 +89,8 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	// Monthly name: phi_illum_occ, phi_illum_unocc
 	double phi_illum = electricForTotalLightArea*lights->powerDensityOccupied()*internalLightingEnabled*electInternalGains;//0.538
 
-	// XXX: permLightPowerDensityWperM2 is hardcoded to 0, so this will always be zero.
-	double Q_illum_tot = electricForTotalLightArea*permLightPowerDensityWperM2*internalLightingEnabled;
+	// XXX: permLightPowerDensityWperM2 is unused.
+	double Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
 	// \Phi_{int}, ISO 13790 10.2.2 eq. 35.
 	// Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
