@@ -15,6 +15,8 @@
 #include <vector>
 #include <functional>
 #include <iterator>
+#include <string>
+#include <map>
 
 namespace openstudio {
 namespace isomodel {
@@ -46,7 +48,7 @@ ISOHourly::ISOHourly() {
 	externalEquipment = 244000;
 }
 
-std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
+std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
 		double windMps, double temperature, double electPriceUSDperMWh,
 		double solarRadiationS,	double solarRadiationE,
 		double solarRadiationN, double solarRadiationW,
@@ -182,18 +184,15 @@ std::vector<double > ISOHourly::calculateHour(int hourOfYear, int month, int day
 	double Q_dhw=0;//XXX no DHW calculations
 
 	// TODO: Convert these results to MJ/M^2.
-	std::vector<double > results;
-	results.push_back(Q_illum_tot);
-	results.push_back(Q_illum_ext_tot);
-	results.push_back(Qneed_ht);
-	results.push_back(Qneed_cl);
-	results.push_back(phi_plug);
-	results.push_back(externalEquipmentEnergyWperm2);
-	results.push_back(Qfan_tot);
-	results.push_back(Q_dhw);
-	double totalEnergyWperm2 = (Q_illum_tot+Q_illum_ext_tot+Qneed_ht+Qneed_cl+phi_plug+externalEquipmentEnergyWperm2+Qfan_tot+Q_dhw);//3.28533332066792
-	//ExcelFunctions.printOut("CZ156",totalEnergyWperm2,3.28533332066792);
-	results.push_back(totalEnergyWperm2);
+	std::map<std::string, double> results;
+	results["Q_illum_tot"] = Q_illum_tot;
+	results["Q_illum_ext_tot"] = Q_illum_ext_tot;
+	results["Qneed_ht"] = Qneed_ht;
+	results["Qneed_cl"] = Qneed_cl;
+	results["phi_plug"] = phi_plug;
+	results["externalEquipmentEnergyWperm2"] = externalEquipmentEnergyWperm2;
+	results["Qfan_tot"] = Qfan_tot;
+	results["Q_dhw"] = Q_dhw;
 
 	// Update tiHeatCool & TMT1 for next hour. tiHeatCool and TMT1 are passed by
 	// reference to the function, allowing this information to pass from hour to
@@ -465,10 +464,8 @@ void ISOHourly::calculateHourly() {
 
 	// Container to hold results.
 	// Q_illum_tot, Q_illum_ext_tot, Qneed_ht, Qneed_cl, phi_plug, externalEquipmentEnergyWperm2, 
-	// Qfan_tot, Q_dhw, totalEnergyWperm2
-	int numResultTypes = 9;
-	std::vector<std::vector<double>> rawResults (numResultTypes);
-
+	// Qfan_tot, Q_dhw
+	std::map < std::string, std::vector<double> > rawResults;
 	for(int i = 0;i<TIMESLICES;i++){
 		electPriceUSDperMWh[i] = 24;
 		month = frame.Month[i];
@@ -484,7 +481,7 @@ void ISOHourly::calculateHourly() {
 			double solarRadiationH,
 			double& , double&
 		 */
-		std::vector<double> hourResults = calculateHour(i+1, //hourOfYear
+		std::map<std::string, double> hourResults = calculateHour(i+1, //hourOfYear
 				month, //month
 				dayOfWeek, //dayOfWeek
 				hourOfDay,//hourOfDay
@@ -499,8 +496,8 @@ void ISOHourly::calculateHourly() {
 				TMT1,//TMT1
 				tiHeatCool);//tiHeatCool
 		// Store each result type in its own vector.
-		for (int i = 0; i < numResultTypes; ++i) {
-			rawResults[i].push_back(hourResults[i]);
+		for (auto const & kv : hourResults) {
+			rawResults[kv.first].push_back(kv.second);
 		}
 	}
 
@@ -512,8 +509,8 @@ void ISOHourly::calculateHourly() {
 	double efficiency_ht = heating->efficiency();
 
 	// Calculate the yearly totals.
-	double Qneed_ht_yr = std::accumulate(rawResults[2].begin(), rawResults[2].end(), 0.0);
-	double Qneed_cl_yr = std::accumulate(rawResults[3].begin(), rawResults[3].end(), 0.0);
+	double Qneed_ht_yr = std::accumulate(rawResults["Qneed_ht"].begin(), rawResults["Qneed_ht"].end(), 0.0);
+	double Qneed_cl_yr = std::accumulate(rawResults["Qneed_cl"].begin(), rawResults["Qneed_cl"].end(), 0.0);
 
 	double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
 	double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
@@ -527,48 +524,57 @@ void ISOHourly::calculateHourly() {
 	auto factorCooling = [=](double need){return need / eta_dist_cl / cop; };
 	
 	// Create containers for factored heating and cooling values.
-	std::vector<double> v_Qht_sys(rawResults[2].size());
-	std::vector<double> v_Qcl_sys(rawResults[3].size());
+	std::vector<double> v_Qht_sys(rawResults["Qneed_ht"].size());
+	std::vector<double> v_Qcl_sys(rawResults["Qneed_cl"].size());
 
 	// Factor the heating and cooling values.
-	std::transform(rawResults[2].begin(), rawResults[2].end(), v_Qht_sys.begin(), factorHeating);
-	std::transform(rawResults[3].begin(), rawResults[3].end(), v_Qcl_sys.begin(), factorCooling);
+	std::transform(rawResults["Qneed_ht"].begin(), rawResults["Qneed_ht"].end(), v_Qht_sys.begin(), factorHeating);
+	std::transform(rawResults["Qneed_cl"].begin(), rawResults["Qneed_cl"].end(), v_Qcl_sys.begin(), factorCooling);
 
 	// Store the factored results.
-	std::vector<std::vector<double>> results (rawResults);
-	results[2] = v_Qht_sys;
-	results[3] = v_Qcl_sys;
+	std::map < std::string, std::vector<double> > results(rawResults);
+	results["Qneed_ht"] = v_Qht_sys;
+	results["Qneed_cl"] = v_Qcl_sys;
 
-	// Update the totals
-	results[8] = std::accumulate(results.begin(), results.end() - 1, std::vector<double>(rawResults[0].size(), 0.0), addVectors);
-
-	// Convert to EUI in MJ/m^2
+	// Convert to EUI in kWh/m^2
 	auto wattsPerHourTokWh = [](double watts){return watts / 1000.0; };
 
-	for (auto& resultType : results) {
-		std::transform(resultType.begin(), resultType.end(), resultType.begin(), wattsPerHourTokWh);
+	for (auto & kv : results) {
+		std::transform(kv.second.begin(), kv.second.end(), kv.second.begin(), wattsPerHourTokWh);
 	}
 
 	// Calculate monthly results
-	std::vector<std::vector<double>> monthlyResults(results.size());
-	std::transform(results.begin(), results.end(), monthlyResults.begin(), sumHoursByMonth);
+	std::map<std::string, std::vector<double>> monthlyResults;
+	for (auto const & kv : results){
+		monthlyResults[kv.first] = sumHoursByMonth(kv.second);
+	}
 
 	// Output the hourly results.
 	for(int i = 0; i < TIMESLICES; ++i){
-		std::cout << "Hour: " << i << " = \t";
-		for(int j = 0; j < numResultTypes; ++j){
-			std::cout << results[j][i] << "\t";	
-		}
+		std::cout << "Hour: " << i << ", ";
+		std::cout << results["Q_illum_tot"][i] << ", "
+			<< results["Q_illum_ext_tot"][i] << ", "
+			<< results["Qneed_ht"][i] << ", "
+			<< results["Qneed_cl"][i] << ", "
+			<< results["phi_plug"][i] << ", "
+			<< results["externalEquipmentEnergyWperm2"][i] << ", "
+			<< results["Qfan_tot"][i] << ", "
+			<< results["Q_dhw"][i];
 		std::cout << std::endl;
 	}
 
 	// Output the monthly results.
-	std::cout << "\t\tIntLights, ExtLights, Heat, Cool, IntEquip, ExtEquip, Fans, DHW, Total Energy (kWh/m^2)" << std::endl;
+	std::cout << "Month, IntLights, ExtLights, Heat, Cool, IntEquip, ExtEquip, Fans, DHW" << std::endl;
 	for (int i = 0; i < 12; ++i){
-		std::cout << "Month: " << i << " = \t";
-		for (int j = 0; j < numResultTypes; ++j){
-			std::cout << monthlyResults[j][i] << "\t";
-		}
+		std::cout << "Month: " << i << ", ";
+		std::cout << monthlyResults["Q_illum_tot"][i] << ", "
+			<< monthlyResults["Q_illum_ext_tot"][i] << ", "
+			<< monthlyResults["Qneed_ht"][i] << ", "
+			<< monthlyResults["Qneed_cl"][i] << ", "
+			<< monthlyResults["phi_plug"][i] << ", "
+			<< monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
+			<< monthlyResults["Qfan_tot"][i] << ", "
+			<< monthlyResults["Q_dhw"][i];
 		std::cout << std::endl;
 	}
 }

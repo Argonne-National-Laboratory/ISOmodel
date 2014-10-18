@@ -78,6 +78,8 @@ ISOMODEL_API Vector pow(const Vector& v1, const double xp);
 
   struct ISOMODEL_API ISOResults{    
       std::vector<EndUses> monthlyResults;
+	  std::vector<EndUses> hourlyResultsByMonth;
+	  std::vector<EndUses> hourlyResultsByHour;
   };
 
   class ISOMODEL_API SimModel {

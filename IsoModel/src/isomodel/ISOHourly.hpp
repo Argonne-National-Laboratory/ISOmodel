@@ -17,6 +17,8 @@
 #include <isomodel/Heating.hpp>
 #include <isomodel/Population.hpp>
 #include <boost/shared_ptr.hpp>
+#include <map>
+#include <string>
 
 namespace openstudio {
 namespace isomodel {
@@ -175,7 +177,7 @@ protected:
 	 * implementation describes everything in terms of EUI (i.e., per area). Any
 	 * discrepency in units where this code uses "units per area" while the
 	 * standard just uses "units" is likely due to this difference. */
-	std::vector<double > calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
+	std::map<std::string, double> calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
 			double windMps,	double temperature, double electPriceUSDperMWh,
 			double solarRadiationN, double solarRadiationE,
 			double solarRadiationS, double solarRadiationW,
