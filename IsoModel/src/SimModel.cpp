@@ -2440,7 +2440,8 @@ Eelec_dhw  = v_Q_dhw_elec/In.cond_flr_area;
         results[i].addEndUse(Eelec_fan[i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
         results[i].addEndUse(Eelec_pump[i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
         results[i].addEndUse(Eelec_plug[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-        results[i].addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+		results[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+		results[i].addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
         results[i].addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
         results[i].addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
@@ -2455,6 +2456,7 @@ Eelec_dhw  = v_Q_dhw_elec/In.cond_flr_area;
         results[i].addEndUse(euse++,Eelec_fan[i]);
         results[i].addEndUse(euse++,Eelec_pump[i]);
         results[i].addEndUse(euse++,Eelec_plug[i]);
+		results[i].addEndUse(euse++,0); // Exterior Equipment
         results[i].addEndUse(euse++,Eelec_dhw[i]);
         results[i].addEndUse(euse++,Egas_ht[i]);
         results[i].addEndUse(euse++,Egas_cl[i]);
@@ -2541,13 +2543,16 @@ int main(int argc, char* argv[]) {
     printVector("mwind", mwind);
   }
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
-  hourly.calculateHourly();
+  ISOResults hourlyResults = hourly.calculateHourly();
+
   openstudio::isomodel::SimModel simModel = umodel.toSimModel();
   ISOResults results = simModel.simulate();
+
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout <<std::endl;
-  std::cout << "Results:" <<std::endl;
-  std::cout << "Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquip,ElectDHW,GasHeat,GasCool,GasEqiup,GasDHW" <<std::endl;
+  
+  std::cout << "Monthly Results:" <<std::endl;
+  std::cout << "Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW" <<std::endl;
   for(int i = 0;i<12;i++){
     std::cout << i+1;
     #ifdef _OPENSTUDIOS
@@ -2558,19 +2563,48 @@ int main(int argc, char* argv[]) {
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+	std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+	std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
     #else
-    for(int j = 0;j<12;j++)
+    for(int j = 0;j<13;j++)
     {
       std::cout << ", " << results.monthlyResults[i].getEndUse(j);
     }
     #endif
     std::cout << std::endl;
+  }
+
+  std::cout << "Hourly results by month:" << std::endl;
+  std::cout << "Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW" << std::endl;
+  for (int i = 0; i<12; i++){
+	  std::cout << i + 1;
+#ifdef _OPENSTUDIOS
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+	  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+#else
+	  for (int j = 0; j<13; j++)
+	  {
+		  std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(j);
+	  }
+#endif
+	  std::cout << std::endl;
   }
   //if(DEBUG_ISO_MODEL_SIMULATION)
   //  std::cin.get();

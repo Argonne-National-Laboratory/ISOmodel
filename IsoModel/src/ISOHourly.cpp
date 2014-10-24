@@ -183,15 +183,14 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month
 
 	double Q_dhw=0;//XXX no DHW calculations
 
-	// TODO: Convert these results to MJ/M^2.
 	std::map<std::string, double> results;
-	results["Q_illum_tot"] = Q_illum_tot;
-	results["Q_illum_ext_tot"] = Q_illum_ext_tot;
 	results["Qneed_ht"] = Qneed_ht;
 	results["Qneed_cl"] = Qneed_cl;
+	results["Q_illum_tot"] = Q_illum_tot;
+	results["Q_illum_ext_tot"] = Q_illum_ext_tot;
+	results["Qfan_tot"] = Qfan_tot;
 	results["phi_plug"] = phi_plug;
 	results["externalEquipmentEnergyWperm2"] = externalEquipmentEnergyWperm2;
-	results["Qfan_tot"] = Qfan_tot;
 	results["Q_dhw"] = Q_dhw;
 
 	// Update tiHeatCool & TMT1 for next hour. tiHeatCool and TMT1 are passed by
@@ -438,7 +437,7 @@ void printMatrix(const char* matName, double* mat,unsigned int dim1,unsigned int
 	}
 }
 
-void ISOHourly::calculateHourly() {
+ISOResults ISOHourly::calculateHourly() {
 	populateSchedules();
 	printMatrix("Cooling Setpoint",(double*)this->fixedActualCoolingSetpoint,24,7);
 	printMatrix("Heating Setpoint",(double*)this->fixedActualHeatingSetpoint,24,7);
@@ -549,34 +548,76 @@ void ISOHourly::calculateHourly() {
 		monthlyResults[kv.first] = sumHoursByMonth(kv.second);
 	}
 
-	// Output the hourly results.
-	for(int i = 0; i < TIMESLICES; ++i){
-		std::cout << "Hour: " << i << ", ";
-		std::cout << results["Q_illum_tot"][i] << ", "
-			<< results["Q_illum_ext_tot"][i] << ", "
-			<< results["Qneed_ht"][i] << ", "
-			<< results["Qneed_cl"][i] << ", "
-			<< results["phi_plug"][i] << ", "
-			<< results["externalEquipmentEnergyWperm2"][i] << ", "
-			<< results["Qfan_tot"][i] << ", "
-			<< results["Q_dhw"][i];
-		std::cout << std::endl;
-	}
+	//// Output the hourly results.
+	//for(int i = 0; i < TIMESLICES; ++i){
+	//	std::cout << "Hour: " << i << ", ";
+	//	std::cout 
+	//		<< results["Qneed_ht"][i] << ", "
+	//		<< results["Qneed_cl"][i] << ", "
+	//		<< results["Q_illum_tot"][i] << ", "
+	//		<< results["Q_illum_ext_tot"][i] << ", "
+	//		<< results["Qfan_tot"][i] << ", "
+	//		<< results["phi_plug"][i] << ", "
+	//		<< results["externalEquipmentEnergyWperm2"][i] << ", "
+	//		<< results["Q_dhw"][i];
+	//	std::cout << std::endl;
+	//}
 
-	// Output the monthly results.
-	std::cout << "Month, IntLights, ExtLights, Heat, Cool, IntEquip, ExtEquip, Fans, DHW" << std::endl;
-	for (int i = 0; i < 12; ++i){
-		std::cout << "Month: " << i << ", ";
-		std::cout << monthlyResults["Q_illum_tot"][i] << ", "
-			<< monthlyResults["Q_illum_ext_tot"][i] << ", "
-			<< monthlyResults["Qneed_ht"][i] << ", "
-			<< monthlyResults["Qneed_cl"][i] << ", "
-			<< monthlyResults["phi_plug"][i] << ", "
-			<< monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
-			<< monthlyResults["Qfan_tot"][i] << ", "
-			<< monthlyResults["Q_dhw"][i];
-		std::cout << std::endl;
+	//// Output the monthly results.
+	//std::cout << "Hourly results by month:" << std::endl;
+	//std::cout << "Month, Heat, Cool, IntLights, ExtLights, Fans, IntEquip, ExtEquip, DHW" << std::endl;
+	//for (int i = 0; i < 12; ++i){
+	//	std::cout << i + 1 << ", ";
+	//	std::cout 
+	//		<< monthlyResults["Qneed_ht"][i] << ", "
+	//		<< monthlyResults["Qneed_cl"][i] << ", "
+	//		<< monthlyResults["Q_illum_tot"][i] << ", "
+	//		<< monthlyResults["Q_illum_ext_tot"][i] << ", "
+	//		<< monthlyResults["Qfan_tot"][i] << ", "
+	//		<< monthlyResults["phi_plug"][i] << ", "
+	//		<< monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
+	//		<< monthlyResults["Q_dhw"][i];
+	//	std::cout << std::endl;
+	//}
+
+	ISOResults allResults;
+	EndUses hourlyEndUsesByMonth[12];
+	for (int i = 0; i<12; i++){
+#ifdef _OPENSTUDIOS
+		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qneed_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_illum_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_illum_ext_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qfan_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["phi_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["externalEquipmentEnergyWperm2"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qneed_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+#else
+		int euse = 0;
+		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qneed_cl"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_illum_tot"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_illum_ext_tot"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qfan_tot"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["phi_plug"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["externalEquipmentEnergyWperm2"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_dhw"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qneed_ht"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+#endif
+		allResults.hourlyResultsByMonth.push_back(hourlyEndUsesByMonth[i]);
 	}
+	return allResults;
+
 }
 
 }

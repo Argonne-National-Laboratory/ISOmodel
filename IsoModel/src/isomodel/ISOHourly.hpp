@@ -16,6 +16,7 @@
 #include <isomodel/Cooling.hpp>
 #include <isomodel/Heating.hpp>
 #include <isomodel/Population.hpp>
+#include <isomodel/SimModel.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <string>
@@ -256,7 +257,7 @@ public:
 	 * those described by the simple hourly method in ISO 13790 Annex C. A key
 	 * difference is that this implementation describes everything in terms of
 	 * EUI (i.e., per area). */
-	void calculateHourly();
+	ISOResults calculateHourly();
 
 	/** Set the population. */
 	void setPop(boost::shared_ptr<Population> value){pop=value;}
