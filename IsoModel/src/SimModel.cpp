@@ -2544,9 +2544,11 @@ int main(int argc, char* argv[]) {
   }
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
   ISOResults hourlyResults = hourly.calculateHourly();
+  std::cout << "Hourly simulation complete" << std::endl;
 
   openstudio::isomodel::SimModel simModel = umodel.toSimModel();
   ISOResults results = simModel.simulate();
+  std::cout << "Monthly simulation complete" << std::endl;
 
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout <<std::endl;

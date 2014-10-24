@@ -530,10 +530,23 @@ ISOResults ISOHourly::calculateHourly() {
 	std::transform(rawResults["Qneed_ht"].begin(), rawResults["Qneed_ht"].end(), v_Qht_sys.begin(), factorHeating);
 	std::transform(rawResults["Qneed_cl"].begin(), rawResults["Qneed_cl"].end(), v_Qcl_sys.begin(), factorCooling);
 
-	// Store the factored results.
-	std::map < std::string, std::vector<double> > results(rawResults);
-	results["Qneed_ht"] = v_Qht_sys;
-	results["Qneed_cl"] = v_Qcl_sys;
+	// Store the factored results and rename them to match the monthly result names.
+	std::map < std::string, std::vector<double> > results;
+	std::vector<double> zeroes (rawResults["Qneed_ht"].size(), 0.0);
+	
+	results["Eelec_ht"] = (heating->energyType() == 1) ? v_Qht_sys : zeroes; // If electric.
+	results["Eelec_cl"] = v_Qcl_sys;
+	results["Eelec_int_lt"] = rawResults["Q_illum_tot"];
+	results["Eelec_ext_lt"] = rawResults["Q_illum_ext_tot"];
+	results["Eelec_fan"] = rawResults["Qfan_tot"];
+	results["Eelec_pump"] = zeroes;
+	results["Eelec_int_plug"] = rawResults["phi_plug"];
+	results["Eelec_ext_plug"] = rawResults["externalEquipmentEnergyWperm2"];
+	results["Eelec_dhw"] = rawResults["Q_dhw"];
+	results["Egas_ht"] = (heating->energyType() != 1) ? v_Qht_sys : zeroes; // If not electric.
+	results["Egas_cl"] = zeroes;
+	results["Egas_plug"] = zeroes;
+	results["Egas_dhw"] = zeroes;
 
 	// Convert to EUI in kWh/m^2
 	auto wattsPerHourTokWh = [](double watts){return watts / 1000.0; };
@@ -548,6 +561,7 @@ ISOResults ISOHourly::calculateHourly() {
 		monthlyResults[kv.first] = sumHoursByMonth(kv.second);
 	}
 
+	// TODO: Make a flag for the CLI to output hourly by hour or hourly by month.
 	//// Output the hourly results.
 	//for(int i = 0; i < TIMESLICES; ++i){
 	//	std::cout << "Hour: " << i << ", ";
@@ -580,39 +594,40 @@ ISOResults ISOHourly::calculateHourly() {
 	//	std::cout << std::endl;
 	//}
 
+	// TODO Fix this! Hardcoded values of '0' for things not being calculated is not ideal.
 	ISOResults allResults;
 	EndUses hourlyEndUsesByMonth[12];
 	for (int i = 0; i<12; i++){
 #ifdef _OPENSTUDIOS
-		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qneed_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_illum_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_illum_ext_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qfan_tot"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["phi_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["externalEquipmentEnergyWperm2"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Q_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_fan"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_pump"][i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
-		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Qneed_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-		hourlyEndUsesByMonth[i].addEndUse(0, EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_cl"][i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+		hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
 		int euse = 0;
-		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qneed_cl"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_illum_tot"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_illum_ext_tot"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qfan_tot"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["phi_plug"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["externalEquipmentEnergyWperm2"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Q_dhw"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Qneed_ht"][i]);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
-		hourlyEndUsesByMonth[i].addEndUse(euse++, 0);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ht"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_cl"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_lt"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_lt"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_fan"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_pump"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_plug"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_plug"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_dhw"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_ht"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_cl"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_plug"][i]);
+		hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_dhw"][i]);
 #endif
 		allResults.hourlyResultsByMonth.push_back(hourlyEndUsesByMonth[i]);
 	}
