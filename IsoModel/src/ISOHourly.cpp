@@ -420,7 +420,7 @@ void ISOHourly::populateSchedules() {
 
 }
 void printMatrix(const char* matName, double* mat,unsigned int dim1,unsigned int dim2){
-	//if(DEBUG_ISO_MODEL_SIMULATION)
+	if(DEBUG_ISO_MODEL_SIMULATION)
 	{
 		std::cout << matName << "("<< dim1 <<", " << dim2 <<	"): " << std::endl << "\t";
 		for(unsigned int j = 0;j< dim2; j++){
@@ -464,6 +464,16 @@ ISOResults ISOHourly::calculateHourly() {
 	// Container to hold results.
 	// Q_illum_tot, Q_illum_ext_tot, Qneed_ht, Qneed_cl, phi_plug, externalEquipmentEnergyWperm2, 
 	// Qfan_tot, Q_dhw
+
+	// TIMING TEST
+	LARGE_INTEGER li = { 0 }, li2 = { 0 };
+	QueryPerformanceFrequency(&li);
+	__int64 freq = li.QuadPart;
+	__int64 ticks;
+
+	QueryPerformanceCounter(&li);
+	// run your app here...
+
 	std::map < std::string, std::vector<double> > rawResults;
 	for(int i = 0;i<TIMESLICES;i++){
 		electPriceUSDperMWh[i] = 24;
@@ -499,6 +509,11 @@ ISOResults ISOHourly::calculateHourly() {
 			rawResults[kv.first].push_back(kv.second);
 		}
 	}
+
+	QueryPerformanceCounter(&li2);
+
+	ticks = li2.QuadPart - li.QuadPart;
+	std::cout << "Core calcs of hourly model ran in " << ticks << " ticks" << " (" << format_elapsed((double)ticks / (double)freq) << ")" << std::endl;
 
 	// Factor the raw need results by the distribution efficiencies.
 	double a_ht_loss = heating->hvacLossFactor();

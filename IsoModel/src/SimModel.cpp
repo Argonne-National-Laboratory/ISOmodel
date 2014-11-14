@@ -2514,6 +2514,48 @@ Ebldg.yr=sum(Ebldg.mon);
 } // isomodel
 } // openstudio
 
+// For timing tests
+std::string format_elapsed(double d)
+{
+	char buf[256] = { 0 };
+
+	if (d < 0.00000001)
+	{
+		// show in ps with 4 digits
+		sprintf(buf, "%0.4f ps", d * 1000000000000.0);
+	}
+	else if (d < 0.00001)
+	{
+		// show in ns
+		sprintf(buf, "%0.0f ns", d * 1000000000.0);
+	}
+	else if (d < 0.001)
+	{
+		// show in us
+		sprintf(buf, "%0.0f us", d * 1000000.0);
+	}
+	else if (d < 0.1)
+	{
+		// show in ms
+		sprintf(buf, "%0.0f ms", d * 1000.0);
+	}
+	else if (d <= 60.0)
+	{
+		// show in seconds
+		sprintf(buf, "%0.2f s", d);
+	}
+	else if (d < 3600.0)
+	{
+		// show in min:sec
+		sprintf(buf, "%01.0f:%02.2f", floor(d / 60.0), fmod(d, 60.0));
+	}
+	// show in h:min:sec
+	else
+		sprintf(buf, "%01.0f:%02.0f:%02.2f", floor(d / 3600.0), floor(fmod(d, 3600.0) / 60.0), fmod(d, 60.0));
+
+	return buf;
+}
+
 int main(int argc, char* argv[]) {
   if(argc < 2) {
     std::cout << "Usage: " << argv[0] << " <filename.ISO>" <<std::endl;
@@ -2542,13 +2584,43 @@ int main(int argc, char* argv[]) {
     printVector("mdbt", mdbt);
     printVector("mwind", mwind);
   }
-  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.calculateHourly();
-  std::cout << "Hourly simulation complete" << std::endl;
 
+  // Create hourly model
+  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  
+  // Run the hourly model and time it
+  LARGE_INTEGER li = { 0 }, li2 = { 0 };
+  QueryPerformanceFrequency(&li);
+  __int64 freq = li.QuadPart;
+  __int64 ticks;
+
+  ISOResults hourlyResults;
+  for (int i = 0; i != 10; ++i){
+	  QueryPerformanceCounter(&li);
+	  // run your app here...
+	  hourlyResults = hourly.calculateHourly();
+	  QueryPerformanceCounter(&li2);
+
+	  ticks = li2.QuadPart - li.QuadPart;
+	  // std::cout << "Hourly simulation complete" << std::endl;
+	  std::cout << "Hourly model ran in " << ticks << " ticks" << " (" << format_elapsed((double)ticks / (double)freq) << ")" << std::endl;
+  }
+
+  // Create monthly model
   openstudio::isomodel::SimModel simModel = umodel.toSimModel();
-  ISOResults results = simModel.simulate();
-  std::cout << "Monthly simulation complete" << std::endl;
+  ISOResults results;
+
+  for (int i = 0; i != 10; ++i){
+	  // Run the hourly model and time it
+	  QueryPerformanceCounter(&li);
+	  // run your app here...
+	  results = simModel.simulate();
+	  QueryPerformanceCounter(&li2);
+
+	  ticks = li2.QuadPart - li.QuadPart;
+	  // std::cout << "Monthly simulation complete" << std::endl;
+	  std::cout << "Monthly model ran in " << ticks << " ticks" << " (" << format_elapsed((double)ticks / (double)freq) << ")" << std::endl;
+  }
 
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout <<std::endl;

@@ -37,11 +37,21 @@
 #include <isomodel/Structure.hpp>
 #include <isomodel/Ventilation.hpp>
 
+// For speed tests
+#define NOMINMAX
+#include <Windows.h>
+#include <string>
+#include <iostream>
+
+//FOR TIMING TESTS
+std::string format_elapsed(double d);
+
 namespace openstudio {
 
   class EndUses;
 
 namespace isomodel { 
+
 #ifndef DBL_MAX
 #define DBL_MAX    1.7976931348623157E+308
 #endif
@@ -238,6 +248,7 @@ ISOMODEL_API Vector pow(const Vector& v1, const double xp);
     void setHeating(boost::shared_ptr<Heating> value){heating=value;}
     void setCooling(boost::shared_ptr<Cooling> value){cooling=value;}
     void setVentilation(boost::shared_ptr<Ventilation> value){ventilation=value;}
+
     SimModel();
     virtual ~SimModel();
     /*
