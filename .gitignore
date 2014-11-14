@@ -1,7 +1,13 @@
-# Ignore outputs of running the simulation.
-SimulationResults/
+# Created by https://www.gitignore.io
 
-# Created by http://www.gitignore.io
+### vim ###
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and
@@ -10,6 +16,7 @@ SimulationResults/
 # User-specific files
 *.suo
 *.user
+*.userosscache
 *.sln.docstates
 
 # Build results
@@ -134,6 +141,7 @@ publish/
 # TODO: Comment the next line if you want to checkin your web deploy settings 
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+*.publishproj
 
 # NuGet Packages
 *.nupkg
