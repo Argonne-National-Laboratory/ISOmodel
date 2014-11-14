@@ -1,3 +1,6 @@
+# Ignore outputs of running the simulation.
+SimulationResults/
+
 # Created by https://www.gitignore.io
 
 ### vim ###
