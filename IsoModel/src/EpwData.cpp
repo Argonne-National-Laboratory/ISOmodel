@@ -127,6 +127,25 @@ std::string EpwData::toISOData(){
 	}
   return sstream.str();
 }
+    
+void EpwData::loadData(int block_size, double* data) {
+    // first 3 doubles are latitude, longitude, tz
+    this->m_latitude = data[0];
+    this->m_longitude = data[1];
+    this->m_timezone = (int)data[2];
+    // each block_size number of doubles is a column of data
+    double* ptr = data + 3;
+    for (int c = 0; c < 7; c++) {
+        std::vector<double>& col = m_data[c];
+        col.resize(8760);
+        for (int i = 0; i < block_size; ++i) {
+            col[i] = *ptr;//data[(c * block_size) + i];
+            ++ptr;
+        }
+    }
+}
+
+    
 void EpwData::loadData(std::string fn)
 {
 	std::string line;
