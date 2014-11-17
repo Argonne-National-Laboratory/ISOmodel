@@ -21,9 +21,10 @@
 #define ISOMODEL_USERMODEL_HPP
 
 #include "ISOModelAPI.hpp"
-#include <isomodel/EpwData.hpp>
-#include <isomodel/SimModel.hpp>
-#include <isomodel/ISOHourly.hpp>
+#include "EpwData.hpp"
+#include "SimModel.hpp"
+#include "ISOHourly.hpp"
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 

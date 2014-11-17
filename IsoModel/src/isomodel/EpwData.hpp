@@ -24,8 +24,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include <isomodel/SolarRadiation.hpp>
-#include <isomodel/TimeFrame.hpp>
+
+#include "SolarRadiation.hpp"
+#include "TimeFrame.hpp"
 
 namespace openstudio {
 namespace isomodel {

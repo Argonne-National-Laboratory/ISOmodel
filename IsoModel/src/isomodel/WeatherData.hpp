@@ -20,9 +20,11 @@
 #define ISOMODEL_WEATHER_DATA_HPP
 
 #include "ISOModelAPI.hpp"
-#include <utilities/data/Vector.hpp>
-#include <utilities/data/Matrix.hpp>
-#include <boost\shared_ptr.hpp>
+
+#include "../utilities/data/Vector.hpp"
+#include "../utilities/data/Matrix.hpp"
+
+#include <boost/shared_ptr.hpp>
 
 namespace openstudio {
 namespace isomodel {

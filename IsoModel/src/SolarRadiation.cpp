@@ -1,4 +1,4 @@
-#include <isomodel/SolarRadiation.hpp>
+#include "isomodel/SolarRadiation.hpp"
 
 namespace openstudio {
 namespace isomodel {

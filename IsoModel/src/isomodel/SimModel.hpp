@@ -24,18 +24,20 @@
 #ifdef _OPENSTUDIO
 #include <utilities/core/Logger.hpp>
 #endif
-#include <utilities/data/EndUses.hpp>
 #include <boost/shared_ptr.hpp>
-#include <utilities/data/Vector.hpp>
-#include <utilities/data/Matrix.hpp>
-#include <isomodel/Population.hpp>
-#include <isomodel/Location.hpp>
-#include <isomodel/Lighting.hpp>
-#include <isomodel/Building.hpp>
-#include <isomodel/Cooling.hpp>
-#include <isomodel/Heating.hpp>
-#include <isomodel/Structure.hpp>
-#include <isomodel/Ventilation.hpp>
+
+#include "Population.hpp"
+#include "Location.hpp"
+#include "Lighting.hpp"
+#include "Building.hpp"
+#include "Cooling.hpp"
+#include "Heating.hpp"
+#include "Structure.hpp"
+#include "Ventilation.hpp"
+#include "../utilities/data/EndUses.hpp"
+#include "../utilities/data/Vector.hpp"
+#include "../utilities/data/Matrix.hpp"
+
 
 namespace openstudio {
 

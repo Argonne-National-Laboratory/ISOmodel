@@ -8,8 +8,9 @@
 // In comments, symbols and formulas from the standard are written in LaTeX
 // markup to reduce ambiguity.
 
-#include <isomodel/ISOHourly.hpp>
-#include <isomodel/SimModel.hpp>
+#include "isomodel/ISOHourly.hpp"
+#include "isomodel/SimModel.hpp"
+
 #include <numeric>
 #include <algorithm>
 #include <vector>

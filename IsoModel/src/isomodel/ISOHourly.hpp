@@ -7,16 +7,18 @@
 
 #ifndef ISOHOURLY_H_
 #define ISOHOURLY_H_
-#include <isomodel/TimeFrame.hpp>
-#include <isomodel/EpwData.hpp>
-#include <isomodel/Structure.hpp>
-#include <isomodel/Building.hpp>
-#include <isomodel/Lighting.hpp>
-#include <isomodel/Ventilation.hpp>
-#include <isomodel/Cooling.hpp>
-#include <isomodel/Heating.hpp>
-#include <isomodel/Population.hpp>
-#include <isomodel/SimModel.hpp>
+
+#include "TimeFrame.hpp"
+#include "EpwData.hpp"
+#include "Structure.hpp"
+#include "Building.hpp"
+#include "Lighting.hpp"
+#include "Ventilation.hpp"
+#include "Cooling.hpp"
+#include "Heating.hpp"
+#include "Population.hpp"
+#include "SimModel.hpp"
+
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <string>

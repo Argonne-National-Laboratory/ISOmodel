@@ -22,8 +22,8 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
-#include <isomodel/TimeFrame.hpp>
-#include <isomodel/EpwData.hpp>
+#include "TimeFrame.hpp"
+#include "EpwData.hpp"
 
 
 namespace openstudio {
