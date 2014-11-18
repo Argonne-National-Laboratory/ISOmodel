@@ -41,7 +41,7 @@ namespace isomodel {
     void parseStructure(std::string attributeName, const char* attributeValue);
 
     boost::shared_ptr<WeatherData> _weather; 
-    EpwData _edata;
+      boost::shared_ptr<EpwData> _edata;
     bool _valid;
     double _terrainClass;
     double _floorArea;
@@ -195,7 +195,7 @@ namespace isomodel {
     void parseLine(std::string line);
     void loadBuilding(std::string buildingFile);
     int weatherState(std::string header);
-      void initializeSolar(boost::shared_ptr<WeatherData>& wdata);
+      void initializeSolar();
   public:
     /**
      * Loads the specified weather data from disk.
@@ -203,7 +203,7 @@ namespace isomodel {
      * Call setWeatherFilePath(path) then loadWeather() to update
      * the UserModel with a new set of weather data
      */
-    boost::shared_ptr<WeatherData> loadWeather();
+    void loadWeather();
       
       /**
        * Loads the weather from the specified array of doubles.
@@ -224,6 +224,10 @@ namespace isomodel {
      */  
     SimModel toSimModel() const;
     ISOHourly toHourlyModel() const;
+      
+      const boost::shared_ptr<WeatherData> weatherData() {
+          return _weather;
+      }
 
     /**
      * Indicates whether or not the user model loaded in correctly

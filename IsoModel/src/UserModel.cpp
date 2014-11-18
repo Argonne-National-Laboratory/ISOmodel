@@ -23,7 +23,7 @@ using namespace std;
 namespace openstudio {
 namespace isomodel {
 
-    UserModel::UserModel()
+    UserModel::UserModel() : _weather(new WeatherData()), _edata(new EpwData())
   {
   }
 
@@ -188,9 +188,7 @@ namespace isomodel {
     ventilation->setSupplyDifference(_supplyExhaustRate);
     ventilation->setSupplyRate(_freshAirFlowRate);
     sim.setVentilation(ventilation);
-
-    boost::shared_ptr<EpwData> wdata((EpwData*)&this->_edata);
-    sim.setWeatherData(wdata);
+    sim.setWeatherData(_edata);
 
     return sim;
   }
@@ -799,8 +797,7 @@ namespace isomodel {
     return result;
   }
     
-  boost::shared_ptr<WeatherData> UserModel::loadWeather(){
-      boost::shared_ptr<WeatherData> wdata(new WeatherData());
+  void UserModel::loadWeather() {
     std::string weatherFilename;
     //see if weather file path is absolute path
     //if so, use it, else assemble relative path
@@ -815,30 +812,26 @@ namespace isomodel {
       {
         std::cout << "Weather File Not Found: " << _weatherFilePath << std::endl;
           _valid = false;
-        return wdata;//using shared_ptr doesn't compile with any attempt at returning null
       }
     }
       
-    _edata.loadData(weatherFilename);
-      initializeSolar(wdata);
-      return wdata;
+    _edata->loadData(weatherFilename);
+      initializeSolar();
   }
     
     void UserModel::loadAndSetWeather() {
-        _weather = loadWeather();
+        loadWeather();
         _valid = true;
     }
     
     void UserModel::loadWeather(int block_size, double* weather_data) {
-        boost::shared_ptr<WeatherData> wdata(new WeatherData());
-        _edata.loadData(block_size, weather_data);
-        initializeSolar(wdata);
-        _weather = wdata;
+        _edata->loadData(block_size, weather_data);
+        initializeSolar();
         _valid = true;
     }
     
     
-    void UserModel::initializeSolar(boost::shared_ptr<WeatherData>& wdata) {
+    void UserModel::initializeSolar() {
 
     int state = 0, row=0;
     Matrix _msolar(12,8);
@@ -851,7 +844,7 @@ namespace isomodel {
     string line;
         std::vector<std::string> linesplit;
 
-    std::stringstream inputFile(_edata.toISOData());
+    std::stringstream inputFile(_edata->toISOData());
 
     while (inputFile.good()) {
       getline (inputFile,line);
@@ -895,12 +888,12 @@ namespace isomodel {
         row++;
       }
     }
-    wdata->setMdbt(_mdbt);
-    wdata->setMEgh(_mEgh);
-    wdata->setMhdbt(_mhdbt);
-    wdata->setMhEgh(_mhEgh);
-    wdata->setMsolar(_msolar);
-    wdata->setMwind(_mwind);
+    _weather->setMdbt(_mdbt);
+    _weather->setMEgh(_mEgh);
+    _weather->setMhdbt(_mhdbt);
+    _weather->setMhEgh(_mhEgh);
+    _weather->setMsolar(_msolar);
+    _weather->setMwind(_mwind);
 }
     
   void UserModel::load(std::string buildingFile){
@@ -917,7 +910,7 @@ namespace isomodel {
     loadBuilding(buildingFile);
     if(DEBUG_ISO_MODEL_SIMULATION)
       std::cout << "Loading Weather File: " << this->weatherFilePath() <<std::endl;
-    _weather = loadWeather();
+    loadWeather();
     if(DEBUG_ISO_MODEL_SIMULATION)
       std::cout << "Weather File Loaded" <<std::endl;
   }

@@ -40,13 +40,13 @@ std::vector<double> sumHoursByMonth(std::vector<double> hourlyData) {
 	return monthlyData;
 }
 
-ISOHourly::ISOHourly() {
-	electInternalGains = 1;//SingleBldg.L51
-	permLightPowerDensityWperM2 = 0;//SingleBldg.L50
-	ventPreheatDegC = -50;//SingleBldg.Q40
+    ISOHourly::ISOHourly() : electInternalGains(1), permLightPowerDensityWperM2(0), externalEquipment(244000), ventPreheatDegC(-50) {
+	//electInternalGains = 1;//SingleBldg.L51
+	//permLightPowerDensityWperM2 = 0;//SingleBldg.L50
+	//ventPreheatDegC = -50;//SingleBldg.Q40
 
 	//XXX External Equipment usage Q56
-	externalEquipment = 244000;
+	//externalEquipment = 244000;
 }
 
 std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,

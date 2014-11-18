@@ -2528,7 +2528,8 @@ int main(int argc, char* argv[]) {
 
   if(DEBUG_ISO_MODEL_SIMULATION)
   {
-    WeatherData wd = *umodel.loadWeather();
+    umodel.loadWeather();
+      WeatherData wd = *umodel.weatherData();
     Matrix msolar = wd.msolar();
     Matrix mhdbt = wd.mhdbt();
     Matrix mhEgh = wd.mhEgh();
@@ -2542,6 +2543,7 @@ int main(int argc, char* argv[]) {
     printVector("mdbt", mdbt);
     printVector("mwind", mwind);
   }
+    
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
   ISOResults hourlyResults = hourly.calculateHourly();
   std::cout << "Hourly simulation complete" << std::endl;
