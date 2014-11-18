@@ -38,7 +38,7 @@ ISOHourly UserModel::toHourlyModel() const
   if (!_valid) {
     return *((ISOHourly*) NULL);
   }
-  boost::shared_ptr<Population> pop(new Population);
+  std::shared_ptr<Population> pop(new Population);
   pop->setDaysStart(_buildingOccupancyFrom);
   pop->setDaysEnd(_buildingOccupancyTo);
   pop->setHoursEnd(_equivFullLoadOccupancyTo);
@@ -48,20 +48,20 @@ ISOHourly UserModel::toHourlyModel() const
   pop->setHeatGainPerPerson(_heatGainPerPerson);
   sim.setPop(pop);
 
-  boost::shared_ptr<Building> building(new Building);
+  std::shared_ptr<Building> building(new Building);
   building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
   building->setElectricApplianceHeatGainUnoccupied(_elecPowerAppliancesUnoccupied);
   building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
   sim.setBuilding(building);
 
-  boost::shared_ptr<Cooling> cooling(new Cooling);
+  std::shared_ptr<Cooling> cooling(new Cooling);
   cooling->setCOP(_coolingSystemCOP);
   cooling->setHvacLossFactor(_hvacCoolingLossFactor);
   cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
   cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
   sim.setCooling(cooling);
 
-  boost::shared_ptr<Heating> heating(new Heating);
+  std::shared_ptr<Heating> heating(new Heating);
   heating->setEfficiency(_heatingSystemEfficiency);
   heating->setHvacLossFactor(_hvacHeatingLossFactor);
   heating->setHotcoldWasteFactor(_hvacWasteFactor);
@@ -69,13 +69,13 @@ ISOHourly UserModel::toHourlyModel() const
   heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
   sim.setHeating(heating);
 
-  boost::shared_ptr<Lighting> lighting(new Lighting);
+  std::shared_ptr<Lighting> lighting(new Lighting);
   lighting->setExteriorEnergy(_exteriorLightingPower);
   lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
   lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
   sim.setLights(lighting);
 
-  boost::shared_ptr<Structure> structure(new Structure);
+  std::shared_ptr<Structure> structure(new Structure);
   structure->setFloorArea(_floorArea);
   structure->setBuildingHeight(_buildingHeight);
   structure->setInfiltrationRate(_buildingAirLeakage);
@@ -180,7 +180,7 @@ ISOHourly UserModel::toHourlyModel() const
   structure->setWindowUniform(winU); //vector
   sim.setStructure(structure);
 
-  boost::shared_ptr<Ventilation> ventilation(new Ventilation);
+  std::shared_ptr<Ventilation> ventilation(new Ventilation);
   ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
   ventilation->setFanControlFactor(_fanFlowControlFactor);
   ventilation->setFanPower(_specificFanPower);
@@ -203,7 +203,7 @@ SimModel UserModel::toSimModel() const
     return *((SimModel*) NULL);
   }
 
-  boost::shared_ptr<Population> pop(new Population());
+  std::shared_ptr<Population> pop(new Population());
   pop->setDaysStart(_buildingOccupancyFrom);
   pop->setDaysEnd(_buildingOccupancyTo);
   pop->setHoursEnd(_equivFullLoadOccupancyTo);
@@ -213,12 +213,12 @@ SimModel UserModel::toSimModel() const
   pop->setHeatGainPerPerson(_heatGainPerPerson);
   sim.setPop(pop);
 
-  boost::shared_ptr<Location> loc(new Location);
+  std::shared_ptr<Location> loc(new Location);
   loc->setTerrain(_terrainClass);
   loc->setWeatherData(_weather);
   sim.setLocation(loc);
 
-  boost::shared_ptr<Building> building(new Building);
+  std::shared_ptr<Building> building(new Building);
   building->setBuildingEnergyManagement(_bemType);
   building->setConstantIllumination(_constantIlluminationControl);
   building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
@@ -228,7 +228,7 @@ SimModel UserModel::toSimModel() const
   building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
   sim.setBuilding(building);
 
-  boost::shared_ptr<Cooling> cooling(new Cooling);
+  std::shared_ptr<Cooling> cooling(new Cooling);
   cooling->setCOP(_coolingSystemCOP);
   cooling->setHvacLossFactor(_hvacCoolingLossFactor);
   cooling->setPartialLoadValue(_coolingSystemIPLVToCOPRatio);
@@ -237,7 +237,7 @@ SimModel UserModel::toSimModel() const
   cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
   sim.setCooling(cooling);
 
-  boost::shared_ptr<Heating> heating(new Heating);
+  std::shared_ptr<Heating> heating(new Heating);
   heating->setEfficiency(_heatingSystemEfficiency);
   heating->setEnergyType(_heatingEnergyCarrier);
   heating->setHotcoldWasteFactor(_hvacWasteFactor); // Used in hvac distribution efficiency.
@@ -251,14 +251,14 @@ SimModel UserModel::toSimModel() const
   heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
   sim.setHeating(heating);
 
-  boost::shared_ptr<Lighting> lighting(new Lighting);
+  std::shared_ptr<Lighting> lighting(new Lighting);
   lighting->setDimmingFraction(_daylightSensorSystem);
   lighting->setExteriorEnergy(_exteriorLightingPower);
   lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
   lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
   sim.setLights(lighting);
 
-  boost::shared_ptr<Structure> structure(new Structure);
+  std::shared_ptr<Structure> structure(new Structure);
   structure->setFloorArea(_floorArea);
   structure->setBuildingHeight(_buildingHeight);
   structure->setInfiltrationRate(_buildingAirLeakage);
@@ -363,7 +363,7 @@ SimModel UserModel::toSimModel() const
   structure->setWindowUniform(winU); //vector
   sim.setStructure(structure);
 
-  boost::shared_ptr<Ventilation> ventilation(new Ventilation);
+  std::shared_ptr<Ventilation> ventilation(new Ventilation);
   ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
   ventilation->setFanControlFactor(_fanFlowControlFactor);
   ventilation->setFanPower(_specificFanPower);

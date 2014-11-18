@@ -24,7 +24,7 @@
 #ifdef _OPENSTUDIO
 #include <utilities/core/Logger.hpp>
 #endif
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Population.hpp"
 #include "Location.hpp"
@@ -105,14 +105,14 @@ struct ISOMODEL_API ISOResults
 class ISOMODEL_API SimModel
 {
 private:
-  boost::shared_ptr<Population> pop;
-  boost::shared_ptr<Location> location;
-  boost::shared_ptr<Lighting> lights;
-  boost::shared_ptr<Building> building;
-  boost::shared_ptr<Structure> structure;
-  boost::shared_ptr<Heating> heating;
-  boost::shared_ptr<Cooling> cooling;
-  boost::shared_ptr<Ventilation> ventilation;
+  std::shared_ptr<Population> pop;
+  std::shared_ptr<Location> location;
+  std::shared_ptr<Lighting> lights;
+  std::shared_ptr<Building> building;
+  std::shared_ptr<Structure> structure;
+  std::shared_ptr<Heating> heating;
+  std::shared_ptr<Cooling> cooling;
+  std::shared_ptr<Ventilation> ventilation;
 
   void
   scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
@@ -169,35 +169,35 @@ private:
       const Vector& v_Qfan_tot, const Vector& v_Q_pump_tot, const Vector& v_Q_dhw_elec, const Vector& v_Qgas_ht, const Vector& v_Qcl_gas_tot,
       const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const;
 public:
-  void setPop(boost::shared_ptr<Population> value)
+  void setPop(std::shared_ptr<Population> value)
   {
     pop = value;
   }
-  void setLocation(boost::shared_ptr<Location> value)
+  void setLocation(std::shared_ptr<Location> value)
   {
     location = value;
   }
-  void setLights(boost::shared_ptr<Lighting> value)
+  void setLights(std::shared_ptr<Lighting> value)
   {
     lights = value;
   }
-  void setBuilding(boost::shared_ptr<Building> value)
+  void setBuilding(std::shared_ptr<Building> value)
   {
     building = value;
   }
-  void setStructure(boost::shared_ptr<Structure> value)
+  void setStructure(std::shared_ptr<Structure> value)
   {
     structure = value;
   }
-  void setHeating(boost::shared_ptr<Heating> value)
+  void setHeating(std::shared_ptr<Heating> value)
   {
     heating = value;
   }
-  void setCooling(boost::shared_ptr<Cooling> value)
+  void setCooling(std::shared_ptr<Cooling> value)
   {
     cooling = value;
   }
-  void setVentilation(boost::shared_ptr<Ventilation> value)
+  void setVentilation(std::shared_ptr<Ventilation> value)
   {
     ventilation = value;
   }

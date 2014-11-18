@@ -24,7 +24,7 @@
 #include "Vector.hpp"
 #include "Matrix.hpp"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace openstudio {
 namespace isomodel {

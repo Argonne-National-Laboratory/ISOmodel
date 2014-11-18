@@ -19,7 +19,7 @@
 #include "Population.hpp"
 #include "SimModel.hpp"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <map>
 #include <string>
 
@@ -247,14 +247,14 @@ protected:
     return fixedActualCoolingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
   }
 
-  boost::shared_ptr<Population> pop;
-  boost::shared_ptr<Lighting> lights;
-  boost::shared_ptr<Building> building;
-  boost::shared_ptr<Structure> structure;
-  boost::shared_ptr<Heating> heating;
-  boost::shared_ptr<Cooling> cooling;
-  boost::shared_ptr<Ventilation> ventilation;
-  boost::shared_ptr<EpwData> weatherData;
+  std::shared_ptr<Population> pop;
+  std::shared_ptr<Lighting> lights;
+  std::shared_ptr<Building> building;
+  std::shared_ptr<Structure> structure;
+  std::shared_ptr<Heating> heating;
+  std::shared_ptr<Cooling> cooling;
+  std::shared_ptr<Ventilation> ventilation;
+  std::shared_ptr<EpwData> weatherData;
 public:
   ISOHourly();
   virtual
@@ -269,49 +269,49 @@ public:
   calculateHourly();
 
   /** Set the population. */
-  void setPop(boost::shared_ptr<Population> value)
+  void setPop(std::shared_ptr<Population> value)
   {
     pop = value;
   }
 
   /** Set the lighting. */
-  void setLights(boost::shared_ptr<Lighting> value)
+  void setLights(std::shared_ptr<Lighting> value)
   {
     lights = value;
   }
 
   /** Set the building. */
-  void setBuilding(boost::shared_ptr<Building> value)
+  void setBuilding(std::shared_ptr<Building> value)
   {
     building = value;
   }
 
   /** Set the structure. */
-  void setStructure(boost::shared_ptr<Structure> value)
+  void setStructure(std::shared_ptr<Structure> value)
   {
     structure = value;
   }
 
   /** Set the heating. */
-  void setHeating(boost::shared_ptr<Heating> value)
+  void setHeating(std::shared_ptr<Heating> value)
   {
     heating = value;
   }
 
   /** Set the cooling. */
-  void setCooling(boost::shared_ptr<Cooling> value)
+  void setCooling(std::shared_ptr<Cooling> value)
   {
     cooling = value;
   }
 
   /** Set the ventilation. */
-  void setVentilation(boost::shared_ptr<Ventilation> value)
+  void setVentilation(std::shared_ptr<Ventilation> value)
   {
     ventilation = value;
   }
 
   /** Set the weather data. */
-  void setWeatherData(boost::shared_ptr<EpwData> value)
+  void setWeatherData(std::shared_ptr<EpwData> value)
   {
     weatherData = value;
   }

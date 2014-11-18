@@ -37,17 +37,17 @@ public:
   {
     _terrain = value;
   }
-  boost::shared_ptr<WeatherData> weather() const
+  std::shared_ptr<WeatherData> weather() const
   {
     return _weather;
   }
-  void setWeatherData(boost::shared_ptr<WeatherData> value)
+  void setWeatherData(std::shared_ptr<WeatherData> value)
   {
     _weather = value;
   }
 private:
   double _terrain;
-  boost::shared_ptr<WeatherData> _weather;
+  std::shared_ptr<WeatherData> _weather;
 };
 
 } // isomodel

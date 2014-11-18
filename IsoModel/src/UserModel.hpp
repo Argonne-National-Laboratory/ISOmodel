@@ -43,8 +43,8 @@ private:
   void
   parseStructure(std::string attributeName, const char* attributeValue);
 
-  boost::shared_ptr<WeatherData> _weather;
-  boost::shared_ptr<EpwData> _edata;
+  std::shared_ptr<WeatherData> _weather;
+  std::shared_ptr<EpwData> _edata;
   bool _valid;
   double _terrainClass;
   double _floorArea;
@@ -238,7 +238,7 @@ public:
   ISOHourly
   toHourlyModel() const;
 
-  const boost::shared_ptr<WeatherData> weatherData()
+  const std::shared_ptr<WeatherData> weatherData()
   {
     return _weather;
   }
