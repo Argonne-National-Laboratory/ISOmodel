@@ -1,14 +1,11 @@
 #include "Ventilation.hpp"
 
-
 namespace openstudio {
 namespace isomodel {
-
 
 Ventilation::Ventilation(void)
 {
 }
-
 
 Ventilation::~Ventilation(void)
 {

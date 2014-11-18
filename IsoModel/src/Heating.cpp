@@ -1,13 +1,11 @@
 #include "Heating.hpp"
 
-
 namespace openstudio {
 namespace isomodel {
 
 Heating::Heating(void)
 {
 }
-
 
 Heating::~Heating(void)
 {

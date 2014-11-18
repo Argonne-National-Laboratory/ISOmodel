@@ -1,9 +1,6 @@
 #ifndef __ISOMODEL_API_HPP__
 #define __ISOMODEL_API_HPP__
 
-
-
-
 #if _WIN32 || _MSC_VER
 
 #ifdef openstudio_isomodel_EXPORTS

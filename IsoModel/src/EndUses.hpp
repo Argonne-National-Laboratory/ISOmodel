@@ -6,14 +6,14 @@ namespace openstudio {
 class ISOMODEL_API EndUses
 {
 protected:
-	std::vector<double> data;
+  std::vector<double> data;
 public:
-  EndUses(){data.resize(20);}
-	~EndUses(void){}
-  inline void addEndUse(int use, double value){
+  EndUses() {data.resize(20);}
+  ~EndUses(void) {}
+  inline void addEndUse(int use, double value) {
     data[use] = value;
   }
-  inline double getEndUse(int use){
+  inline double getEndUse(int use) {
     return data[use];
   }
 };

@@ -23,51 +23,51 @@
 #include <model/Model.hpp>
 
 namespace openstudio {
-namespace isomodel {
+  namespace isomodel {
 
-  ForwardTranslator::ForwardTranslator()
-  {
-    m_logSink.setLogLevel(Warn);
-    m_logSink.setChannelRegex(boost::regex("openstudio\\.isomodel\\.ForwardTranslator"));
-  }
-
-  ForwardTranslator::~ForwardTranslator()
-  {
-  }
-
-  UserModel ForwardTranslator::translateModel(const openstudio::model::Model& model)
-  {
-    m_logSink.resetStringStream();
-
-    return UserModel();
-  }
-
-  std::vector<LogMessage> ForwardTranslator::warnings() const
-  {
-    std::vector<LogMessage> result;
-
-    BOOST_FOREACH(LogMessage logMessage, m_logSink.logMessages()){
-      if (logMessage.logLevel() == Warn){
-        result.push_back(logMessage);
-      }
+    ForwardTranslator::ForwardTranslator()
+    {
+      m_logSink.setLogLevel(Warn);
+      m_logSink.setChannelRegex(boost::regex("openstudio\\.isomodel\\.ForwardTranslator"));
     }
 
-    return result;
-  }
-
-  std::vector<LogMessage> ForwardTranslator::errors() const
-  {
-    std::vector<LogMessage> result;
-
-    BOOST_FOREACH(LogMessage logMessage, m_logSink.logMessages()){
-      if (logMessage.logLevel() > Warn){
-        result.push_back(logMessage);
-      }
+    ForwardTranslator::~ForwardTranslator()
+    {
     }
 
-    return result;
-  }
+    UserModel ForwardTranslator::translateModel(const openstudio::model::Model& model)
+    {
+      m_logSink.resetStringStream();
 
-} // isomodel
+      return UserModel();
+    }
+
+    std::vector<LogMessage> ForwardTranslator::warnings() const
+    {
+      std::vector<LogMessage> result;
+
+      BOOST_FOREACH(LogMessage logMessage, m_logSink.logMessages()) {
+        if (logMessage.logLevel() == Warn) {
+          result.push_back(logMessage);
+        }
+      }
+
+      return result;
+    }
+
+    std::vector<LogMessage> ForwardTranslator::errors() const
+    {
+      std::vector<LogMessage> result;
+
+      BOOST_FOREACH(LogMessage logMessage, m_logSink.logMessages()) {
+        if (logMessage.logLevel() > Warn) {
+          result.push_back(logMessage);
+        }
+      }
+
+      return result;
+    }
+
+  } // isomodel
 } // openstudio
 #endif
