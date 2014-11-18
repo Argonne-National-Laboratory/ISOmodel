@@ -23,7 +23,7 @@ using namespace std;
 namespace openstudio {
 namespace isomodel {
 
-  UserModel::UserModel()
+    UserModel::UserModel()
   {
   }
 
@@ -194,14 +194,19 @@ namespace isomodel {
 
     return sim;
   }
+    
   SimModel UserModel::toSimModel() const
   {
-    SimModel sim = SimModel();
-    if(!_valid){
-      return *((SimModel*)NULL);
+    
+    
+      SimModel sim;
+      
+    if(!valid()){
+        std::cout << "Invalid" << std::endl;
+        return *((SimModel*)NULL);
     }
-
-    boost::shared_ptr<Population> pop(new Population);
+      
+    boost::shared_ptr<Population> pop(new Population());
     pop->setDaysStart(_buildingOccupancyFrom);
     pop->setDaysEnd(_buildingOccupancyTo);
     pop->setHoursEnd(_equivFullLoadOccupancyTo);
@@ -210,7 +215,7 @@ namespace isomodel {
     pop->setDensityUnoccupied(_peopleDensityUnoccupied);
     pop->setHeatGainPerPerson(_heatGainPerPerson);
     sim.setPop(pop);
-
+      
     boost::shared_ptr<Location> loc(new Location);
     loc->setTerrain(_terrainClass);
     loc->setWeatherData(_weather);
@@ -726,14 +731,21 @@ namespace isomodel {
       cout << "Unknown Attribute: "<< attributeName << " = " << attributeValue <<endl;
     }    
   }
+    
   void UserModel::loadBuilding(std::string buildingFile){
     string line;
     ifstream inputFile (buildingFile.c_str());
     if (inputFile.is_open()) {
       while (inputFile.good()) {
         getline (inputFile,line);
-        if(line.size() > 0 && line[0] == '#')
-          continue;
+          if(line.size() > 0 && line[0] == '#') {
+              continue;
+          }
+          if (line[line.length() - 1] == '\r') {
+              // reading dos / windows on osx / linux
+              // so need to strip the /r
+            line.erase(line.length() - 1);
+          }
         parseLine(line);
       }
       inputFile.close();
@@ -742,6 +754,7 @@ namespace isomodel {
       cout << "Unable to open file"; 
     }
   }
+    
     int UserModel::weatherState(std::string header){
       if(!header.compare("solar"))
         return 1;
@@ -785,9 +798,9 @@ namespace isomodel {
     }
     return result;
   }
+    
   boost::shared_ptr<WeatherData> UserModel::loadWeather(){
-    boost::shared_ptr<WeatherData> wdata(new WeatherData);
-    std::vector<std::string> linesplit;
+      boost::shared_ptr<WeatherData> wdata(new WeatherData());
     std::string weatherFilename;
     //see if weather file path is absolute path
     //if so, use it, else assemble relative path
@@ -801,12 +814,31 @@ namespace isomodel {
       if ( !boost::filesystem::exists( weatherFilename ) )
       {
         std::cout << "Weather File Not Found: " << _weatherFilePath << std::endl;
-        _valid = false;
+          _valid = false;
         return wdata;//using shared_ptr doesn't compile with any attempt at returning null
       }
     }
-    string line;
+      
     _edata.loadData(weatherFilename);
+      initializeSolar(wdata);
+      return wdata;
+  }
+    
+    void UserModel::loadAndSetWeather() {
+        _weather = loadWeather();
+        _valid = true;
+    }
+    
+    void UserModel::loadWeather(int block_size, double* weather_data) {
+        boost::shared_ptr<WeatherData> wdata(new WeatherData());
+        _edata.loadData(block_size, weather_data);
+        initializeSolar(wdata);
+        _weather = wdata;
+        _valid = true;
+    }
+    
+    
+    void UserModel::initializeSolar(boost::shared_ptr<WeatherData>& wdata) {
 
     int state = 0, row=0;
     Matrix _msolar(12,8);
@@ -816,6 +848,9 @@ namespace isomodel {
     Vector _mdbt(12);
     Vector _mwind(12);
     
+    string line;
+        std::vector<std::string> linesplit;
+
     std::stringstream inputFile(_edata.toISOData());
 
     while (inputFile.good()) {
@@ -866,16 +901,15 @@ namespace isomodel {
     wdata->setMhEgh(_mhEgh);
     wdata->setMsolar(_msolar);
     wdata->setMwind(_mwind);
+}
     
-    return wdata;
-  }
   void UserModel::load(std::string buildingFile){
     this->dataFile = buildingFile;
-    _valid = true;
+      _valid = true;
     if ( !boost::filesystem::exists( buildingFile ) )
     {
       std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
-      _valid = false;
+        _valid = false;
       return;
     }
     if(DEBUG_ISO_MODEL_SIMULATION)
