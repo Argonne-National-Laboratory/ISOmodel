@@ -1,4 +1,4 @@
-#include "isomodel/Cooling.hpp"
+#include "Cooling.hpp"
 
 
 namespace openstudio {

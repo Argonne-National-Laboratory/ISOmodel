@@ -1,4 +1,4 @@
-#include "isomodel/EpwData.hpp"
+#include "EpwData.hpp"
 
 namespace openstudio {
 namespace isomodel {

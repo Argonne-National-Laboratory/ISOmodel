@@ -17,8 +17,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
 #ifdef _OPENSTUDIOS
-#include "isomodel/ForwardTranslator.hpp"
-#include "isomodel/UserModel.hpp"
+#include "ForwardTranslator.hpp"
+#include "UserModel.hpp"
 
 #include <model/Model.hpp>
 

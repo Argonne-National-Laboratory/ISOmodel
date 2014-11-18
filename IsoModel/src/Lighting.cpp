@@ -1,4 +1,4 @@
-#include "isomodel/Lighting.hpp"
+#include "Lighting.hpp"
 
 
 namespace openstudio {

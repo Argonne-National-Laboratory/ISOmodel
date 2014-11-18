@@ -1,4 +1,4 @@
-#include "isomodel/Ventilation.hpp"
+#include "Ventilation.hpp"
 
 
 namespace openstudio {

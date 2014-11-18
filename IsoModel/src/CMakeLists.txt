@@ -3,50 +3,44 @@ set(target_name isomodel)
 cmake_minimum_required(VERSION 3.0)
 
 set(${target_name}_src
-	isomodel/Building.hpp
-	isomodel/Cooling.hpp
-	isomodel/EpwData.hpp
-	isomodel/ForwardTranslator.hpp
-	isomodel/Heating.hpp
-    isomodel/ISOHourly.hpp
-	isomodel/ISOModelAPI.hpp
-	isomodel/Lighting.hpp
-	isomodel/Location.hpp
-	isomodel/Population.hpp
-	isomodel/SimModel.hpp
-	isomodel/SolarRadiation.hpp
-	isomodel/Structure.hpp
-	isomodel/TimeFrame.hpp
-	isomodel/UserModel.hpp
-	isomodel/Ventilation.hpp
-	isomodel/WeatherData.hpp
+	Building.hpp
+	Cooling.hpp
+	EpwData.hpp
+	ForwardTranslator.hpp
+	Heating.hpp
+    ISOHourly.hpp
+	ISOModelAPI.hpp
+	Lighting.hpp
+	Location.hpp
+	Population.hpp
+	SimModel.hpp
+	SolarRadiation.hpp
+	Structure.hpp
+	TimeFrame.hpp
+	UserModel.hpp
+	Ventilation.hpp
+	WeatherData.hpp
 	utilities/data/EndUses.hpp
 	utilities/data/Matrix.hpp
 	utilities/data/Vector.hpp
 	Building.cpp
 	Cooling.cpp
-	EndUses.cpp
 	EpwData.cpp
 	ForwardTranslator.cpp
 	Heating.cpp
     ISOHourly.cpp
 	Lighting.cpp
 	Location.cpp
-	Matrix.cpp
 	Population.cpp
 	SimModel.cpp
 	SolarRadiation.cpp
 	Structure.cpp
 	TimeFrame.cpp
 	UserModel.cpp
-	Vector.cpp
 	Ventilation.cpp
 	WeatherData.cpp
 )
 
-set(${target_name}_main 
-  	main.cpp
-)
 
 add_definitions( -DBOOST_ALL_NO_LIB )
 

@@ -1,4 +1,4 @@
-#include "isomodel/Structure.hpp"
+#include "Structure.hpp"
 
 
 namespace openstudio {

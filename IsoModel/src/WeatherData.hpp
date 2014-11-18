@@ -21,8 +21,8 @@
 
 #include "ISOModelAPI.hpp"
 
-#include "../utilities/data/Vector.hpp"
-#include "../utilities/data/Matrix.hpp"
+#include "Vector.hpp"
+#include "Matrix.hpp"
 
 #include <boost/shared_ptr.hpp>
 

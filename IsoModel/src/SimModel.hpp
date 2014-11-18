@@ -34,9 +34,9 @@
 #include "Heating.hpp"
 #include "Structure.hpp"
 #include "Ventilation.hpp"
-#include "../utilities/data/EndUses.hpp"
-#include "../utilities/data/Vector.hpp"
-#include "../utilities/data/Matrix.hpp"
+#include "EndUses.hpp"
+#include "Vector.hpp"
+#include "Matrix.hpp"
 
 
 namespace openstudio {

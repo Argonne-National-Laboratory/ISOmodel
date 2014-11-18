@@ -1,4 +1,4 @@
-#include "isomodel/WeatherData.hpp"
+#include "WeatherData.hpp"
 
 
 namespace openstudio {
