@@ -2557,14 +2557,20 @@ std::string format_elapsed(double d)
 }
 
 int main(int argc, char* argv[]) {
-  if(argc < 2) {
+	/*
+if(argc < 2) {
     std::cout << "Usage: " << argv[0] << " <filename.ISO>" <<std::endl;
     return -1;
   }
+*/
+  
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "Loading User Model..." <<std::endl;
   openstudio::isomodel::UserModel umodel;
-  umodel.load(argv[1]);
+  
+  //umodel.load(argv[1]);
+  umodel.load("C:\\Users\\Student\\Dropbox\\Argonne\\ISOHourlyRepo\\SmallOffice.ism");
+
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "User Model Loaded" <<std::endl;
 
@@ -2595,7 +2601,7 @@ int main(int argc, char* argv[]) {
   __int64 ticks;
 
   ISOResults hourlyResults;
-  for (int i = 0; i != 10; ++i){
+  
 	  QueryPerformanceCounter(&li);
 	  // run your app here...
 	  hourlyResults = hourly.calculateHourly();
@@ -2604,13 +2610,11 @@ int main(int argc, char* argv[]) {
 	  ticks = li2.QuadPart - li.QuadPart;
 	  // std::cout << "Hourly simulation complete" << std::endl;
 	  std::cout << "Hourly model ran in " << ticks << " ticks" << " (" << format_elapsed((double)ticks / (double)freq) << ")" << std::endl;
-  }
 
   // Create monthly model
   openstudio::isomodel::SimModel simModel = umodel.toSimModel();
   ISOResults results;
 
-  for (int i = 0; i != 10; ++i){
 	  // Run the hourly model and time it
 	  QueryPerformanceCounter(&li);
 	  // run your app here...
@@ -2620,7 +2624,7 @@ int main(int argc, char* argv[]) {
 	  ticks = li2.QuadPart - li.QuadPart;
 	  // std::cout << "Monthly simulation complete" << std::endl;
 	  std::cout << "Monthly model ran in " << ticks << " ticks" << " (" << format_elapsed((double)ticks / (double)freq) << ")" << std::endl;
-  }
+
 
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout <<std::endl;

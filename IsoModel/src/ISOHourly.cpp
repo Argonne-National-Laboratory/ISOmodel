@@ -193,6 +193,17 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month
 	results["externalEquipmentEnergyWperm2"] = externalEquipmentEnergyWperm2;
 	results["Q_dhw"] = Q_dhw;
 
+	// SPEED TEST vector vs map
+	std::vector<double> resultsVectorTest;
+	resultsVectorTest.push_back(Qneed_ht);
+	resultsVectorTest.push_back(Qneed_cl);
+	resultsVectorTest.push_back(Q_illum_tot);
+	resultsVectorTest.push_back(Q_illum_ext_tot);
+	resultsVectorTest.push_back(Qfan_tot);
+	resultsVectorTest.push_back(phi_plug);
+	resultsVectorTest.push_back(externalEquipmentEnergyWperm2);
+	resultsVectorTest.push_back(Q_dhw);
+
 	// Update tiHeatCool & TMT1 for next hour. tiHeatCool and TMT1 are passed by
 	// reference to the function, allowing this information to pass from hour to
 	// hour.
