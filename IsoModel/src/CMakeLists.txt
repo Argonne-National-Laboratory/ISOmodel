@@ -1,3 +1,4 @@
+project(isomodel_project)
 set(target_name isomodel)
 
 cmake_minimum_required(VERSION 3.0)
