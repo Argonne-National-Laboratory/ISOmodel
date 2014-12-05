@@ -125,4 +125,4 @@ dhwDistributionEfficiency = 0.33038965168355
 heatingPumpControl = 0.625403806654488
 coolingPumpControl = 0.0184589116025784
 heatGainPerPerson = 0.976673863929532
-weatherFilePath = ../ORD.epw
+weatherFilePath = ./ORD.epw

@@ -45,9 +45,9 @@ TEST(PropertiesTests, KeyValueTests)
   ASSERT_EQ(6.33, props.getPropertyAsDouble("BUILDINGHEIGHT"));
 }
 
-TEST(UserModelTests, InitializationTests)
+TEST(IsoModelTests, InitializationTests)
 {
-  openstudio::isomodel::UserModel userModel;
+  UserModel userModel;
   userModel.load("../test_data/ism_props_for_testing_umodel_init.ism");
 
   EXPECT_DOUBLE_EQ(0.366569597990189, userModel.terrainClass());
@@ -185,8 +185,56 @@ TEST(UserModelTests, InitializationTests)
   EXPECT_DOUBLE_EQ(0.0184589116025784, userModel.coolingPumpControl());
   EXPECT_DOUBLE_EQ(0.976673863929532, userModel.heatGainPerPerson());
 
-  EXPECT_STREQ("../ORD.epw", userModel.weatherFilePath().c_str());
+  EXPECT_STREQ("./ORD.epw", userModel.weatherFilePath().c_str());
+}
 
+/*
+ * Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW
+ 1, 0, 0.0371925, 2.88034, 0.257822, 7.3185, 0.799035, 2.24457, 0, 0, 41.5822, 0, 0, 0
+ 2, 0, 0.0694192, 2.6016, 0.199604, 5.89737, 0.643876, 2.02735, 0, 0, 33.43, 0, 0, 0
+ 3, 0, 0.196458, 2.88034, 0.184159, 4.56589, 0.498505, 2.24457, 0, 0, 25.6013, 0, 0, 0
+ 4, 0, 0.46986, 2.78743, 0.178218, 2.6064, 0.284567, 2.17216, 0, 0, 13.9098, 0, 0, 0
+ 5, 0, 1.41522, 2.88034, 0.147327, 1.42405, 0.155478, 2.24457, 0, 0, 5.31852, 0, 0, 0
+ 6, 0, 2.65012, 2.78743, 0.142575, 1.00172, 0.109368, 2.17216, 0, 0, 0.482898, 0, 0, 0
+ 7, 0, 3.9228, 2.88034, 0.147327, 1.3572, 0.148179, 2.24457, 0, 0, -3.61702e-17, 0, 0, 0
+ 8, 0, 2.2641, 2.88034, 0.147327, 0.838663, 0.0915654, 2.24457, 0, 0, 0.31496, 0, 0, 0
+ 9, 0, 1.03261, 2.78743, 0.178218, 0.897044, 0.0979394, 2.17216, 0, 0, 3.07235, 0, 0, 0
+ 10, 0, 0.269696, 2.88034, 0.202575, 2.63422, 0.287605, 2.24457, 0, 0, 14.4624, 0, 0, 0
+ 11, 0, 0.0614263, 2.78743, 0.231684, 4.55298, 0.497095, 2.17216, 0, 0, 25.7937, 0, 0, 0
+ 12, 0, 0.030399, 2.88034, 0.257822, 7.02313, 0.766787, 2.24457, 0, 0, 39.9145, 0, 0, 0
+ *
+ */
+TEST(IsoModelTests, SimModelTests)
+{
+  // the expected values are the results of running the "prior to updated parameter names
+  // and parsing" version and copying the results as they were printed out to stdout.
+  // Consequently these are not "exact" and so we use EXPECT_NEAR with 0.0001 to test.
+  double expected[12][14] =
+  {
+  { 0.0, 0.0371925, 2.88034, 0.257822, 7.3185, 0.799035, 2.24457, 0.0, 0.0, 41.5822, 0.0, 0.0, 0.0 },
+  { 0, 0.0694192, 2.6016, 0.199604, 5.89737, 0.643876, 2.02735, 0, 0, 33.43, 0, 0, 0 },
+  { 0, 0.196458, 2.88034, 0.184159, 4.56589, 0.498505, 2.24457, 0, 0, 25.6013, 0, 0, 0 },
+  { 0, 0.46986, 2.78743, 0.178218, 2.6064, 0.284567, 2.17216, 0, 0, 13.9098, 0, 0, 0 },
+  { 0, 1.41522, 2.88034, 0.147327, 1.42405, 0.155478, 2.24457, 0, 0, 5.31852, 0, 0, 0 },
+  { 0, 2.65012, 2.78743, 0.142575, 1.00172, 0.109368, 2.17216, 0, 0, 0.482898, 0, 0, 0 },
+  { 0, 3.9228, 2.88034, 0.147327, 1.3572, 0.148179, 2.24457, 0, 0, -3.61702e-17, 0, 0, 0 },
+  { 0, 2.2641, 2.88034, 0.147327, 0.838663, 0.0915654, 2.24457, 0, 0, 0.31496, 0, 0, 0 },
+  { 0, 1.03261, 2.78743, 0.178218, 0.897044, 0.0979394, 2.17216, 0, 0, 3.07235, 0, 0, 0 },
+  { 0, 0.269696, 2.88034, 0.202575, 2.63422, 0.287605, 2.24457, 0, 0, 14.4624, 0, 0, 0 },
+  { 0, 0.0614263, 2.78743, 0.231684, 4.55298, 0.497095, 2.17216, 0, 0, 25.7937, 0, 0, 0 },
+  { 0, 0.030399, 2.88034, 0.257822, 7.02313, 0.766787, 2.24457, 0, 0, 39.9145, 0, 0, 0 }
+  };
+
+  openstudio::isomodel::UserModel userModel;
+  userModel.load("../test_data/SmallOffice.ism");
+  SimModel simModel = userModel.toSimModel();
+  ISOResults results = simModel.simulate();
+
+  for (int i = 0; i < 12; ++i) {
+    for (int j = 0; j < 14; ++j) {
+      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.0001);
+    }
+  }
 }
 
 int main(int argc, char** argv)
