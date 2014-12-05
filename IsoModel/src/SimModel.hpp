@@ -54,6 +54,11 @@ namespace isomodel {
 #define DEBUG_ISO_MODEL_SIMULATION false
 typedef unsigned int uint;
 
+ISOMODEL_API
+void printVector(const char* vecName, Vector vec);
+ISOMODEL_API
+void printMatrix(const char* matName, Matrix mat);
+
 ISOMODEL_API Vector
 mult(const double* v1, const double s1, int size);
 ISOMODEL_API Vector
