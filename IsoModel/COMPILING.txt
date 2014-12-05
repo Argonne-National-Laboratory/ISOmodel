@@ -1,7 +1,3 @@
-TODO:
-
-Add bit about gtest:  cmake -DCMAKE_BUILD_TYPE=Debug -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/ ../src
-
 The isomodel code uses CMake for compilation. 
 
 OSX:
@@ -12,13 +8,20 @@ OSX:
 	and then Tools->Install for Command Line Use
 - Install Boost
 
+- Install gtest (Google C++ unit testing framework: https://code.google.com/p/googletest/)
+
 To Generate the makefile:
 
 1. Open terminal and cd to wherever you've cloned the isomodel.
 2. mkdir obj then cd obj. The obj directory is where cmake will generate the makefiles and where the
 actual compilation will take place. You can also call this release or debug if you want to
 create separate directories for those.
-3. Run: cmake -DCMAKE_BUILD_TYPE=(Release | Debug) ../src. If Boost is in some standard place 
+3. Run: cmake -DCMAKE_BUILD_TYPE=(Release | Debug) -DGTEST_ROOT=X ../src. 
+ * X should be the root location of gtest. For example if its in /Users/nick/src/gtest-1.7.0/
+ then -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/. CMake will look in that directory for both 
+ the gtest and gtest_main library and the headers.
+
+If Boost is in some standard place 
 such as /usr/local/include etc. then it should be found. If not you can specify where to find 
 it with the flags: -DBoost_LIBRARY_DIR and -DBoost_INCLUDE_DIR
 
@@ -28,6 +31,7 @@ Windows:
 	During the install, you can choose to add the cmake executable to the PATH. 
 	Make sure to do this.
 - Install Boost 32 bit and 64
+- Install gtest (Google C++ unit testing framework: https://code.google.com/p/googletest/)
 - Install Visual Studio -- the free editions are fine
 
 To generate an nmake (Visual Studio's "make") Makefile:
@@ -43,10 +47,13 @@ actual compilation will take place. You can also call this Release or Debug if y
 create separate directories for those.
 
 4.Run: cmake -DCMAKE_BUILD_TYPE=(Release | Debug) ../src -G "NMake Makefiles" -DBoost_LIBRARY_DIR=
-C:/local/boost_1_55_0/lib64-msvc-12.0 -DBoost_INCLUDE_DIR=C:/local/boost_1_55_0. 
+C:/local/boost_1_55_0/lib64-msvc-12.0 -DBoost_INCLUDE_DIR=C:/local/boost_1_55_0 -DGTEST_ROOT=X
 	* Choose Release or Debug as appropriate
 	* Set the Boost_LIBRARY_DIR and the Boost_INCLUDE_DIR to wherever you've installed boost.
 	  If you are doing a 64bit build then make sure to choose the 64bit library location.
+	* X should be the root location of gtest. For example if its in /Users/nick/src/gtest-1.7.0/
+ 	  then -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/. CMake will look in that directory for both 
+ 	  the gtest and gtest_main library and the headers.
 	  
 5. Run: nmake. This will build the isomodel.dll, isomodel.lib and the isomodel_standalone.exe executable. 
 
@@ -55,7 +62,9 @@ To generate a Visual Studio Solution using cmake:
 1. Do the same as above, up to step 4.
 
 2. Run: cmake ../src -G "Visual Studio 12 2013 Win64"  -DBoost_LIBRARY_DIR=C:/local/boost_1_55_0/lib64-msvc-12.0 
--DBoost_INCLUDE_DIR=C:/local/boost_1_55_0
+-DBoost_INCLUDE_DIR=C:/local/boost_1_55_0 -DGTEST_ROOT=X
+
+See the notes in step 4 above for more details.
 
 Remove the Win64 if you are not doing a 64bit build.
 
