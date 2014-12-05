@@ -8,43 +8,43 @@ buildingHeight = 6.33
 floorArea = 511.16
 peopleDensityOccupied = 25.4683514030612
 peopleDensityUnoccupied = 150.51041254091
-buildingOccupancyFrom = 1
-buildingOccupancyTo = 5
-equivFullLoadOccupancyFrom = 8
-equivFullLoadOccupancyTo = 18
+occupancyDayStart = 1
+occupancyDayEnd = 5
+occupancyHourStart = 8
+occupancyHourEnd = 18
 # LPD, EPD, GPD all in W/m2, ext light power in W, an heat gain is W/person
-lightingPowerIntensityOccupied = 6.33869983780207
-lightingPowerIntensityUnoccupied = 2.58639212251571
-elecPowerAppliancesOccupied = 4.83103336902162
-elecPowerAppliancesUnoccupied = 2.24818845302062
-gasPowerAppliancesOccupied = 0.0
-gasPowerAppliancesUnoccupied = 0.0
+lightingPowerDensityOccupied = 6.33869983780207
+lightingPowerDensityUnoccupied = 2.58639212251571
+electricAppliancePowerDensityOccupied = 4.83103336902162
+electricAppliancePowerDensityUnoccupied = 2.24818845302062
+gasAppliancePowerOccupied = 0.0
+gasAppliancePowerUnoccupied = 0.0
 exteriorLightingPower = 303.660166666667
 heatGainPerPerson=120.0
 # Temp set points in degrees C
-heatingOccupiedSetpoint = 24
-heatingUnoccupiedSetpoint= 24
-coolingOccupiedSetpoint= 28
-coolingUnoccupiedSetpoint= 28
+heatingSetpointOccupied = 24
+heatingSetpointUnoccupied = 24
+coolingSetpointOccupied = 28
+coolingSetpointUnoccupied = 28
 # HVAC waste, heating and cooling loss factors set by HVAC type from EN 15243
 hvacWasteFactor = 0.0
 hvacHeatingLossFactor = 0.25
 hvacCoolingLossFactor = 0.0
 # daylight sensors, occupancy sensors, illum control are set to 1 if there is no control.   See iso 15193 Annex F/G for values
-daylightSensorSystem = 1
-lightingOccupancySensorSystem = 1
-constantIlluminationControl = 1
+daylightSensorDimmingFraction = 1
+lightingOccupancyDimmingFraction = 1
+constantIlluminationControlMultiplier = 1
 # COP is W/W, coolingSystemIPLV is the ratio of IPLV/COP
 coolingSystemCOP = 3.21030372594672
 coolingSystemIPLVToCopRatio =1.04773541524309
 #energycarrier is 1 if electric, 2 if gas
-heatingEnergyCarrier = 2
+heatingFuelType = 2
 heatingSystemEfficiency = 2.13505737091766
 # vent type is 1 if mech, 2 if natural, 3 if mixed
 ventilationType = 1
 # ventilation flow rates in L/s, default is 10 L/s/person ~ 20 cfm/person
-freshAirFlowRate = 158.1941
-supplyExhaustRate = 158.1941
+ventilationIntakeRateOccupied = 158.1941
+ventilationExhaustRateOccupied = 158.1941
 # heatRecover = efficiency of heat recovery (0 for none), exhaustAirRecir = fraction of supply air recirculated
 heatRecovery = 0.0
 exhaustAirRecirculation = 0.0
@@ -53,7 +53,7 @@ dhwDemand =  0.0
 # dhwDistribution efficiency all taps w/i 3m = 1, taps more than 3m = 0.8, circulation or unknown = 0.6, see NEN 2916 12.6, 
 dhwSystemEfficiency = 0.8
 dhwDistributionEfficiency = 0.6
-dhwEnergyCarrier = 2
+dhwFuelType = 2
 # Surface Heat capacity in J/K/m2
 interiorHeatCapacity = 98010.0000000022
 exteriorHeatCapacity = 29707.0229928189
@@ -64,7 +64,7 @@ specificFanPower = 0.892769460142308
 # fan flow control  1= no control, 0.75 = inlet blade adjuct, 0.65= variable speed  see NEN 2916 7.3.3.4  
 fanFlowcontrolFactor = 1.0
 # infiltration in m3/m2/hr based on surface area
-infiltration = 7.08899540065705
+infiltrationRateOccupied = 7.08899540065705
 # pump control 0= no pump, 0.5 = auto pump controls for more 50% of pumps, 1.0 = all other cases.   See NEN 2914 9.4.3
 heatingPumpControl=1.0
 coolingPumpControl=1.0

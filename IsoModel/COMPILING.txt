@@ -1,3 +1,7 @@
+TODO:
+
+Add bit about gtest:  cmake -DCMAKE_BUILD_TYPE=Debug -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/ ../src
+
 The isomodel code uses CMake for compilation. 
 
 OSX:

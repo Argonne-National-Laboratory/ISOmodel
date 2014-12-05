@@ -24,6 +24,7 @@
 #include "EpwData.hpp"
 #include "SimModel.hpp"
 #include "ISOHourly.hpp"
+#include "Properties.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -41,7 +42,7 @@ private:
   std::string
   resolveFilename(std::string baseFile, std::string relativeFile);
   void
-  parseStructure(std::string attributeName, const char* attributeValue);
+  initializeStructure(const Properties& buildingParams);
 
   std::shared_ptr<WeatherData> _weather;
   std::shared_ptr<EpwData> _edata;
@@ -195,7 +196,7 @@ private:
   std::string dataFile;
 
   void
-  parseLine(std::string line);
+  initializeParameters(const Properties& props);
   void
   loadBuilding(std::string buildingFile);
   int
