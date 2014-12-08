@@ -108,6 +108,18 @@ public:
   double getPropertyAsDouble(const std::string& key) const;
 
   /**
+   * Gets the property with the specified key as a vector of doubles. The
+   * value is comma separated list of doubles that will be parsed into a
+   * vector of doubles.
+   *
+   * @param key the property key
+   *
+   * @return the vector of doubles for that key
+   * @throws std::invalid_argument if the specified property is not found or is not a double.
+   */
+  void getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
+
+  /**
    * Gets whether or not this Properties contains the specified key.
    *
    * @param key the property key

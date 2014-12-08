@@ -3,6 +3,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/tokenizer.hpp>
+
 #include "Properties.hpp"
 
 using namespace std;
@@ -36,6 +38,17 @@ Properties::Properties()
 
 Properties::Properties(const std::string& file) {
   readFile(file);
+}
+
+void Properties::getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const {
+  std::string val = getProperty(key);
+  vec.clear();
+  // tokenize the line using boost's escaped list separator which parses CSV format
+  boost::tokenizer<boost::escaped_list_separator<char> > tok(val);
+  // assign those values to the vector
+  for (auto& item : tok) {
+    vec.push_back(std::stod(item));
+  }
 }
 
 double Properties::getPropertyAsDouble(const std::string& key) const
