@@ -86,6 +86,14 @@ add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
 target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
 target_link_libraries(isomodel_unit_tests ${unit_test_depends})
 
+# define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
+# this allows use to test parsing the as yet unused parameters 
+set_property(
+	TARGET isomodel_unit_tests 
+	PROPERTY COMPILE_DEFINITIONS USE_NEW_BUILDING_PARAMS
+)
+
+
 add_library(${library_name} SHARED ${${target_name}_src})
 target_link_libraries(${library_name} ${${target_name}_depends})
 
