@@ -172,6 +172,7 @@ private:
   double _windowSCFNW;
   double _windowSCFW;
   double _windowSCFSW;
+  double _skylightSCF;
 
   double _windowSDFS;
   double _windowSDFSE;
@@ -181,6 +182,7 @@ private:
   double _windowSDFNW;
   double _windowSDFW;
   double _windowSDFSW;
+  double _skylightSDF;
 
   double _exteriorHeatCapacity;
   double _infiltration;
@@ -1090,6 +1092,17 @@ public:
     return _skylightSHGC;
   }
 
+  double skylightSDF() const
+    {
+      return _skylightSDF;
+    }
+
+  double skylightSCF()
+    {
+      return _skylightSCF;
+    }
+
+
   double exteriorHeatCapacity()
   {
     return _exteriorHeatCapacity;
@@ -1387,6 +1400,16 @@ public:
   {
     _skylightSHGC = val;
   }
+
+  void setSkylightSDF(double val)
+    {
+      _skylightSDF = val;
+    }
+
+  void setSkylightSCF(double val)
+    {
+      _skylightSCF = val;
+    }
 
   void setExteriorHeatCapacity(double val)
   {

@@ -515,8 +515,7 @@ void UserModel::initializeStructure(const Properties& buildingParams)
   _windowSCFSW = values[5];
   _windowSCFW = values[6];
   _windowSCFNW = values[7];
-  // Uncomment when _skylightSCF is implemented
-  //_skylightSCF = values[8];
+  _skylightSCF = values[8];
 
   buildingParams.getPropertyAsDoubleVector("windowSDF", values);
   if (values.size() != 9)
@@ -529,8 +528,7 @@ void UserModel::initializeStructure(const Properties& buildingParams)
   _windowSDFSW = values[5];
   _windowSDFW = values[6];
   _windowSDFNW = values[7];
-  // Uncomment when _skylightSDF is implemented
-  //_skylightSDF = values[8];
+  _skylightSDF = values[8];
 }
 
 void UserModel::initializeParameters(const Properties& buildingParams)

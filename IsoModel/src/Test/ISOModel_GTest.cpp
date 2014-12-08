@@ -180,6 +180,8 @@ TEST(IsoModelTests, InitializationTests)
   EXPECT_DOUBLE_EQ(0.0746662195816253, userModel.windowSDFNW());
   EXPECT_DOUBLE_EQ(0.970579615803331, userModel.windowSDFW());
   EXPECT_DOUBLE_EQ(0.617489329894299, userModel.windowSDFSW());
+  EXPECT_DOUBLE_EQ(0.3434343, userModel.skylightSCF());
+  EXPECT_DOUBLE_EQ(0.2534335, userModel.skylightSDF());
   EXPECT_DOUBLE_EQ(0.523964673586454, userModel.exteriorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.139585598177502, userModel.infiltration());
   EXPECT_DOUBLE_EQ(0.287554068015519, userModel.hvacWasteFactor());
