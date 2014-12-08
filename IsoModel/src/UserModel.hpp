@@ -192,7 +192,17 @@ private:
   double _coolingPumpControl;
   double _heatGainPerPerson;
 
-  std::string _weatherFilePath;
+  double _ventilationIntakeRateUnoccupied;
+  double _ventilationExhaustRateUnoccupied;
+  double _infiltrationRateUnoccupied;
+  double _lightingPowerFixedOccupied;
+  double _lightingPowerFixedUnoccupied;
+  double _electricAppliancePowerFixedOccupied;
+  double _electricAppliancePowerFixedUnoccupied;
+  double _gasAppliancePowerFixedOccupied;
+  double _gasAppliancePowerFixedUnoccupied;
+
+  std::string _weatherFilePath, _scheduleFilePath;
   std::string dataFile;
 
   void
@@ -1413,6 +1423,104 @@ public:
   void setHeatGainPerPerson(double val)
   {
     _heatGainPerPerson = val;
+  }
+
+  std::string scheduleFilePath() const {
+    return _scheduleFilePath;
+  }
+
+  void setScheduleFilePath(const std::string& path) {
+    _scheduleFilePath = path;
+  }
+
+  double electricAppliancePowerFixedOccupied() const
+  {
+    return _electricAppliancePowerFixedOccupied;
+  }
+
+  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied)
+  {
+    _electricAppliancePowerFixedOccupied = electricAppliancePowerFixedOccupied;
+  }
+
+  double electricAppliancePowerFixedUnoccupied() const
+  {
+    return _electricAppliancePowerFixedUnoccupied;
+  }
+
+  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied)
+  {
+    _electricAppliancePowerFixedUnoccupied = electricAppliancePowerFixedUnoccupied;
+  }
+
+  double gasAppliancePowerFixedOccupied() const
+  {
+    return _gasAppliancePowerFixedOccupied;
+  }
+
+  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied)
+  {
+    _gasAppliancePowerFixedOccupied = gasAppliancePowerFixedOccupied;
+  }
+
+  double gasAppliancePowerFixedUnoccupied() const
+  {
+    return _gasAppliancePowerFixedUnoccupied;
+  }
+
+  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied)
+  {
+    _gasAppliancePowerFixedUnoccupied = gasAppliancePowerFixedUnoccupied;
+  }
+
+  double infiltrationRateUnoccupied() const
+  {
+    return _infiltrationRateUnoccupied;
+  }
+
+  void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied)
+  {
+    _infiltrationRateUnoccupied = infiltrationRateUnoccupied;
+  }
+
+  double lightingPowerFixedOccupied() const
+  {
+    return _lightingPowerFixedOccupied;
+  }
+
+  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied)
+  {
+    _lightingPowerFixedOccupied = lightingPowerFixedOccupied;
+  }
+
+  double lightingPowerFixedUnoccupied() const
+  {
+    return _lightingPowerFixedUnoccupied;
+  }
+
+  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied)
+  {
+    _lightingPowerFixedUnoccupied = lightingPowerFixedUnoccupied;
+  }
+
+  double ventilationExhaustRateUnoccupied() const
+  {
+    return _ventilationExhaustRateUnoccupied;
+  }
+
+  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied)
+  {
+    _ventilationExhaustRateUnoccupied = ventilationExhaustRateUnoccupied;
+  }
+
+  double ventilationIntakeRateUnoccupied() const
+  {
+    return _ventilationIntakeRateUnoccupied;
+  }
+
+  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied)
+  {
+    _ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
   }
 };
 

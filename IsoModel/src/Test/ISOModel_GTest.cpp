@@ -12,9 +12,7 @@
 
 using namespace openstudio::isomodel;
 
-const std::string KEYS[] =
-{ "weatherFilePath", "terrainClass", "buildingHeight", "occupancyHourEnd", "wallU" };
-
+std::string test_data_path;
 /*
  * weatherFilePath = ORD.epw
  # Terrain class urban/city = 0.8, suburban/some shielding = 0.9, country/open = 1.0
@@ -27,14 +25,14 @@ const std::string KEYS[] =
 
 TEST(PropertiesTests, KeyValueTests)
 {
-  Properties props("../test_data/test_properties.props");
+  Properties props(test_data_path + "/test_properties.props");
   ASSERT_EQ(5, props.size());
 
-  ASSERT_EQ("ORD.epw", props.getProperty(KEYS[0]));
-  ASSERT_EQ(0.8, props.getPropertyAsDouble(KEYS[1]));
-  ASSERT_EQ(6.33, props.getPropertyAsDouble(KEYS[2]));
-  ASSERT_EQ(18.0, props.getPropertyAsDouble(KEYS[3]));
-  ASSERT_STREQ("2.1, 234.3, 12.3", props.getProperty(KEYS[4]).c_str());
+  ASSERT_EQ("ORD.epw", props.getProperty("weatherFilePath"));
+  ASSERT_EQ(0.8, props.getPropertyAsDouble("terrainClass"));
+  ASSERT_EQ(6.33, props.getPropertyAsDouble("buildingHeight"));
+  ASSERT_EQ(18.0, props.getPropertyAsDouble("occupancyHourEnd"));
+  ASSERT_STREQ("2.1, 234.3, 12.3", props.getProperty("wallU").c_str());
 
   props.putProperty("a string", "some string");
   ASSERT_STREQ("some string", props.getProperty("a string").c_str());
@@ -43,12 +41,19 @@ TEST(PropertiesTests, KeyValueTests)
 
   // test case insensitivity
   ASSERT_EQ(6.33, props.getPropertyAsDouble("BUILDINGHEIGHT"));
+
+  std::vector<double> vec;
+  props.getPropertyAsDoubleVector("wallU", vec);
+  ASSERT_EQ(3, vec.size());
+  ASSERT_EQ(2.1, vec[0]);
+  ASSERT_EQ(234.3, vec[1]);
+  ASSERT_EQ(12.3, vec[2]);
 }
 
 TEST(IsoModelTests, InitializationTests)
 {
   UserModel userModel;
-  userModel.load("../test_data/ism_props_for_testing_umodel_init.ism");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
 
   EXPECT_DOUBLE_EQ(0.366569597990189, userModel.terrainClass());
   EXPECT_DOUBLE_EQ(0.13797878192703, userModel.floorArea());
@@ -75,9 +80,9 @@ TEST(IsoModelTests, InitializationTests)
   EXPECT_DOUBLE_EQ(0.295905191092175, userModel.constantIlluminationControl());
   EXPECT_DOUBLE_EQ(0.977647331541828, userModel.coolingSystemCOP());
   EXPECT_DOUBLE_EQ(0.86953551426846, userModel.coolingSystemIPLVToCOPRatio());
-  EXPECT_DOUBLE_EQ(0.263002176275548, userModel.heatingEnergyCarrier());
+  EXPECT_DOUBLE_EQ(1, userModel.heatingEnergyCarrier());
   EXPECT_DOUBLE_EQ(0.710454137223511, userModel.heatingSystemEfficiency());
-  EXPECT_DOUBLE_EQ(0.0841726806995226, userModel.ventilationType());
+  EXPECT_DOUBLE_EQ(3, userModel.ventilationType());
   EXPECT_DOUBLE_EQ(0.903704085971796, userModel.freshAirFlowRate());
   EXPECT_DOUBLE_EQ(0.724248760195895, userModel.supplyExhaustRate());
   EXPECT_DOUBLE_EQ(0.49985550202677, userModel.heatRecovery());
@@ -88,8 +93,8 @@ TEST(IsoModelTests, InitializationTests)
   // this is no longer set, we should delete the accessors for it
   // and the variable
   // EXPECT_DOUBLE_EQ(0.791092991177229, userModel.dhwDistributionSystem());
-  EXPECT_DOUBLE_EQ(0.789220796023767, userModel.dhwEnergyCarrier());
-  EXPECT_DOUBLE_EQ(0.293374792126407, userModel.bemType());
+  EXPECT_DOUBLE_EQ(2, userModel.dhwEnergyCarrier());
+  EXPECT_DOUBLE_EQ(3, userModel.bemType());
   EXPECT_DOUBLE_EQ(0.590020871911987, userModel.interiorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.256509943938684, userModel.specificFanPower());
   EXPECT_DOUBLE_EQ(0.171213718831364, userModel.fanFlowControlFactor());
@@ -186,6 +191,18 @@ TEST(IsoModelTests, InitializationTests)
   EXPECT_DOUBLE_EQ(0.976673863929532, userModel.heatGainPerPerson());
 
   EXPECT_STREQ("./ORD.epw", userModel.weatherFilePath().c_str());
+
+  EXPECT_DOUBLE_EQ(0.1, userModel.ventilationIntakeRateUnoccupied());
+  EXPECT_DOUBLE_EQ(0.2, userModel.ventilationExhaustRateUnoccupied());
+  EXPECT_DOUBLE_EQ(0.3, userModel.infiltrationRateUnoccupied());
+  EXPECT_DOUBLE_EQ(0.4, userModel.lightingPowerFixedOccupied());
+  EXPECT_DOUBLE_EQ(0.5, userModel.lightingPowerFixedUnoccupied());
+  EXPECT_DOUBLE_EQ(0.6, userModel.electricAppliancePowerFixedOccupied());
+  EXPECT_DOUBLE_EQ(0.7, userModel.electricAppliancePowerFixedUnoccupied());
+  EXPECT_DOUBLE_EQ(0.8, userModel.gasAppliancePowerFixedOccupied());
+  EXPECT_DOUBLE_EQ(0.9, userModel.gasAppliancePowerFixedUnoccupied());
+
+  EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
 
 /*
@@ -222,11 +239,10 @@ TEST(IsoModelTests, SimModelTests)
   { 0, 1.03261, 2.78743, 0.178218, 0.897044, 0.0979394, 2.17216, 0, 0, 3.07235, 0, 0, 0 },
   { 0, 0.269696, 2.88034, 0.202575, 2.63422, 0.287605, 2.24457, 0, 0, 14.4624, 0, 0, 0 },
   { 0, 0.0614263, 2.78743, 0.231684, 4.55298, 0.497095, 2.17216, 0, 0, 25.7937, 0, 0, 0 },
-  { 0, 0.030399, 2.88034, 0.257822, 7.02313, 0.766787, 2.24457, 0, 0, 39.9145, 0, 0, 0 }
-  };
+  { 0, 0.030399, 2.88034, 0.257822, 7.02313, 0.766787, 2.24457, 0, 0, 39.9145, 0, 0, 0 } };
 
   openstudio::isomodel::UserModel userModel;
-  userModel.load("../test_data/SmallOffice.ism");
+  userModel.load(test_data_path + "/SmallOffice_v2.ism");
   SimModel simModel = userModel.toSimModel();
   ISOResults results = simModel.simulate();
 
@@ -239,7 +255,16 @@ TEST(IsoModelTests, SimModelTests)
 
 int main(int argc, char** argv)
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  if (argc < 2) {
+    std::cout << "Usage: isomodel_unit_tests test_data_directory" << std::endl;
+    return 0;
+  } else {
+    ::testing::InitGoogleTest(&argc, argv);
+    test_data_path = argv[argc - 1];
+    std::cout << test_data_path << std::endl;
+    return RUN_ALL_TESTS();
+
+  }
+
 }
 

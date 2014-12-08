@@ -23,6 +23,17 @@ using namespace std;
 namespace openstudio {
 namespace isomodel {
 
+const std::string GAS = "gas";
+const std::string ELECTRIC = "electric";
+
+const std::string MECHANICAL = "mechanical";
+const std::string NATURAL = "natural";
+const std::string COMBINED = "combined";
+
+const std::string NONE = "none";
+const std::string SIMPLE = "simple";
+const std::string ADVANCED = "advanced";
+
 UserModel::UserModel() :
     _weather(new WeatherData()), _edata(new EpwData())
 {
@@ -398,155 +409,128 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
   return results;
 }
 
-// trim from front and back ends
-static inline std::string trim(std::string &s)
-{
-  const char* cstr = s.c_str();
-  int start = 0, end = s.size();
-  while (*cstr == ' ') {
-    cstr++;
-    start++;
-  }
-  cstr += (end - start - 1);
-  while (*cstr == ' ') {
-    cstr--;
-    end--;
-  }
-  return s.substr(start, end - start);
-}
-// trim from front and back ends
-static inline std::string lcase(std::string &s)
-{
-  for (unsigned int i = 0; i < s.size(); i++) {
-    if (s.at(i) < 91) {
-      s.at(i) = s.at(i) + 32;
-    }
-  }
-  return s;
-}
-
 void UserModel::initializeStructure(const Properties& buildingParams)
 {
-  double attributeValue = buildingParams.getPropertyAsDouble("windowuvaluen");
-  _windowUvalueN = attributeValue;
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcn");
-  _windowSHGCN = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfn");
-  _windowSCFN = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfn");
-  _windowSDFN = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluen");
-  _wallUvalueN = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionn");
-  _wallSolarAbsorptionN = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivityn");
-  _wallThermalEmissivityN = attributeValue;
+  std::vector<double> values;
+  buildingParams.getPropertyAsDoubleVector("wallArea", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallArea parameter. It must have 9.");
+  _wallAreaN = values[0];
+  _wallAreaNE = values[1];
+  _wallAreaE = values[2];
+  _wallAreaSE = values[3];
+  _wallAreaS = values[4];
+  _wallAreaSW = values[5];
+  _wallAreaW = values[6];
+  _wallAreaNW = values[7];
+  _roofArea = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluene");
-  _windowUvalueNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcne");
-  _windowSHGCNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfne");
-  _windowSCFNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfne");
-  _windowSDFNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluene");
-  _wallUvalueNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionne");
-  _wallSolarAbsorptionNE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivityne");
-  _wallThermalEmissivityNE = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("wallU", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallU parameter. It must have 9.");
+  _wallUvalueN = values[0];
+  _wallUvalueNE = values[1];
+  _wallUvalueE = values[2];
+  _wallUvalueSE = values[3];
+  _wallUvalueS = values[4];
+  _wallUvalueSW = values[5];
+  _wallUvalueW = values[6];
+  _wallUvalueNW = values[7];
+  _roofUValue = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluee");
-  _windowUvalueE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgce");
-  _windowSHGCE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfe");
-  _windowSCFE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfe");
-  _windowSDFE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluee");
-  _wallUvalueE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptione");
-  _wallSolarAbsorptionE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivitye");
-  _wallThermalEmissivityE = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("wallEmissivity", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallEmissivity parameter. It must have 9.");
+  _wallThermalEmissivityN = values[0];
+  _wallThermalEmissivityNE = values[1];
+  _wallThermalEmissivityE = values[2];
+  _wallThermalEmissivitySE = values[3];
+  _wallThermalEmissivityS = values[4];
+  _wallThermalEmissivitySW = values[5];
+  _wallThermalEmissivityW = values[6];
+  _wallThermalEmissivityNW = values[7];
+  _roofThermalEmissivity = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluese");
-  _windowUvalueSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcse");
-  _windowSHGCSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfse");
-  _windowSCFSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfse");
-  _windowSDFSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluese");
-  _wallUvalueSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionse");
-  _wallSolarAbsorptionSE = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivityse");
-  _wallThermalEmissivitySE = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("wallAbsorption", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallAbsorption parameter. It must have 9.");
+  _wallSolarAbsorptionN = values[0];
+  _wallSolarAbsorptionNE = values[1];
+  _wallSolarAbsorptionE = values[2];
+  _wallSolarAbsorptionSE = values[3];
+  _wallSolarAbsorptionS = values[4];
+  _wallSolarAbsorptionSW = values[5];
+  _wallSolarAbsorptionW = values[6];
+  _wallSolarAbsorptionNW = values[7];
+  _roofSolarAbsorption = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvalues");
-  _windowUvalueS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcs");
-  _windowSHGCS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfs");
-  _windowSCFS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfs");
-  _windowSDFS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvalues");
-  _wallUvalueS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptions");
-  _wallSolarAbsorptionS = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivitys");
-  _wallThermalEmissivityS = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("windowArea", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowArea parameter. It must have 9.");
+  _windowAreaN = values[0];
+  _windowAreaNE = values[1];
+  _windowAreaE = values[2];
+  _windowAreaSE = values[3];
+  _windowAreaS = values[4];
+  _windowAreaSW = values[5];
+  _windowAreaW = values[6];
+  _windowAreaNW = values[7];
+  _skylightArea = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluesw");
-  _windowUvalueSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcsw");
-  _windowSHGCSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfsw");
-  _windowSCFSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfsw");
-  _windowSDFSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluesw");
-  _wallUvalueSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionsw");
-  _wallSolarAbsorptionSW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivitysw");
-  _wallThermalEmissivitySW = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("windowU", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowU parameter. It must have 9.");
+  _windowUvalueN = values[0];
+  _windowUvalueNE = values[1];
+  _windowUvalueE = values[2];
+  _windowUvalueSE = values[3];
+  _windowUvalueS = values[4];
+  _windowUvalueSW = values[5];
+  _windowUvalueW = values[6];
+  _windowUvalueNW = values[7];
+  _skylightUvalue = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluew");
-  _windowUvalueW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcw");
-  _windowSHGCW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfw");
-  _windowSCFW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfw");
-  _windowSDFW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluew");
-  _wallUvalueW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionw");
-  _wallSolarAbsorptionW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivityw");
-  _wallThermalEmissivityW = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("windowSHGC", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSHGC parameter. It must have 9.");
+  _windowSHGCN = values[0];
+  _windowSHGCNE = values[1];
+  _windowSHGCE = values[2];
+  _windowSHGCSE = values[3];
+  _windowSHGCS = values[4];
+  _windowSHGCSW = values[5];
+  _windowSHGCW = values[6];
+  _windowSHGCNW = values[7];
+  _skylightSHGC = values[8];
 
-  attributeValue = buildingParams.getPropertyAsDouble("windowuvaluenw");
-  _windowUvalueNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowshgcnw");
-  _windowSHGCNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowscfnw");
-  _windowSCFNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("windowsdfnw");
-  _windowSDFNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("walluvaluenw");
-  _wallUvalueNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallsolarabsorptionnw");
-  _wallSolarAbsorptionNW = attributeValue;
-  attributeValue = buildingParams.getPropertyAsDouble("wallthermalemissivitynw");
-  _wallThermalEmissivityNW = attributeValue;
+  buildingParams.getPropertyAsDoubleVector("windowSCF", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSCF parameter. It must have 9.");
+  _windowSCFN = values[0];
+  _windowSCFNE = values[1];
+  _windowSCFE = values[2];
+  _windowSCFSE = values[3];
+  _windowSCFS = values[4];
+  _windowSCFSW = values[5];
+  _windowSCFW = values[6];
+  _windowSCFNW = values[7];
+  // Uncomment when _skylightSCF is implemented
+  //_skylightSCF = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowSDF", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSDF parameter. It must have 9.");
+  _windowSDFN = values[0];
+  _windowSDFNE = values[1];
+  _windowSDFE = values[2];
+  _windowSDFSE = values[3];
+  _windowSDFS = values[4];
+  _windowSDFSW = values[5];
+  _windowSDFW = values[6];
+  _windowSDFNW = values[7];
+  // Uncomment when _skylightSDF is implemented
+  //_skylightSDF = values[8];
 }
 
 void UserModel::initializeParameters(const Properties& buildingParams)
@@ -599,12 +583,32 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   setCoolingSystemCOP(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("coolingsystemiplvtocopratio");
   setCoolingSystemIPLVToCOPRatio(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingfueltype");
+
+  std::string type = buildingParams.getProperty("heatingfueltype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == ELECTRIC)
+    attributeValue = 1.0;
+  else if (type == GAS)
+    attributeValue = 2.0;
+  else
+    throw invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
   setHeatingEnergyCarrier(attributeValue);
+
   attributeValue = buildingParams.getPropertyAsDouble("heatingsystemefficiency");
   setHeatingSystemEfficiency(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationtype");
+
+  type = buildingParams.getProperty("ventilationtype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == MECHANICAL)
+    attributeValue = 1.0;
+  else if (type == COMBINED)
+    attributeValue = 2.0;
+  else if (type == NATURAL)
+    attributeValue = 3.0;
+  else
+    throw invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
   setVentilationType(attributeValue);
+
   attributeValue = buildingParams.getPropertyAsDouble("ventilationintakerateoccupied");
   setFreshAirFlowRate(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateOccupied");
@@ -626,10 +630,29 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   setDhwEfficiency(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("dhwdistributionefficiency");
   setDhwDistributionEfficiency(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwfueltype");
+
+  type = buildingParams.getProperty("dhwfueltype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == ELECTRIC)
+    attributeValue = 1.0;
+  else if (type == GAS)
+    attributeValue = 2.0;
+  else
+    throw invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
   setDhwEnergyCarrier(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("bemtype");
+
+  type = buildingParams.getProperty("bemtype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == NONE)
+    attributeValue = 1.0;
+  else if (type == SIMPLE)
+    attributeValue = 2.0;
+  else if (type == ADVANCED)
+    attributeValue = 3.0;
+  else
+    throw invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
   setBemType(attributeValue);
+
   attributeValue = buildingParams.getPropertyAsDouble("interiorheatcapacity");
   setInteriorHeatCapacity(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("exteriorheatcapacity");
@@ -645,63 +668,52 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   setSpecificFanPower(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("fanflowcontrolfactor");
   setFanFlowControlFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("roofuvalue");
-  setRoofUValue(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("roofsolarabsorption");
-  setRoofSolarAbsorption(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("roofthermalemissivity");
-  setRoofThermalEmissivity(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("skylightuvalue");
-  setSkylightUvalue(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("skylightshgc");
-  setSkylightSHGC(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareas");
-  setWallAreaS(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallarease");
-  setWallAreaSE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareae");
-  setWallAreaE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareane");
-  setWallAreaNE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallarean");
-  setWallAreaN(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareanw");
-  setWallAreaNW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareaw");
-  setWallAreaW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("wallareasw");
-  setWallAreaSW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("roofarea");
-  setRoofArea(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareas");
-  setWindowAreaS(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowarease");
-  setWindowAreaSE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareae");
-  setWindowAreaE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareane");
-  setWindowAreaNE(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowarean");
-  setWindowAreaN(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareanw");
-  setWindowAreaNW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareaw");
-  setWindowAreaW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("windowareasw");
-  setWindowAreaSW(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("skylightarea");
-  setSkylightArea(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointoccupied");
   setCoolingOccupiedSetpoint(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointunoccupied");
   setCoolingUnoccupiedSetpoint(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointoccupied");
   setHeatingOccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");	//weatherFilePath
+  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");
   setHeatingUnoccupiedSetpoint(attributeValue);
 
+#if (USE_NEW_BUILDING_PARAMS)
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationIntakeRateUnoccupied");
+  setVentilationIntakeRateUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateUnoccupied");
+  setVentilationExhaustRateUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("infiltrationRateUnoccupied");
+  setInfiltrationRateUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedOccupied");
+  setLightingPowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedUnoccupied");
+  setLightingPowerFixedUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedOccupied");
+  setElectricAppliancePowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedUnoccupied");
+  setElectricAppliancePowerFixedUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedOccupied");
+  setGasAppliancePowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedUnoccupied");
+  setGasAppliancePowerFixedUnoccupied(attributeValue);
+
+  std::string scheduleFilePath = buildingParams.getProperty("schedulefilepath");
+  if (scheduleFilePath == "")
+    throw invalid_argument("scheduleFilePath building parameter is missing");
+  setScheduleFilePath(scheduleFilePath);
+#endif
+
   std::string weatherFilePath = buildingParams.getProperty("weatherfilepath");
-  if (weatherFilePath.length() == 0) throw invalid_argument("weatherFilePath building parameter is missing");
+  if (weatherFilePath == "")
+    throw invalid_argument("weatherFilePath building parameter is missing");
 
   setWeatherFilePath(weatherFilePath);
 }
