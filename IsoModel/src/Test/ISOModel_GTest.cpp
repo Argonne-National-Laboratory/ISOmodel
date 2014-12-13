@@ -250,7 +250,7 @@ TEST(IsoModelTests, SimModelTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 14; ++j) {
-      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.0001);
+      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001);
     }
   }
 }
