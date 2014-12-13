@@ -458,14 +458,14 @@ void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned i
 ISOResults ISOHourly::calculateHourly()
 {
   populateSchedules();
-  printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
-  printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
-  printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
-  printMatrix("Exterior Lighting", (double*) this->fixedExteriorLightingSchedule, 24, 7);
-  printMatrix("Fan", (double*) this->fixedFanSchedule, 24, 7);
-  printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
-  printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
-  printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
+  // printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
+  // printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
+  // printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
+  // printMatrix("Exterior Lighting", (double*) this->fixedExteriorLightingSchedule, 24, 7);
+  // printMatrix("Fan", (double*) this->fixedFanSchedule, 24, 7);
+  // printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
+  // printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
+  // printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
   initialize();
   int hourOfDay = 1;
   int dayOfWeek = 1;

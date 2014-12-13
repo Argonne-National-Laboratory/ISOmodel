@@ -207,6 +207,7 @@ TEST(IsoModelTests, InitializationTests)
   EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
 
+// Monthly simulation results.
 /*
  * Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW
  1, 0, 0.0371925, 2.88034, 0.257822, 7.3185, 0.799035, 2.24457, 0, 0, 41.5822, 0, 0, 0
@@ -227,7 +228,7 @@ TEST(IsoModelTests, SimModelTests)
 {
   // the expected values are the results of running the "prior to updated parameter names
   // and parsing" version and copying the results as they were printed out to stdout.
-  // Consequently these are not "exact" and so we use EXPECT_NEAR with 0.0001 to test.
+  // Consequently these are not "exact" and so we use EXPECT_NEAR with 0.001 to test.
   double expected[12][14] =
   {
   { 0.0, 0.0371925, 2.88034, 0.257822, 7.3185, 0.799035, 2.24457, 0.0, 0.0, 41.5822, 0.0, 0.0, 0.0 },
@@ -251,6 +252,54 @@ TEST(IsoModelTests, SimModelTests)
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 14; ++j) {
       EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001);
+    }
+  }
+}
+
+/*
+Hourly results by month:
+ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW
+0, 0, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 39.2839, 0, 0, 0
+0, 0, 0.21298, 0.399209, 0, 0, 0.973936, 38.4932, 0, 31.2383, 0, 0, 0
+0, 0.0113888, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 23.079, 0, 0, 0
+0, 0.815593, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 14.3389, 0, 0, 0
+0, 1.37548, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 5.98838, 0, 0, 0
+0, 2.76303, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 1.5327, 0, 0, 0
+0, 4.07107, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 0.366813, 0, 0, 0
+0, 2.45841, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 0.87312, 0, 0, 0
+0, 1.47979, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 3.47906, 0, 0, 0
+0, 0.222445, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 11.9559, 0, 0, 0
+0, 0.00862051, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 23.4188, 0, 0, 0
+0, 0, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 37.8816, 0, 0, 0
+*/
+TEST(IsoModelTests, ISOHourlyTests)
+{
+  // the expected values are the results of running the "prior to updated parameter names
+  // and parsing" version and copying the results as they were printed out to stdout.
+  // Consequently these are not "exact" and so we use EXPECT_NEAR with 0.001 to test.
+  double expected[12][14] =
+  {
+	{ 0, 0, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 39.2839, 0, 0, 0 },
+	{ 0, 0, 0.21298, 0.399209, 0, 0, 0.973936, 38.4932, 0, 31.2383, 0, 0, 0 },
+	{ 0, 0.0113888, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 23.079, 0, 0, 0 },
+	{ 0, 0.815593, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 14.3389, 0, 0, 0 },
+	{ 0, 1.37548, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 5.98838, 0, 0, 0 },
+	{ 0, 2.76303, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 1.5327, 0, 0, 0 },
+	{ 0, 4.07107, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 0.366813, 0, 0, 0 },
+	{ 0, 2.45841, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 0.87312, 0, 0, 0 },
+	{ 0, 1.47979, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 3.47906, 0, 0, 0 },
+	{ 0, 0.222445, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 11.9559, 0, 0, 0 },
+	{ 0, 0.00862051, 0.228193, 0.427724, 0, 0, 1.0435, 41.2427, 0, 23.4188, 0, 0, 0 },
+	{ 0, 0, 0.2358, 0.441981, 0, 0, 1.07829, 42.6174, 0, 37.8816, 0, 0, 0 } };
+
+  openstudio::isomodel::UserModel userModel;
+  userModel.load(test_data_path + "/SmallOffice_v2.ism");
+  ISOHourly hourlyModel = userModel.toHourlyModel();
+  ISOResults results = hourlyModel.calculateHourly();
+
+  for (int i = 0; i < 12; ++i) {
+    for (int j = 0; j < 14; ++j) {
+      EXPECT_NEAR(expected[i][j], results.hourlyResultsByMonth[i].getEndUse(j), 0.001);
     }
   }
 }
