@@ -1,12 +1,18 @@
 /*
  * ISOHourly.cpp
  *
- *	Created on: Apr 28, 2014
- *			Author: craig
+ *  Created on: Apr 28, 2014
+ *      Author: craig
  */
 
+// Some notes on the comments:
 // In comments, symbols and formulas from the standard are written in LaTeX
 // markup to reduce ambiguity.
+//
+// While this is a work in progress, comments relating the code to the cells of
+// the spreadsheet on which this is based will be retained (e.g.,
+// SingleBldg.L50).
+
 #include "ISOHourly.hpp"
 #include "SimModel.hpp"
 
@@ -21,141 +27,137 @@
 namespace openstudio {
 namespace isomodel {
 
-// Utility functions.
-std::vector<double> addVectors(std::vector<double> v1, std::vector<double> v2)
+//TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
+ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
+                         permLightPowerDensityWperM2(0), // SingleBldg.L50
+                         externalEquipment(244000), // Q56
+                         ventPreheatDegC(-50) // SingleBldg.Q40
 {
-  std::vector<double> v3;
-  std::transform(v1.begin(), v1.end(), v2.begin(), std::back_inserter(v3), std::plus<double>());
-  return v3;
 }
 
-std::vector<double> sumHoursByMonth(std::vector<double> hourlyData)
+std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourlyData)
 {
   std::vector<double> monthlyData(12);
-  std::vector<int> monthsInHours =
-  { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+  std::vector<int> monthsInHours = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+
   for (int month = 0; month < 12; ++month) {
-    monthlyData[month] = std::accumulate(hourlyData.begin() + monthsInHours[month], hourlyData.begin() + monthsInHours[month + 1], 0.0);
+    monthlyData[month] = std::accumulate(hourlyData.begin() + monthsInHours[month],
+                                         hourlyData.begin() + monthsInHours[month + 1],
+                                         0.0);
   }
+
   return monthlyData;
 }
 
-ISOHourly::ISOHourly() :
-    electInternalGains(1), permLightPowerDensityWperM2(0), externalEquipment(244000), ventPreheatDegC(-50)
+std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
+                                                       int month,
+                                                       int dayOfWeek,
+                                                       int hourOfDay,
+                                                       double windMps,
+                                                       double temperature,
+                                                       double electPriceUSDperMWh,
+                                                       double solarRadiationS,
+                                                       double solarRadiationE,
+                                                       double solarRadiationN,
+                                                       double solarRadiationW,
+                                                       double solarRadiationH,
+                                                       double& TMT1,
+                                                       double& tiHeatCool)
 {
-  //electInternalGains = 1;//SingleBldg.L51
-  //permLightPowerDensityWperM2 = 0;//SingleBldg.L50
-  //ventPreheatDegC = -50;//SingleBldg.Q40
-
-  //XXX External Equipment usage Q56
-  //externalEquipment = 244000;
-}
-
-std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay, double windMps, double temperature,
-    double electPriceUSDperMWh, double solarRadiationS, double solarRadiationE, double solarRadiationN, double solarRadiationW,
-    double solarRadiationH, double& TMT1, double& tiHeatCool)
-{
-
-  int scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7;	//1
-  // ExcelFunctions.printOut("E156",scheduleOffset,1);
+  int scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
 
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
-  double fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset);	//ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1);//0
-  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset);	//ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1);//1E-05
-  double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);	//ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1);//0.05
-  double internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);	//ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1);//0.3
-  double exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset);	//1
-  double internalLightingEnabled = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset);	//ExcelFunctions.OFFSET(BL90,hourOfDay-1,E156-1);//0.05
-  double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);	//15.6
-  double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);	//30
+  double fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
+  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
+  double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
+  double internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
+  double exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
+  double internalLightingEnabled = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BL90,hourOfDay-1,E156-1)
+  double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
   // http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
-  double Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;	//0
+  double Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
 
-  double externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();	//0.263382986063586
+  double externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 
-      // \Phi_{int,A}, ISO 13790 10.4.2.
-      // Monthly name: phi_plug_occ and phi_plug_unocc.
+  // \Phi_{int,A}, ISO 13790 10.4.2.
+  // Monthly name: phi_plug_occ and phi_plug_unocc.
   double phi_plug = internalEquipmentEnabled * building->electricApplianceHeatGainOccupied();
 
-  double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH
-      * (naturalLightRatioH + shadingUsePerWPerM2 * naturalLightShadeRatioReductionH * std::min(shadingRatioWtoM2, solarRadiationH));	//0
-  // XXX BAA@20140626: I think this should be 'W' for west, not 'O'.
-  double lightingContributionO = 53 / areaNaturallyLightedRatio * solarRadiationW
-      * (naturalLightRatioW + shadingUsePerWPerM2 * naturalLightShadeRatioReductionW * std::min(shadingRatioWtoM2, solarRadiationW));	//0
-  double lightingContributionS = 53 / areaNaturallyLightedRatio * solarRadiationS
-      * (naturalLightRatioS + shadingUsePerWPerM2 * naturalLightShadeRatioReductionS * std::min(shadingRatioWtoM2, solarRadiationS));	//0
-  double lightingContributionE = 53 / areaNaturallyLightedRatio * solarRadiationE
-      * (naturalLightRatioE + shadingUsePerWPerM2 * naturalLightShadeRatioReductionE * std::min(shadingRatioWtoM2, solarRadiationE));	//0
-  double lightingContributionN = 53 / areaNaturallyLightedRatio * solarRadiationN
-      * (naturalLightRatioN + shadingUsePerWPerM2 * naturalLightShadeRatioReductionN * std::min(shadingRatioWtoM2, solarRadiationN));	//0
-  double lightingLevel = (lightingContributionN + lightingContributionE + lightingContributionS + lightingContributionO + lightingContributionH);	//0
-  double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));	//1
-  double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio
-      + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;	//1
-      // Heat produced by lighting.
-      // \Phi_{int,L}, ISO 13790 10.4.3. 
-      // Monthly name: phi_illum_occ, phi_illum_unocc
-  double phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;	//0.538
+  // TODO BAA@2014-12-14: if the lightingContribution, solarRadiation,
+  // naturalLightRatio and naturalLightShadeRatioReduction were all vectors,
+  // this would be much simpler. 
+  double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH * (naturalLightRatioH + shadingUsePerWPerM2 * naturalLightShadeRatioReductionH * std::min(shadingRatioWtoM2, solarRadiationH));
+  double lightingContributionW = 53 / areaNaturallyLightedRatio * solarRadiationW * (naturalLightRatioW + shadingUsePerWPerM2 * naturalLightShadeRatioReductionW * std::min(shadingRatioWtoM2, solarRadiationW));
+  double lightingContributionS = 53 / areaNaturallyLightedRatio * solarRadiationS * (naturalLightRatioS + shadingUsePerWPerM2 * naturalLightShadeRatioReductionS * std::min(shadingRatioWtoM2, solarRadiationS));
+  double lightingContributionE = 53 / areaNaturallyLightedRatio * solarRadiationE * (naturalLightRatioE + shadingUsePerWPerM2 * naturalLightShadeRatioReductionE * std::min(shadingRatioWtoM2, solarRadiationE));
+  double lightingContributionN = 53 / areaNaturallyLightedRatio * solarRadiationN * (naturalLightRatioN + shadingUsePerWPerM2 * naturalLightShadeRatioReductionN * std::min(shadingRatioWtoM2, solarRadiationN));
 
-  // XXX: permLightPowerDensityWperM2 is unused.
+  double lightingLevel = (lightingContributionN + lightingContributionE + lightingContributionS + lightingContributionW + lightingContributionH);
+  double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));
+  double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;
+
+  // Heat produced by lighting.
+  // \Phi_{int,L}, ISO 13790 10.4.3. 
+  // Monthly name: phi_illum_occ, phi_illum_unocc
+  double phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
+
+  // TODO: permLightPowerDensityWperM2 is unused.
   double Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
-  double phi_int = phi_plug + phi_illum;	//1.753
+  double phi_int = phi_plug + phi_illum; //1.753
 
-  //TODO -- expand solar heat calculations to array format to include diagonals.
+  //TODO -- expand solar heat calculations to array format to include
+  //diagonals. If the directional values were vectors, it would simplify things
+  //considerably.
   // \Phi_{sol,k}, ISO 13790 11.3.2 eq. 43. 
   // Note: method of calculating A_{sol,k} with movable shading differs from
   // the method in the standard.
-  double solarHeatGainH = solarRadiationH
-      * (solarRatioH + solarShadeRatioReductionH * shadingUsePerWPerM2 * std::min(solarRadiationH, shadingRatioWtoM2));	//0
-  double solarHeatGainW = solarRadiationW
-      * (solarRatioW + solarShadeRatioReductionW * shadingUsePerWPerM2 * std::min(solarRadiationW, shadingRatioWtoM2));	//0
-  double solarHeatGainS = solarRadiationS
-      * (solarRatioS + solarShadeRatioReductionS * shadingUsePerWPerM2 * std::min(solarRadiationS, shadingRatioWtoM2));	//0
-  double solarHeatGainE = solarRadiationE
-      * (solarRatioE + solarShadeRatioReductionE * shadingUsePerWPerM2 * std::min(solarRadiationE, shadingRatioWtoM2));	//0
-  double solarHeatGainN = solarRadiationN
-      * (solarRatioN + solarShadeRatioReductionN * shadingUsePerWPerM2 * std::min(solarRadiationN, shadingRatioWtoM2));	//0
+  double solarHeatGainH = solarRadiationH * (solarRatioH + solarShadeRatioReductionH * shadingUsePerWPerM2 * std::min(solarRadiationH, shadingRatioWtoM2));
+  double solarHeatGainW = solarRadiationW * (solarRatioW + solarShadeRatioReductionW * shadingUsePerWPerM2 * std::min(solarRadiationW, shadingRatioWtoM2));
+  double solarHeatGainS = solarRadiationS * (solarRatioS + solarShadeRatioReductionS * shadingUsePerWPerM2 * std::min(solarRadiationS, shadingRatioWtoM2));
+  double solarHeatGainE = solarRadiationE * (solarRatioE + solarShadeRatioReductionE * shadingUsePerWPerM2 * std::min(solarRadiationE, shadingRatioWtoM2));
+  double solarHeatGainN = solarRadiationN * (solarRatioN + solarShadeRatioReductionN * shadingUsePerWPerM2 * std::min(solarRadiationN, shadingRatioWtoM2));
   // \Phi_{sol}, ISO 13790 11.2.2 eq. 41.
-  double qSolarHeatGain = (solarHeatGainN + solarHeatGainE + solarHeatGainS + solarHeatGainW + solarHeatGainH);	//0
+  double qSolarHeatGain = (solarHeatGainN + solarHeatGainE + solarHeatGainS + solarHeatGainW + solarHeatGainH);
   // \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
   // (Note that solarPair = 0 and intPair = 0.5).
-  double phii = solarPair * qSolarHeatGain + intPair * phi_int;	//0.8765
+  double phii = solarPair * qSolarHeatGain + intPair * phi_int;
   // \Phi_{ia10}, ISO 13790 C.4.2. 
   // Used to calculate \theta_{air,ac} when available heating or cooling power
   // is insufficient to achieve the setpoint. Adding 10 is equivalent to
   // applying 10 W/m^2 to the building because all the values in this
   // implementation are expressed per area (so as to get final results in EUI).
-  double phii10 = phii + 10;	//10.8765
+  double phii10 = phii + 10;
 
   // Ventilation from wind. ISO 15242.
-  double qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;	//1E-05
-  double exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}. 0
-  double tAfterExchange = (1 - ventilation->heatRecoveryEfficiency()) * temperature + ventilation->heatRecoveryEfficiency() * 20; //-1
-  double tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange); //-1
+  double qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;
+  double exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}.
+  double tAfterExchange = (1 - ventilation->heatRecoveryEfficiency()) * temperature + ventilation->heatRecoveryEfficiency() * 20;
+  double tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange);
   // ISO 15242 6.7.1 Step 1.
-  double qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);	//0.341700355961478
-  double qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, std::abs(temperature - tiHeatCool)))), 0.667);	//1.21396172390701
+  double qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);
+  double qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, std::abs(temperature - tiHeatCool)))), 0.667);
   // ISO 15242 6.7.1 Step 2.
   double qExfiltration = std::max(0.0,
-      std::max(qStackPrevIntTemp, qWind) - std::abs(exhaustSupply) * (0.5 * qStackPrevIntTemp + 0.667 * (qWind) / (qStackPrevIntTemp + qWind))); //1.21396172390701
-  double qEnvelope = std::max(0.0, exhaustSupply) + qExfiltration; //1.21396172390701
+      std::max(qStackPrevIntTemp, qWind) - std::abs(exhaustSupply) * (0.5 * qStackPrevIntTemp + 0.667 * (qWind) / (qStackPrevIntTemp + qWind)));
+  double qEnvelope = std::max(0.0, exhaustSupply) + qExfiltration;
   // ISO 15242 6.7.2.
-  double qEnteringTotal = qEnvelope + qSupplyBySystem;	//1.21397172390701
+  double qEnteringTotal = qEnvelope + qSupplyBySystem;
 
   // \theta_{sup} ISO 13790 9.3.
-  double tEnteringAndSupplied = (temperature * qEnvelope + tSuppliedAir * qSupplyBySystem) / qEnteringTotal;	//-1
+  double tEnteringAndSupplied = (temperature * qEnvelope + tSuppliedAir * qSupplyBySystem) / qEnteringTotal;
   // I think hei is H_{ve,adj} or H_{ve} ISO 13790 9.3.1 eq. 21. I'm not sure
   // what the 0.34 is.
-  double hei = 0.34 * qEnteringTotal;	//0.412750386128385
+  double hei = 0.34 * qEnteringTotal;
   // H_{tr,1}, ISO 13790 C.3 eq. C.6.
-  double h1 = 1 / (1 / hei + 1 / his);	//0.402051964790249
+  double h1 = 1 / (1 / hei + 1 / his);
   // H_{tr,2}, ISO 13790 C.3 eq. C.7.
-  double h2 = h1 + hwindowWperkm2;	//0.726440377838674
+  double h2 = h1 + hwindowWperkm2;
   //ExcelFunctions.printOut("h2",h2,0.726440377838674);
 
   // Subscript '0' indicates the free-floating condition and sub '10' indicates
@@ -166,39 +168,39 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month
 
   // \Phi_{st}, ISO 13790 C.2 eq. C.3 
   // In generalized form from Georgia Tech spreadsheet.
-  double phisPhi0 = prsSolar * qSolarHeatGain + prsInterior * phi_int;  //-0.00694325870664089
+  double phisPhi0 = prsSolar * qSolarHeatGain + prsInterior * phi_int;
   // \Phi_{m}, ISO 13790 C.2 eq. C.2.
   // In generalized form from Georgia Tech spreadsheet.
-  double phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;	//0.8765
+  double phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;
   // H_{tr,3}, ISO 13790 C.3 eq. C.9.
-  double h3 = 1 / (1 / h2 + 1 / hms);	//0.713778173058944
+  double h3 = 1 / (1 / h2 + 1 / hms);
   // \Phi_{mtot}, ISO 13790 C.3 eq. C.5.
   double phimTotalPhi10 = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii10 / hei + tEnteringAndSupplied)) / h2;	//10.4245918723996
+      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii10 / hei + tEnteringAndSupplied)) / h2;
   double phimTotalPhi0 = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii / hei + tEnteringAndSupplied)) / h2;	//0.853577061315981
+      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii / hei + tEnteringAndSupplied)) / h2;
       // \theta_{m,t10}, ISO 13790 C.3 eq. C.4.
-  double tmt1Phi10 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi10) / (Cm / 3.6 + 0.5 * (h3 + hem));	//19.9760054473834
-  double tmPhi10 = 0.5 * (TMT1 + tmt1Phi10);	//19.9880027236917
+  double tmt1Phi10 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi10) / (Cm / 3.6 + 0.5 * (h3 + hem));
+  double tmPhi10 = 0.5 * (TMT1 + tmt1Phi10);
   double tsPhi10 = (hms * tmPhi10 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii10 / hei))
-      / (hms + hwindowWperkm2 + h1);	//19.8762155145252
+      / (hms + hwindowWperkm2 + h1);
   //ExcelFunctions.printOut("BA156",tsPhi10,19.8762155145252);
-  double tiPhi10 = (his * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (his + hei);	//20.0181282126061
+  double tiPhi10 = (his * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (his + hei);
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
-  double tmt1Phi0 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi0) / (Cm / 3.6 + 0.5 * (h3 + hem));	//19.9416027398399
-  double tmPhi0 = 0.5 * (TMT1 + tmt1Phi0);	//19.9708013699199
-  double tsPhi0 = (hms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (hms + hwindowWperkm2 + h1);//19.6255895732024
-  double tiPhi0 = (his * tsPhi0 + hei * tEnteringAndSupplied + phii) / (his + hei);	//19.1460200317084
-  double phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);	//124.45680714884
-  double phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);	//-40.6603229894958
-  double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);	//0
-  double Qneed_cl = std::max(0.0, -phiActual);	// Raw need. Not adjusted for efficiency.
+  double tmt1Phi0 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi0) / (Cm / 3.6 + 0.5 * (h3 + hem));
+  double tmPhi0 = 0.5 * (TMT1 + tmt1Phi0);
+  double tsPhi0 = (hms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (hms + hwindowWperkm2 + h1);
+  double tiPhi0 = (his * tsPhi0 + hei * tEnteringAndSupplied + phii) / (his + hei);
+  double phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
+  double phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
+  double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
+  double Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
   double Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
 
-  double Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea(); //0.0539503346043362
+  double Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
       //ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
 
-  double Q_dhw = 0;	//XXX no DHW calculations
+  double Q_dhw = 0; //TODO no DHW calculations
 
   std::map<std::string, double> results;
   results["Qneed_ht"] = Qneed_ht;
@@ -216,19 +218,19 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear, int month
   double phiiHeatCool = phiActual + phii;
   // \Phi_{mtot} ISO 13790 C.3 eq. C.5
   double phimHeatCoolTotal = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phiiHeatCool / hei + tEnteringAndSupplied)) / h2;	//0.853577061315981
+      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phiiHeatCool / hei + tEnteringAndSupplied)) / h2;
       // Set tmt to this hour's \theta_{m,t-1}.
   double tmt = TMT1;
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
   // Set TMT1 to next hour's \theta_{m,t-1} (this hour's \theta_{m,t}).
-  TMT1 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimHeatCoolTotal) / (Cm / 3.6 + 0.5 * (h3 + hem));	//19.9416027398399
+  TMT1 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimHeatCoolTotal) / (Cm / 3.6 + 0.5 * (h3 + hem));
   // \theta_{m}, ISO 13790 C.3 eq. C.9.
-  double tmHeatCool = 0.5 * (TMT1 + tmt);	//19.9708013699199
+  double tmHeatCool = 0.5 * (TMT1 + tmt);
   // \theta_{s}, ISO 13790 C.3 eq. C.10.
   double tsHeatCool = (hms * tmHeatCool + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phiiHeatCool / hei))
-      / (hms + hwindowWperkm2 + h1);	//19.6255895732024
+      / (hms + hwindowWperkm2 + h1);
   // \theta_{air}, ISO 13790, C.3 eq. C.11.
-  tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);	//19.1460200317084
+  tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
 
   return results;
 }
@@ -250,26 +252,26 @@ const int ISOHourly::ROOF = 8;
 
 void ISOHourly::initialize()
 {
-  //XXX where do all these static numbers come from?
-  fanDeltaPinPa = 800;	//800
-  fanN = 0.8;	//0.8
-  provisionalCFlowad = 1;	//1
-  solarPair = 0;	//0
-  intPair = 0.5;	//0.5
-  presenceSensorAd = 0.6;	//0.6
-  automaticAd = 0.8;	//0.8
-  presenceAutoAd = 0.6;	//0.6
-  manualSwitchAd = 1;	//1
-  presenceSensorLux = 500;	//500
-  automaticLux = 300;	//300
-  presenceAutoLux = 300;	//300
-  manualSwitchLux = 500;	//500
-  shadingRatioWtoM2 = 500;	//500
-  shadingMaximumUseRatio = 0.5;	//0.5
-  ventDcpWindImpact = 0.75;	//0.75
-  AtPerAFloor = 4.5;	//4.5
-  hci = 2.5;	//2.5
-  hri = 5.5;	//5.5
+  //TODO where do all these static numbers come from?
+  fanDeltaPinPa = 800;
+  fanN = 0.8;
+  provisionalCFlowad = 1;
+  solarPair = 0;
+  intPair = 0.5;
+  presenceSensorAd = 0.6;
+  automaticAd = 0.8;
+  presenceAutoAd = 0.6;
+  manualSwitchAd = 1;
+  presenceSensorLux = 500;
+  automaticLux = 300;
+  presenceAutoLux = 300;
+  manualSwitchLux = 500;
+  shadingRatioWtoM2 = 500;
+  shadingMaximumUseRatio = 0.5;
+  ventDcpWindImpact = 0.75;
+  AtPerAFloor = 4.5;
+  hci = 2.5;
+  hri = 5.5;
 
   switch ((int) building->lightingOccupancySensor()) {
   case 2:
@@ -289,45 +291,45 @@ void ISOHourly::initialize()
     elightNatural = manualSwitchLux;
     break;
   }
-  double lightedNaturalAream2 = 0;	//XXX SingleBuilding.L53
-  areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);	//0.0001
-  areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();	//2.15887693494743E-09
+  double lightedNaturalAream2 = 0; // SingleBuilding.L53
+  areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
+  areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
   for (int i = 0; i < 9; i++) {
     this->structureCalculations(structure->windowShadingDevice(), structure->wallArea()[i], structure->windowArea()[i], structure->wallUniform()[i],
         structure->windowUniform()[i], structure->wallSolarAbsorbtion()[i], structure->windowShadingCorrectionFactor()[i],
         structure->windowNormalIncidenceSolarEnergyTransmittance()[i], i);
   }
 
-  shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;	//0.001
-  naturalLightRatioH = nla[ROOF] / structure->floorArea();	//0
-  naturalLightShadeRatioReductionH = nlaWMovableShadingH - naturalLightRatioH;	//0
-  nlaWMovableShadingW = nlams[WEST] / structure->floorArea();	//0.00885843163506495
-  naturalLightRatioW = nla[WEST] / structure->floorArea();	//0.00885843163506495
-  naturalLightShadeRatioReductionW = nlaWMovableShadingW - naturalLightRatioW;	//0
-  nlaWMovableShadingS = nlams[SOUTH] / structure->floorArea();	//0.0132876952208514
-  naturalLightRatioS = nla[SOUTH] / structure->floorArea();	//0.0132876952208514
-  naturalLightShadeRatioReductionS = nlaWMovableShadingS - naturalLightRatioS;	//0
-  nlaWMovableShadingE = nlams[EAST] / structure->floorArea();	//0.00885843163506495
-  naturalLightRatioE = nla[EAST] / structure->floorArea();	//0.00885843163506495
-  naturalLightShadeRatioReductionE = nlaWMovableShadingE - naturalLightRatioE;	//0
-  nlaWMovableShadingN = nlams[NORTH] / structure->floorArea();	//0.0132876952208514
-  naturalLightRatioN = nla[NORTH] / structure->floorArea();	//0.0132876952208514
-  naturalLightShadeRatioReductionN = nlaWMovableShadingN - naturalLightRatioN;	//0
-  saWMovableShadingH = sams[ROOF] / structure->floorArea();	//0.00082174001745161
-  solarRatioH = sa[ROOF] / structure->floorArea();	//0.00082174001745161
-  solarShadeRatioReductionH = saWMovableShadingH - solarRatioH;	//0
-  saWMovableShadingW = sams[WEST] / structure->floorArea();	//0.00891699584502545
-  solarRatioW = sa[WEST] / structure->floorArea();	//0.0129205467658081
-  solarShadeRatioReductionW = saWMovableShadingW - solarRatioW;	//-0.0040035509207826
-  saWMovableShadingS = sams[SOUTH] / structure->floorArea();	//0.0133755339312847
-  solarRatioS = sa[SOUTH] / structure->floorArea();	//0.0193808819012279
-  solarShadeRatioReductionS = saWMovableShadingS - solarRatioS;	//-0.00600534796994325
-  saWMovableShadingE = sams[EAST] / structure->floorArea();	//0.00891699584502545
-  solarRatioE = sa[EAST] / structure->floorArea();	//0.0129205467658081
-  solarShadeRatioReductionE = saWMovableShadingE - solarRatioE;	//-0.0040035509207826
-  saWMovableShadingN = sams[NORTH] / structure->floorArea();	//0.0133755339312847
-  solarRatioN = sa[NORTH] / structure->floorArea();	//0.0193808819012279
-  solarShadeRatioReductionN = saWMovableShadingN - solarRatioN;	//-0.00600534796994325
+  shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;
+  naturalLightRatioH = nla[ROOF] / structure->floorArea();
+  naturalLightShadeRatioReductionH = nlaWMovableShadingH - naturalLightRatioH;
+  nlaWMovableShadingW = nlams[WEST] / structure->floorArea();
+  naturalLightRatioW = nla[WEST] / structure->floorArea();
+  naturalLightShadeRatioReductionW = nlaWMovableShadingW - naturalLightRatioW;
+  nlaWMovableShadingS = nlams[SOUTH] / structure->floorArea();
+  naturalLightRatioS = nla[SOUTH] / structure->floorArea();
+  naturalLightShadeRatioReductionS = nlaWMovableShadingS - naturalLightRatioS;
+  nlaWMovableShadingE = nlams[EAST] / structure->floorArea();
+  naturalLightRatioE = nla[EAST] / structure->floorArea();
+  naturalLightShadeRatioReductionE = nlaWMovableShadingE - naturalLightRatioE;
+  nlaWMovableShadingN = nlams[NORTH] / structure->floorArea();
+  naturalLightRatioN = nla[NORTH] / structure->floorArea();
+  naturalLightShadeRatioReductionN = nlaWMovableShadingN - naturalLightRatioN;
+  saWMovableShadingH = sams[ROOF] / structure->floorArea();
+  solarRatioH = sa[ROOF] / structure->floorArea();
+  solarShadeRatioReductionH = saWMovableShadingH - solarRatioH;
+  saWMovableShadingW = sams[WEST] / structure->floorArea();
+  solarRatioW = sa[WEST] / structure->floorArea();
+  solarShadeRatioReductionW = saWMovableShadingW - solarRatioW;
+  saWMovableShadingS = sams[SOUTH] / structure->floorArea();
+  solarRatioS = sa[SOUTH] / structure->floorArea();
+  solarShadeRatioReductionS = saWMovableShadingS - solarRatioS;
+  saWMovableShadingE = sams[EAST] / structure->floorArea();
+  solarRatioE = sa[EAST] / structure->floorArea();
+  solarShadeRatioReductionE = saWMovableShadingE - solarRatioE;
+  saWMovableShadingN = sams[NORTH] / structure->floorArea();
+  solarRatioN = sa[NORTH] / structure->floorArea();
+  solarShadeRatioReductionN = saWMovableShadingN - solarRatioN;
 
   // ISO 15242 Air leakage values.
   // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
@@ -335,13 +337,13 @@ void ISOHourly::initialize()
   // Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
   double buildingv8 = 0.19 * (n50 * (structure->floorArea() * structure->buildingHeight()));
   // Air leakage per area at 4Pa (m3/hr/m2).
-  q4Pa = std::max(0.000001, buildingv8 / structure->floorArea()); // 1.5048
+  q4Pa = std::max(0.000001, buildingv8 / structure->floorArea());
 
-  P96 = hri * 1.2; // 6.6
+  P96 = hri * 1.2;
   // ISO 13790 12.2.2
-  P97 = hci + P96; // 9.1 XXX Does it make sense to do P97=hci+hri*1.2 and eliminate P96?
+  P97 = hci + P96; // TODO Does it make sense to do P97=hci+hri*1.2 and eliminate P96?
   // ISO 13790 7.2.2.2
-  P98 = 1 / hci - 1 / P97; // 0.29010989010989 (or 1/3.45).
+  P98 = 1 / hci - 1 / P97; // (or 1/3.45).
 
   // ISO 13790 7.2.2.2 eq. 9 
   //
@@ -350,10 +352,10 @@ void ISOHourly::initialize()
   //
   // P98 is 1/h_{is} (not sure why its done this way).
   // Eq here is H_{tr,is} = \Lambda_{at} / (1/h_{is})
-  //						H_{tr,is} = \Lambda_{at} * h_{is}
+  //            H_{tr,is} = \Lambda_{at} * h_{is}
   //
   // This is the "per floor area" version of eq. 9.
-  his = AtPerAFloor / P98; //15.5113636363636
+  his = AtPerAFloor / P98;
 
   // Calculate Cm from the data in the .ism file.
   // Units seem to need to be in KJ, so divide by 1000.
@@ -380,33 +382,33 @@ void ISOHourly::initialize()
     hWind += hWindow[i];
     hWall += htot[i] - hWindow[i];
   }
-  hwindowWperkm2 = hWind / structure->floorArea();	//0.324388413048425
+  hwindowWperkm2 = hWind / structure->floorArea();
 
       // Constant portion of \Phi_{st}, i.e. without multiplying by
-      // (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.3.
-  prs = (AtPerAFloor - Am - hwindowWperkm2 / P97) / AtPerAFloor;      //-0.0079215729682155
+      // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.3.
+  prs = (AtPerAFloor - Am - hwindowWperkm2 / P97) / AtPerAFloor;
   // intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
   // eq. C.3. When used in phisPhi0.
-  prsInterior = (1 - intPair) * prs;	//-0.00396078648410775
-  prsSolar = (1 - solarPair) * prs;	//-0.0079215729682155
+  prsInterior = (1 - intPair) * prs;
+  prsSolar = (1 - solarPair) * prs;
 
   // Constant portion of \Phi_{m}, i.e. without multiplying by
-  // (.5*\Phi_{int} + \Phi_{sol}).	ISO 13790 C.2 eq. C.2.
-  prm = Am / AtPerAFloor;	//1
-  prmInterior = (1 - intPair) * prm;	//0.5
-  prmSolar = (1 - solarPair) * prm;	//1
+  // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.2.
+  prm = Am / AtPerAFloor;
+  prmInterior = (1 - intPair) * prm;
+  prmSolar = (1 - solarPair) * prm;
 
   // ISO 13790 12.2.2 eq. 64
-  hms = P97 * Am;	//40.95
+  hms = P97 * Am;
 
-  hOpaqueWperkm2 = std::max(hWall / structure->floorArea(), 0.000001);	//0.14073662888776
+  hOpaqueWperkm2 = std::max(hWall / structure->floorArea(), 0.000001);
 
   // ISO 13790 12.2.2 eq. 63
-  hem = 1 / (1 / hOpaqueWperkm2 - 1 / hms);	//0.141221979444827
+  hem = 1 / (1 / hOpaqueWperkm2 - 1 / hms);
 
-  double hzone = 39;	//XXX SingleBuilding.N6
-  windImpactHz = std::max(0.1, hzone);	//39
-  windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor());	//XXX ventSupplyExhaustRatio = SingleBuilding.P40 ?
+  double hzone = 39;
+  windImpactHz = std::max(0.1, hzone);
+  windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
 
 }
 
@@ -480,10 +482,7 @@ ISOResults ISOHourly::calculateHourly()
   std::vector<std::vector<double> > radiation = pos.eglobe();
   electPriceUSDperMWh[0] = 24;
 
-  // Container to hold results.
-  // Q_illum_tot, Q_illum_ext_tot, Qneed_ht, Qneed_cl, phi_plug, externalEquipmentEnergyWperm2, 
-  // Qfan_tot, Q_dhw
-  std::map<std::string, std::vector<double> > rawResults;
+  std::map<std::string, std::vector<double>> rawResults;
   for (int i = 0; i < TIMESLICES; i++) {
     electPriceUSDperMWh[i] = 24;
     month = frame.Month[i];
@@ -491,26 +490,24 @@ ISOResults ISOHourly::calculateHourly()
       hourOfDay = 1;
       dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
     }
-    /*
-     * int , int month, int , int ,
-     double ,	double , double ,
-     double solarRadiationN, double solarRadiationE,
-     double solarRadiationS, double solarRadiationW,
-     double solarRadiationH,
-     double& , double&
-     */
+    
+    // TODO BAA@2014-12-14: Why is the roof radiation zero???
     std::map<std::string, double> hourResults = calculateHour(i + 1, //hourOfYear
-    month, //month
-        dayOfWeek, //dayOfWeek
-        hourOfDay, //hourOfDay
-        wind[i], //windMps
-        temp[i], //temperature
-        electPriceUSDperMWh[i], //electPriceUSDperMWh
-        radiation[i][0], radiation[i][2], radiation[i][4], radiation[i][6], 0, //radiation[i][8],//roof is 0 for some reason
-        TMT1, //TMT1
-        tiHeatCool); //tiHeatCool
+                                                              month, //month
+                                                              dayOfWeek, //dayOfWeek
+                                                              hourOfDay, //hourOfDay
+                                                              wind[i], //windMps
+                                                              temp[i], //temperature
+                                                              electPriceUSDperMWh[i], //electPriceUSDperMWh
+                                                              radiation[i][0],
+                                                              radiation[i][2],
+                                                              radiation[i][4],
+                                                              radiation[i][6],
+                                                              0, //radiation[i][8], //roof is 0 for some reason
+                                                              TMT1, //TMT1
+                                                              tiHeatCool); //tiHeatCool
     // Store each result type in its own vector.
-    for (auto const & kv : hourResults) {
+    for (const auto& kv : hourResults) {
       rawResults[kv.first].push_back(kv.second);
     }
   }
@@ -566,47 +563,47 @@ ISOResults ISOHourly::calculateHourly()
   // Convert to EUI in kWh/m^2
   auto wattsPerHourTokWh = [](double watts) {return watts / 1000.0;};
 
-  for (auto & kv : results) {
+  for (auto& kv : results) {
     std::transform(kv.second.begin(), kv.second.end(), kv.second.begin(), wattsPerHourTokWh);
   }
 
   // Calculate monthly results
   std::map<std::string, std::vector<double>> monthlyResults;
-  for (auto const & kv : results) {
+  for (const auto& kv : results) {
     monthlyResults[kv.first] = sumHoursByMonth(kv.second);
   }
 
   // TODO: Make a flag for the CLI to output hourly by hour or hourly by month.
   //// Output the hourly results.
   //for(int i = 0; i < TIMESLICES; ++i){
-  //	std::cout << "Hour: " << i << ", ";
-  //	std::cout 
-  //		<< results["Qneed_ht"][i] << ", "
-  //		<< results["Qneed_cl"][i] << ", "
-  //		<< results["Q_illum_tot"][i] << ", "
-  //		<< results["Q_illum_ext_tot"][i] << ", "
-  //		<< results["Qfan_tot"][i] << ", "
-  //		<< results["phi_plug"][i] << ", "
-  //		<< results["externalEquipmentEnergyWperm2"][i] << ", "
-  //		<< results["Q_dhw"][i];
-  //	std::cout << std::endl;
+  //  std::cout << "Hour: " << i << ", ";
+  //  std::cout 
+  //    << results["Qneed_ht"][i] << ", "
+  //    << results["Qneed_cl"][i] << ", "
+  //    << results["Q_illum_tot"][i] << ", "
+  //    << results["Q_illum_ext_tot"][i] << ", "
+  //    << results["Qfan_tot"][i] << ", "
+  //    << results["phi_plug"][i] << ", "
+  //    << results["externalEquipmentEnergyWperm2"][i] << ", "
+  //    << results["Q_dhw"][i];
+  //  std::cout << std::endl;
   //}
 
   //// Output the monthly results.
   //std::cout << "Hourly results by month:" << std::endl;
   //std::cout << "Month, Heat, Cool, IntLights, ExtLights, Fans, IntEquip, ExtEquip, DHW" << std::endl;
   //for (int i = 0; i < 12; ++i){
-  //	std::cout << i + 1 << ", ";
-  //	std::cout 
-  //		<< monthlyResults["Qneed_ht"][i] << ", "
-  //		<< monthlyResults["Qneed_cl"][i] << ", "
-  //		<< monthlyResults["Q_illum_tot"][i] << ", "
-  //		<< monthlyResults["Q_illum_ext_tot"][i] << ", "
-  //		<< monthlyResults["Qfan_tot"][i] << ", "
-  //		<< monthlyResults["phi_plug"][i] << ", "
-  //		<< monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
-  //		<< monthlyResults["Q_dhw"][i];
-  //	std::cout << std::endl;
+  //  std::cout << i + 1 << ", ";
+  //  std::cout 
+  //    << monthlyResults["Qneed_ht"][i] << ", "
+  //    << monthlyResults["Qneed_cl"][i] << ", "
+  //    << monthlyResults["Q_illum_tot"][i] << ", "
+  //    << monthlyResults["Q_illum_ext_tot"][i] << ", "
+  //    << monthlyResults["Qfan_tot"][i] << ", "
+  //    << monthlyResults["phi_plug"][i] << ", "
+  //    << monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
+  //    << monthlyResults["Q_dhw"][i];
+  //  std::cout << std::endl;
   //}
 
   // TODO Fix this! Hardcoded values of '0' for things not being calculated is not ideal.

@@ -1,8 +1,8 @@
 /*
  * ISOHourly.h
  *
- *	Created on: Apr 28, 2014
- *			Author: craig
+ *  Created on: Apr 28, 2014
+ *      Author: craig
  */
 
 #ifndef ISOHOURLY_H_
@@ -33,7 +33,7 @@ class ISOHourly
   // standard noted. Symbols are case sensitive, e.g., H_{ms} is different than
   // h_{ms}. References to spreadsheet cells are from the Gerogia Tech
   // ISOHourly spreadsheet.  Suggested name changes are marked with XXX. If I'm
-  // not confident in the suggested name, it's followed with '???'.	
+  // not confident in the suggested name, it's followed with '???'.  
 
   // Fans. http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html
   double fanDeltaPinPa; // dp. Total pressure increase in the fan. Calculation.T15
@@ -172,8 +172,7 @@ protected:
   /** Populates the ventilation, fan, exterior equipment, interior equipment,
    * exterior lighting, interior lighting, heating setpoint, and cooling
    * setpoint schedules. */
-  void
-  populateSchedules();
+  void populateSchedules();
 
   /** Calculates the energy use for one hour and sets the state for the next
    * hour. The hourly calculations largely correspond to those described by the
@@ -181,14 +180,32 @@ protected:
    * implementation describes everything in terms of EUI (i.e., per area). Any
    * discrepency in units where this code uses "units per area" while the
    * standard just uses "units" is likely due to this difference. */
-  std::map<std::string, double>
-  calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay, double windMps, double temperature, double electPriceUSDperMWh,
-      double solarRadiationN, double solarRadiationE, double solarRadiationS, double solarRadiationW, double solarRadiationH, double& TMT1,
-      double& tiHeatCool);
-  void
-  initialize();
-  void structureCalculations(double SHGC, double wallAreaM2, double windowAreaM2, double wallUValue, double windowUValue, double wallSolarAbsorption,
-      double solarFactorWith, double solarFactorWithout, int direction)
+  std::map<std::string, double> calculateHour(int hourOfYear,
+                                              int month,
+                                              int dayOfWeek,
+                                              int hourOfDay,
+                                              double windMps,
+                                              double temperature,
+                                              double electPriceUSDperMWh,
+                                              double solarRadiationN,
+                                              double solarRadiationE,
+                                              double solarRadiationS,
+                                              double solarRadiationW,
+                                              double solarRadiationH,
+                                              double& TMT1,
+                                              double& tiHeatCool);
+  
+  void initialize();
+
+  void structureCalculations(double SHGC,
+                             double wallAreaM2,
+                             double windowAreaM2,
+                             double wallUValue,
+                             double windowUValue,
+                             double wallSolarAbsorption,
+                             double solarFactorWith,
+                             double solarFactorWithout,
+                             int direction)
   {
     double WindowT = SHGC / 0.87;
     nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
@@ -198,6 +215,8 @@ protected:
     htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
     hWindow[direction] = windowAreaM2 * windowUValue;
   }
+
+  std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
   /** Returns the fan schedule. */
   virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
@@ -255,18 +274,17 @@ protected:
   std::shared_ptr<Cooling> cooling;
   std::shared_ptr<Ventilation> ventilation;
   std::shared_ptr<EpwData> weatherData;
+
 public:
   ISOHourly();
-  virtual
-  ~ISOHourly();
+  virtual ~ISOHourly();
 
   /** Calculates the building's hourly EUI using the "simple hourly method"
    * described in ISO 13790:2008. The hourly calculations largely correspond to
    * those described by the simple hourly method in ISO 13790 Annex C. A key
    * difference is that this implementation describes everything in terms of
    * EUI (i.e., per area). */
-  ISOResults
-  calculateHourly();
+  ISOResults calculateHourly();
 
   /** Set the population. */
   void setPop(std::shared_ptr<Population> value)
