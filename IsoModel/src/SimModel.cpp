@@ -2569,7 +2569,7 @@ if(argc < 2) {
   openstudio::isomodel::UserModel umodel;
   
   //umodel.load(argv[1]);
-  umodel.load("C:\\Users\\Student\\Dropbox\\Argonne\\ISOHourlyRepo\\SmallOffice.ism");
+  umodel.load("D:\\brendan\\Dropbox\\Argonne\\ISOHourlyRepo\\SmallOffice.ism");
 
   if(DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "User Model Loaded" <<std::endl;

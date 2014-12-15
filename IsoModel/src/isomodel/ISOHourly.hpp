@@ -26,6 +26,32 @@ namespace isomodel {
 
 
 class ISOHourly {
+  // Stuff for the speed tests
+  struct HourResults
+  {
+    double Qneed_ht;
+    double Qneed_cl;
+    double Q_illum_tot;
+    double Q_illum_ext_tot;
+    double Qfan_tot;
+    double phi_plug;
+    double externalEquipmentEnergyWperm2;
+    double Q_dhw;
+  };
+
+  struct RawHourlyResults
+  {
+    std::vector<double> Qneed_ht;
+    std::vector<double> Qneed_cl;
+    std::vector<double> Q_illum_tot;
+    std::vector<double> Q_illum_ext_tot;
+    std::vector<double> Qfan_tot;
+    std::vector<double> phi_plug;
+    std::vector<double> externalEquipmentEnergyWperm2;
+    std::vector<double> Q_dhw;
+  };
+
+
 	// BAA@20150717: Variables that correspond to symbols in ISO 13790 have the symbols noted
 	// in LaTeX format in the comments. Symbols from other standards have their
 	// standard noted. Symbols are case sensitive, e.g., H_{ms} is different than
@@ -178,7 +204,7 @@ protected:
 	 * implementation describes everything in terms of EUI (i.e., per area). Any
 	 * discrepency in units where this code uses "units per area" while the
 	 * standard just uses "units" is likely due to this difference. */
-	std::map<std::string, double> calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
+	HourResults calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay,
 			double windMps,	double temperature, double electPriceUSDperMWh,
 			double solarRadiationN, double solarRadiationE,
 			double solarRadiationS, double solarRadiationW,
