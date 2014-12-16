@@ -167,6 +167,20 @@ class ISOHourly
   // XXX Unused variables.
   double provisionalCFlowad; // Appears to be unused. Calculation.S106
 
+  // Struct to hold the results of each hour and the vector of results of all the hours.
+  template<typename T>
+  struct HourResults
+  {
+    T Qneed_ht;
+    T Qneed_cl;
+    T Q_illum_tot;
+    T Q_illum_ext_tot;
+    T Qfan_tot;
+    T phi_plug;
+    T externalEquipmentEnergyWperm2;
+    T Q_dhw;
+  };
+
 protected:
 
   /** Populates the ventilation, fan, exterior equipment, interior equipment,
@@ -180,7 +194,7 @@ protected:
    * implementation describes everything in terms of EUI (i.e., per area). Any
    * discrepency in units where this code uses "units per area" while the
    * standard just uses "units" is likely due to this difference. */
-  std::map<std::string, double> calculateHour(int hourOfYear,
+  void calculateHour(int hourOfYear,
                                               int month,
                                               int dayOfWeek,
                                               int hourOfDay,
@@ -193,7 +207,8 @@ protected:
                                               double solarRadiationW,
                                               double solarRadiationH,
                                               double& TMT1,
-                                              double& tiHeatCool);
+                                              double& tiHeatCool,
+                                              HourResults<double>& results);
   
   void initialize();
 

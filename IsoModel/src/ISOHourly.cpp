@@ -49,7 +49,7 @@ std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourly
   return monthlyData;
 }
 
-std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
+void ISOHourly::calculateHour(int hourOfYear,
                                                        int month,
                                                        int dayOfWeek,
                                                        int hourOfDay,
@@ -62,7 +62,8 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
                                                        double solarRadiationW,
                                                        double solarRadiationH,
                                                        double& TMT1,
-                                                       double& tiHeatCool)
+                                                       double& tiHeatCool,
+                                                       HourResults<double>& results)
 {
   int scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
 
@@ -78,13 +79,13 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
   double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
   // http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
-  double Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
+  results.Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
 
-  double externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
+  results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 
   // \Phi_{int,A}, ISO 13790 10.4.2.
   // Monthly name: phi_plug_occ and phi_plug_unocc.
-  double phi_plug = internalEquipmentEnabled * building->electricApplianceHeatGainOccupied();
+  results.phi_plug = internalEquipmentEnabled * building->electricApplianceHeatGainOccupied();
 
   // TODO BAA@2014-12-14: if the lightingContribution, solarRadiation,
   // naturalLightRatio and naturalLightShadeRatioReduction were all vectors,
@@ -105,11 +106,11 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
   double phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
 
   // TODO: permLightPowerDensityWperM2 is unused.
-  double Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
+  results.Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
-  double phi_int = phi_plug + phi_illum; //1.753
+  double phi_int = results.phi_plug + phi_illum; //1.753
 
   //TODO -- expand solar heat calculations to array format to include
   //diagonals. If the directional values were vectors, it would simplify things
@@ -194,23 +195,13 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
   double phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
   double phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
   double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
-  double Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
-  double Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
+  results.Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
+  results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
 
-  double Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
+  results.Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
       //ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
 
-  double Q_dhw = 0; //TODO no DHW calculations
-
-  std::map<std::string, double> results;
-  results["Qneed_ht"] = Qneed_ht;
-  results["Qneed_cl"] = Qneed_cl;
-  results["Q_illum_tot"] = Q_illum_tot;
-  results["Q_illum_ext_tot"] = Q_illum_ext_tot;
-  results["Qfan_tot"] = Qfan_tot;
-  results["phi_plug"] = phi_plug;
-  results["externalEquipmentEnergyWperm2"] = externalEquipmentEnergyWperm2;
-  results["Q_dhw"] = Q_dhw;
+  results.Q_dhw = 0; //TODO no DHW calculations
 
   // Update tiHeatCool & TMT1 for next hour. tiHeatCool and TMT1 are passed by
   // reference to the function, allowing this information to pass from hour to
@@ -231,8 +222,6 @@ std::map<std::string, double> ISOHourly::calculateHour(int hourOfYear,
       / (hms + hwindowWperkm2 + h1);
   // \theta_{air}, ISO 13790, C.3 eq. C.11.
   tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
-
-  return results;
 }
 
 ISOHourly::~ISOHourly()
@@ -482,7 +471,8 @@ ISOResults ISOHourly::calculateHourly()
   std::vector<std::vector<double> > radiation = pos.eglobe();
   electPriceUSDperMWh[0] = 24;
 
-  std::map<std::string, std::vector<double>> rawResults;
+  HourResults<double> tempHourResults;
+  HourResults<std::vector<double>> rawResults;
   for (int i = 0; i < TIMESLICES; i++) {
     electPriceUSDperMWh[i] = 24;
     month = frame.Month[i];
@@ -492,24 +482,30 @@ ISOResults ISOHourly::calculateHourly()
     }
     
     // TODO BAA@2014-12-14: Why is the roof radiation zero???
-    std::map<std::string, double> hourResults = calculateHour(i + 1, //hourOfYear
-                                                              month, //month
-                                                              dayOfWeek, //dayOfWeek
-                                                              hourOfDay, //hourOfDay
-                                                              wind[i], //windMps
-                                                              temp[i], //temperature
-                                                              electPriceUSDperMWh[i], //electPriceUSDperMWh
-                                                              radiation[i][0],
-                                                              radiation[i][2],
-                                                              radiation[i][4],
-                                                              radiation[i][6],
-                                                              0, //radiation[i][8], //roof is 0 for some reason
-                                                              TMT1, //TMT1
-                                                              tiHeatCool); //tiHeatCool
+    calculateHour(i + 1, //hourOfYear
+                  month, //month
+                  dayOfWeek, //dayOfWeek
+                  hourOfDay, //hourOfDay
+                  wind[i], //windMps
+                  temp[i], //temperature
+                  electPriceUSDperMWh[i], //electPriceUSDperMWh
+                  radiation[i][0],
+                  radiation[i][2],
+                  radiation[i][4],
+                  radiation[i][6],
+                  0, //radiation[i][8], //roof is 0 for some reason
+                  TMT1, //TMT1
+                  tiHeatCool, //tiHeatCool
+                  tempHourResults);
     // Store each result type in its own vector.
-    for (const auto& kv : hourResults) {
-      rawResults[kv.first].push_back(kv.second);
-    }
+    rawResults.Qneed_ht.push_back(tempHourResults.Qneed_ht);
+    rawResults.Qneed_cl.push_back(tempHourResults.Qneed_cl);
+    rawResults.Q_illum_tot.push_back(tempHourResults.Q_illum_tot);
+    rawResults.Q_illum_ext_tot.push_back(tempHourResults.Q_illum_ext_tot);
+    rawResults.Qfan_tot.push_back(tempHourResults.Qfan_tot);
+    rawResults.phi_plug.push_back(tempHourResults.phi_plug);
+    rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
+    rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
   }
 
   // Factor the raw need results by the distribution efficiencies.
@@ -520,8 +516,8 @@ ISOResults ISOHourly::calculateHourly()
   double efficiency_ht = heating->efficiency();
 
   // Calculate the yearly totals.
-  double Qneed_ht_yr = std::accumulate(rawResults["Qneed_ht"].begin(), rawResults["Qneed_ht"].end(), 0.0);
-  double Qneed_cl_yr = std::accumulate(rawResults["Qneed_cl"].begin(), rawResults["Qneed_cl"].end(), 0.0);
+  double Qneed_ht_yr = std::accumulate(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), 0.0);
+  double Qneed_cl_yr = std::accumulate(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), 0.0);
 
   double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
   double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
@@ -535,26 +531,26 @@ ISOResults ISOHourly::calculateHourly()
   auto factorCooling = [=](double need) {return need / eta_dist_cl / cop;};
 
   // Create containers for factored heating and cooling values.
-  std::vector<double> v_Qht_sys(rawResults["Qneed_ht"].size());
-  std::vector<double> v_Qcl_sys(rawResults["Qneed_cl"].size());
+  std::vector<double> v_Qht_sys(rawResults.Qneed_ht.size());
+  std::vector<double> v_Qcl_sys(rawResults.Qneed_cl.size());
 
   // Factor the heating and cooling values.
-  std::transform(rawResults["Qneed_ht"].begin(), rawResults["Qneed_ht"].end(), v_Qht_sys.begin(), factorHeating);
-  std::transform(rawResults["Qneed_cl"].begin(), rawResults["Qneed_cl"].end(), v_Qcl_sys.begin(), factorCooling);
+  std::transform(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), v_Qht_sys.begin(), factorHeating);
+  std::transform(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), v_Qcl_sys.begin(), factorCooling);
 
   // Store the factored results and rename them to match the monthly result names.
   std::map<std::string, std::vector<double> > results;
-  std::vector<double> zeroes(rawResults["Qneed_ht"].size(), 0.0);
+  std::vector<double> zeroes(rawResults.Qneed_ht.size(), 0.0);
 
   results["Eelec_ht"] = (heating->energyType() == 1) ? v_Qht_sys : zeroes; // If electric.
   results["Eelec_cl"] = v_Qcl_sys;
-  results["Eelec_int_lt"] = rawResults["Q_illum_tot"];
-  results["Eelec_ext_lt"] = rawResults["Q_illum_ext_tot"];
-  results["Eelec_fan"] = rawResults["Qfan_tot"];
+  results["Eelec_int_lt"] = rawResults.Q_illum_tot;
+  results["Eelec_ext_lt"] = rawResults.Q_illum_ext_tot;
+  results["Eelec_fan"] = rawResults.Qfan_tot;
   results["Eelec_pump"] = zeroes;
-  results["Eelec_int_plug"] = rawResults["phi_plug"];
-  results["Eelec_ext_plug"] = rawResults["externalEquipmentEnergyWperm2"];
-  results["Eelec_dhw"] = rawResults["Q_dhw"];
+  results["Eelec_int_plug"] = rawResults.phi_plug;
+  results["Eelec_ext_plug"] = rawResults.externalEquipmentEnergyWperm2;
+  results["Eelec_dhw"] = rawResults.Q_dhw;
   results["Egas_ht"] = (heating->energyType() != 1) ? v_Qht_sys : zeroes; // If not electric.
   results["Egas_cl"] = zeroes;
   results["Egas_plug"] = zeroes;
