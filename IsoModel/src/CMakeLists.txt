@@ -7,6 +7,10 @@ set(${target_name}_test
 	Test/ISOModel_GTest.cpp
 )
 
+set(${target_name}_benchmark
+	Test/ISOModel_Benchmark.cpp
+)
+
 set(${target_name}_standalone
 	standalone_main.cpp
 )
@@ -77,6 +81,10 @@ set(unit_test_depends
   ${Boost_LIBRARIES}
 )
 
+set(benchmark_depends
+  ${Boost_LIBRARIES}
+)
+
 
 set (exec_name isomodel_standalone)
 add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
@@ -85,6 +93,9 @@ target_link_libraries(${exec_name} ${${target_name}_depends})
 add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
 target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
 target_link_libraries(isomodel_unit_tests ${unit_test_depends})
+
+add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
+target_link_libraries(isomodel_benchmark ${benchmark_depends})
 
 # define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
 # this allows use to test parsing the as yet unused parameters 
