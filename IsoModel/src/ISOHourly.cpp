@@ -35,35 +35,186 @@ ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
 {
 }
 
-std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourlyData)
+ISOHourly::~ISOHourly()
 {
-  std::vector<double> monthlyData(12);
-  std::vector<int> monthsInHours = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+}
 
-  for (int month = 0; month < 12; ++month) {
-    monthlyData[month] = std::accumulate(hourlyData.begin() + monthsInHours[month],
-                                         hourlyData.begin() + monthsInHours[month + 1],
-                                         0.0);
+ISOResults ISOHourly::calculateHourly()
+{
+  populateSchedules();
+  // printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
+  // printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
+  // printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
+  // printMatrix("Exterior Lighting", (double*) this->fixedExteriorLightingSchedule, 24, 7);
+  // printMatrix("Fan", (double*) this->fixedFanSchedule, 24, 7);
+  // printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
+  // printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
+  // printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
+  initialize();
+  int hourOfDay = 1;
+  int dayOfWeek = 1;
+  int month = 1;
+  TimeFrame frame;
+  double TMT1, tiHeatCool;
+  TMT1 = tiHeatCool = 20;
+  std::vector<double> wind = weatherData->data()[WSPD];
+  std::vector<double> temp = weatherData->data()[DBT];
+  SolarRadiation pos(&frame, weatherData.get());
+  pos.Calculate();
+  std::vector<std::vector<double> > radiation = pos.eglobe();
+  HourResults<double> tempHourResults;
+  HourResults<std::vector<double>> rawResults;
+
+  for (int i = 0; i < TIMESLICES; i++) {
+    month = frame.Month[i];
+    if (hourOfDay == 25) {
+      hourOfDay = 1;
+      dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
+    }
+    
+    // TODO BAA@2014-12-14: Why is the roof radiation zero???
+    calculateHour(i + 1, //hourOfYear
+                  month, //month
+                  dayOfWeek, //dayOfWeek
+                  hourOfDay, //hourOfDay
+                  wind[i], //windMps
+                  temp[i], //temperature
+                  radiation[i][0],
+                  radiation[i][2],
+                  radiation[i][4],
+                  radiation[i][6],
+                  0, //radiation[i][8], //roof is 0 for some reason
+                  TMT1, //TMT1
+                  tiHeatCool, //tiHeatCool
+                  tempHourResults);
+    // Store each result type in its own vector.
+    rawResults.Qneed_ht.push_back(tempHourResults.Qneed_ht);
+    rawResults.Qneed_cl.push_back(tempHourResults.Qneed_cl);
+    rawResults.Q_illum_tot.push_back(tempHourResults.Q_illum_tot);
+    rawResults.Q_illum_ext_tot.push_back(tempHourResults.Q_illum_ext_tot);
+    rawResults.Qfan_tot.push_back(tempHourResults.Qfan_tot);
+    rawResults.phi_plug.push_back(tempHourResults.phi_plug);
+    rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
+    rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
   }
 
-  return monthlyData;
+  // Factor the raw need results by the distribution efficiencies.
+  double a_ht_loss = heating->hvacLossFactor();
+  double a_cl_loss = cooling->hvacLossFactor();
+  double f_waste = heating->hotcoldWasteFactor();
+  double cop = cooling->cop();
+  double efficiency_ht = heating->efficiency();
+
+  // Calculate the yearly totals.
+  double Qneed_ht_yr = std::accumulate(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), 0.0);
+  double Qneed_cl_yr = std::accumulate(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), 0.0);
+
+  double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
+  double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
+
+  double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht);
+  double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
+
+  // Create unary functions to factor the heating and cooling values for use
+  // with transform().
+  auto factorHeating = [=](double need) {return need / eta_dist_ht / efficiency_ht;};
+  auto factorCooling = [=](double need) {return need / eta_dist_cl / cop;};
+
+  // Create containers for factored heating and cooling values.
+  std::vector<double> v_Qht_sys(rawResults.Qneed_ht.size());
+  std::vector<double> v_Qcl_sys(rawResults.Qneed_cl.size());
+
+  // Factor the heating and cooling values.
+  std::transform(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), v_Qht_sys.begin(), factorHeating);
+  std::transform(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), v_Qcl_sys.begin(), factorCooling);
+
+  // Store the factored results and rename them to match the monthly result names.
+  std::map<std::string, std::vector<double> > results;
+  
+  // TODO Fix this! Hardcoded values of '0' for things not being calculated is not ideal.
+  std::vector<double> zeroes(rawResults.Qneed_ht.size(), 0.0);
+
+  results["Eelec_ht"] = (heating->energyType() == 1) ? v_Qht_sys : zeroes; // If electric.
+  results["Eelec_cl"] = v_Qcl_sys;
+  results["Eelec_int_lt"] = rawResults.Q_illum_tot;
+  results["Eelec_ext_lt"] = rawResults.Q_illum_ext_tot;
+  results["Eelec_fan"] = rawResults.Qfan_tot;
+  results["Eelec_pump"] = zeroes;
+  results["Eelec_int_plug"] = rawResults.phi_plug;
+  results["Eelec_ext_plug"] = rawResults.externalEquipmentEnergyWperm2;
+  results["Eelec_dhw"] = rawResults.Q_dhw;
+  results["Egas_ht"] = (heating->energyType() != 1) ? v_Qht_sys : zeroes; // If not electric.
+  results["Egas_cl"] = zeroes;
+  results["Egas_plug"] = zeroes;
+  results["Egas_dhw"] = zeroes;
+
+  // Convert to EUI in kWh/m^2
+  auto wattsPerHourTokWh = [](double watts) {return watts / 1000.0;};
+
+  for (auto& kv : results) {
+    std::transform(kv.second.begin(), kv.second.end(), kv.second.begin(), wattsPerHourTokWh);
+  }
+
+  // Calculate monthly results
+  std::map<std::string, std::vector<double>> monthlyResults;
+  for (const auto& kv : results) {
+    monthlyResults[kv.first] = sumHoursByMonth(kv.second);
+  }
+
+  // TODO: Make a flag for the CLI to output hourly by hour or hourly by month.
+  ISOResults allResults;
+  EndUses hourlyEndUsesByMonth[12];
+  for (int i = 0; i < 12; i++) {
+#ifdef _OPENSTUDIOS
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_fan"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_pump"][i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_cl"][i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+#else
+    int euse = 0;
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ht"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_cl"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_lt"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_lt"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_fan"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_pump"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_plug"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_plug"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_dhw"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_ht"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_cl"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_plug"][i]);
+    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_dhw"][i]);
+#endif
+    allResults.hourlyResultsByMonth.push_back(hourlyEndUsesByMonth[i]);
+  }
+  return allResults;
 }
 
 void ISOHourly::calculateHour(int hourOfYear,
-                                                       int month,
-                                                       int dayOfWeek,
-                                                       int hourOfDay,
-                                                       double windMps,
-                                                       double temperature,
-                                                       double electPriceUSDperMWh,
-                                                       double solarRadiationS,
-                                                       double solarRadiationE,
-                                                       double solarRadiationN,
-                                                       double solarRadiationW,
-                                                       double solarRadiationH,
-                                                       double& TMT1,
-                                                       double& tiHeatCool,
-                                                       HourResults<double>& results)
+                              int month,
+                              int dayOfWeek,
+                              int hourOfDay,
+                              double windMps,
+                              double temperature,
+                              double solarRadiationS,
+                              double solarRadiationE,
+                              double solarRadiationN,
+                              double solarRadiationW,
+                              double solarRadiationH,
+                              double& TMT1,
+                              double& tiHeatCool,
+                              HourResults<double>& results)
 {
   int scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
 
@@ -224,20 +375,6 @@ void ISOHourly::calculateHour(int hourOfYear,
   tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
 }
 
-ISOHourly::~ISOHourly()
-{
-
-}
-
-const int ISOHourly::SOUTH = 0;
-const int ISOHourly::SOUTHEAST = 1;
-const int ISOHourly::EAST = 2;
-const int ISOHourly::NORTHEAST = 3;
-const int ISOHourly::NORTH = 4;
-const int ISOHourly::NORTHWEST = 5;
-const int ISOHourly::WEST = 6;
-const int ISOHourly::SOUTHWEST = 7;
-const int ISOHourly::ROOF = 8;
 
 void ISOHourly::initialize()
 {
@@ -262,6 +399,7 @@ void ISOHourly::initialize()
   hci = 2.5;
   hri = 5.5;
 
+  // TODO BAA@2014-12-18: This is broken! The sensor values are now fractions/multipliers, not ints.
   switch ((int) building->lightingOccupancySensor()) {
   case 2:
     maxRatioElectricLighting = presenceSensorAd;
@@ -398,12 +536,10 @@ void ISOHourly::initialize()
   double hzone = 39;
   windImpactHz = std::max(0.1, hzone);
   windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
-
 }
 
 void ISOHourly::populateSchedules()
 {
-
   int dayStart = (int) pop->daysStart();
   int dayEnd = (int) pop->daysEnd();
   int hourStart = (int) pop->hoursStart();
@@ -425,8 +561,9 @@ void ISOHourly::populateSchedules()
       fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling->temperatureSetPointOccupied() : cooling->temperatureSetPointUnoccupied();
     }
   }
-
 }
+
+// TODO BAA@2014-12-18 Do we actually ever use this function? Can we get rid of it?
 void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2)
 {
   //if(DEBUG_ISO_MODEL_SIMULATION)
@@ -446,202 +583,29 @@ void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned i
   }
 }
 
-ISOResults ISOHourly::calculateHourly()
+std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourlyData)
 {
-  populateSchedules();
-  // printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
-  // printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
-  // printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
-  // printMatrix("Exterior Lighting", (double*) this->fixedExteriorLightingSchedule, 24, 7);
-  // printMatrix("Fan", (double*) this->fixedFanSchedule, 24, 7);
-  // printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
-  // printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
-  // printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
-  initialize();
-  int hourOfDay = 1;
-  int dayOfWeek = 1;
-  int month = 1;
-  TimeFrame frame;
-  double TMT1, tiHeatCool;
-  TMT1 = tiHeatCool = 20;
-  std::vector<double> wind = weatherData->data()[WSPD];
-  std::vector<double> temp = weatherData->data()[DBT];
-  SolarRadiation pos(&frame, weatherData.get());
-  pos.Calculate();
-  std::vector<std::vector<double> > radiation = pos.eglobe();
-  electPriceUSDperMWh[0] = 24;
+  std::vector<double> monthlyData(12);
+  std::vector<int> monthsInHours = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
 
-  HourResults<double> tempHourResults;
-  HourResults<std::vector<double>> rawResults;
-  for (int i = 0; i < TIMESLICES; i++) {
-    electPriceUSDperMWh[i] = 24;
-    month = frame.Month[i];
-    if (hourOfDay == 25) {
-      hourOfDay = 1;
-      dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
-    }
-    
-    // TODO BAA@2014-12-14: Why is the roof radiation zero???
-    calculateHour(i + 1, //hourOfYear
-                  month, //month
-                  dayOfWeek, //dayOfWeek
-                  hourOfDay, //hourOfDay
-                  wind[i], //windMps
-                  temp[i], //temperature
-                  electPriceUSDperMWh[i], //electPriceUSDperMWh
-                  radiation[i][0],
-                  radiation[i][2],
-                  radiation[i][4],
-                  radiation[i][6],
-                  0, //radiation[i][8], //roof is 0 for some reason
-                  TMT1, //TMT1
-                  tiHeatCool, //tiHeatCool
-                  tempHourResults);
-    // Store each result type in its own vector.
-    rawResults.Qneed_ht.push_back(tempHourResults.Qneed_ht);
-    rawResults.Qneed_cl.push_back(tempHourResults.Qneed_cl);
-    rawResults.Q_illum_tot.push_back(tempHourResults.Q_illum_tot);
-    rawResults.Q_illum_ext_tot.push_back(tempHourResults.Q_illum_ext_tot);
-    rawResults.Qfan_tot.push_back(tempHourResults.Qfan_tot);
-    rawResults.phi_plug.push_back(tempHourResults.phi_plug);
-    rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
-    rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
+  for (int month = 0; month < 12; ++month) {
+    monthlyData[month] = std::accumulate(hourlyData.begin() + monthsInHours[month],
+                                         hourlyData.begin() + monthsInHours[month + 1],
+                                         0.0);
   }
 
-  // Factor the raw need results by the distribution efficiencies.
-  double a_ht_loss = heating->hvacLossFactor();
-  double a_cl_loss = cooling->hvacLossFactor();
-  double f_waste = heating->hotcoldWasteFactor();
-  double cop = cooling->cop();
-  double efficiency_ht = heating->efficiency();
-
-  // Calculate the yearly totals.
-  double Qneed_ht_yr = std::accumulate(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), 0.0);
-  double Qneed_cl_yr = std::accumulate(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), 0.0);
-
-  double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
-  double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
-
-  double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht);
-  double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
-
-  // Create unary functions to factor the heating and cooling values for use
-  // with transform().
-  auto factorHeating = [=](double need) {return need / eta_dist_ht / efficiency_ht;};
-  auto factorCooling = [=](double need) {return need / eta_dist_cl / cop;};
-
-  // Create containers for factored heating and cooling values.
-  std::vector<double> v_Qht_sys(rawResults.Qneed_ht.size());
-  std::vector<double> v_Qcl_sys(rawResults.Qneed_cl.size());
-
-  // Factor the heating and cooling values.
-  std::transform(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), v_Qht_sys.begin(), factorHeating);
-  std::transform(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), v_Qcl_sys.begin(), factorCooling);
-
-  // Store the factored results and rename them to match the monthly result names.
-  std::map<std::string, std::vector<double> > results;
-  std::vector<double> zeroes(rawResults.Qneed_ht.size(), 0.0);
-
-  results["Eelec_ht"] = (heating->energyType() == 1) ? v_Qht_sys : zeroes; // If electric.
-  results["Eelec_cl"] = v_Qcl_sys;
-  results["Eelec_int_lt"] = rawResults.Q_illum_tot;
-  results["Eelec_ext_lt"] = rawResults.Q_illum_ext_tot;
-  results["Eelec_fan"] = rawResults.Qfan_tot;
-  results["Eelec_pump"] = zeroes;
-  results["Eelec_int_plug"] = rawResults.phi_plug;
-  results["Eelec_ext_plug"] = rawResults.externalEquipmentEnergyWperm2;
-  results["Eelec_dhw"] = rawResults.Q_dhw;
-  results["Egas_ht"] = (heating->energyType() != 1) ? v_Qht_sys : zeroes; // If not electric.
-  results["Egas_cl"] = zeroes;
-  results["Egas_plug"] = zeroes;
-  results["Egas_dhw"] = zeroes;
-
-  // Convert to EUI in kWh/m^2
-  auto wattsPerHourTokWh = [](double watts) {return watts / 1000.0;};
-
-  for (auto& kv : results) {
-    std::transform(kv.second.begin(), kv.second.end(), kv.second.begin(), wattsPerHourTokWh);
-  }
-
-  // Calculate monthly results
-  std::map<std::string, std::vector<double>> monthlyResults;
-  for (const auto& kv : results) {
-    monthlyResults[kv.first] = sumHoursByMonth(kv.second);
-  }
-
-  // TODO: Make a flag for the CLI to output hourly by hour or hourly by month.
-  //// Output the hourly results.
-  //for(int i = 0; i < TIMESLICES; ++i){
-  //  std::cout << "Hour: " << i << ", ";
-  //  std::cout 
-  //    << results["Qneed_ht"][i] << ", "
-  //    << results["Qneed_cl"][i] << ", "
-  //    << results["Q_illum_tot"][i] << ", "
-  //    << results["Q_illum_ext_tot"][i] << ", "
-  //    << results["Qfan_tot"][i] << ", "
-  //    << results["phi_plug"][i] << ", "
-  //    << results["externalEquipmentEnergyWperm2"][i] << ", "
-  //    << results["Q_dhw"][i];
-  //  std::cout << std::endl;
-  //}
-
-  //// Output the monthly results.
-  //std::cout << "Hourly results by month:" << std::endl;
-  //std::cout << "Month, Heat, Cool, IntLights, ExtLights, Fans, IntEquip, ExtEquip, DHW" << std::endl;
-  //for (int i = 0; i < 12; ++i){
-  //  std::cout << i + 1 << ", ";
-  //  std::cout 
-  //    << monthlyResults["Qneed_ht"][i] << ", "
-  //    << monthlyResults["Qneed_cl"][i] << ", "
-  //    << monthlyResults["Q_illum_tot"][i] << ", "
-  //    << monthlyResults["Q_illum_ext_tot"][i] << ", "
-  //    << monthlyResults["Qfan_tot"][i] << ", "
-  //    << monthlyResults["phi_plug"][i] << ", "
-  //    << monthlyResults["externalEquipmentEnergyWperm2"][i] << ", "
-  //    << monthlyResults["Q_dhw"][i];
-  //  std::cout << std::endl;
-  //}
-
-  // TODO Fix this! Hardcoded values of '0' for things not being calculated is not ideal.
-  ISOResults allResults;
-  EndUses hourlyEndUsesByMonth[12];
-  for (int i = 0; i < 12; i++) {
-#ifdef _OPENSTUDIOS
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_fan"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_pump"][i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
-
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_cl"][i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
-#else
-    int euse = 0;
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ht"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_cl"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_lt"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_lt"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_fan"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_pump"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_dhw"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_ht"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_cl"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_dhw"][i]);
-#endif
-    allResults.hourlyResultsByMonth.push_back(hourlyEndUsesByMonth[i]);
-  }
-  return allResults;
-
+  return monthlyData;
 }
+
+const int ISOHourly::SOUTH = 0;
+const int ISOHourly::SOUTHEAST = 1;
+const int ISOHourly::EAST = 2;
+const int ISOHourly::NORTHEAST = 3;
+const int ISOHourly::NORTH = 4;
+const int ISOHourly::NORTHWEST = 5;
+const int ISOHourly::WEST = 6;
+const int ISOHourly::SOUTHWEST = 7;
+const int ISOHourly::ROOF = 8;
 
 }
 }
