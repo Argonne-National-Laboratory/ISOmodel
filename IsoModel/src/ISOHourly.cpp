@@ -399,25 +399,24 @@ void ISOHourly::initialize()
   hci = 2.5;
   hri = 5.5;
 
-  // TODO BAA@2014-12-18: This is broken! The sensor values are now fractions/multipliers, not ints.
-  switch ((int) building->lightingOccupancySensor()) {
-  case 2:
-    maxRatioElectricLighting = presenceSensorAd;
-    elightNatural = presenceSensorLux;
-    break;
-  case 3:
-    maxRatioElectricLighting = automaticAd;
-    elightNatural = automaticLux;
-    break;
-  case 4:
+  // TODO BAA@2014-12-22: This is still pretty rough and needs ought to be confirmed to be working correctly.
+  auto lightingOccupancySensorDimmingFraction = building->lightingOccupancySensor();
+  auto daylightSensorDimmingFraction = lights->dimmingFraction();
+
+  if (lightingOccupancySensorDimmingFraction < 1.0 && daylightSensorDimmingFraction < 1.0) {
     maxRatioElectricLighting = presenceAutoAd;
     elightNatural = presenceAutoLux;
-    break;
-  default:
+  } else if (lightingOccupancySensorDimmingFraction < 1.0) {
+    maxRatioElectricLighting = presenceSensorAd;
+    elightNatural = presenceSensorLux;
+  } else if (daylightSensorDimmingFraction < 1.0) {
+    maxRatioElectricLighting = automaticAd;
+    elightNatural = automaticLux;
+  } else {
     maxRatioElectricLighting = manualSwitchAd;
     elightNatural = manualSwitchLux;
-    break;
   }
+
   double lightedNaturalAream2 = 0; // SingleBuilding.L53
   areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
