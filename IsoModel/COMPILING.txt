@@ -31,7 +31,7 @@ Windows:
 - Install CMake.
 	During the install, you can choose to add the cmake executable to the PATH. 
 	Make sure to do this.
-- Install Boost 32 bit and 64
+- Install Boost 32 bit and 64 (additional notes at bottom)
 - Install gtest (Google C++ unit testing framework: https://code.google.com/p/googletest/)
 	Make sure to compile the dynamically linkable version of gtest (e.g., gtest-1.7.0/msvc/gtest-md.sln).
 	Make sure to compile both a release and a debug version of gtest.
@@ -70,3 +70,34 @@ See the notes in step 4 above for more details.
 
 Remove the Win64 if you are not doing a 64bit build.
 
+Additional notes for installing 64-bit on windows
+=================================================
+
+Boost 64-bit
+------------
+
+You can build the 64-bit boost much like you build the 32-bit boost with b2. Just run the following (after running bootstrap):
+
+./b2 --toolset=msvc-12.0 address-model=64 --build-type=complete --stagedir=stage\x64 stage
+
+GTest 64-bit
+------------
+
+The instructions below were copied from: https://code.google.com/p/googletest/wiki/FAQ#How_do_I_generate_64-bit_binaries_on_Windows_%28using_Visual_Studi
+
+"Load the supplied Visual Studio solution file, either msvc\gtest-md.sln or msvc\gtest.sln. Go through the migration wizard to migrate the solution and project files to Visual Studio 2008. Select Configuration Manager... from the Build menu. Select <New...> from the Active solution platform dropdown. Select x64 from the new platform dropdown, leave Copy settings from set to Win32 and Create new project platforms checked, then click OK. You now have Win32 and x64 platform configurations, selectable from the Standard toolbar, which allow you to toggle between building 32-bit or 64-bit binaries (or both at once using Batch Build)."
+
+"In order to prevent build output files from overwriting one another, you'll need to change the Intermediate Directory settings for the newly created platform configuration across all the projects. To do this, multi-select (e.g. using shift-click) all projects (but not the solution) in the Solution Explorer. Right-click one of them and select Properties. In the left pane, select Configuration Properties, and from the Configuration dropdown, select All Configurations. Make sure the selected platform is x64. For the Intermediate Directory setting, change the value from $(PlatformName)\$(ConfigurationName) to $(OutDir)\$(ProjectName). Click OK and then build the solution. When the build is complete, the 64-bit binaries will be in the msvc\x64\Debug directory." 
+
+NOTE: in order to make cmake happy, I had to move the Debug and Release directories from msvc\x64 into msvc\gtest or msvc\gtest-md (depending on which one I had just compiled) so that the directory structure looked exactly the same as if I had done the standard 32-bit compile. This allows FindGTest to automatically figure out whether it should be using gtest or gtest-md. In order to keep both a x86 and x64 version of gtest while still leaving the directories msvc/gtest and msvc/gtest-md with their default names, I made two copies of the root gtest folder, and put one in "Program Files" and compiled it 64-bit and put the other in "Program Files (x86)" and compiled it 32-bit. It's a little clunky, but it seems to work. - Brendan
+
+Linking up all the 64-bit libraries with CMake
+----------------------------------------------
+
+In case it is helpful for anyone struggling to get everything working in 64-bit on windows, these two cmake commands both work on Brendan's machine on 2015-01-10.
+
+cmake -DCMAKE_BUILD_TYPE=Release ../src -G "NMake Makefiles" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
+
+or
+
+cmake -DCMAKE_BUILD_TYPE=Release ../src -G "Visual Studio 12 2013 Win64" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
