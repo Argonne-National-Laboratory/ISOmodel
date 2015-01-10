@@ -67,7 +67,7 @@ else()
 endif()
 
 
-find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem program_options)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIB_DIR})
 

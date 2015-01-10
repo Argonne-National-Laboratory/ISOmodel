@@ -7,20 +7,49 @@
 
 #include "UserModel.hpp"
 #include "SimModel.hpp"
+#include <iostream>
+
+#include <boost/program_options.hpp>
 
 using namespace openstudio::isomodel;
 using namespace openstudio;
 
 int main(int argc, char* argv[])
 {
-  if (argc < 2) {
-    std::cout << "Usage: " << argv[0] << " <filename.ISO>" << std::endl;
-    return -1;
+  namespace po = boost::program_options; 
+  po::options_description desc("Options"); 
+  desc.add_options()
+    ("ismfilepath,i", po::value<std::string>()->required(), "Path to ism file.");
+
+  po::positional_options_description positionalOptions; 
+  positionalOptions.add("ismfilepath", 1); 
+
+  po::variables_map vm;
+
+  try {
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions).run(), vm); // Throws on error. 
+    po::notify(vm); // Throws if required options are mising.
   }
-  if (DEBUG_ISO_MODEL_SIMULATION)
+  catch(boost::program_options::required_option& e) 
+  { 
+    std::cout << "Missing a required option!" << std::endl;
+    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    return 1; 
+  } 
+  catch(boost::program_options::error& e) 
+  { 
+    std::cout << "Error parsing arguments!" << std::endl;
+    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    return 1; 
+  } 
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Loading User Model..." << std::endl;
+  }
+
   openstudio::isomodel::UserModel umodel;
-  umodel.load(argv[1]);
+  umodel.load(vm["ismfilepath"].as<std::string>());
+
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "User Model Loaded" << std::endl;
 
