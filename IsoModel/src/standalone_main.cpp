@@ -105,14 +105,14 @@ int main(int argc, char* argv[])
   }
   catch(boost::program_options::required_option& e) 
   { 
-    std::cout << "Missing a required option!" << std::endl;
     std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    std::cerr << desc << std::endl;
     return 1; 
   } 
   catch(boost::program_options::error& e) 
   { 
-    std::cout << "Error parsing arguments!" << std::endl;
     std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    std::cerr << desc << std::endl;
     return 1; 
   } 
 
@@ -142,9 +142,6 @@ int main(int argc, char* argv[])
     printVector("mEgh", mEgh);
     printVector("mdbt", mdbt);
     printVector("mwind", mwind);
-  }
-
-  if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << std::endl;
   }
 
