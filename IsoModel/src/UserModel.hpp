@@ -24,6 +24,7 @@
 #include "EpwData.hpp"
 #include "SimModel.hpp"
 #include "ISOHourly.hpp"
+#include "Properties.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -41,7 +42,7 @@ private:
   std::string
   resolveFilename(std::string baseFile, std::string relativeFile);
   void
-  parseStructure(std::string attributeName, const char* attributeValue);
+  initializeStructure(const Properties& buildingParams);
 
   std::shared_ptr<WeatherData> _weather;
   std::shared_ptr<EpwData> _edata;
@@ -171,6 +172,7 @@ private:
   double _windowSCFNW;
   double _windowSCFW;
   double _windowSCFSW;
+  double _skylightSCF;
 
   double _windowSDFS;
   double _windowSDFSE;
@@ -180,6 +182,7 @@ private:
   double _windowSDFNW;
   double _windowSDFW;
   double _windowSDFSW;
+  double _skylightSDF;
 
   double _exteriorHeatCapacity;
   double _infiltration;
@@ -191,11 +194,21 @@ private:
   double _coolingPumpControl;
   double _heatGainPerPerson;
 
-  std::string _weatherFilePath;
+  double _ventilationIntakeRateUnoccupied;
+  double _ventilationExhaustRateUnoccupied;
+  double _infiltrationRateUnoccupied;
+  double _lightingPowerFixedOccupied;
+  double _lightingPowerFixedUnoccupied;
+  double _electricAppliancePowerFixedOccupied;
+  double _electricAppliancePowerFixedUnoccupied;
+  double _gasAppliancePowerFixedOccupied;
+  double _gasAppliancePowerFixedUnoccupied;
+
+  std::string _weatherFilePath, _scheduleFilePath;
   std::string dataFile;
 
   void
-  parseLine(std::string line);
+  initializeParameters(const Properties& props);
   void
   loadBuilding(std::string buildingFile);
   int
@@ -1079,6 +1092,17 @@ public:
     return _skylightSHGC;
   }
 
+  double skylightSDF() const
+    {
+      return _skylightSDF;
+    }
+
+  double skylightSCF()
+    {
+      return _skylightSCF;
+    }
+
+
   double exteriorHeatCapacity()
   {
     return _exteriorHeatCapacity;
@@ -1377,6 +1401,16 @@ public:
     _skylightSHGC = val;
   }
 
+  void setSkylightSDF(double val)
+    {
+      _skylightSDF = val;
+    }
+
+  void setSkylightSCF(double val)
+    {
+      _skylightSCF = val;
+    }
+
   void setExteriorHeatCapacity(double val)
   {
     _exteriorHeatCapacity = val;
@@ -1412,6 +1446,104 @@ public:
   void setHeatGainPerPerson(double val)
   {
     _heatGainPerPerson = val;
+  }
+
+  std::string scheduleFilePath() const {
+    return _scheduleFilePath;
+  }
+
+  void setScheduleFilePath(const std::string& path) {
+    _scheduleFilePath = path;
+  }
+
+  double electricAppliancePowerFixedOccupied() const
+  {
+    return _electricAppliancePowerFixedOccupied;
+  }
+
+  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied)
+  {
+    _electricAppliancePowerFixedOccupied = electricAppliancePowerFixedOccupied;
+  }
+
+  double electricAppliancePowerFixedUnoccupied() const
+  {
+    return _electricAppliancePowerFixedUnoccupied;
+  }
+
+  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied)
+  {
+    _electricAppliancePowerFixedUnoccupied = electricAppliancePowerFixedUnoccupied;
+  }
+
+  double gasAppliancePowerFixedOccupied() const
+  {
+    return _gasAppliancePowerFixedOccupied;
+  }
+
+  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied)
+  {
+    _gasAppliancePowerFixedOccupied = gasAppliancePowerFixedOccupied;
+  }
+
+  double gasAppliancePowerFixedUnoccupied() const
+  {
+    return _gasAppliancePowerFixedUnoccupied;
+  }
+
+  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied)
+  {
+    _gasAppliancePowerFixedUnoccupied = gasAppliancePowerFixedUnoccupied;
+  }
+
+  double infiltrationRateUnoccupied() const
+  {
+    return _infiltrationRateUnoccupied;
+  }
+
+  void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied)
+  {
+    _infiltrationRateUnoccupied = infiltrationRateUnoccupied;
+  }
+
+  double lightingPowerFixedOccupied() const
+  {
+    return _lightingPowerFixedOccupied;
+  }
+
+  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied)
+  {
+    _lightingPowerFixedOccupied = lightingPowerFixedOccupied;
+  }
+
+  double lightingPowerFixedUnoccupied() const
+  {
+    return _lightingPowerFixedUnoccupied;
+  }
+
+  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied)
+  {
+    _lightingPowerFixedUnoccupied = lightingPowerFixedUnoccupied;
+  }
+
+  double ventilationExhaustRateUnoccupied() const
+  {
+    return _ventilationExhaustRateUnoccupied;
+  }
+
+  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied)
+  {
+    _ventilationExhaustRateUnoccupied = ventilationExhaustRateUnoccupied;
+  }
+
+  double ventilationIntakeRateUnoccupied() const
+  {
+    return _ventilationIntakeRateUnoccupied;
+  }
+
+  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied)
+  {
+    _ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
   }
 };
 

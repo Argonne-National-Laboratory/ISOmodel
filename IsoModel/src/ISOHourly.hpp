@@ -1,8 +1,8 @@
 /*
  * ISOHourly.h
  *
- *	Created on: Apr 28, 2014
- *			Author: craig
+ *  Created on: Apr 28, 2014
+ *      Author: craig
  */
 
 #ifndef ISOHOURLY_H_
@@ -26,14 +26,197 @@
 namespace openstudio {
 namespace isomodel {
 
+// Struct to hold the results of each hour and the vector of results of all the hours.
+template<typename T>
+struct HourResults
+{
+  T Qneed_ht;
+  T Qneed_cl;
+  T Q_illum_tot;
+  T Q_illum_ext_tot;
+  T Qfan_tot;
+  T phi_plug;
+  T externalEquipmentEnergyWperm2;
+  T Q_dhw;
+};
+
 class ISOHourly
 {
+public:
+  ISOHourly();
+  virtual ~ISOHourly();
+
+  /** Calculates the building's hourly EUI using the "simple hourly method"
+   * described in ISO 13790:2008. The hourly calculations largely correspond to
+   * those described by the simple hourly method in ISO 13790 Annex C. A key
+   * difference is that this implementation describes everything in terms of
+   * EUI (i.e., per area). */
+  ISOResults calculateHourly();
+
+  /** Set the population. */
+  void setPop(std::shared_ptr<Population> value)
+  {
+    pop = value;
+  }
+
+  /** Set the lighting. */
+  void setLights(std::shared_ptr<Lighting> value)
+  {
+    lights = value;
+  }
+
+  /** Set the building. */
+  void setBuilding(std::shared_ptr<Building> value)
+  {
+    building = value;
+  }
+
+  /** Set the structure. */
+  void setStructure(std::shared_ptr<Structure> value)
+  {
+    structure = value;
+  }
+
+  /** Set the heating. */
+  void setHeating(std::shared_ptr<Heating> value)
+  {
+    heating = value;
+  }
+
+  /** Set the cooling. */
+  void setCooling(std::shared_ptr<Cooling> value)
+  {
+    cooling = value;
+  }
+
+  /** Set the ventilation. */
+  void setVentilation(std::shared_ptr<Ventilation> value)
+  {
+    ventilation = value;
+  }
+
+  /** Set the weather data. */
+  void setWeatherData(std::shared_ptr<EpwData> value)
+  {
+    weatherData = value;
+  }
+
+protected:
+
+  /** Populates the ventilation, fan, exterior equipment, interior equipment,
+   * exterior lighting, interior lighting, heating setpoint, and cooling
+   * setpoint schedules. */
+  void populateSchedules();
+
+  /** Calculates the energy use for one hour and sets the state for the next
+   * hour. The hourly calculations largely correspond to those described by the
+   * simple hourly method in ISO 13790 Annex C. A key difference is that this
+   * implementation describes everything in terms of EUI (i.e., per area). Any
+   * discrepency in units where this code uses "units per area" while the
+   * standard just uses "units" is likely due to this difference. */
+  void calculateHour(int hourOfYear,
+                     int month,
+                     int dayOfWeek,
+                     int hourOfDay,
+                     double windMps,
+                     double temperature,
+                     double solarRadiationN,
+                     double solarRadiationE,
+                     double solarRadiationS,
+                     double solarRadiationW,
+                     double solarRadiationH,
+                     double& TMT1,
+                     double& tiHeatCool,
+                     HourResults<double>& results);
+  
+  void initialize();
+
+  void structureCalculations(double SHGC,
+                             double wallAreaM2,
+                             double windowAreaM2,
+                             double wallUValue,
+                             double windowUValue,
+                             double wallSolarAbsorption,
+                             double solarFactorWith,
+                             double solarFactorWithout,
+                             int direction)
+  {
+    double WindowT = SHGC / 0.87;
+    nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
+    nla[direction] = windowAreaM2 * WindowT; //natural lighted area
+    sams[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWith;
+    sa[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWithout;
+    htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
+    hWindow[direction] = windowAreaM2 * windowUValue;
+  }
+
+  std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
+
+  /** Returns the fan schedule. */
+  virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedFanSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the ventilation schedule. */
+  virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedVentilationSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the exterior equipment schedule. */
+  virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedExteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the interior equipment schedule. */
+  virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedInteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the exterior lighting schedule. */
+  virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedExteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the interior lighting schedule. */
+  virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedInteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the heating setpoint schedule. */
+  virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedActualHeatingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  /** Returns the cooling setpoint schedule. */
+  virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
+  {
+    return fixedActualCoolingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+  }
+
+  std::shared_ptr<Population> pop;
+  std::shared_ptr<Lighting> lights;
+  std::shared_ptr<Building> building;
+  std::shared_ptr<Structure> structure;
+  std::shared_ptr<Heating> heating;
+  std::shared_ptr<Cooling> cooling;
+  std::shared_ptr<Ventilation> ventilation;
+  std::shared_ptr<EpwData> weatherData;
+
+private:
+
   // BAA@20150717: Variables that correspond to symbols in ISO 13790 have the symbols noted
   // in LaTeX format in the comments. Symbols from other standards have their
   // standard noted. Symbols are case sensitive, e.g., H_{ms} is different than
   // h_{ms}. References to spreadsheet cells are from the Gerogia Tech
   // ISOHourly spreadsheet.  Suggested name changes are marked with XXX. If I'm
-  // not confident in the suggested name, it's followed with '???'.	
+  // not confident in the suggested name, it's followed with '???'.  
 
   // Fans. http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html
   double fanDeltaPinPa; // dp. Total pressure increase in the fan. Calculation.T15
@@ -143,7 +326,6 @@ class ISOHourly
   double sa[9];
   double htot[9];
   double hWindow[9];
-  double electPriceUSDperMWh[TIMESLICES];
 
   //XXX External Equipment usage Q56
   double externalEquipment;
@@ -166,155 +348,6 @@ class ISOHourly
 
   // XXX Unused variables.
   double provisionalCFlowad; // Appears to be unused. Calculation.S106
-
-protected:
-
-  /** Populates the ventilation, fan, exterior equipment, interior equipment,
-   * exterior lighting, interior lighting, heating setpoint, and cooling
-   * setpoint schedules. */
-  void
-  populateSchedules();
-
-  /** Calculates the energy use for one hour and sets the state for the next
-   * hour. The hourly calculations largely correspond to those described by the
-   * simple hourly method in ISO 13790 Annex C. A key difference is that this
-   * implementation describes everything in terms of EUI (i.e., per area). Any
-   * discrepency in units where this code uses "units per area" while the
-   * standard just uses "units" is likely due to this difference. */
-  std::map<std::string, double>
-  calculateHour(int hourOfYear, int month, int dayOfWeek, int hourOfDay, double windMps, double temperature, double electPriceUSDperMWh,
-      double solarRadiationN, double solarRadiationE, double solarRadiationS, double solarRadiationW, double solarRadiationH, double& TMT1,
-      double& tiHeatCool);
-  void
-  initialize();
-  void structureCalculations(double SHGC, double wallAreaM2, double windowAreaM2, double wallUValue, double windowUValue, double wallSolarAbsorption,
-      double solarFactorWith, double solarFactorWithout, int direction)
-  {
-    double WindowT = SHGC / 0.87;
-    nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
-    nla[direction] = windowAreaM2 * WindowT; //natural lighted area
-    sams[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWith;
-    sa[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWithout;
-    htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
-    hWindow[direction] = windowAreaM2 * windowUValue;
-  }
-
-  /** Returns the fan schedule. */
-  virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedFanSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the ventilation schedule. */
-  virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedVentilationSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the exterior equipment schedule. */
-  virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedExteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the interior equipment schedule. */
-  virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedInteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the exterior lighting schedule. */
-  virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedExteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the interior lighting schedule. */
-  virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedInteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the heating setpoint schedule. */
-  virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedActualHeatingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  /** Returns the cooling setpoint schedule. */
-  virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
-    return fixedActualCoolingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
-  }
-
-  std::shared_ptr<Population> pop;
-  std::shared_ptr<Lighting> lights;
-  std::shared_ptr<Building> building;
-  std::shared_ptr<Structure> structure;
-  std::shared_ptr<Heating> heating;
-  std::shared_ptr<Cooling> cooling;
-  std::shared_ptr<Ventilation> ventilation;
-  std::shared_ptr<EpwData> weatherData;
-public:
-  ISOHourly();
-  virtual
-  ~ISOHourly();
-
-  /** Calculates the building's hourly EUI using the "simple hourly method"
-   * described in ISO 13790:2008. The hourly calculations largely correspond to
-   * those described by the simple hourly method in ISO 13790 Annex C. A key
-   * difference is that this implementation describes everything in terms of
-   * EUI (i.e., per area). */
-  ISOResults
-  calculateHourly();
-
-  /** Set the population. */
-  void setPop(std::shared_ptr<Population> value)
-  {
-    pop = value;
-  }
-
-  /** Set the lighting. */
-  void setLights(std::shared_ptr<Lighting> value)
-  {
-    lights = value;
-  }
-
-  /** Set the building. */
-  void setBuilding(std::shared_ptr<Building> value)
-  {
-    building = value;
-  }
-
-  /** Set the structure. */
-  void setStructure(std::shared_ptr<Structure> value)
-  {
-    structure = value;
-  }
-
-  /** Set the heating. */
-  void setHeating(std::shared_ptr<Heating> value)
-  {
-    heating = value;
-  }
-
-  /** Set the cooling. */
-  void setCooling(std::shared_ptr<Cooling> value)
-  {
-    cooling = value;
-  }
-
-  /** Set the ventilation. */
-  void setVentilation(std::shared_ptr<Ventilation> value)
-  {
-    ventilation = value;
-  }
-
-  /** Set the weather data. */
-  void setWeatherData(std::shared_ptr<EpwData> value)
-  {
-    weatherData = value;
-  }
 };
 }
 }

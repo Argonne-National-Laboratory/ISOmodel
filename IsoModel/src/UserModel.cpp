@@ -23,6 +23,17 @@ using namespace std;
 namespace openstudio {
 namespace isomodel {
 
+const std::string GAS = "gas";
+const std::string ELECTRIC = "electric";
+
+const std::string MECHANICAL = "mechanical";
+const std::string NATURAL = "natural";
+const std::string COMBINED = "combined";
+
+const std::string NONE = "none";
+const std::string SIMPLE = "simple";
+const std::string ADVANCED = "advanced";
+
 UserModel::UserModel() :
     _weather(new WeatherData()), _edata(new EpwData())
 {
@@ -398,354 +409,318 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
   return results;
 }
 
-// trim from front and back ends
-static inline std::string trim(std::string &s)
+void UserModel::initializeStructure(const Properties& buildingParams)
 {
-  const char* cstr = s.c_str();
-  int start = 0, end = s.size();
-  while (*cstr == ' ') {
-    cstr++;
-    start++;
-  }
-  cstr += (end - start - 1);
-  while (*cstr == ' ') {
-    cstr--;
-    end--;
-  }
-  return s.substr(start, end - start);
+
+  std::vector<double> values;
+  buildingParams.getPropertyAsDoubleVector("wallArea", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallArea parameter. It must have 9.");
+  _wallAreaN = values[0];
+  _wallAreaNE = values[1];
+  _wallAreaE = values[2];
+  _wallAreaSE = values[3];
+  _wallAreaS = values[4];
+  _wallAreaSW = values[5];
+  _wallAreaW = values[6];
+  _wallAreaNW = values[7];
+  _roofArea = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("wallU", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallU parameter. It must have 9.");
+  _wallUvalueN = values[0];
+  _wallUvalueNE = values[1];
+  _wallUvalueE = values[2];
+  _wallUvalueSE = values[3];
+  _wallUvalueS = values[4];
+  _wallUvalueSW = values[5];
+  _wallUvalueW = values[6];
+  _wallUvalueNW = values[7];
+  _roofUValue = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("wallEmissivity", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallEmissivity parameter. It must have 9.");
+  _wallThermalEmissivityN = values[0];
+  _wallThermalEmissivityNE = values[1];
+  _wallThermalEmissivityE = values[2];
+  _wallThermalEmissivitySE = values[3];
+  _wallThermalEmissivityS = values[4];
+  _wallThermalEmissivitySW = values[5];
+  _wallThermalEmissivityW = values[6];
+  _wallThermalEmissivityNW = values[7];
+  _roofThermalEmissivity = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("wallAbsorption", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for wallAbsorption parameter. It must have 9.");
+  _wallSolarAbsorptionN = values[0];
+  _wallSolarAbsorptionNE = values[1];
+  _wallSolarAbsorptionE = values[2];
+  _wallSolarAbsorptionSE = values[3];
+  _wallSolarAbsorptionS = values[4];
+  _wallSolarAbsorptionSW = values[5];
+  _wallSolarAbsorptionW = values[6];
+  _wallSolarAbsorptionNW = values[7];
+  _roofSolarAbsorption = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowArea", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowArea parameter. It must have 9.");
+  _windowAreaN = values[0];
+  _windowAreaNE = values[1];
+  _windowAreaE = values[2];
+  _windowAreaSE = values[3];
+  _windowAreaS = values[4];
+  _windowAreaSW = values[5];
+  _windowAreaW = values[6];
+  _windowAreaNW = values[7];
+  _skylightArea = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowU", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowU parameter. It must have 9.");
+  _windowUvalueN = values[0];
+  _windowUvalueNE = values[1];
+  _windowUvalueE = values[2];
+  _windowUvalueSE = values[3];
+  _windowUvalueS = values[4];
+  _windowUvalueSW = values[5];
+  _windowUvalueW = values[6];
+  _windowUvalueNW = values[7];
+  _skylightUvalue = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowSHGC", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSHGC parameter. It must have 9.");
+  _windowSHGCN = values[0];
+  _windowSHGCNE = values[1];
+  _windowSHGCE = values[2];
+  _windowSHGCSE = values[3];
+  _windowSHGCS = values[4];
+  _windowSHGCSW = values[5];
+  _windowSHGCW = values[6];
+  _windowSHGCNW = values[7];
+  _skylightSHGC = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowSCF", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSCF parameter. It must have 9.");
+  _windowSCFN = values[0];
+  _windowSCFNE = values[1];
+  _windowSCFE = values[2];
+  _windowSCFSE = values[3];
+  _windowSCFS = values[4];
+  _windowSCFSW = values[5];
+  _windowSCFW = values[6];
+  _windowSCFNW = values[7];
+  _skylightSCF = values[8];
+
+  buildingParams.getPropertyAsDoubleVector("windowSDF", values);
+  if (values.size() != 9)
+    throw invalid_argument("Invalid number of values for windowSDF parameter. It must have 9.");
+  _windowSDFN = values[0];
+  _windowSDFNE = values[1];
+  _windowSDFE = values[2];
+  _windowSDFSE = values[3];
+  _windowSDFS = values[4];
+  _windowSDFSW = values[5];
+  _windowSDFW = values[6];
+  _windowSDFNW = values[7];
+  _skylightSDF = values[8];
 }
-// trim from front and back ends
-static inline std::string lcase(std::string &s)
+
+void UserModel::initializeParameters(const Properties& buildingParams)
 {
-  for (unsigned int i = 0; i < s.size(); i++) {
-    if (s.at(i) < 91) {
-      s.at(i) = s.at(i) + 32;
-    }
-  }
-  return s;
-}
+  double attributeValue = buildingParams.getPropertyAsDouble("terrainclass");
+  setTerrainClass(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("buildingheight");
+  setBuildingHeight(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("floorarea");
+  setFloorArea(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("occupancydaystart");
+  setBuildingOccupancyFrom(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("occupancydayend");
+  setBuildingOccupancyTo(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourstart");
+  setEquivFullLoadOccupancyFrom(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourend");
+  setEquivFullLoadOccupancyTo(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("peopledensityoccupied");
+  setPeopleDensityOccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("peopledensityunoccupied");
+  setPeopleDensityUnoccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityoccupied");
+  setLightingPowerIntensityOccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityunoccupied");
+  setLightingPowerIntensityUnoccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityoccupied");
+  setElecPowerAppliancesOccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityunoccupied");
+  setElecPowerAppliancesUnoccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityoccupied");
+  setGasPowerAppliancesOccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityunoccupied");
+  setGasPowerAppliancesUnoccupied(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("exteriorlightingpower");
+  setExteriorLightingPower(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("hvacwastefactor");
+  setHvacWasteFactor(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("hvacheatinglossfactor");
+  setHvacHeatingLossFactor(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("hvaccoolinglossfactor");
+  setHvacCoolingLossFactor(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("daylightsensordimmingfraction");
+  setDaylightSensorSystem(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("lightingoccupancysensordimmingfraction");
+  setLightingOccupancySensorSystem(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("constantilluminationcontrolmultiplier");	//constantilluminaitoncontrol
+  setConstantIlluminationControl(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemcop");
+  setCoolingSystemCOP(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemiplvtocopratio");
+  setCoolingSystemIPLVToCOPRatio(attributeValue);
 
-void UserModel::parseStructure(std::string attributeName, const char* attributeValue)
-{
-  //Window&Wall Values    
-  if (!attributeName.compare("windowuvaluen")) {
-    _windowUvalueN = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcn")) {
-    _windowSHGCN = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfn")) {
-    _windowSCFN = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfn")) {
-    _windowSDFN = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluen")) {
-    _wallUvalueN = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionn")) {
-    _wallSolarAbsorptionN = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivityn")) {
-    _wallThermalEmissivityN = (atof(attributeValue));
-  }
+  std::string type = buildingParams.getProperty("heatingfueltype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == ELECTRIC)
+    attributeValue = 1.0;
+  else if (type == GAS)
+    attributeValue = 2.0;
+  else
+    throw invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
+  setHeatingEnergyCarrier(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluene")) {
-    _windowUvalueNE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcne")) {
-    _windowSHGCNE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfne")) {
-    _windowSCFNE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfne")) {
-    _windowSDFNE = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluene")) {
-    _wallUvalueNE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionne")) {
-    _wallSolarAbsorptionNE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivityne")) {
-    _wallThermalEmissivityNE = (atof(attributeValue));
-  }
+  attributeValue = buildingParams.getPropertyAsDouble("heatingsystemefficiency");
+  setHeatingSystemEfficiency(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluee")) {
-    _windowUvalueE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgce")) {
-    _windowSHGCE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfe")) {
-    _windowSCFE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfe")) {
-    _windowSDFE = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluee")) {
-    _wallUvalueE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptione")) {
-    _wallSolarAbsorptionE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivitye")) {
-    _wallThermalEmissivityE = (atof(attributeValue));
-  }
+  type = buildingParams.getProperty("ventilationtype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == MECHANICAL)
+    attributeValue = 1.0;
+  else if (type == COMBINED)
+    attributeValue = 2.0;
+  else if (type == NATURAL)
+    attributeValue = 3.0;
+  else
+    throw invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
+  setVentilationType(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluese")) {
-    _windowUvalueSE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcse")) {
-    _windowSHGCSE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfse")) {
-    _windowSCFSE = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfse")) {
-    _windowSDFSE = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluese")) {
-    _wallUvalueSE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionse")) {
-    _wallSolarAbsorptionSE = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivityse")) {
-    _wallThermalEmissivitySE = (atof(attributeValue));
-  }
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationintakerateoccupied");
+  setFreshAirFlowRate(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateOccupied");
+  setSupplyExhaustRate(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("heatrecovery");
+  setHeatRecovery(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("exhaustairrecirculation");
+  setExhaustAirRecirclation(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("infiltrationrateoccupied");
+  // set both of these to infiltration. Prior version set only the
+  // buildingAirLeakage from the infiltration and the _infiltration var
+  // wasn't used. Its still not used, but does have a getter and setter
+  // so we set it
+  setBuildingAirLeakage(attributeValue);
+  setInfiltration(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("dhwdemand");
+  setDhwDemand(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("dhwsystemefficiency");
+  setDhwEfficiency(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("dhwdistributionefficiency");
+  setDhwDistributionEfficiency(attributeValue);
 
-  else if (!attributeName.compare("windowuvalues")) {
-    _windowUvalueS = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcs")) {
-    _windowSHGCS = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfs")) {
-    _windowSCFS = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfs")) {
-    _windowSDFS = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvalues")) {
-    _wallUvalueS = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptions")) {
-    _wallSolarAbsorptionS = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivitys")) {
-    _wallThermalEmissivityS = (atof(attributeValue));
-  }
+  type = buildingParams.getProperty("dhwfueltype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == ELECTRIC)
+    attributeValue = 1.0;
+  else if (type == GAS)
+    attributeValue = 2.0;
+  else
+    throw invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
+  setDhwEnergyCarrier(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluesw")) {
-    _windowUvalueSW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcsw")) {
-    _windowSHGCSW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfsw")) {
-    _windowSCFSW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfsw")) {
-    _windowSDFSW = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluesw")) {
-    _wallUvalueSW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionsw")) {
-    _wallSolarAbsorptionSW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivitysw")) {
-    _wallThermalEmissivitySW = (atof(attributeValue));
-  }
+  type = buildingParams.getProperty("bemtype");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  if (type == NONE)
+    attributeValue = 1.0;
+  else if (type == SIMPLE)
+    attributeValue = 2.0;
+  else if (type == ADVANCED)
+    attributeValue = 3.0;
+  else
+    throw invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
+  setBemType(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluew")) {
-    _windowUvalueW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcw")) {
-    _windowSHGCW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfw")) {
-    _windowSCFW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfw")) {
-    _windowSDFW = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluew")) {
-    _wallUvalueW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionw")) {
-    _wallSolarAbsorptionW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivityw")) {
-    _wallThermalEmissivityW = (atof(attributeValue));
-  }
+  attributeValue = buildingParams.getPropertyAsDouble("interiorheatcapacity");
+  setInteriorHeatCapacity(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("exteriorheatcapacity");
+  setExteriorHeatCapacity(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("heatingpumpcontrol");
+  setHeatingPumpControl(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("coolingpumpcontrol");
+  setCoolingPumpControl(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("heatgainperperson");
+  setHeatGainPerPerson(attributeValue);
+  //specificFanPower
+  attributeValue = buildingParams.getPropertyAsDouble("specificfanpower");
+  setSpecificFanPower(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("fanflowcontrolfactor");
+  setFanFlowControlFactor(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointoccupied");
+  setCoolingOccupiedSetpoint(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointunoccupied");
+  setCoolingUnoccupiedSetpoint(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointoccupied");
+  setHeatingOccupiedSetpoint(attributeValue);
+  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");
+  setHeatingUnoccupiedSetpoint(attributeValue);
 
-  else if (!attributeName.compare("windowuvaluenw")) {
-    _windowUvalueNW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowshgcnw")) {
-    _windowSHGCNW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowscfnw")) {
-    _windowSCFNW = (atof(attributeValue));
-  } else if (!attributeName.compare("windowsdfnw")) {
-    _windowSDFNW = (atof(attributeValue));
-  } else if (!attributeName.compare("walluvaluenw")) {
-    _wallUvalueNW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallsolarabsorptionnw")) {
-    _wallSolarAbsorptionNW = (atof(attributeValue));
-  } else if (!attributeName.compare("wallthermalemissivitynw")) {
-    _wallThermalEmissivityNW = (atof(attributeValue));
-  }
-}
-void UserModel::parseLine(string line)
-{
-  std::vector<std::string> linesplit = stringSplit(line, '=', true);
-  if (linesplit.size() < 2)
-    return;
-  for (unsigned int i = 0; i < linesplit.size(); i++) {
-    linesplit[i] = trim(linesplit[i]);
-  }
-  if (linesplit[0].at(0) == '#')
-    return;
-  string attributeName = lcase(linesplit[0]);
+#if (USE_NEW_BUILDING_PARAMS)
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationIntakeRateUnoccupied");
+  setVentilationIntakeRateUnoccupied(attributeValue);
 
-  // XXX BAA@20140730: atof() returns 0.0 when no valid conversion can be
-  // performed. This seems like it makes it impossible to differentiate
-  // between corrupted input data and intentional values of 0.0. Is this a
-  // problem?
-  const char* attributeValue = linesplit[1].c_str();
-  if (!attributeName.compare("terrainclass")) {
-    setTerrainClass(atof(attributeValue));
-  } else if (!attributeName.compare("buildingheight")) {
-    setBuildingHeight(atof(attributeValue));
-  } else if (!attributeName.compare("floorarea")) {
-    setFloorArea(atof(attributeValue));
-  } else if (!attributeName.compare("buildingoccupancyfrom")) {
-    setBuildingOccupancyFrom(atof(attributeValue));
-  } else if (!attributeName.compare("buildingoccupancyto")) {
-    setBuildingOccupancyTo(atof(attributeValue));
-  } else if (!attributeName.compare("equivfullloadoccupancyfrom")) {
-    setEquivFullLoadOccupancyFrom(atof(attributeValue));
-  } else if (!attributeName.compare("equivfullloadoccupancyto")) {
-    setEquivFullLoadOccupancyTo(atof(attributeValue));
-  } else if (!attributeName.compare("peopledensityoccupied")) {
-    setPeopleDensityOccupied(atof(attributeValue));
-  } else if (!attributeName.compare("peopledensityunoccupied")) {
-    setPeopleDensityUnoccupied(atof(attributeValue));
-  } else if (!attributeName.compare("lightingpowerintensityoccupied")) {
-    setLightingPowerIntensityOccupied(atof(attributeValue));
-  } else if (!attributeName.compare("lightingpowerintensityunoccupied")) {
-    setLightingPowerIntensityUnoccupied(atof(attributeValue));
-  } else if (!attributeName.compare("elecpowerappliancesoccupied")) {
-    setElecPowerAppliancesOccupied(atof(attributeValue));
-  } else if (!attributeName.compare("elecpowerappliancesunoccupied")) {
-    setElecPowerAppliancesUnoccupied(atof(attributeValue));
-  } else if (!attributeName.compare("gaspowerappliancesoccupied")) {
-    setGasPowerAppliancesOccupied(atof(attributeValue));
-  } else if (!attributeName.compare("gaspowerappliancesunoccupied")) {
-    setGasPowerAppliancesUnoccupied(atof(attributeValue));
-  } else if (!attributeName.compare("exteriorlightingpower")) {
-    setExteriorLightingPower(atof(attributeValue));
-  } else if (!attributeName.compare("hvacwastefactor")) {
-    setHvacWasteFactor(atof(attributeValue));
-  } else if (!attributeName.compare("hvacheatinglossfactor")) {
-    setHvacHeatingLossFactor(atof(attributeValue));
-  } else if (!attributeName.compare("hvaccoolinglossfactor")) {
-    setHvacCoolingLossFactor(atof(attributeValue));
-  } else if (!attributeName.compare("daylightsensorsystem")) {
-    setDaylightSensorSystem(atof(attributeValue));
-  } else if (!attributeName.compare("lightingoccupancysensorsystem")) {
-    setLightingOccupancySensorSystem(atof(attributeValue));
-  } else if (!attributeName.compare("constantilluminationcontrol")) {	//constantilluminaitoncontrol
-    setConstantIlluminationControl(atof(attributeValue));
-  } else if (!attributeName.compare("coolingsystemcop")) {
-    setCoolingSystemCOP(atof(attributeValue));
-  } else if (!attributeName.compare("coolingsystemiplvtocopratio")) {
-    setCoolingSystemIPLVToCOPRatio(atof(attributeValue));
-  } else if (!attributeName.compare("heatingenergycarrier")) {
-    setHeatingEnergyCarrier(atof(attributeValue));
-  } else if (!attributeName.compare("heatingsystemefficiency")) {
-    setHeatingSystemEfficiency(atof(attributeValue));
-  } else if (!attributeName.compare("ventilationtype")) {
-    setVentilationType(atof(attributeValue));
-  } else if (!attributeName.compare("freshairflowrate")) {
-    setFreshAirFlowRate(atof(attributeValue));
-  } else if (!attributeName.compare("supplyexhaustrate")) {
-    setSupplyExhaustRate(atof(attributeValue));
-  } else if (!attributeName.compare("heatrecovery")) {
-    setHeatRecovery(atof(attributeValue));
-  } else if (!attributeName.compare("exhaustairrecirculation")) {
-    setExhaustAirRecirclation(atof(attributeValue));
-  } else if (!attributeName.compare("infiltration")) {
-    setBuildingAirLeakage(atof(attributeValue));
-  } else if (!attributeName.compare("dhwdemand")) {
-    setDhwDemand(atof(attributeValue));
-  } else if (!attributeName.compare("dhwsystemefficiency")) {
-    setDhwEfficiency(atof(attributeValue));
-  } else if (!attributeName.compare("dhwdistributionefficiency")) {
-    setDhwDistributionEfficiency(atof(attributeValue));
-  } else if (!attributeName.compare("dhwenergycarrier")) {
-    setDhwEnergyCarrier(atof(attributeValue));
-  } else if (!attributeName.compare("bemtype")) {
-    setBemType(atof(attributeValue));
-  } else if (!attributeName.compare("interiorheatcapacity")) {
-    setInteriorHeatCapacity(atof(attributeValue));
-  } else if (!attributeName.compare("exteriorheatcapacity")) {
-    setExteriorHeatCapacity(atof(attributeValue));
-  } else if (!attributeName.compare("heatingpumpcontrol")) {
-    setHeatingPumpControl(atof(attributeValue));
-  } else if (!attributeName.compare("coolingpumpcontrol")) {
-    setCoolingPumpControl(atof(attributeValue));
-  } else if (!attributeName.compare("heatgainperperson")) {
-    setHeatGainPerPerson(atof(attributeValue));
-    //specificFanPower
-  } else if (!attributeName.compare("specificfanpower")) {
-    setSpecificFanPower(atof(attributeValue));
-  } else if (!attributeName.compare("fanflowcontrolfactor")) {
-    setFanFlowControlFactor(atof(attributeValue));
-  } else if (!attributeName.compare("roofuvalue")) {
-    setRoofUValue(atof(attributeValue));
-  } else if (!attributeName.compare("roofsolarabsorption")) {
-    setRoofSolarAbsorption(atof(attributeValue));
-  } else if (!attributeName.compare("roofthermalemissivity")) {
-    setRoofThermalEmissivity(atof(attributeValue));
-  } else if (!attributeName.compare("skylightuvalue")) {
-    setSkylightUvalue(atof(attributeValue));
-  } else if (!attributeName.compare("skylightshgc")) {
-    setSkylightSHGC(atof(attributeValue));
-  } else if (!attributeName.compare("wallareas")) {
-    setWallAreaS(atof(attributeValue));
-  } else if (!attributeName.compare("wallarease")) {
-    setWallAreaSE(atof(attributeValue));
-  } else if (!attributeName.compare("wallareae")) {
-    setWallAreaE(atof(attributeValue));
-  } else if (!attributeName.compare("wallareane")) {
-    setWallAreaNE(atof(attributeValue));
-  } else if (!attributeName.compare("wallarean")) {
-    setWallAreaN(atof(attributeValue));
-  } else if (!attributeName.compare("wallareanw")) {
-    setWallAreaNW(atof(attributeValue));
-  } else if (!attributeName.compare("wallareaw")) {
-    setWallAreaW(atof(attributeValue));
-  } else if (!attributeName.compare("wallareasw")) {
-    setWallAreaSW(atof(attributeValue));
-  } else if (!attributeName.compare("roofarea")) {
-    setRoofArea(atof(attributeValue));
-  } else if (!attributeName.compare("windowareas")) {
-    setWindowAreaS(atof(attributeValue));
-  } else if (!attributeName.compare("windowarease")) {
-    setWindowAreaSE(atof(attributeValue));
-  } else if (!attributeName.compare("windowareae")) {
-    setWindowAreaE(atof(attributeValue));
-  } else if (!attributeName.compare("windowareane")) {
-    setWindowAreaNE(atof(attributeValue));
-  } else if (!attributeName.compare("windowarean")) {
-    setWindowAreaN(atof(attributeValue));
-  } else if (!attributeName.compare("windowareanw")) {
-    setWindowAreaNW(atof(attributeValue));
-  } else if (!attributeName.compare("windowareaw")) {
-    setWindowAreaW(atof(attributeValue));
-  } else if (!attributeName.compare("windowareasw")) {
-    setWindowAreaSW(atof(attributeValue));
-  } else if (!attributeName.compare("skylightarea")) {
-    setSkylightArea(atof(attributeValue));
-  } else if (!attributeName.compare("coolingoccupiedsetpoint")) {
-    setCoolingOccupiedSetpoint(atof(attributeValue));
-  } else if (!attributeName.compare("coolingunoccupiedsetpoint")) {
-    setCoolingUnoccupiedSetpoint(atof(attributeValue));
-  } else if (!attributeName.compare("heatingoccupiedsetpoint")) {
-    setHeatingOccupiedSetpoint(atof(attributeValue));
-  } else if (!attributeName.compare("heatingunoccupiedsetpoint")) {	//weatherFilePath
-    setHeatingUnoccupiedSetpoint(atof(attributeValue));
-  } else if (!attributeName.compare("weatherfilepath")) {		//weatherFilePath
-    setWeatherFilePath(linesplit[1]);
-  } else if (boost::starts_with(attributeName.c_str(), "window") || boost::starts_with(attributeName.c_str(), "wall")) {
-    parseStructure(attributeName, attributeValue);		//avoid max nested ifs.  Might be better to change to a map eventually
-  } else {
-    cout << "Unknown Attribute: " << attributeName << " = " << attributeValue << endl;
-  }
+  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateUnoccupied");
+  setVentilationExhaustRateUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("infiltrationRateUnoccupied");
+  setInfiltrationRateUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedOccupied");
+  setLightingPowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedUnoccupied");
+  setLightingPowerFixedUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedOccupied");
+  setElectricAppliancePowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedUnoccupied");
+  setElectricAppliancePowerFixedUnoccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedOccupied");
+  setGasAppliancePowerFixedOccupied(attributeValue);
+
+  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedUnoccupied");
+  setGasAppliancePowerFixedUnoccupied(attributeValue);
+
+  std::string scheduleFilePath = buildingParams.getProperty("schedulefilepath");
+  if (scheduleFilePath == "")
+    throw invalid_argument("scheduleFilePath building parameter is missing");
+  setScheduleFilePath(scheduleFilePath);
+#endif
+
+  std::string weatherFilePath = buildingParams.getProperty("weatherfilepath");
+  if (weatherFilePath == "")
+    throw invalid_argument("weatherFilePath building parameter is missing");
+
+  setWeatherFilePath(weatherFilePath);
 }
 
 void UserModel::loadBuilding(std::string buildingFile)
 {
-  string line;
-  ifstream inputFile(buildingFile.c_str());
-  if (inputFile.is_open()) {
-    while (inputFile.good()) {
-      getline(inputFile, line);
-      if (line.size() > 0 && line[0] == '#') {
-        continue;
-      }
-      if (line[line.length() - 1] == '\r') {
-        // reading dos / windows on osx / linux
-        // so need to strip the /r
-        line.erase(line.length() - 1);
-      }
-      parseLine(line);
-    }
-    inputFile.close();
-  } else {
-    cout << "Unable to open file";
-  }
+  Properties buildingParams(buildingFile);
+  initializeParameters(buildingParams);
+  initializeStructure(buildingParams);
 }
 
 int UserModel::weatherState(std::string header)
