@@ -39,7 +39,7 @@ ISOHourly::~ISOHourly()
 {
 }
 
-ISOResults ISOHourly::calculateHourly()
+ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
 {
   populateSchedules();
   // printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
@@ -155,48 +155,50 @@ ISOResults ISOHourly::calculateHourly()
     std::transform(kv.second.begin(), kv.second.end(), kv.second.begin(), wattsPerHourTokWh);
   }
 
-  // Calculate monthly results
-  std::map<std::string, std::vector<double>> monthlyResults;
-  for (const auto& kv : results) {
-    monthlyResults[kv.first] = sumHoursByMonth(kv.second);
+  if (aggregateByMonth) {
+    // Calculate monthly results
+    for (const auto& kv : results) {
+      results[kv.first] = sumHoursByMonth(kv.second);
+    }
   }
 
-  // TODO: Make a flag for the CLI to output hourly by hour or hourly by month.
-  ISOResults allResults;
-  EndUses hourlyEndUsesByMonth[12];
-  for (int i = 0; i < 12; i++) {
-#ifdef _OPENSTUDIOS
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_fan"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_pump"][i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_int_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_ext_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Eelec_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+  int numberOfResults = aggregateByMonth ? 12 : 8760;
 
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_cl"][i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    hourlyEndUsesByMonth[i].addEndUse(monthlyResults["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+  ISOResults allResults;
+  for (int i = 0; i < numberOfResults; i++) {
+    EndUses timestepEndUses;
+#ifdef _OPENSTUDIOS
+    timestepEndUses.addEndUse(results["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    timestepEndUses.addEndUse(results["Eelec_cl"][i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    timestepEndUses.addEndUse(results["Eelec_int_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    timestepEndUses.addEndUse(results["Eelec_ext_lt"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    timestepEndUses.addEndUse(results["Eelec_fan"][i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    timestepEndUses.addEndUse(results["Eelec_pump"][i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    timestepEndUses.addEndUse(results["Eelec_int_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    timestepEndUses.addEndUse(results["Eelec_ext_plug"][i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    timestepEndUses.addEndUse(results["Eelec_dhw"][i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+
+    timestepEndUses.addEndUse(results["Egas_ht"][i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    timestepEndUses.addEndUse(results["Egas_cl"][i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    timestepEndUses.addEndUse(results["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    timestepEndUses.addEndUse(results["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
     int euse = 0;
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ht"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_cl"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_lt"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_lt"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_fan"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_pump"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_int_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_ext_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Eelec_dhw"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_ht"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_cl"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_plug"][i]);
-    hourlyEndUsesByMonth[i].addEndUse(euse++, monthlyResults["Egas_dhw"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_ht"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_cl"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_int_lt"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_ext_lt"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_fan"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_pump"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_int_plug"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_ext_plug"][i]);
+    timestepEndUses.addEndUse(euse++, results["Eelec_dhw"][i]);
+    timestepEndUses.addEndUse(euse++, results["Egas_ht"][i]);
+    timestepEndUses.addEndUse(euse++, results["Egas_cl"][i]);
+    timestepEndUses.addEndUse(euse++, results["Egas_plug"][i]);
+    timestepEndUses.addEndUse(euse++, results["Egas_dhw"][i]);
 #endif
-    allResults.hourlyResultsByMonth.push_back(hourlyEndUsesByMonth[i]);
+    allResults.hourlyResults.push_back(timestepEndUses);
   }
   return allResults;
 }
@@ -231,6 +233,16 @@ void ISOHourly::calculateHour(int hourOfYear,
 
   // http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
   results.Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
+
+  // XXX Temporary print fan info
+  if (ventExhaustM3phpm2 > 0.0) {
+    std::cout << "ventExhaustM3phpm2 = " << ventExhaustM3phpm2 << std::endl;
+  }
+
+  if (fanEnabled > 0.0) {
+    std::cout << "fanEnabled = " << fanEnabled << std::endl;
+  }
+  // std::cout << "Qfan_tot = " << results.Qfan_tot << ", ventExhaustM2phpm2 = " << ventExhaustM3phpm2 << ", fanEnabled = " << fanEnabled << std::endl;
 
   results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 

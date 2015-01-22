@@ -299,7 +299,7 @@ TEST(IsoModelTests, ISOHourlyTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 14; ++j) {
-      EXPECT_NEAR(expected[i][j], results.hourlyResultsByMonth[i].getEndUse(j), 0.001);
+      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001);
     }
   }
 }
