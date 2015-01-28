@@ -42,6 +42,7 @@ ISOHourly::~ISOHourly()
 ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
 {
   populateSchedules();
+
   // printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
   // printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
   // printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
@@ -50,6 +51,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   // printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
   // printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
   // printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
+
   initialize();
   int hourOfDay = 1;
   int dayOfWeek = 1;
@@ -226,7 +228,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
   double fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
-  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
+  // Divide ventilation by floor area and convert from L/s to m^3/h.
+  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) / structure->floorArea() / 3.6; //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
   double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
   double internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
   double exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
@@ -567,7 +570,7 @@ void ISOHourly::populateSchedules()
   }
 }
 
-// TODO BAA@2014-12-18 Do we actually ever use this function? Can we get rid of it?
+// TODO BAA@2015-01-28 Is there a better place to keep these debug functions?
 void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2)
 {
   //if(DEBUG_ISO_MODEL_SIMULATION)
