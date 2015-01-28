@@ -96,6 +96,9 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
     rawResults.phi_plug.push_back(tempHourResults.phi_plug);
     rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
     rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
+
+    // Increment the hour.
+    ++hourOfDay;
   }
 
   // Factor the raw need results by the distribution efficiencies.
@@ -233,16 +236,6 @@ void ISOHourly::calculateHour(int hourOfYear,
 
   // http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
   results.Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
-
-  // XXX Temporary print fan info
-  if (ventExhaustM3phpm2 > 0.0) {
-    std::cout << "ventExhaustM3phpm2 = " << ventExhaustM3phpm2 << std::endl;
-  }
-
-  if (fanEnabled > 0.0) {
-    std::cout << "fanEnabled = " << fanEnabled << std::endl;
-  }
-  // std::cout << "Qfan_tot = " << results.Qfan_tot << ", ventExhaustM2phpm2 = " << ventExhaustM3phpm2 << ", fanEnabled = " << fanEnabled << std::endl;
 
   results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 
