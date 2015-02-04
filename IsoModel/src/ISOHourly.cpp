@@ -358,8 +358,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   results.Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
 
-  // Determine pump energy by using the fixed pump power of .00025 kW/m2 if the heating
-  // or cooling system is active, 0.0 if not. The .00025 kW/m2 comes from the monthly
+  // Determine pump energy by using the fixed pump power of .25 W/m2 if the heating
+  // or cooling system is active, 0.0 if not. The .25 W/m2 comes from the monthly
   // pump calculations.
   double n_E_pumps = 0.25; // Specific power of systems pumps + control systems in W/m2
   if (results.Qneed_cl > 0.0) {
