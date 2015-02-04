@@ -95,6 +95,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
     rawResults.Q_illum_tot.push_back(tempHourResults.Q_illum_tot);
     rawResults.Q_illum_ext_tot.push_back(tempHourResults.Q_illum_ext_tot);
     rawResults.Qfan_tot.push_back(tempHourResults.Qfan_tot);
+    rawResults.Qpump_tot.push_back(tempHourResults.Qpump_tot);
     rawResults.phi_plug.push_back(tempHourResults.phi_plug);
     rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
     rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
@@ -144,9 +145,9 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   results["Eelec_int_lt"] = rawResults.Q_illum_tot;
   results["Eelec_ext_lt"] = rawResults.Q_illum_ext_tot;
   results["Eelec_fan"] = rawResults.Qfan_tot;
-  results["Eelec_pump"] = zeroes;
+  results["Eelec_pump"] = rawResults.Qpump_tot;
   results["Eelec_int_plug"] = rawResults.phi_plug;
-  results["Eelec_ext_plug"] = rawResults.externalEquipmentEnergyWperm2;
+  results["Eelec_ext_plug"] = rawResults.externalEquipmentEnergyWperm2; // TODO BAA@2015-01-28. This is currently hardcoded and shouldn't be.
   results["Eelec_dhw"] = rawResults.Q_dhw;
   results["Egas_ht"] = (heating->energyType() != 1) ? v_Qht_sys : zeroes; // If not electric.
   results["Egas_cl"] = zeroes;
@@ -356,6 +357,18 @@ void ISOHourly::calculateHour(int hourOfYear,
   double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
   results.Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
+
+  // Determine pump energy by using the fixed pump power of .00025 kW/m2 if the heating
+  // or cooling system is active, 0.0 if not. The .00025 kW/m2 comes from the monthly
+  // pump calculations.
+  double n_E_pumps = 0.25; // Specific power of systems pumps + control systems in W/m2
+  if (results.Qneed_cl > 0.0) {
+    results.Qpump_tot = n_E_pumps * cooling->pumpControlReduction();
+  } else if (results.Qneed_ht > 0.0) {
+    results.Qpump_tot = n_E_pumps * heating->pumpControlReduction();
+  } else {
+    results.Qpump_tot = 0.0;
+  }
 
   results.Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
       //ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);

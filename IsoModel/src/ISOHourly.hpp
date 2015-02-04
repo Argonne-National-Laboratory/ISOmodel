@@ -35,6 +35,7 @@ struct HourResults
   T Q_illum_tot;
   T Q_illum_ext_tot;
   T Qfan_tot;
+  T Qpump_tot;
   T phi_plug;
   T externalEquipmentEnergyWperm2;
   T Q_dhw;

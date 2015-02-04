@@ -70,6 +70,7 @@ ISOHourly UserModel::toHourlyModel() const
   cooling->setHvacLossFactor(_hvacCoolingLossFactor);
   cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
   cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
+  cooling->setPumpControlReduction(_coolingPumpControl);
   sim.setCooling(cooling);
 
   std::shared_ptr<Heating> heating(new Heating);
@@ -78,6 +79,7 @@ ISOHourly UserModel::toHourlyModel() const
   heating->setHotcoldWasteFactor(_hvacWasteFactor);
   heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
   heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
+  heating->setPumpControlReduction(_heatingPumpControl);
   sim.setHeating(heating);
 
   std::shared_ptr<Lighting> lighting(new Lighting);
