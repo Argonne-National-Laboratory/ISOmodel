@@ -345,13 +345,13 @@ void SimModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& 
 void SimModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds, const Vector& weekdayUnoccupiedMegaseconds,
     const Vector& weekendOccupiedMegaseconds, const Vector& weekendUnoccupiedMegaseconds, const Vector& clockHourOccupied,
     const Vector& clockHourUnoccupied, Vector& v_hrs_sun_down_mo, Vector& frac_Pgh_wk_nt, Vector& frac_Pgh_wke_day, Vector& frac_Pgh_wke_nt,
-    Vector& v_Tdbt_nt) const
+    Vector& v_Tdbt_nt, Vector& v_Tdbt_Day) const
 {
 
   Matrix m_mhEgh = location->weather()->mhEgh();
   Matrix m_mhdbt = location->weather()->mhdbt();
 
-  Vector v_Tdbt_Day = prod(m_mhdbt, clockHourOccupied);
+  v_Tdbt_Day = prod(m_mhdbt, clockHourOccupied);
   v_Tdbt_Day /= sum(clockHourOccupied);
 
   v_Tdbt_nt = prod(m_mhdbt, clockHourUnoccupied);
@@ -901,7 +901,7 @@ void SimModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, 
    */
 }
 void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_day, const Vector& v_P_tot_wk_nt, const Vector& v_P_tot_wke_nt,
-    const Vector& v_Tdbt_nt, double H_tr, double hoursUnoccupiedPerDay, double hoursOccupiedPerDay, double frac_hrs_wk_day, double frac_hrs_wk_nt,
+    const Vector& v_Tdbt_nt, const Vector& v_Tdbt_day, double H_tr, double hoursUnoccupiedPerDay, double hoursOccupiedPerDay, double frac_hrs_wk_day, double frac_hrs_wk_nt,
     double frac_hrs_wke_tot, Vector& v_Th_avg, Vector& v_Tc_avg, double& tau) const
 {
   //BEM Type
@@ -917,6 +917,12 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     T_adj = 1.0;
     break;
   }
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    std::cout << "BEM: " << building->buildingEnergyManagement() << ", " << ((int) building->buildingEnergyManagement()) << std::endl;
+    std::cout << "T_adj: " << T_adj << std::endl;
+  }
+
   double ht_tset_ctrl = heating->temperatureSetPointOccupied() - T_adj;
   double cl_tset_ctrl = cooling->temperatureSetPointOccupied() + T_adj;
 
@@ -928,6 +934,11 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
   for (uint i = 0; i < v_cl_tset_ctrl.size(); i++) {
     v_cl_tset_ctrl[i] = cl_tset_ctrl;
     v_ht_tset_ctrl[i] = ht_tset_ctrl;
+  }
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printVector("v_cl_tset_ctrl", v_cl_tset_ctrl);
+    printVector("v_ht_tset_ctrl", v_ht_tset_ctrl);
   }
 
   /*
@@ -1021,6 +1032,35 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
   v_ti[1] = v_ti[3] = hoursOccupiedPerDay;
   Matrix M_dT(v_P_tot_wk_nt.size(), 5);
   Matrix M_Te(v_Tdbt_nt.size(), 5);
+
+  for (uint i = 0; i < v_P_tot_wk_nt.size(); ++i) {
+    M_dT(i, 0) = v_P_tot_wk_nt[i] / H_tot;
+    M_dT(i, 1) = M_dT(i, 3) = v_P_tot_wke_day[i] / H_tot;
+    M_dT(i, 2) = M_dT(i, 4) = v_P_tot_wke_nt[i] / H_tot;
+  }
+
+  for (uint i = 0; i < v_Tdbt_nt.size(); ++i) {
+      M_Te(i, 0) = M_Te(i, 2) = M_Te(i, 4) = v_Tdbt_nt[i];
+      M_Te(i, 1) = M_Te(i, 3) = v_Tdbt_day[i];
+  }
+
+//  for (uint i = 0; i < M_dT.size2(); i++) {
+//    for (uint j = 0; j < M_dT.size1(); j++) {
+//      M_dT(j, i) = 1;
+//    }
+//  }
+//
+//  for (uint i = 0; i < M_Te.size2(); i++) {
+//      for (uint j = 0; j < M_Te.size1(); j++) {
+//        M_Te(j, i) = 1;
+//      }
+//    }
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printMatrix("M_dT", M_dT);
+    printMatrix("M_Te", M_Te);
+    printVector("v_ti", v_ti);
+  }
   /*
    %%% NOTE 
    % The following code is not a direct translation of the excel spreadsheet
@@ -1052,6 +1092,12 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
   Vector v_Th_wk_day(v_ht_tset_ctrl);
   Vector v_Th_wk_nt(v_ht_tset_ctrl);
 
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printVector("v_Th_wke_avg", v_Th_wke_avg);
+    printVector("v_Th_wk_day", v_Th_wk_day);
+    printVector("v_Th_wk_nt", v_Th_wk_nt);
+  }
+
   /*
    % compute the change in temp from setback to another heating temp in unoccupied times 
    if T_ht_ctrl_flag ==1  % if the HVAC heating controls are turned on.*/
@@ -1065,6 +1111,11 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
       }
     }
 
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+      printMatrix("M_Ta", M_Ta);
+      printVector("v_Tstart", v_Tstart);
+    }
+
     /*
      % find the exponential Temp decay after any changes in heating temp setpoint and put
      % in the matrix M_Ta with columns being the different time segments 
@@ -1076,15 +1127,28 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
      v_Tstart=M_Ta(:,I);
      end
      */
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+        printVector("v_cl_tset_ctrl", v_cl_tset_ctrl);
+        printVector("v_ht_tset_ctrl", v_ht_tset_ctrl);
+    }
 
     Matrix M_Taa(12, 5);
     for (uint j = 0; j < M_Taa.size1(); j++) {
-      M_Taa(j, 1) = v_ht_tset_ctrl[j];
+      M_Taa(j, 0) = v_ht_tset_ctrl[j];
     }
+
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+      printMatrix("M_Taa", M_Taa);
+    }
+
     for (uint i = 1; i < M_Taa.size2(); i++) {
       for (uint j = 0; j < M_Taa.size1(); j++) {
         M_Taa(j, i) = std::max(M_Ta(j, i - 1), ht_tset_unocc);
       }
+    }
+
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+         printMatrix("M_Taa", M_Taa);
     }
 
     /*
@@ -1116,7 +1180,15 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     for (uint j = 0; j < M_Tb.size1(); j++) {
       v_Th_wk_nt[j] = M_Tb(j, 1);
     }
+
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+        printMatrix("M_Tb", M_Tb);
+        printVector("v_Th_wke_avg", v_Th_wke_avg);
+        printVector("v_Th_wk_nt", v_Th_wk_nt);
+      }
   }
+
+
   /*
    M_Tb=zeros(12,5);
    % for each time period, find the average temp given the start and
@@ -1931,7 +2003,7 @@ ISOResults SimModel::simulate() const
   double frac_hrs_wke_tot = 0;
 
   //Solor Radiation Breakdown Results
-  Vector v_hrs_sun_down_mo(12), v_Tdbt_nt;
+  Vector v_hrs_sun_down_mo(12), v_Tdbt_nt, v_Tdbt_day;
   Vector frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt;
   //Envelop Calculations Results
   Vector v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U, v_wall_A;
@@ -1984,7 +2056,7 @@ ISOResults SimModel::simulate() const
     std::cout << std::endl << "solarRadiationBreakdown: " << std::endl;
   }
   solarRadiationBreakdown(weekdayOccupiedMegaseconds, weekdayUnoccupiedMegaseconds, weekendOccupiedMegaseconds, weekendUnoccupiedMegaseconds,
-      clockHourOccupied, clockHourUnoccupied, v_hrs_sun_down_mo, frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt, v_Tdbt_nt);
+      clockHourOccupied, clockHourUnoccupied, v_hrs_sun_down_mo, frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt, v_Tdbt_nt, v_Tdbt_day);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_hrs_sun_down_mo", v_hrs_sun_down_mo);
@@ -1992,6 +2064,7 @@ ISOResults SimModel::simulate() const
     printVector("frac_Pgh_wke_day", frac_Pgh_wke_day);
     printVector("frac_Pgh_wke_nt", frac_Pgh_wke_nt);
     printVector("v_Tdbt_nt", v_Tdbt_nt);
+    printVector("v_Tdbt_day", v_Tdbt_day);
 
     std::cout << std::endl << "lightingEnergyUse: " << std::endl;
   }
@@ -2068,7 +2141,7 @@ ISOResults SimModel::simulate() const
 
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
-  interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt, v_Tdbt_nt, H_tr, hoursUnoccupiedPerDay, hoursOccupiedPerDay, frac_hrs_wk_day,
+  interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt, v_Tdbt_nt, v_Tdbt_day, H_tr, hoursUnoccupiedPerDay, hoursOccupiedPerDay, frac_hrs_wk_day,
       frac_hrs_wk_nt, frac_hrs_wke_tot, v_Th_avg, v_Tc_avg, tau);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "tau: " << tau << std::endl;
@@ -2254,5 +2327,4 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
 }
 } // isomodel
 } // openstudio
-
 
