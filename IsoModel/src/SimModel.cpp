@@ -1883,7 +1883,7 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   Vector v_frac_tot = div(sum(v_Qneed_ht, v_Qneed_cl), Qneed_ht_yr + Qneed_cl_yr);
   double frac_total = sum(v_frac_tot);
   double Q_pumps_tot = Q_pumps_ht + Q_pumps_cl;
-  v_Q_pump_tot;
+
   if (Q_pumps_ht == 0 || Q_pumps_cl == 0) {
     v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
   } else {
@@ -1960,8 +1960,6 @@ void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
   printVector("v_Q_dhw_need", v_Q_dhw_need);
   zero(Z);
   printVector("Z", Z);
-  v_Q_dhw_elec;
-  v_Q_dhw_gas;
 
   if (heating->hotWaterEnergyType() == 1) {
     v_Q_dhw_elec = v_Q_dhw_need;
