@@ -1044,18 +1044,6 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
       M_Te(i, 1) = M_Te(i, 3) = v_Tdbt_day[i];
   }
 
-//  for (uint i = 0; i < M_dT.size2(); i++) {
-//    for (uint j = 0; j < M_dT.size1(); j++) {
-//      M_dT(j, i) = 1;
-//    }
-//  }
-//
-//  for (uint i = 0; i < M_Te.size2(); i++) {
-//      for (uint j = 0; j < M_Te.size1(); j++) {
-//        M_Te(j, i) = 1;
-//      }
-//    }
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printMatrix("M_dT", M_dT);
     printMatrix("M_Te", M_Te);
