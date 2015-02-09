@@ -51,7 +51,7 @@ public:
    * those described by the simple hourly method in ISO 13790 Annex C. A key
    * difference is that this implementation describes everything in terms of
    * EUI (i.e., per area). */
-  ISOResults calculateHourly();
+  ISOResults calculateHourly(bool aggregateByMonth = false);
 
   /** Set the population. */
   void setPop(std::shared_ptr<Population> value)

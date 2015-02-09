@@ -49,36 +49,39 @@ void runMonthlySimulation(const UserModel& umodel) {
   }
 }
 
-void runHourlySimulation(const UserModel& umodel) {
+void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   // Run the hourly simulation (with results aggregated by month).
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.calculateHourly();
+  ISOResults hourlyResults = hourly.calculateHourly(aggregateByMonth);
+
+  std::string monthOrHour = aggregateByMonth ? "month" : "hour";
+  int numberOfResults = aggregateByMonth ? 12 : 8760;
 
   // Output the results.
-  std::cout << "Hourly results by month:" << std::endl;
+  std::cout << "Hourly results by " << monthOrHour << ":" << std::endl;
   std::cout
-    << "Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW"
+    << monthOrHour << ",ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW"
     << std::endl;
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < numberOfResults; i++) {
     std::cout << i + 1;
 #ifdef _OPENSTUDIOS
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
     for (int j = 0; j < 13; j++) {
-      std::cout << ", " << hourlyResults.hourlyResultsByMonth[i].getEndUse(j);
+      std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(j);
     }
 #endif
     std::cout << std::endl;
@@ -92,7 +95,8 @@ int main(int argc, char* argv[])
   desc.add_options()
     ("ismfilepath,i", po::value<std::string>()->required(), "Path to ism file.")
     ("monthly,m", "Run the monthly simulation (default).")
-    ("hourly,h", "Run the hourly simulation (results aggregated by month.");
+    ("hourlyByMonth,h", "Run the hourly simulation (results aggregated by month.")
+    ("hourlyByHour,H", "Run the hourly simulation (results for each hour).");
 
   po::positional_options_description positionalOptions; 
   positionalOptions.add("ismfilepath", 1); 
@@ -145,13 +149,26 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
   }
 
-  if (vm.count("monthly") || (!vm.count("monthly") && !vm.count("hourly"))) {
-    // Monthly simulation is the default.
+  bool simulationRan = false;
+
+  if (vm.count("monthly")) {
     runMonthlySimulation(umodel);
+    simulationRan = true;
   }
 
-  if (vm.count("hourly")) {
-    runHourlySimulation(umodel);
+  if (vm.count("hourlyByMonth")) {
+    runHourlySimulation(umodel, true);
+    simulationRan = true;
+  }
+
+  if (vm.count("hourlyByHour")) {
+    runHourlySimulation(umodel, false);
+    simulationRan = true;
+  }
+
+  if (!simulationRan) {
+    // Monthly simulation is default and will run if no other simulations did.
+    runMonthlySimulation(umodel);
   }
 
 }
