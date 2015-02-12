@@ -229,8 +229,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
   double fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
-  // Divide ventilation by floor area and convert from L/s to m^3/h.
-  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) / structure->floorArea() / 3.6; //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
+  // Convert ventilation from L/s to m^3/h and divide by floor area.
+  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) * 3.6 / structure->floorArea(); //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
   double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
   double internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
   double exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
@@ -238,8 +238,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
   double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
-  // http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html eq. 3.
-  results.Qfan_tot = ventExhaustM3phpm2 / 3600 * fanEnabled * fanDeltaPinPa / fanN;
+  // Calculate fan energy in W/m2. Vent rate in m3/h/m2, fan power in W/(L/s). Convert with (m^3 / 1000 L) * (3600 s / h)
+  results.Qfan_tot = ventExhaustM3phpm2 * fanEnabled * ventilation->fanPower() * 1000.0/3600.0;
 
   results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 

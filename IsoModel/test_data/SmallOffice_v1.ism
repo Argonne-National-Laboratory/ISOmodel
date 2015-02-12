@@ -59,7 +59,7 @@ interiorHeatCapacity = 98010.0000000022
 exteriorHeatCapacity = 29707.0229928189
 # BEM type 1= none, 2 = simple, 3=advanced with FDD
 bemType = 1
-# specific fan power in L/s/W,  flow control factor is energy reduction from fan control measures
+# specific fan power in W/(L/s),  flow control factor is energy reduction from fan control measures
 specificFanPower = 0.892769460142308 
 # fan flow control  1= no control, 0.75 = inlet blade adjuct, 0.65= variable speed  see NEN 2916 7.3.3.4  
 fanFlowcontrolFactor = 1.0
