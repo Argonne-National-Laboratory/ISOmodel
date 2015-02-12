@@ -1643,7 +1643,7 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   printVector("v_Vair_ht", v_Vair_ht);
   printVector("v_Vair_cl", v_Vair_cl);
 
-  Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation->supplyRate() * frac_hrs_wk_day, 12), 1000)); //% compute air flow in m3
+  Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation->supplyRate() * frac_hrs_wk_day * 1000000.0, 12), 1000)); //% compute air flow in m3, multiply by 1000000 to convert megaseconds to seconds.
   printVector("v_Vair_tot", v_Vair_tot);
   Vector fanPower = mult(v_Vair_tot, ventilation->fanPower() * ventilation->fanControlFactor());
   printVector("fanPower", fanPower);
