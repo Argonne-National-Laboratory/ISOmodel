@@ -1584,11 +1584,11 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   //% compute the cooling gain utilization factor eta_g_cl
   Vector v_eta_g_CL(12);
   for (uint i = 0; i < v_eta_g_CL.size(); i++) {
-    double numer = (1.0 - std::pow(v_gamma_H_cl[i], a_H));
-    double denom = (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0)));
     if (DEBUG_ISO_MODEL_SIMULATION) {
+      double numer = (1.0 - std::pow(v_gamma_H_cl[i], a_H));
+      double denom = (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0)));
       std::cout << numer << " = 1.0 - " << v_gamma_H_cl[i] << "^" << a_H << std::endl;
-      std::cout << numer << " = 1.0 - " << v_gamma_H_cl[i] << "^" << (a_H + 1.0) << std::endl;
+      std::cout << denom << " = 1.0 - " << v_gamma_H_cl[i] << "^" << (a_H + 1.0) << std::endl;
     }
     v_eta_g_CL[i] = v_gamma_H_cl(i) > 0.0 ? (1.0 - std::pow(v_gamma_H_cl[i], a_H)) / (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0))) : 1.0;
   }
