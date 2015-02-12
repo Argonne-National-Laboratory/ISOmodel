@@ -2214,6 +2214,15 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
   Vector Eelec_pump = div(div(v_Q_pump_tot, structure->floorArea()), kWh2MJ); //% Total monthly elec usage for pumps
   Vector Eelec_plug = v_Q_plug_elec; //% Total monthly elec usage for elec plugloads
   Vector Eelec_dhw = div(v_Q_dhw_elec, structure->floorArea());
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+      printVector("v_Qcl_elec_tot", v_Qcl_elec_tot);
+      printVector("v_Q_pump_tot", v_Q_pump_tot);
+      printVector("Eelec_cl", Eelec_cl);
+      printVector("Eelec_pump", Eelec_pump);
+      std::cout << "floorArea: " << structure->floorArea() << std::endl;
+      std::cout << "kWh2MJ: " << "kWh2MJ" << std::endl;
+    }
   /*
    %% Generating output table
 
