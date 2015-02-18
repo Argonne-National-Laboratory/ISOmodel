@@ -30,7 +30,7 @@ namespace isomodel {
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
 ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
                          permLightPowerDensityWperM2(0), // SingleBldg.L50
-                         externalEquipment(244000), // Q56
+                         externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
                          ventPreheatDegC(-50) // SingleBldg.Q40
 {
 }
