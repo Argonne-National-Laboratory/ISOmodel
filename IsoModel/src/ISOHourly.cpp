@@ -238,9 +238,6 @@ void ISOHourly::calculateHour(int hourOfYear,
   double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
   double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
-  // Calculate fan energy in W/m2. Vent rate in m3/h/m2, fan power in W/(L/s). Convert with (m^3 / 1000 L) * (3600 s / h)
-  results.Qfan_tot = ventExhaustM3phpm2 * fanEnabled * ventilation->fanPower() * 1000.0/3600.0;
-
   results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 
   // \Phi_{int,A}, ISO 13790 10.4.2.
@@ -357,6 +354,23 @@ void ISOHourly::calculateHour(int hourOfYear,
   double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
   results.Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
+  
+  // Fan power
+  auto n_dT_supp_ht = 7.0; //% set heating temp diff between supply air and room air
+  auto n_dT_supp_cl = 7.0; //%set cooling temp diff between supply air and room air
+  auto T_sup_ht = heating->temperatureSetPointOccupied() + n_dT_supp_ht; //%hot air supply temp  - assume supply air is 7C hotter than room
+  auto T_sup_cl = cooling->temperatureSetPointOccupied() - n_dT_supp_cl; //%cool air supply temp - assume 7C lower than room
+  auto n_rhoC_a = 1.22521 * 0.001012 * 277.777778; // First two numbers give rho*Cp for air in MJ/m3/K, last number converts to watt-hr/m3/K.
+
+  auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
+  // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
+  auto Vair_ht = results.Qneed_ht / (((T_sup_ht - TMT1) * n_rhoC_a) + DBL_MIN);
+  auto Vair_cl = results.Qneed_cl / (((TMT1 - T_sup_cl) * n_rhoC_a) + DBL_MIN);
+
+  auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
+
+  // Calculate fan energy in W/m2. Air volumes in m3/h/m2, fan power in W/(L/s). Convert with (m^3 / 1000 L) * (3600 s / h)
+  results.Qfan_tot = Vair_tot * ventilation->fanPower() * 1000.0 / 3600.0;
 
   // Determine pump energy by using the fixed pump power of .25 W/m2 if the heating
   // or cooling system is active, 0.0 if not. The .25 W/m2 comes from the monthly
@@ -394,6 +408,7 @@ void ISOHourly::calculateHour(int hourOfYear,
       / (hms + hwindowWperkm2 + h1);
   // \theta_{air}, ISO 13790, C.3 eq. C.11.
   tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
+
 }
 
 
