@@ -384,8 +384,12 @@ void ISOHourly::calculateHour(int hourOfYear,
     results.Qpump_tot = 0.0;
   }
 
-  results.Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
-      //ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
+  if (solarRadiationW > 0) { // Using W radiation because roof radiation isn't set up right now. 2015-02-18.
+    results.Q_illum_ext_tot = 0; // No exterior lights during the day.
+  } else {
+    results.Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
+    //ExcelFunctions.printOut("CS156",exteriorLightingEnergyWperm2,0.0539503346043362);
+  }
 
   results.Q_dhw = 0; //TODO no DHW calculations
 
@@ -590,7 +594,7 @@ void ISOHourly::populateSchedules()
       fixedFanSchedule[h][d] = hoccupied ? 1 : 0.0;
       fixedExteriorEquipmentSchedule[h][d] = hoccupied ? 0.3 : 0.12;
       fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 0.9 : 0.3;
-      fixedExteriorLightingSchedule[h][d] = !hoccupied ? 1.0 : 0.0;
+      fixedExteriorLightingSchedule[h][d] = 1; // in calculateHour, the lights are only turned on when the sun is down.
       fixedInteriorLightingSchedule[h][d] = popoccupied ? 0.9 : 0.05;
       fixedActualHeatingSetpoint[h][d] = popoccupied ? heating->temperatureSetPointOccupied() : heating->temperatureSetPointUnoccupied();
       fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling->temperatureSetPointOccupied() : cooling->temperatureSetPointUnoccupied();
