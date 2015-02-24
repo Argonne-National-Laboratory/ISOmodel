@@ -1225,13 +1225,17 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
      */
     Matrix M_Tcc(12, 5);
     for (uint j = 0; j < M_Tcc.size1(); j++) {
-      M_Tcc(j, 1) = std::min(v_ht_tset_ctrl[j], cl_tset_unocc);
+      M_Tcc(j, 0) = std::min(v_ht_tset_ctrl[j], cl_tset_unocc);
     }
     for (uint i = 1; i < M_Tcc.size2(); i++) {
       for (uint j = 0; j < M_Tcc.size1(); j++) {
         M_Tcc(j, i) = std::max(M_Tc(j, i - 1), cl_tset_unocc);
       }
     }
+
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+            printMatrix("M_Tcc", M_Tcc);
+        }
     /*
      % Check to see if the decay temp is lower than the temp setpoint.  If so, the space will cool
      % to that level.  If the cooling setpoint is lower the cooling system will kick in and lower the 
@@ -1248,8 +1252,16 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     for (uint i = 0; i < M_Td.size2(); i++) {
       for (uint j = 0; j < M_Td.size1(); j++) {
         double v_T_avg = tau / v_ti(i) * (M_Tcc(j, i) - M_Te(j, i) - M_dT(j, i)) * (1 - exp(-1 * v_ti(i) / tau)) + M_Te(j, i) + M_dT(j, i);
+        if (DEBUG_ISO_MODEL_SIMULATION) {
+          std::cout << "v_T_avg = " << v_T_avg << std::endl;
+        }
         M_Td(j, i) = std::max(v_T_avg, cl_tset_unocc);
       }
+    }
+
+
+    if (DEBUG_ISO_MODEL_SIMULATION) {
+        printMatrix("M_Td", M_Td);
     }
 
     for (uint i = 0; i < v_Th_wke_avg.size(); i++) {
@@ -1282,8 +1294,19 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
 
   }
 
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+     printVector("v_Tc_wk_day", v_Tc_wk_day);
+     printVector("v_Tc_wk_nt", v_Tc_wk_nt);
+     printVector("v_Tc_wke_avg", v_Tc_wke_avg);
+   }
+
   Vector v_Th_wk_avg = sum(sum(mult(v_Th_wk_day, frac_hrs_wk_day), mult(v_Th_wk_nt, frac_hrs_wk_nt)), mult(v_Th_wke_avg, frac_hrs_wke_tot));
   Vector v_Tc_wk_avg = sum(sum(mult(v_Tc_wk_day, frac_hrs_wk_day), mult(v_Tc_wk_nt, frac_hrs_wk_nt)), mult(v_Tc_wke_avg, frac_hrs_wke_tot));
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printVector("v_Tc_wk_avg", v_Tc_wk_avg);
+    printVector("v_Th_wk_avg", v_Th_wk_avg);
+  }
 
   //v_Th_avg(v_Th_wk_avg);
   //v_Tc_avg(v_Tc_wk_avg);
@@ -2221,7 +2244,6 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
       printVector("Eelec_cl", Eelec_cl);
       printVector("Eelec_pump", Eelec_pump);
       std::cout << "floorArea: " << structure->floorArea() << std::endl;
-      std::cout << "kWh2MJ: " << "kWh2MJ" << std::endl;
     }
   /*
    %% Generating output table
