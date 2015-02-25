@@ -36,6 +36,14 @@ namespace isomodel {
 class SimModel;
 class WeatherData;
 
+
+struct LatLon {
+
+  double lat, lon;
+  bool operator<(const LatLon& rhs) const;
+
+};
+
 class ISOMODEL_API UserModel
 {
 private:
@@ -43,6 +51,8 @@ private:
   resolveFilename(std::string baseFile, std::string relativeFile);
   void
   initializeStructure(const Properties& buildingParams);
+
+  std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
 
   std::shared_ptr<WeatherData> _weather;
   std::shared_ptr<EpwData> _edata;

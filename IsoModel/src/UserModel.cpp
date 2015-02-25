@@ -35,7 +35,7 @@ const std::string SIMPLE = "simple";
 const std::string ADVANCED = "advanced";
 
 UserModel::UserModel() :
-    _weather(new WeatherData()), _edata(new EpwData())
+    _weather_cache(), _weather(new WeatherData()), _edata(new EpwData())
 {
 }
 
@@ -793,10 +793,33 @@ void UserModel::loadAndSetWeather()
   _valid = true;
 }
 
+bool LatLon::operator <(const LatLon& rhs) const {
+  if (lat < rhs.lat) return true;
+  if (lat > rhs.lat) return false;
+
+  if (lon < rhs.lon) return true;
+  return false;
+}
+
 void UserModel::loadWeather(int block_size, double* weather_data)
 {
-  _edata->loadData(block_size, weather_data);
-  initializeSolar();
+
+  double lat = weather_data[0];
+  double lon = weather_data[1];
+
+  LatLon latlon = {lat, lon};
+  auto iter = _weather_cache.find(latlon);
+  if (iter == _weather_cache.end()) {
+    //std::cout << "not in cache" << std::endl;
+    _weather = make_shared<WeatherData>();
+    _weather_cache.insert(make_pair(latlon, _weather));
+    _edata->loadData(block_size, weather_data);
+    initializeSolar();
+  } else {
+    //std::cout << "in cache" << std::endl;
+    _weather = iter->second;
+  }
+
   _valid = true;
 }
 
