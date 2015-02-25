@@ -145,8 +145,8 @@ protected:
     double WindowT = SHGC / 0.87;
     nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
     nla[direction] = windowAreaM2 * WindowT; //natural lighted area
-    sams[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWith;
-    sa[direction] = wallAreaM2 * (wallSolarAbsorption * windowUValue / 23) + windowAreaM2 * solarFactorWithout;
+    sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue / 23) + windowAreaM2 * solarFactorWith;
+    sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue / 23) + windowAreaM2 * solarFactorWithout;
     htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
     hWindow[direction] = windowAreaM2 * windowUValue;
   }

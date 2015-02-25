@@ -63,7 +63,8 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   std::vector<double> temp = weatherData->data()[DBT];
   SolarRadiation pos(&frame, weatherData.get());
   pos.Calculate();
-  std::vector<std::vector<double> > radiation = pos.eglobe();
+  std::vector<std::vector<double> > radiation = pos.eglobe(); // Radiation for 8 directions (N, NE, E, etc.).
+  std::vector<double> globalHorizontalRadiation = weatherData->data()[EGH]; // Radiation for roof.
   HourResults<double> tempHourResults;
   HourResults<std::vector<double>> rawResults;
 
@@ -74,7 +75,6 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
       dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
     }
     
-    // TODO BAA@2014-12-14: Why is the roof radiation zero???
     calculateHour(i + 1, //hourOfYear
                   month, //month
                   dayOfWeek, //dayOfWeek
@@ -85,7 +85,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
                   radiation[i][2],
                   radiation[i][4],
                   radiation[i][6],
-                  0, //radiation[i][8], //roof is 0 for some reason
+                  globalHorizontalRadiation[i],
                   TMT1, //TMT1
                   tiHeatCool, //tiHeatCool
                   tempHourResults);
@@ -280,6 +280,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   double solarHeatGainS = solarRadiationS * (solarRatioS + solarShadeRatioReductionS * shadingUsePerWPerM2 * std::min(solarRadiationS, shadingRatioWtoM2));
   double solarHeatGainE = solarRadiationE * (solarRatioE + solarShadeRatioReductionE * shadingUsePerWPerM2 * std::min(solarRadiationE, shadingRatioWtoM2));
   double solarHeatGainN = solarRadiationN * (solarRatioN + solarShadeRatioReductionN * shadingUsePerWPerM2 * std::min(solarRadiationN, shadingRatioWtoM2));
+
   // \Phi_{sol}, ISO 13790 11.2.2 eq. 41.
   double qSolarHeatGain = (solarHeatGainN + solarHeatGainE + solarHeatGainS + solarHeatGainW + solarHeatGainH);
   // \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
@@ -467,6 +468,7 @@ void ISOHourly::initialize()
   }
 
   shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;
+  nlaWMovableShadingH = nlams[ROOF] / structure->floorArea();
   naturalLightRatioH = nla[ROOF] / structure->floorArea();
   naturalLightShadeRatioReductionH = nlaWMovableShadingH - naturalLightRatioH;
   nlaWMovableShadingW = nlams[WEST] / structure->floorArea();
