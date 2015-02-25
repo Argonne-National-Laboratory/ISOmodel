@@ -143,10 +143,11 @@ protected:
                              int direction)
   {
     double WindowT = SHGC / 0.87;
+    double R_se = 0.04; // Thermal surface resistance.
     nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
     nla[direction] = windowAreaM2 * WindowT; //natural lighted area
-    sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue / 23) + windowAreaM2 * solarFactorWith;
-    sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue / 23) + windowAreaM2 * solarFactorWithout;
+    sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWith;
+    sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWithout;
     htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
     hWindow[direction] = windowAreaM2 * windowUValue;
   }
