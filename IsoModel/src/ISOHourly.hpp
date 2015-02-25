@@ -121,11 +121,7 @@ protected:
                      int hourOfDay,
                      double windMps,
                      double temperature,
-                     double solarRadiationN,
-                     double solarRadiationE,
-                     double solarRadiationS,
-                     double solarRadiationW,
-                     double solarRadiationH,
+                     const std::vector<double>& solarRadiation,
                      double& TMT1,
                      double& tiHeatCool,
                      HourResults<double>& results);
@@ -262,36 +258,14 @@ private:
 
   double areaNaturallyLighted;
   double areaNaturallyLightedRatio;
-  double nlaWMovableShadingH;
-  double naturalLightRatioH;
-  double nlaWMovableShadingW;
-  double naturalLightRatioW;
-  double nlaWMovableShadingS;
-  double naturalLightShadeRatioReductionH; // CA150 XXX naturalLightShadeRatioReductionH
-  double naturalLightShadeRatioReductionW; // BZ150 XXX naturalLightShadeRatioReductionW
-  double naturalLightRatioS;
-  double naturalLightShadeRatioReductionS; // BY150 XXX naturalLightShadeRatioReductionS
-  double nlaWMovableShadingE;
-  double naturalLightRatioE;
-  double naturalLightShadeRatioReductionE; // BX150 XXX naturalLightShadeRatioReductionE
-  double nlaWMovableShadingN;
-  double naturalLightRatioN;
-  double naturalLightShadeRatioReductionN; // BW150 XXX naturalLightShadeRatioReductionN
-  double saWMovableShadingH;
-  double solarRatioH;
-  double solarShadeRatioReductionH; // O150 XXX solarShadeRatioReductionH
-  double saWMovableShadingW;
-  double solarRatioW;
-  double solarShadeRatioReductionW; // N150 XXX solarShadeRatioReductionW
-  double saWMovableShadingS;
-  double solarRatioS;
-  double solarShadeRatioReductionS; // M150 XXX solarShadeRatioReductionS
-  double saWMovableShadingE;
-  double solarRatioE;
-  double solarShadeRatioReductionE; // L150 XXX solarShadeRatioReductionE
-  double saWMovableShadingN;
-  double solarRatioN;
-  double solarShadeRatioReductionN; // K150 XXX solarShadeRatioReductionN
+  
+  std::vector<double> nlaWMovableShading;
+  std::vector<double> naturalLightRatio;
+  std::vector<double> naturalLightShadeRatioReduction;
+
+  std::vector<double> saWMovableShading;
+  std::vector<double> solarRatio;
+  std::vector<double> solarShadeRatioReduction;
 
   double hci; // =2.5. P94
   double hri; // =5.5. P95

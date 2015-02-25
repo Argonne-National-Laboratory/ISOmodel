@@ -61,10 +61,16 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   TMT1 = tiHeatCool = 20;
   std::vector<double> wind = weatherData->data()[WSPD];
   std::vector<double> temp = weatherData->data()[DBT];
+
   SolarRadiation pos(&frame, weatherData.get());
   pos.Calculate();
   std::vector<std::vector<double> > radiation = pos.eglobe(); // Radiation for 8 directions (N, NE, E, etc.).
-  std::vector<double> globalHorizontalRadiation = weatherData->data()[EGH]; // Radiation for roof.
+  // Add the roof radiation (9th direction). EGH is global horizontal radiation.
+  // TODO BAA@2015-02-25: There ought to be a more efficient way of setting up the radiation.
+  for (int i = 0; i != radiation.size(); ++i) {
+    radiation[i].push_back(weatherData->data()[EGH][i]);
+  }
+
   HourResults<double> tempHourResults;
   HourResults<std::vector<double>> rawResults;
 
@@ -81,11 +87,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
                   hourOfDay, //hourOfDay
                   wind[i], //windMps
                   temp[i], //temperature
-                  radiation[i][0],
-                  radiation[i][2],
-                  radiation[i][4],
-                  radiation[i][6],
-                  globalHorizontalRadiation[i],
+                  radiation[i],
                   TMT1, //TMT1
                   tiHeatCool, //tiHeatCool
                   tempHourResults);
@@ -215,11 +217,7 @@ void ISOHourly::calculateHour(int hourOfYear,
                               int hourOfDay,
                               double windMps,
                               double temperature,
-                              double solarRadiationS,
-                              double solarRadiationE,
-                              double solarRadiationN,
-                              double solarRadiationW,
-                              double solarRadiationH,
+                              const std::vector<double>& solarRadiation,
                               double& TMT1,
                               double& tiHeatCool,
                               HourResults<double>& results)
@@ -247,13 +245,13 @@ void ISOHourly::calculateHour(int hourOfYear,
   // TODO BAA@2014-12-14: if the lightingContribution, solarRadiation,
   // naturalLightRatio and naturalLightShadeRatioReduction were all vectors,
   // this would be much simpler. 
-  double lightingContributionH = 53 / areaNaturallyLightedRatio * solarRadiationH * (naturalLightRatioH + shadingUsePerWPerM2 * naturalLightShadeRatioReductionH * std::min(shadingRatioWtoM2, solarRadiationH));
-  double lightingContributionW = 53 / areaNaturallyLightedRatio * solarRadiationW * (naturalLightRatioW + shadingUsePerWPerM2 * naturalLightShadeRatioReductionW * std::min(shadingRatioWtoM2, solarRadiationW));
-  double lightingContributionS = 53 / areaNaturallyLightedRatio * solarRadiationS * (naturalLightRatioS + shadingUsePerWPerM2 * naturalLightShadeRatioReductionS * std::min(shadingRatioWtoM2, solarRadiationS));
-  double lightingContributionE = 53 / areaNaturallyLightedRatio * solarRadiationE * (naturalLightRatioE + shadingUsePerWPerM2 * naturalLightShadeRatioReductionE * std::min(shadingRatioWtoM2, solarRadiationE));
-  double lightingContributionN = 53 / areaNaturallyLightedRatio * solarRadiationN * (naturalLightRatioN + shadingUsePerWPerM2 * naturalLightShadeRatioReductionN * std::min(shadingRatioWtoM2, solarRadiationN));
+  std::vector<double> lightingContribution;
+  for (int i = 0; i != 9; ++i) {
+    lightingContribution.push_back(53 / areaNaturallyLightedRatio * solarRadiation[i]
+        * (naturalLightRatio[i] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i] * std::min(shadingRatioWtoM2, solarRadiation[i])));
+  }
 
-  double lightingLevel = (lightingContributionN + lightingContributionE + lightingContributionS + lightingContributionW + lightingContributionH);
+  double lightingLevel = std::accumulate(std::begin(lightingContribution), std::end(lightingContribution), 0.0);
   double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));
   double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;
 
@@ -275,14 +273,14 @@ void ISOHourly::calculateHour(int hourOfYear,
   // \Phi_{sol,k}, ISO 13790 11.3.2 eq. 43. 
   // Note: method of calculating A_{sol,k} with movable shading differs from
   // the method in the standard.
-  double solarHeatGainH = solarRadiationH * (solarRatioH + solarShadeRatioReductionH * shadingUsePerWPerM2 * std::min(solarRadiationH, shadingRatioWtoM2));
-  double solarHeatGainW = solarRadiationW * (solarRatioW + solarShadeRatioReductionW * shadingUsePerWPerM2 * std::min(solarRadiationW, shadingRatioWtoM2));
-  double solarHeatGainS = solarRadiationS * (solarRatioS + solarShadeRatioReductionS * shadingUsePerWPerM2 * std::min(solarRadiationS, shadingRatioWtoM2));
-  double solarHeatGainE = solarRadiationE * (solarRatioE + solarShadeRatioReductionE * shadingUsePerWPerM2 * std::min(solarRadiationE, shadingRatioWtoM2));
-  double solarHeatGainN = solarRadiationN * (solarRatioN + solarShadeRatioReductionN * shadingUsePerWPerM2 * std::min(solarRadiationN, shadingRatioWtoM2));
+  std::vector<double> solarHeatGain;
+  for (int i = 0; i != 9; ++i) {
+    solarHeatGain.push_back(
+      solarRadiation[i] * (solarRatio[i] + solarShadeRatioReduction[i] * shadingUsePerWPerM2 * std::min(solarRadiation[i], shadingRatioWtoM2)));
+  }
 
   // \Phi_{sol}, ISO 13790 11.2.2 eq. 41.
-  double qSolarHeatGain = (solarHeatGainN + solarHeatGainE + solarHeatGainS + solarHeatGainW + solarHeatGainH);
+  double qSolarHeatGain = std::accumulate(std::begin(solarHeatGain), std::end(solarHeatGain), 0.0);
   // \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
   // (Note that solarPair = 0 and intPair = 0.5).
   double phii = solarPair * qSolarHeatGain + intPair * phi_int;
@@ -385,7 +383,7 @@ void ISOHourly::calculateHour(int hourOfYear,
     results.Qpump_tot = 0.0;
   }
 
-  if (solarRadiationW > 0) { // Using W radiation because roof radiation isn't set up right now. 2015-02-18.
+  if (solarRadiation[8] > 0) { // Check roof radiation to see if sun is up.
     results.Q_illum_ext_tot = 0; // No exterior lights during the day.
   } else {
     results.Q_illum_ext_tot = lights->exteriorEnergy() * exteriorLightingEnabled / structure->floorArea();
@@ -458,46 +456,26 @@ void ISOHourly::initialize()
     elightNatural = manualSwitchLux;
   }
 
+  // TODO BAA@2015-02-25: lightedNaturalAreaM2 should be set by an .ism parameter.
   double lightedNaturalAream2 = 0; // SingleBuilding.L53
   areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
-  for (int i = 0; i < 9; i++) {
+
+  for (int i = 0; i != 9; ++i) {
     this->structureCalculations(structure->windowShadingDevice(), structure->wallArea()[i], structure->windowArea()[i], structure->wallUniform()[i],
         structure->windowUniform()[i], structure->wallSolarAbsorbtion()[i], structure->windowShadingCorrectionFactor()[i],
         structure->windowNormalIncidenceSolarEnergyTransmittance()[i], i);
+
+    nlaWMovableShading.push_back(nlams[i] / structure->floorArea());
+    naturalLightRatio.push_back(nla[i] / structure->floorArea());
+    naturalLightShadeRatioReduction.push_back(nlaWMovableShading[i] - naturalLightRatio[i]);
+
+    saWMovableShading.push_back(sams[i] / structure->floorArea());
+    solarRatio.push_back(sa[i] / structure->floorArea());
+    solarShadeRatioReduction.push_back(saWMovableShading[i] - solarRatio[i]);
   }
 
   shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;
-  nlaWMovableShadingH = nlams[ROOF] / structure->floorArea();
-  naturalLightRatioH = nla[ROOF] / structure->floorArea();
-  naturalLightShadeRatioReductionH = nlaWMovableShadingH - naturalLightRatioH;
-  nlaWMovableShadingW = nlams[WEST] / structure->floorArea();
-  naturalLightRatioW = nla[WEST] / structure->floorArea();
-  naturalLightShadeRatioReductionW = nlaWMovableShadingW - naturalLightRatioW;
-  nlaWMovableShadingS = nlams[SOUTH] / structure->floorArea();
-  naturalLightRatioS = nla[SOUTH] / structure->floorArea();
-  naturalLightShadeRatioReductionS = nlaWMovableShadingS - naturalLightRatioS;
-  nlaWMovableShadingE = nlams[EAST] / structure->floorArea();
-  naturalLightRatioE = nla[EAST] / structure->floorArea();
-  naturalLightShadeRatioReductionE = nlaWMovableShadingE - naturalLightRatioE;
-  nlaWMovableShadingN = nlams[NORTH] / structure->floorArea();
-  naturalLightRatioN = nla[NORTH] / structure->floorArea();
-  naturalLightShadeRatioReductionN = nlaWMovableShadingN - naturalLightRatioN;
-  saWMovableShadingH = sams[ROOF] / structure->floorArea();
-  solarRatioH = sa[ROOF] / structure->floorArea();
-  solarShadeRatioReductionH = saWMovableShadingH - solarRatioH;
-  saWMovableShadingW = sams[WEST] / structure->floorArea();
-  solarRatioW = sa[WEST] / structure->floorArea();
-  solarShadeRatioReductionW = saWMovableShadingW - solarRatioW;
-  saWMovableShadingS = sams[SOUTH] / structure->floorArea();
-  solarRatioS = sa[SOUTH] / structure->floorArea();
-  solarShadeRatioReductionS = saWMovableShadingS - solarRatioS;
-  saWMovableShadingE = sams[EAST] / structure->floorArea();
-  solarRatioE = sa[EAST] / structure->floorArea();
-  solarShadeRatioReductionE = saWMovableShadingE - solarRatioE;
-  saWMovableShadingN = sams[NORTH] / structure->floorArea();
-  solarRatioN = sa[NORTH] / structure->floorArea();
-  solarShadeRatioReductionN = saWMovableShadingN - solarRatioN;
 
   // ISO 15242 Air leakage values.
   // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
