@@ -261,10 +261,10 @@ private:
 
   double hci; // Value of 2.5 used to generate standard values for h_ms and h_is.
   double hri; // Value of 5.5 used to generate standard values for h_ms and h_is.
-  double h_ms; // h_{ms} Heat transfer coefficient, mass to surface.
-  double h_is; // h_{is} Heat transfer coefficient, air to surface.
+  double h_ms; // h_{ms} Heat transfer coefficient, mass(m) to surface(s).
+  double h_is; // h_{is} Heat transfer coefficient, air(s) to surface(s).
 
-  double H_tris; // H_{tr,is}
+  double H_tris; // H_{tr,is}. Coupling conductance from air(i) to surface(s).
   double hwindowWperkm2; // H_{tr,w}.
 
   // \Phi_{st} and \Phi_{m} are calculated differently than in ISO 13790 to
