@@ -31,7 +31,10 @@ namespace isomodel {
 ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
                          permLightPowerDensityWperM2(0), // SingleBldg.L50
                          externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
-                         ventPreheatDegC(-50) // SingleBldg.Q40
+                         ventPreheatDegC(-50), // SingleBldg.Q40
+                         R_se(0.04), // Thermal surface resistance.
+                         forcedAirHeating(true),
+                         forcedAirCooling(true)
 {
 }
 
@@ -367,9 +370,10 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto n_rhoC_a = 1.22521 * 0.001012 * 277.777778; // First two numbers give rho*Cp for air in MJ/m3/K, last number converts to watt-hr/m3/K.
 
   auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
+
   // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
-  auto Vair_ht = results.Qneed_ht / (((T_sup_ht - TMT1) * n_rhoC_a) + DBL_MIN);
-  auto Vair_cl = results.Qneed_cl / (((TMT1 - T_sup_cl) * n_rhoC_a) + DBL_MIN);
+  auto Vair_ht = forcedAirHeating ? results.Qneed_ht / (((T_sup_ht - TMT1) * n_rhoC_a) + DBL_MIN) : 0.0;
+  auto Vair_cl = forcedAirCooling ? results.Qneed_cl / (((TMT1 - T_sup_cl) * n_rhoC_a) + DBL_MIN) : 0.0;
 
   auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
 
@@ -587,6 +591,25 @@ void ISOHourly::populateSchedules()
       fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling->temperatureSetPointOccupied() : cooling->temperatureSetPointUnoccupied();
     }
   }
+}
+
+void ISOHourly::structureCalculations(double SHGC,
+                           double wallAreaM2,
+                           double windowAreaM2,
+                           double wallUValue,
+                           double windowUValue,
+                           double wallSolarAbsorption,
+                           double solarFactorWith,
+                           double solarFactorWithout,
+                           int direction)
+{
+  double WindowT = SHGC / 0.87;
+  nlams[direction] = windowAreaM2 * WindowT; // Natural lighted area movable shade.
+  nla[direction] = windowAreaM2 * WindowT; // Natural lighted area.
+  sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWith;
+  sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWithout;
+  htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
+  hWindow[direction] = windowAreaM2 * windowUValue;
 }
 
 // TODO BAA@2015-01-28 Is there a better place to keep these debug functions?

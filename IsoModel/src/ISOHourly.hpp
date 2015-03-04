@@ -136,17 +136,7 @@ protected:
                              double wallSolarAbsorption,
                              double solarFactorWith,
                              double solarFactorWithout,
-                             int direction)
-  {
-    double WindowT = SHGC / 0.87;
-    double R_se = 0.04; // Thermal surface resistance.
-    nlams[direction] = windowAreaM2 * WindowT; //natural lighted area movable shade
-    nla[direction] = windowAreaM2 * WindowT; //natural lighted area
-    sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWith;
-    sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWithout;
-    htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
-    hWindow[direction] = windowAreaM2 * windowUValue;
-  }
+                             int direction);
 
   std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
@@ -219,6 +209,8 @@ private:
   // Fans. http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html
   double fanDeltaPinPa; // dp. Total pressure increase in the fan. Calculation.T15
   double fanN; // \mu_{f}. Fan efficiency. Calculation.T16
+  bool forcedAirHeating; // Only calculate fan power to deliver heat if forced air heating is used.
+  bool forcedAirCooling; // Only calculate fan power to deliver cooling if forced air cooling is used.
 
   // Lighting controls.
   // Occupancy based lighting control lighting use adjustment factors.
@@ -295,11 +287,13 @@ private:
 
   static const int NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, ROOF;
 
-  //Calculated surface values
+  double R_se; // Thermal surface resistance. Used in solar surface value calculations.
+
+  // Calculated surface values
   double nlams[9];
   double nla[9];
-  double sams[9];
-  double sa[9];
+  double sams[9]; // ISO13790 11.3.4
+  double sa[9]; // ISO13790 11.3.4
   double htot[9];
   double hWindow[9];
 
