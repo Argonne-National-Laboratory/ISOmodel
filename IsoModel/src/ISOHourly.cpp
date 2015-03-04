@@ -53,12 +53,12 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   // printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
 
   initialize();
-  int hourOfDay = 1;
-  int dayOfWeek = 1;
-  int month = 1;
+  auto hourOfDay = 1;
+  auto dayOfWeek = 1;
+  auto month = 1;
   TimeFrame frame;
-  double TMT1, tiHeatCool;
-  TMT1 = tiHeatCool = 20;
+  auto TMT1 = 20.0;
+  auto tiHeatCool = 20.0;
   std::vector<double> wind = weatherData->data()[WSPD];
   std::vector<double> temp = weatherData->data()[DBT];
 
@@ -67,14 +67,14 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   std::vector<std::vector<double> > radiation = pos.eglobe(); // Radiation for 8 directions (N, NE, E, etc.).
   // Add the roof radiation (9th direction). EGH is global horizontal radiation.
   // TODO BAA@2015-02-25: There ought to be a more efficient way of setting up the radiation.
-  for (int i = 0; i != radiation.size(); ++i) {
+  for (auto i = 0; i != radiation.size(); ++i) {
     radiation[i].push_back(weatherData->data()[EGH][i]);
   }
 
   HourResults<double> tempHourResults;
   HourResults<std::vector<double>> rawResults;
 
-  for (int i = 0; i < TIMESLICES; i++) {
+  for (auto i = 0; i < TIMESLICES; ++i) {
     month = frame.Month[i];
     if (hourOfDay == 25) {
       hourOfDay = 1;
@@ -107,21 +107,21 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   }
 
   // Factor the raw need results by the distribution efficiencies.
-  double a_ht_loss = heating->hvacLossFactor();
-  double a_cl_loss = cooling->hvacLossFactor();
-  double f_waste = heating->hotcoldWasteFactor();
-  double cop = cooling->cop();
-  double efficiency_ht = heating->efficiency();
+  auto a_ht_loss = heating->hvacLossFactor();
+  auto a_cl_loss = cooling->hvacLossFactor();
+  auto f_waste = heating->hotcoldWasteFactor();
+  auto cop = cooling->cop();
+  auto efficiency_ht = heating->efficiency();
 
   // Calculate the yearly totals.
-  double Qneed_ht_yr = std::accumulate(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), 0.0);
-  double Qneed_cl_yr = std::accumulate(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), 0.0);
+  auto Qneed_ht_yr = std::accumulate(rawResults.Qneed_ht.begin(), rawResults.Qneed_ht.end(), 0.0);
+  auto Qneed_cl_yr = std::accumulate(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), 0.0);
 
-  double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
-  double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
+  auto f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
+  auto f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
 
-  double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht);
-  double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
+  auto eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht);
+  auto eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
 
   // Create unary functions to factor the heating and cooling values for use
   // with transform().
@@ -137,7 +137,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   std::transform(rawResults.Qneed_cl.begin(), rawResults.Qneed_cl.end(), v_Qcl_sys.begin(), factorCooling);
 
   // Store the factored results and rename them to match the monthly result names.
-  std::map<std::string, std::vector<double> > results;
+  std::map<std::string, std::vector<double>> results;
   
   // TODO Fix this! Hardcoded values of '0' for things not being calculated is not ideal.
   std::vector<double> zeroes(rawResults.Qneed_ht.size(), 0.0);
@@ -170,10 +170,10 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
     }
   }
 
-  int numberOfResults = aggregateByMonth ? 12 : 8760;
+  auto numberOfResults = aggregateByMonth ? 12 : 8760;
 
   ISOResults allResults;
-  for (int i = 0; i < numberOfResults; i++) {
+  for (auto i = 0; i < numberOfResults; ++i) {
     EndUses timestepEndUses;
 #ifdef _OPENSTUDIOS
     timestepEndUses.addEndUse(results["Eelec_ht"][i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
@@ -191,7 +191,7 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
     timestepEndUses.addEndUse(results["Egas_plug"][i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
     timestepEndUses.addEndUse(results["Egas_dhw"][i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
-    int euse = 0;
+    auto euse = 0;
     timestepEndUses.addEndUse(euse++, results["Eelec_ht"][i]);
     timestepEndUses.addEndUse(euse++, results["Eelec_cl"][i]);
     timestepEndUses.addEndUse(euse++, results["Eelec_int_lt"][i]);
@@ -222,19 +222,23 @@ void ISOHourly::calculateHour(int hourOfYear,
                               double& tiHeatCool,
                               HourResults<double>& results)
 {
-  int scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
+  auto scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
 
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
-  double fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
+  auto fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
   // Convert ventilation from L/s to m^3/h and divide by floor area.
-  double ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) * 3.6 / structure->floorArea(); //ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
-  double externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
-  double internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
-  double exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
-  double internalLightingEnabled = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(BL90,hourOfDay-1,E156-1)
-  double actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
-  double actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  // ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
+  auto ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) * 3.6 / structure->floorArea(); 
+  //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
+  auto externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  // ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
+  auto internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
+  //ExcelFunctions.OFFSET(BL90,hourOfDay-1,E156-1)
+  auto internalLightingEnabled = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
   results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
 
@@ -246,26 +250,27 @@ void ISOHourly::calculateHour(int hourOfYear,
   // naturalLightRatio and naturalLightShadeRatioReduction were all vectors,
   // this would be much simpler. 
   std::vector<double> lightingContribution;
-  for (int i = 0; i != 9; ++i) {
+  for (auto i = 0; i != 9; ++i) {
     lightingContribution.push_back(53 / areaNaturallyLightedRatio * solarRadiation[i]
         * (naturalLightRatio[i] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i] * std::min(shadingRatioWtoM2, solarRadiation[i])));
   }
 
-  double lightingLevel = std::accumulate(std::begin(lightingContribution), std::end(lightingContribution), 0.0);
-  double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));
-  double electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;
+  auto lightingLevel = std::accumulate(std::begin(lightingContribution), std::end(lightingContribution), 0.0);
+  auto electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1 - lightingLevel / elightNatural));
+  auto electricForTotalLightArea = electricForNaturalLightArea * areaNaturallyLightedRatio
+         + (1 - areaNaturallyLightedRatio) * maxRatioElectricLighting;
 
   // Heat produced by lighting.
   // \Phi_{int,L}, ISO 13790 10.4.3. 
   // Monthly name: phi_illum_occ, phi_illum_unocc
-  double phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
+  auto phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
 
   // TODO: permLightPowerDensityWperM2 is unused.
   results.Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
-  double phi_int = results.phi_plug + phi_illum; //1.753
+  auto phi_int = results.phi_plug + phi_illum; //1.753
 
   //TODO -- expand solar heat calculations to array format to include
   //diagonals. If the directional values were vectors, it would simplify things
@@ -274,47 +279,47 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Note: method of calculating A_{sol,k} with movable shading differs from
   // the method in the standard.
   std::vector<double> solarHeatGain;
-  for (int i = 0; i != 9; ++i) {
+  for (auto i = 0; i != 9; ++i) {
     solarHeatGain.push_back(
       solarRadiation[i] * (solarRatio[i] + solarShadeRatioReduction[i] * shadingUsePerWPerM2 * std::min(solarRadiation[i], shadingRatioWtoM2)));
   }
 
   // \Phi_{sol}, ISO 13790 11.2.2 eq. 41.
-  double qSolarHeatGain = std::accumulate(std::begin(solarHeatGain), std::end(solarHeatGain), 0.0);
+  auto qSolarHeatGain = std::accumulate(std::begin(solarHeatGain), std::end(solarHeatGain), 0.0);
   // \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
   // (Note that solarPair = 0 and intPair = 0.5).
-  double phii = solarPair * qSolarHeatGain + intPair * phi_int;
+  auto phii = solarPair * qSolarHeatGain + intPair * phi_int;
   // \Phi_{ia10}, ISO 13790 C.4.2. 
   // Used to calculate \theta_{air,ac} when available heating or cooling power
   // is insufficient to achieve the setpoint. Adding 10 is equivalent to
   // applying 10 W/m^2 to the building because all the values in this
   // implementation are expressed per area (so as to get final results in EUI).
-  double phii10 = phii + 10;
+  auto phii10 = phii + 10;
 
   // Ventilation from wind. ISO 15242.
-  double qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;
-  double exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}.
-  double tAfterExchange = (1 - ventilation->heatRecoveryEfficiency()) * temperature + ventilation->heatRecoveryEfficiency() * 20;
-  double tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange);
+  auto qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;
+  auto exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}.
+  auto tAfterExchange = (1 - ventilation->heatRecoveryEfficiency()) * temperature + ventilation->heatRecoveryEfficiency() * 20;
+  auto tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange);
   // ISO 15242 6.7.1 Step 1.
-  double qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);
-  double qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, std::abs(temperature - tiHeatCool)))), 0.667);
+  auto qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);
+  auto qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, std::abs(temperature - tiHeatCool)))), 0.667);
   // ISO 15242 6.7.1 Step 2.
-  double qExfiltration = std::max(0.0,
+  auto qExfiltration = std::max(0.0,
       std::max(qStackPrevIntTemp, qWind) - std::abs(exhaustSupply) * (0.5 * qStackPrevIntTemp + 0.667 * (qWind) / (qStackPrevIntTemp + qWind)));
-  double qEnvelope = std::max(0.0, exhaustSupply) + qExfiltration;
+  auto qEnvelope = std::max(0.0, exhaustSupply) + qExfiltration;
   // ISO 15242 6.7.2.
-  double qEnteringTotal = qEnvelope + qSupplyBySystem;
+  auto qEnteringTotal = qEnvelope + qSupplyBySystem;
 
   // \theta_{sup} ISO 13790 9.3.
-  double tEnteringAndSupplied = (temperature * qEnvelope + tSuppliedAir * qSupplyBySystem) / qEnteringTotal;
+  auto tEnteringAndSupplied = (temperature * qEnvelope + tSuppliedAir * qSupplyBySystem) / qEnteringTotal;
   // I think hei is H_{ve,adj} or H_{ve} ISO 13790 9.3.1 eq. 21. I'm not sure
   // what the 0.34 is.
-  double hei = 0.34 * qEnteringTotal;
+  auto hei = 0.34 * qEnteringTotal;
   // H_{tr,1}, ISO 13790 C.3 eq. C.6.
-  double h1 = 1 / (1 / hei + 1 / his);
+  auto h1 = 1 / (1 / hei + 1 / his);
   // H_{tr,2}, ISO 13790 C.3 eq. C.7.
-  double h2 = h1 + hwindowWperkm2;
+  auto h2 = h1 + hwindowWperkm2;
   //ExcelFunctions.printOut("h2",h2,0.726440377838674);
 
   // Subscript '0' indicates the free-floating condition and sub '10' indicates
@@ -325,32 +330,32 @@ void ISOHourly::calculateHour(int hourOfYear,
 
   // \Phi_{st}, ISO 13790 C.2 eq. C.3 
   // In generalized form from Georgia Tech spreadsheet.
-  double phisPhi0 = prsSolar * qSolarHeatGain + prsInterior * phi_int;
+  auto phisPhi0 = prsSolar * qSolarHeatGain + prsInterior * phi_int;
   // \Phi_{m}, ISO 13790 C.2 eq. C.2.
   // In generalized form from Georgia Tech spreadsheet.
-  double phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;
+  auto phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;
   // H_{tr,3}, ISO 13790 C.3 eq. C.9.
-  double h3 = 1 / (1 / h2 + 1 / hms);
+  auto h3 = 1 / (1 / h2 + 1 / hms);
   // \Phi_{mtot}, ISO 13790 C.3 eq. C.5.
-  double phimTotalPhi10 = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii10 / hei + tEnteringAndSupplied)) / h2;
-  double phimTotalPhi0 = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii / hei + tEnteringAndSupplied)) / h2;
+  auto phimTotalPhi10 = phimPhi0 + hem * temperature
+       + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii10 / hei + tEnteringAndSupplied)) / h2;
+  auto phimTotalPhi0 = phimPhi0 + hem * temperature
+       + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii / hei + tEnteringAndSupplied)) / h2;
       // \theta_{m,t10}, ISO 13790 C.3 eq. C.4.
-  double tmt1Phi10 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi10) / (Cm / 3.6 + 0.5 * (h3 + hem));
-  double tmPhi10 = 0.5 * (TMT1 + tmt1Phi10);
-  double tsPhi10 = (hms * tmPhi10 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii10 / hei))
-      / (hms + hwindowWperkm2 + h1);
+  auto tmt1Phi10 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi10) / (Cm / 3.6 + 0.5 * (h3 + hem));
+  auto tmPhi10 = 0.5 * (TMT1 + tmt1Phi10);
+  auto tsPhi10 = (hms * tmPhi10 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii10 / hei))
+       / (hms + hwindowWperkm2 + h1);
   //ExcelFunctions.printOut("BA156",tsPhi10,19.8762155145252);
-  double tiPhi10 = (his * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (his + hei);
+  auto tiPhi10 = (his * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (his + hei);
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
-  double tmt1Phi0 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi0) / (Cm / 3.6 + 0.5 * (h3 + hem));
-  double tmPhi0 = 0.5 * (TMT1 + tmt1Phi0);
-  double tsPhi0 = (hms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (hms + hwindowWperkm2 + h1);
-  double tiPhi0 = (his * tsPhi0 + hei * tEnteringAndSupplied + phii) / (his + hei);
-  double phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
-  double phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
-  double phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
+  auto tmt1Phi0 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi0) / (Cm / 3.6 + 0.5 * (h3 + hem));
+  auto tmPhi0 = 0.5 * (TMT1 + tmt1Phi0);
+  auto tsPhi0 = (hms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (hms + hwindowWperkm2 + h1);
+  auto tiPhi0 = (his * tsPhi0 + hei * tEnteringAndSupplied + phii) / (his + hei);
+  auto phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
+  auto phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
+  auto phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
   results.Qneed_cl = std::max(0.0, -phiActual); // Raw need. Not adjusted for efficiency.
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
   
@@ -374,7 +379,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Determine pump energy by using the fixed pump power of .25 W/m2 if the heating
   // or cooling system is active, 0.0 if not. The .25 W/m2 comes from the monthly
   // pump calculations.
-  double n_E_pumps = 0.25; // Specific power of systems pumps + control systems in W/m2
+  auto n_E_pumps = 0.25; // Specific power of systems pumps + control systems in W/m2
   if (results.Qneed_cl > 0.0) {
     results.Qpump_tot = n_E_pumps * cooling->pumpControlReduction();
   } else if (results.Qneed_ht > 0.0) {
@@ -395,20 +400,20 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Update tiHeatCool & TMT1 for next hour. tiHeatCool and TMT1 are passed by
   // reference to the function, allowing this information to pass from hour to
   // hour.
-  double phiiHeatCool = phiActual + phii;
+  auto phiiHeatCool = phiActual + phii;
   // \Phi_{mtot} ISO 13790 C.3 eq. C.5
-  double phimHeatCoolTotal = phimPhi0 + hem * temperature
-      + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phiiHeatCool / hei + tEnteringAndSupplied)) / h2;
+  auto phimHeatCoolTotal = phimPhi0 + hem * temperature
+       + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phiiHeatCool / hei + tEnteringAndSupplied)) / h2;
       // Set tmt to this hour's \theta_{m,t-1}.
-  double tmt = TMT1;
+  auto tmt = TMT1;
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
   // Set TMT1 to next hour's \theta_{m,t-1} (this hour's \theta_{m,t}).
   TMT1 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimHeatCoolTotal) / (Cm / 3.6 + 0.5 * (h3 + hem));
   // \theta_{m}, ISO 13790 C.3 eq. C.9.
-  double tmHeatCool = 0.5 * (TMT1 + tmt);
+  auto tmHeatCool = 0.5 * (TMT1 + tmt);
   // \theta_{s}, ISO 13790 C.3 eq. C.10.
-  double tsHeatCool = (hms * tmHeatCool + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phiiHeatCool / hei))
-      / (hms + hwindowWperkm2 + h1);
+  auto tsHeatCool = (hms * tmHeatCool + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phiiHeatCool / hei))
+                    / (hms + hwindowWperkm2 + h1);
   // \theta_{air}, ISO 13790, C.3 eq. C.11.
   tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
 
@@ -457,11 +462,11 @@ void ISOHourly::initialize()
   }
 
   // TODO BAA@2015-02-25: lightedNaturalAreaM2 should be set by an .ism parameter.
-  double lightedNaturalAream2 = 0; // SingleBuilding.L53
+  auto lightedNaturalAream2 = 0.0; // SingleBuilding.L53
   areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
 
-  for (int i = 0; i != 9; ++i) {
+  for (auto i = 0; i != 9; ++i) {
     this->structureCalculations(structure->windowShadingDevice(), structure->wallArea()[i], structure->windowArea()[i], structure->wallUniform()[i],
         structure->windowUniform()[i], structure->wallSolarAbsorbtion()[i], structure->windowShadingCorrectionFactor()[i],
         structure->windowNormalIncidenceSolarEnergyTransmittance()[i], i);
@@ -479,9 +484,9 @@ void ISOHourly::initialize()
 
   // ISO 15242 Air leakage values.
   // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
-  double n50 = 2; // SingleBldg.V4
+  auto n50 = 2.0; // SingleBldg.V4
   // Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
-  double buildingv8 = 0.19 * (n50 * (structure->floorArea() * structure->buildingHeight()));
+  auto buildingv8 = 0.19 * (n50 * (structure->floorArea() * structure->buildingHeight()));
   // Air leakage per area at 4Pa (m3/hr/m2).
   q4Pa = std::max(0.000001, buildingv8 / structure->floorArea());
 
@@ -505,9 +510,9 @@ void ISOHourly::initialize()
 
   // Calculate Cm from the data in the .ism file.
   // Units seem to need to be in KJ, so divide by 1000.
-  double Cm_int = structure->interiorHeatCapacity() / 1000.0;
+  auto Cm_int = structure->interiorHeatCapacity() / 1000.0;
   // Convert env Cm to per floor area.
-  double Cm_env = (structure->wallHeatCapacity() * sum(structure->wallArea()) / structure->floorArea()) / 1000.0;
+  auto Cm_env = (structure->wallHeatCapacity() * sum(structure->wallArea()) / structure->floorArea()) / 1000.0;
   Cm = Cm_int + Cm_env;
 
   // Calculate Am based the Cm value and the default values in ISO 13790 12.3.1.2 Table 12.
@@ -523,15 +528,17 @@ void ISOHourly::initialize()
     Am = 2.5;
   }
 
-  double hWind = 0, hWall = 0;
-  for (int i = 0; i < ROOF + 1; i++) {
+  auto hWind = 0.0;
+  auto hWall = 0;
+
+  for (auto i = 0; i < ROOF + 1; ++i) {
     hWind += hWindow[i];
     hWall += htot[i] - hWindow[i];
   }
   hwindowWperkm2 = hWind / structure->floorArea();
 
-      // Constant portion of \Phi_{st}, i.e. without multiplying by
-      // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.3.
+  // Constant portion of \Phi_{st}, i.e. without multiplying by
+  // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.3.
   prs = (AtPerAFloor - Am - hwindowWperkm2 / P97) / AtPerAFloor;
   // intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
   // eq. C.3. When used in phisPhi0.
@@ -552,22 +559,22 @@ void ISOHourly::initialize()
   // ISO 13790 12.2.2 eq. 63
   hem = 1 / (1 / hOpaqueWperkm2 - 1 / hms);
 
-  double hzone = 39;
+  auto hzone = 39.0;
   windImpactHz = std::max(0.1, hzone);
   windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
 }
 
 void ISOHourly::populateSchedules()
 {
-  int dayStart = (int) pop->daysStart();
-  int dayEnd = (int) pop->daysEnd();
-  int hourStart = (int) pop->hoursStart();
-  int hourEnd = (int) pop->hoursEnd();
+  auto dayStart = (int) pop->daysStart();
+  auto dayEnd = (int) pop->daysEnd();
+  auto hourStart = (int) pop->hoursStart();
+  auto hourEnd = (int) pop->hoursEnd();
 
   bool hoccupied, doccupied, popoccupied;
-  for (int h = 0; h < 24; h++) {
+  for (auto h = 0; h < 24; ++h) {
     hoccupied = h >= hourStart && h < hourEnd;
-    for (int d = 0; d < 7; d++) {
+    for (auto d = 0; d < 7; ++d) {
       doccupied = (d >= dayStart && d < dayEnd);
       popoccupied = hoccupied && doccupied;
       fixedVentilationSchedule[h][d] = hoccupied ? ventilation->supplyRate() : 0.0;
@@ -585,14 +592,14 @@ void ISOHourly::populateSchedules()
 // TODO BAA@2015-01-28 Is there a better place to keep these debug functions?
 void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2)
 {
-  //if(DEBUG_ISO_MODEL_SIMULATION)
+  if(DEBUG_ISO_MODEL_SIMULATION)
   {
     std::cout << matName << "(" << dim1 << ", " << dim2 << "): " << std::endl << "\t";
     for (unsigned int j = 0; j < dim2; j++) {
       std::cout << "," << j;
     }
     std::cout << std::endl;
-    for (unsigned int i = 0; i < dim1; i++) {
+    for (unsigned int i = 0; i < dim1; ++i) {
       std::cout << "\t" << i;
       for (unsigned int j = 0; j < dim2; j++) {
         std::cout << "," << mat[i * dim2 + j];
