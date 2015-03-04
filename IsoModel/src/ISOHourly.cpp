@@ -320,7 +320,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   // what the 0.34 is.
   auto hei = 0.34 * qEnteringTotal;
   // H_{tr,1}, ISO 13790 C.3 eq. C.6.
-  auto h1 = 1 / (1 / hei + 1 / his);
+  auto h1 = 1 / (1 / hei + 1 / H_tris);
   // H_{tr,2}, ISO 13790 C.3 eq. C.7.
   auto h2 = h1 + hwindowWperkm2;
   //ExcelFunctions.printOut("h2",h2,0.726440377838674);
@@ -338,7 +338,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   // In generalized form from Georgia Tech spreadsheet.
   auto phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;
   // H_{tr,3}, ISO 13790 C.3 eq. C.9.
-  auto h3 = 1 / (1 / h2 + 1 / hms);
+  auto h3 = 1 / (1 / h2 + 1 / H_ms);
   // \Phi_{mtot}, ISO 13790 C.3 eq. C.5.
   auto phimTotalPhi10 = phimPhi0 + hem * temperature
        + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phii10 / hei + tEnteringAndSupplied)) / h2;
@@ -347,15 +347,15 @@ void ISOHourly::calculateHour(int hourOfYear,
       // \theta_{m,t10}, ISO 13790 C.3 eq. C.4.
   auto tmt1Phi10 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi10) / (Cm / 3.6 + 0.5 * (h3 + hem));
   auto tmPhi10 = 0.5 * (TMT1 + tmt1Phi10);
-  auto tsPhi10 = (hms * tmPhi10 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii10 / hei))
-       / (hms + hwindowWperkm2 + h1);
+  auto tsPhi10 = (H_ms * tmPhi10 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii10 / hei))
+       / (H_ms + hwindowWperkm2 + h1);
   //ExcelFunctions.printOut("BA156",tsPhi10,19.8762155145252);
-  auto tiPhi10 = (his * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (his + hei);
+  auto tiPhi10 = (H_tris * tsPhi10 + hei * tEnteringAndSupplied + phii10) / (H_tris + hei);
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
   auto tmt1Phi0 = (TMT1 * (Cm / 3.6 - 0.5 * (h3 + hem)) + phimTotalPhi0) / (Cm / 3.6 + 0.5 * (h3 + hem));
   auto tmPhi0 = 0.5 * (TMT1 + tmt1Phi0);
-  auto tsPhi0 = (hms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (hms + hwindowWperkm2 + h1);
-  auto tiPhi0 = (his * tsPhi0 + hei * tEnteringAndSupplied + phii) / (his + hei);
+  auto tsPhi0 = (H_ms * tmPhi0 + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phii / hei)) / (H_ms + hwindowWperkm2 + h1);
+  auto tiPhi0 = (H_tris * tsPhi0 + hei * tEnteringAndSupplied + phii) / (H_tris + hei);
   auto phiCooling = 10 * (actualCoolingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
   auto phiHeating = 10 * (actualHeatingSetpoint - tiPhi0) / (tiPhi10 - tiPhi0);
   auto phiActual = std::max(0.0, phiHeating) + std::min(phiCooling, 0.0);
@@ -416,10 +416,10 @@ void ISOHourly::calculateHour(int hourOfYear,
   // \theta_{m}, ISO 13790 C.3 eq. C.9.
   auto tmHeatCool = 0.5 * (TMT1 + tmt);
   // \theta_{s}, ISO 13790 C.3 eq. C.10.
-  auto tsHeatCool = (hms * tmHeatCool + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phiiHeatCool / hei))
-                    / (hms + hwindowWperkm2 + h1);
+  auto tsHeatCool = (H_ms * tmHeatCool + phisPhi0 + hwindowWperkm2 * temperature + h1 * (tEnteringAndSupplied + phiiHeatCool / hei))
+                    / (H_ms + hwindowWperkm2 + h1);
   // \theta_{air}, ISO 13790, C.3 eq. C.11.
-  tiHeatCool = (his * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (his + hei);
+  tiHeatCool = (H_tris * tsHeatCool + hei * tEnteringAndSupplied + phiiHeatCool) / (H_tris + hei);
 
 }
 
@@ -494,23 +494,12 @@ void ISOHourly::initialize()
   // Air leakage per area at 4Pa (m3/hr/m2).
   q4Pa = std::max(0.000001, buildingv8 / structure->floorArea());
 
-  P96 = hri * 1.2;
-  // ISO 13790 12.2.2
-  P97 = hci + P96; // TODO Does it make sense to do P97=hci+hri*1.2 and eliminate P96?
-  // ISO 13790 7.2.2.2
-  P98 = 1 / hci - 1 / P97; // (or 1/3.45).
-
+  // ISO 13790 12.2.2: h_ms is fixed at 9.1 W/(m^2*K).
+  h_ms = hci + hri * 1.2; 
+  // ISO 13790 7.2.2.2: h_is is fixed at 3.45 W/(m^2*K).
+  h_is = 1 / (1 / hci - 1 / h_ms);
   // ISO 13790 7.2.2.2 eq. 9 
-  //
-  // Eq in ISO is H_{tr,is} = h_{is} * A_{tot}
-  // where A_{tot} = \Lambda_{at} * A_{f}
-  //
-  // P98 is 1/h_{is} (not sure why its done this way).
-  // Eq here is H_{tr,is} = \Lambda_{at} / (1/h_{is})
-  //            H_{tr,is} = \Lambda_{at} * h_{is}
-  //
-  // This is the "per floor area" version of eq. 9.
-  his = AtPerAFloor / P98;
+  H_tris = h_is * AtPerAFloor;
 
   // Calculate Cm from the data in the .ism file.
   // Units seem to need to be in KJ, so divide by 1000.
@@ -543,7 +532,7 @@ void ISOHourly::initialize()
 
   // Constant portion of \Phi_{st}, i.e. without multiplying by
   // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.3.
-  prs = (AtPerAFloor - Am - hwindowWperkm2 / P97) / AtPerAFloor;
+  prs = (AtPerAFloor - Am - hwindowWperkm2 / h_ms) / AtPerAFloor;
   // intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
   // eq. C.3. When used in phisPhi0.
   prsInterior = (1 - intPair) * prs;
@@ -556,12 +545,12 @@ void ISOHourly::initialize()
   prmSolar = (1 - solarPair) * prm;
 
   // ISO 13790 12.2.2 eq. 64
-  hms = P97 * Am;
+  H_ms = h_ms * Am;
 
   hOpaqueWperkm2 = std::max(hWall / structure->floorArea(), 0.000001);
 
   // ISO 13790 12.2.2 eq. 63
-  hem = 1 / (1 / hOpaqueWperkm2 - 1 / hms);
+  hem = 1 / (1 / hOpaqueWperkm2 - 1 / H_ms);
 
   auto hzone = 39.0;
   windImpactHz = std::max(0.1, hzone);

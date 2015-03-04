@@ -259,13 +259,12 @@ private:
   std::vector<double> solarRatio;
   std::vector<double> solarShadeRatioReduction;
 
-  double hci; // =2.5. P94
-  double hri; // =5.5. P95
-  double P96; // =hri*1.2 XXX Calculation Sheet: What variable is this?
-  double P97; // h_{ms} XXX heatTransferCoefficientMassToSurfWPerM2K ???
-  double P98; // 1/h_{is}. Not sure why inverted. XXX heatTransferCoefficientAirToSurfWPerM2K ???
+  double hci; // Value of 2.5 used to generate standard values for h_ms and h_is.
+  double hri; // Value of 5.5 used to generate standard values for h_ms and h_is.
+  double h_ms; // h_{ms} Heat transfer coefficient, mass to surface.
+  double h_is; // h_{is} Heat transfer coefficient, air to surface.
 
-  double his; // H_{tr,is}
+  double H_tris; // H_{tr,is}
   double hwindowWperkm2; // H_{tr,w}.
 
   // \Phi_{st} and \Phi_{m} are calculated differently than in ISO 13790 to
@@ -281,7 +280,7 @@ private:
   double prmInterior; // Interior part of \Phi_{m}.
   double prmSolar; // Solar part of \Phi_{m}.
 
-  double hms; // H_{ms}
+  double H_ms; // H_{ms}
   double hOpaqueWperkm2; // H_{op}
   double hem; // H_{em}
 
