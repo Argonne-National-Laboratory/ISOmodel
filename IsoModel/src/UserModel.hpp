@@ -266,6 +266,11 @@ public:
     return _weather;
   }
 
+  const std::shared_ptr<EpwData> epwData()
+  {
+    return _edata;
+  }
+
   /**
    * Indicates whether or not the user model loaded in correctly
    * If either the ISO file or the Weather File cannot be found

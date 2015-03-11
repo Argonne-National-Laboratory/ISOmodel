@@ -15,6 +15,10 @@ set(${target_name}_standalone
 	standalone_main.cpp
 )
 
+set(${target_name}_solar_debug
+  Test/solar_debug.cpp
+)
+
 set(${target_name}_src
 	Building.hpp
 	Cooling.hpp
@@ -96,6 +100,9 @@ target_link_libraries(isomodel_unit_tests ${unit_test_depends})
 
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
 target_link_libraries(isomodel_benchmark ${benchmark_depends})
+
+add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
+target_link_libraries(solar_debug ${${target_name}_depends})
 
 # define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
 # this allows use to test parsing the as yet unused parameters 

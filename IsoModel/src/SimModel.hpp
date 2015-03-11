@@ -51,7 +51,7 @@ namespace isomodel {
 #endif
 
 //flag to turn on debug printing of many intermediate variables to stdout
-#define DEBUG_ISO_MODEL_SIMULATION false
+#define DEBUG_ISO_MODEL_SIMULATION true
 typedef unsigned int uint;
 
 ISOMODEL_API
