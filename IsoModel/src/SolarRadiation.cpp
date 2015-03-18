@@ -83,12 +83,13 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
 
     GroundReflected = (vecEB[i] * sin(SolarAltitudeAngles) + vecED[i]) * rhog * (1 - cos(m_surfaceTilt)) / 2;  // ground reflected component
     vecEGI = &(m_eglobe[i]);
+
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour
     for (int s = 0; s < NUM_SURFACES; s++) {
       SurfaceSolarAzimuth = abs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
 
       AngleOfIncidence = acos(
-          cos(SolarAltitudeAngles) * cos(SurfaceSolarAzimuth * PI / 180.0) * sin(m_surfaceTilt) + sin(SolarAltitudeAngles) * cos(m_surfaceTilt)); //ancle of incidence of sun's rays on surface in rad
+          cos(SolarAltitudeAngles) * cos(SurfaceSolarAzimuth) * sin(m_surfaceTilt) + sin(SolarAltitudeAngles) * cos(m_surfaceTilt)); //ancle of incidence of sun's rays on surface in rad
 
       DirectBeam = vecEB[i] * std::max(cos(AngleOfIncidence), 0.0); //Beam component of radiation
 
@@ -102,6 +103,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
     }
   }
 }
+
 //average the data in the bins over the count or days
 void SolarRadiation::calculateMonthAvg(int midx, int cnt)
 {
