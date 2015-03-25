@@ -249,9 +249,6 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Monthly name: phi_plug_occ and phi_plug_unocc.
   results.phi_plug = internalEquipmentEnabled * building->electricApplianceHeatGainOccupied();
 
-  // TODO BAA@2014-12-14: if the lightingContribution, solarRadiation,
-  // naturalLightRatio and naturalLightShadeRatioReduction were all vectors,
-  // this would be much simpler. 
   std::vector<double> lightingContribution;
   for (auto i = 0; i != 9; ++i) {
     lightingContribution.push_back(53 / areaNaturallyLightedRatio * solarRadiation[i]
@@ -275,9 +272,6 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
   auto phi_int = results.phi_plug + phi_illum; //1.753
 
-  //TODO -- expand solar heat calculations to array format to include
-  //diagonals. If the directional values were vectors, it would simplify things
-  //considerably.
   // \Phi_{sol,k}, ISO 13790 11.3.2 eq. 43. 
   // Note: method of calculating A_{sol,k} with movable shading differs from
   // the method in the standard.
