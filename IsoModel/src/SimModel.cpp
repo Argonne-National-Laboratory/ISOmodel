@@ -44,6 +44,7 @@ void printMatrix(const char* matName, Matrix mat)
     for (unsigned int j = 0; j < mat.size2(); j++) {
       std::cout << "," << j;
     }
+    std::cout << std::endl;
     for (unsigned int i = 0; i < mat.size1(); i++) {
       std::cout << "\t" << i;
       for (unsigned int j = 0; j < mat.size2(); j++) {
