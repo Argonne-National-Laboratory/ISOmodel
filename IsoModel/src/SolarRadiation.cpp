@@ -34,7 +34,7 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
   }
   this->frame = frame;
   this->weatherData = wdata;
-  this->m_longitude = wdata->longitude() * PI / 180.0; // Convert latitude to radians.
+  this->m_longitude = wdata->longitude(); // Should this be converted to radians? BAA@2015-03-25
   this->m_localMeridian = wdata->timezone() * 15.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian
   this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
   this->m_surfaceTilt = tilt / 2.0;	//surface tilt in radians (pi/2 is vertical, 0 is horizontal);
