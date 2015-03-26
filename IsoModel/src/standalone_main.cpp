@@ -8,6 +8,7 @@
 #include "UserModel.hpp"
 #include "SimModel.hpp"
 #include <iostream>
+#include <iomanip>
 
 #include <boost/program_options.hpp>
 
@@ -23,6 +24,7 @@ void runMonthlySimulation(const UserModel& umodel) {
   std::cout
     << "Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW"
     << std::endl;
+
   for (int i = 0; i < 12; i++) {
     std::cout << i + 1;
 #ifdef _OPENSTUDIOS
@@ -42,7 +44,7 @@ void runMonthlySimulation(const UserModel& umodel) {
     std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
     for (int j = 0; j < 13; j++) {
-      std::cout << ", " << results.monthlyResults[i].getEndUse(j);
+      std::cout << ", " <<  std::setprecision(10) << results.monthlyResults[i].getEndUse(j);
     }
 #endif
     std::cout << std::endl;
