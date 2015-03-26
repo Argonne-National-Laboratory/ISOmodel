@@ -253,7 +253,7 @@ Vector abs(const Vector& v1)
 {
   Vector va = Vector(v1.size());
   for (uint i = 0; i < v1.size(); i++) {
-    va[i] = std::abs(v1[i]);
+    va[i] = fabs(v1[i]);
   }
   return va;
 }

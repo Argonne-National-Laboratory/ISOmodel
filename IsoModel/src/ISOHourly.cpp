@@ -306,10 +306,10 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange);
   // ISO 15242 6.7.1 Step 1.
   auto qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);
-  auto qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, std::abs(temperature - tiHeatCool)))), 0.667);
+  auto qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, fabs(temperature - tiHeatCool)))), 0.667);
   // ISO 15242 6.7.1 Step 2.
   auto qExfiltration = std::max(0.0,
-      std::max(qStackPrevIntTemp, qWind) - std::abs(exhaustSupply) * (0.5 * qStackPrevIntTemp + 0.667 * (qWind) / (qStackPrevIntTemp + qWind)));
+      std::max(qStackPrevIntTemp, qWind) - fabs(exhaustSupply) * (0.5 * qStackPrevIntTemp + 0.667 * (qWind) / (qStackPrevIntTemp + qWind)));
   auto qEnvelope = std::max(0.0, exhaustSupply) + qExfiltration;
   // ISO 15242 6.7.2.
   auto qEnteringTotal = qEnvelope + qSupplyBySystem;

@@ -86,7 +86,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
 
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour
     for (int s = 0; s < NUM_SURFACES; s++) {
-      SurfaceSolarAzimuth = abs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
+      SurfaceSolarAzimuth = fabs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
 
       AngleOfIncidence = acos(
           cos(SolarAltitudeAngles) * cos(SurfaceSolarAzimuth) * sin(m_surfaceTilt) + sin(SolarAltitudeAngles) * cos(m_surfaceTilt)); //ancle of incidence of sun's rays on surface in rad
