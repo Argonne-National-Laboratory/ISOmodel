@@ -34,8 +34,8 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
   }
   this->frame = frame;
   this->weatherData = wdata;
-  this->m_longitude = wdata->longitude();
-  this->m_localMeridian = wdata->timezone() * 15.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian
+  this->m_longitude = wdata->longitude() * PI / 180.0; // Convert to radians.
+  this->m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
   this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
   this->m_surfaceTilt = tilt / 2.0;	//surface tilt in radians (pi/2 is vertical, 0 is horizontal);
 }
@@ -86,7 +86,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
 
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour
     for (int s = 0; s < NUM_SURFACES; s++) {
-      SurfaceSolarAzimuth = abs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
+      SurfaceSolarAzimuth = fabs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
 
       AngleOfIncidence = acos(
           cos(SolarAltitudeAngles) * cos(SurfaceSolarAzimuth) * sin(m_surfaceTilt) + sin(SolarAltitudeAngles) * cos(m_surfaceTilt)); //ancle of incidence of sun's rays on surface in rad
