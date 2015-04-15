@@ -225,6 +225,7 @@ void ISOHourly::calculateHour(int hourOfYear,
                               double& tiHeatCool,
                               HourResults<double>& results)
 {
+  // scheduleOffset appears to be converting a 0 to 6, Sunday to Saturday range into a 1 to 7, Monday to Sunday range. BAA@2015-04-15.
   auto scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
 
   // Extract schedules to a function so that we can populate them based on
@@ -266,6 +267,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
 
   // TODO: permLightPowerDensityWperM2 is unused.
+  
   results.Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
@@ -560,7 +562,7 @@ void ISOHourly::populateSchedules()
 
   bool hoccupied, doccupied, popoccupied;
   for (auto h = 0; h < 24; ++h) {
-    hoccupied = h >= hourStart && h < hourEnd;
+    hoccupied = h >= hourStart && h <= hourEnd;
     for (auto d = 0; d < 7; ++d) {
       doccupied = (d >= dayStart && d < dayEnd);
       popoccupied = hoccupied && doccupied;
