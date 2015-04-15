@@ -269,7 +269,7 @@ TEST(IsoModelTests, SimModelTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001);
+      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001) << "i = " << i << ", j = " << j << std::endl;
     }
   }
 }
@@ -318,7 +318,7 @@ TEST(IsoModelTests, ISOHourlyTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001);
+      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001) << "i = " << i << ", j = " << j << std::endl;
     }
   }
 }

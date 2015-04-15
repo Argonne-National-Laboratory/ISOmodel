@@ -478,9 +478,9 @@ void SimModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illu
   double n_day_end = 18;
   double n_weeks = 50;
   double t_lt_D = (std::min(n_day_end, pop->hoursEnd()) - std::max(pop->hoursStart(), n_day_start) + 1)
-      * (pop->daysEnd() + 1 - pop->daysStart() + 1) * n_weeks;
+      * (pop->daysEnd() - pop->daysStart() + 1) * n_weeks;
   double t_lt_N = (std::max(n_day_start - pop->hoursStart(), 0.0) + std::max(pop->hoursEnd() - n_day_end, 0.0))
-      * (pop->daysEnd() + 1 - pop->daysStart() + 1) * n_weeks;
+      * (pop->daysEnd() - pop->daysStart() + 1) * n_weeks;
 
   Q_illum_occ = structure->floorArea() * lpd_occ * F_C * F_O * (t_lt_D * F_D + t_lt_N) / 1000.0;
   /*
