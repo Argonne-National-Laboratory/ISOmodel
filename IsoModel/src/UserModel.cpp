@@ -541,13 +541,13 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   setBuildingHeight(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("floorarea");
   setFloorArea(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydaystart");
+  attributeValue = buildingParams.getPropertyAsDouble("occupancydayfirst");
   setBuildingOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydayend");
+  attributeValue = buildingParams.getPropertyAsDouble("occupancydaylast");
   setBuildingOccupancyTo(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourstart");
+  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourfirst");
   setEquivFullLoadOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourend");
+  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourlast");
   setEquivFullLoadOccupancyTo(attributeValue);
   attributeValue = buildingParams.getPropertyAsDouble("peopledensityoccupied");
   setPeopleDensityOccupied(attributeValue);

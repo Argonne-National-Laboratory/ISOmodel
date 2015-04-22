@@ -31,7 +31,7 @@ TEST(PropertiesTests, KeyValueTests)
   ASSERT_EQ("ORD.epw", props.getProperty("weatherFilePath"));
   ASSERT_EQ(0.8, props.getPropertyAsDouble("terrainClass"));
   ASSERT_EQ(6.33, props.getPropertyAsDouble("buildingHeight"));
-  ASSERT_EQ(18.0, props.getPropertyAsDouble("occupancyHourEnd"));
+  ASSERT_EQ(17.0, props.getPropertyAsDouble("occupancyHourLast"));
   ASSERT_STREQ("2.1, 234.3, 12.3", props.getProperty("wallU").c_str());
 
   props.putProperty("a string", "some string");

@@ -5,5 +5,5 @@ weatherFilePath = ORD.epw
 terrainClass = 0.8
 # building height is in m,  floor area is in m^2, people density is m2/person
 buildingHeight = 6.33
-occupancyHourEnd = 18
+occupancyHourLast = 17
 wallU = 2.1, 234.3, 12.3

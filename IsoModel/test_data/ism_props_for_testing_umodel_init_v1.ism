@@ -1,10 +1,10 @@
 terrainClass = 0.366569597990189
 floorArea = 0.13797878192703
 buildingHeight = 0.425419263581922
-occupancyDayStart = 0.665995505182317
-occupancyDayEnd = 0.400372234106352
-occupancyHourStart = 0.254850243633116
-occupancyHourEnd = 0.713362082549865
+occupancyDayFirst = 0.665995505182317
+occupancyDayLast = 0.400372234106352
+occupancyHourFirst = 0.254850243633116
+occupancyHourLast = 0.713362082549865
 peopleDensityOccupied = 0.0453028919599623
 peopleDensityUnoccupied = 0.374398515315959
 heatingSetpointOccupied = 0.308476836073534

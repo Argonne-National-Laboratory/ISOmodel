@@ -8,10 +8,10 @@ buildingHeight = 6.33
 floorArea = 511.16
 peopleDensityOccupied = 25.4683514030612
 peopleDensityUnoccupied = 150.51041254091
-occupancyDayStart = 1
-occupancyDayEnd = 5
-occupancyHourStart = 8
-occupancyHourEnd = 17
+occupancyDayFirst = 1
+occupancyDayLast = 5
+occupancyHourFirst = 8
+occupancyHourLast = 17
 # LPD, EPD, GPD all in W/m2, ext light power in W, an heat gain is W/person
 lightingPowerDensityOccupied = 6.33869983780207
 lightingPowerDensityUnoccupied = 2.58639212251571
