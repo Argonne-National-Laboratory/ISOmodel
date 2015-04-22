@@ -564,7 +564,7 @@ void ISOHourly::populateSchedules()
   for (auto h = 0; h < 24; ++h) {
     hoccupied = h >= hourStart && h <= hourEnd;
     for (auto d = 0; d < 7; ++d) {
-      doccupied = (d >= dayStart && d < dayEnd);
+      doccupied = (d >= dayStart && d <= dayEnd);
       popoccupied = hoccupied && doccupied;
       fixedVentilationSchedule[h][d] = hoccupied ? ventilation->supplyRate() : 0.0;
       fixedFanSchedule[h][d] = hoccupied ? 1 : 0.0;
