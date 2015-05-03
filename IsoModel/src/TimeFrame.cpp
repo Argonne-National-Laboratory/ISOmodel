@@ -4,16 +4,16 @@ namespace openstudio {
 namespace isomodel {
 TimeFrame::TimeFrame(void)
 {
-  int i = 0, j = 0, dim;
-  for (int I = 1; I <= 12; I++) {
-    dim = monthLength(I);
-    for (int J = 1; J <= dim; J++) {
-      j++;
-      for (int K = 1; K <= 24; K++) {
-        this->Hour[i] = K;
-        this->Day[i] = J;
-        this->Month[i] = I;
-        this->YTD[i++] = j;
+  int hourOfYear = 0, dayOfYear = 0, dim;
+  for (int month = 1; month <= 12; month++) {
+    dim = monthLength(month);
+    for (int dayOfMonth = 1; dayOfMonth <= dim; dayOfMonth++) {
+      dayOfYear++;
+      for (int hourOfDay = 1; hourOfDay <= 24; hourOfDay++) {
+        this->Hour[hourOfYear] = hourOfDay;
+        this->Day[hourOfYear] = dayOfMonth;
+        this->Month[hourOfYear] = month;
+        this->YTD[hourOfYear++] = dayOfYear;
       }
     }
   }

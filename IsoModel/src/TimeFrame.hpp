@@ -28,8 +28,7 @@ class TimeFrame
 protected:
 
 public:
-  int
-  monthLength(int month);
+  int monthLength(int month);
   int YTD[TIMESLICES], Hour[TIMESLICES], Day[TIMESLICES], Month[TIMESLICES];
   TimeFrame(void);
   ~TimeFrame(void);

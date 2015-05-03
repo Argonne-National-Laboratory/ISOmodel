@@ -323,6 +323,56 @@ TEST(IsoModelTests, ISOHourlyTests)
   }
 }
 
+TEST(TimeFrameTests, MonthLengthTest) {
+  openstudio::isomodel::TimeFrame frame;
+  std::vector<int> monthLengths = {
+    31, // January
+    28, // February
+    31, // March
+    30, // April
+    31, // May
+    30, // June
+    31, // July
+    31, // August
+    30, // September
+    31, // October
+    30, // November
+    31 // December
+  };
+
+  for (auto i = 1; i != 13; ++i) {
+    EXPECT_EQ(monthLengths[i - 1], frame.monthLength(i)) << "When i = " << i;
+  }
+}
+
+TEST(TimeFrameTests, HourTests) {
+  openstudio::isomodel::TimeFrame frame;
+  EXPECT_EQ(1, frame.Hour[0]);
+  EXPECT_EQ(24, frame.Hour[23]);
+  EXPECT_EQ(1, frame.Hour[24]);
+}
+
+TEST(TimeFrameTests, DayTests) {
+  openstudio::isomodel::TimeFrame frame;
+  EXPECT_EQ(1, frame.Day[0]);
+  EXPECT_EQ(1, frame.Day[23]);
+  EXPECT_EQ(2, frame.Day[24]);
+}
+
+TEST(TimeFrameTests, MonthTests) {
+  openstudio::isomodel::TimeFrame frame;
+  EXPECT_EQ(1, frame.Month[0]);
+  EXPECT_EQ(1, frame.Month[743]);
+  EXPECT_EQ(2, frame.Month[744]);
+}
+
+TEST(TimeFrameTests, YTDTests) {
+  openstudio::isomodel::TimeFrame frame;
+  EXPECT_EQ(1, frame.YTD[0]);
+  EXPECT_EQ(31, frame.YTD[743]);
+  EXPECT_EQ(32, frame.YTD[744]);
+}
+
 int main(int argc, char** argv)
 {
   if (argc < 2) {
