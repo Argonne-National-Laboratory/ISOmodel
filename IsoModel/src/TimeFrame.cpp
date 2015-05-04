@@ -4,17 +4,24 @@ namespace openstudio {
 namespace isomodel {
 TimeFrame::TimeFrame(void)
 {
-  int hourOfYear = 0, dayOfYear = 0, dim;
+  int hourOfYear = 0;
+  int dayOfYear = 1;
+  int dayOfWeek = 1;
+  int dim;
+
   for (int month = 1; month <= 12; month++) {
     dim = monthLength(month);
     for (int dayOfMonth = 1; dayOfMonth <= dim; dayOfMonth++) {
-      dayOfYear++;
       for (int hourOfDay = 1; hourOfDay <= 24; hourOfDay++) {
         this->Hour[hourOfYear] = hourOfDay;
-        this->Day[hourOfYear] = dayOfMonth;
+        this->DayOfMonth[hourOfYear] = dayOfMonth;
+        this->DayOfWeek[hourOfYear] = dayOfWeek;
         this->Month[hourOfYear] = month;
-        this->YTD[hourOfYear++] = dayOfYear;
+        this->YTD[hourOfYear] = dayOfYear;
+        ++hourOfYear;
       }
+      ++dayOfYear;
+      dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
     }
   }
 

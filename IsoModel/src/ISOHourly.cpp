@@ -56,9 +56,6 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
 
   initialize();
-  auto hourOfDay = 1;
-  auto dayOfWeek = 1;
-  auto month = 1;
   TimeFrame frame;
   auto TMT1 = 20.0;
   auto tiHeatCool = 20.0;
@@ -78,11 +75,9 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
   HourResults<std::vector<double>> rawResults;
 
   for (auto i = 0; i < TIMESLICES; ++i) {
-    month = frame.Month[i];
-    if (hourOfDay == 25) {
-      hourOfDay = 1;
-      dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
-    }
+    auto month = frame.Month[i];
+    auto hourOfDay = frame.Hour[i];
+    auto dayOfWeek = frame.DayOfWeek[i];
     
     calculateHour(i + 1, //hourOfYear
                   month, //month

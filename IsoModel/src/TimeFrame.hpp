@@ -31,7 +31,8 @@ public:
   int monthLength(int month);
   int YTD[TIMESLICES];
   int Hour[TIMESLICES];
-  int Day[TIMESLICES]; // XXX: This does not appear to ever be used. BAA@2015-05-04
+  int DayOfMonth[TIMESLICES]; // XXX: This does not appear to ever be used. BAA@2015-05-04
+  int DayOfWeek[TIMESLICES];
   int Month[TIMESLICES];
   TimeFrame(void);
   ~TimeFrame(void);
