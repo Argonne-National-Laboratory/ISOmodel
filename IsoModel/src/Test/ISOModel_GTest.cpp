@@ -350,6 +350,7 @@ TEST(TimeFrameTests, HourTests) {
   EXPECT_EQ(1, frame.Hour[0]);
   EXPECT_EQ(24, frame.Hour[23]);
   EXPECT_EQ(1, frame.Hour[24]);
+  EXPECT_EQ(24, frame.Hour[8759]);
 }
 
 TEST(TimeFrameTests, DayTests) {
@@ -357,6 +358,7 @@ TEST(TimeFrameTests, DayTests) {
   EXPECT_EQ(1, frame.Day[0]);
   EXPECT_EQ(1, frame.Day[23]);
   EXPECT_EQ(2, frame.Day[24]);
+  EXPECT_EQ(31, frame.Day[8759]);
 }
 
 TEST(TimeFrameTests, MonthTests) {
@@ -364,6 +366,7 @@ TEST(TimeFrameTests, MonthTests) {
   EXPECT_EQ(1, frame.Month[0]);
   EXPECT_EQ(1, frame.Month[743]);
   EXPECT_EQ(2, frame.Month[744]);
+  EXPECT_EQ(12, frame.Month[8759]);
 }
 
 TEST(TimeFrameTests, YTDTests) {
@@ -371,6 +374,7 @@ TEST(TimeFrameTests, YTDTests) {
   EXPECT_EQ(1, frame.YTD[0]);
   EXPECT_EQ(31, frame.YTD[743]);
   EXPECT_EQ(32, frame.YTD[744]);
+  EXPECT_EQ(365, frame.YTD[8759]);
 }
 
 int main(int argc, char** argv)

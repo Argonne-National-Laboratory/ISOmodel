@@ -225,8 +225,10 @@ void ISOHourly::calculateHour(int hourOfYear,
                               double& tiHeatCool,
                               HourResults<double>& results)
 {
-  // scheduleOffset appears to be converting a 0 to 6, Sunday to Saturday range into a 1 to 7, Monday to Sunday range. BAA@2015-04-15.
-  auto scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
+  // scheduleOffset appears to perhaps be supposed to convert a 0 to 6, Sunday to Saturday range into a 1 to 7, Monday to Sunday 
+  // range, but because dayOfWeek is a 1-7 range, it does nothing. BAA@2015-04-15.
+  // auto scheduleOffset = (dayOfWeek % 7) == 0 ? 7 : dayOfWeek % 7; // ExcelFunctions.printOut("E156",scheduleOffset,1);
+  auto scheduleOffset = dayOfWeek;
 
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
