@@ -347,10 +347,10 @@ TEST(TimeFrameTests, MonthLengthTest) {
 
 TEST(TimeFrameTests, HourTests) {
   openstudio::isomodel::TimeFrame frame;
-  EXPECT_EQ(1, frame.Hour[0]);
-  EXPECT_EQ(24, frame.Hour[23]);
-  EXPECT_EQ(1, frame.Hour[24]);
-  EXPECT_EQ(24, frame.Hour[8759]);
+  EXPECT_EQ(0, frame.Hour[0]);
+  EXPECT_EQ(23, frame.Hour[23]);
+  EXPECT_EQ(0, frame.Hour[24]);
+  EXPECT_EQ(23, frame.Hour[8759]);
 }
 
 TEST(TimeFrameTests, DayOfMonthTests) {
@@ -363,11 +363,11 @@ TEST(TimeFrameTests, DayOfMonthTests) {
 
 TEST(TimeFrameTests, DayOfWeekTests) {
   openstudio::isomodel::TimeFrame frame;
-  EXPECT_EQ(1, frame.DayOfWeek[0]);
-  EXPECT_EQ(1, frame.DayOfWeek[23]);
-  EXPECT_EQ(2, frame.DayOfWeek[24]);
-  EXPECT_EQ(7, frame.DayOfWeek[167]);
-  EXPECT_EQ(1, frame.DayOfWeek[168]);
+  EXPECT_EQ(0, frame.DayOfWeek[0]);
+  EXPECT_EQ(0, frame.DayOfWeek[23]);
+  EXPECT_EQ(1, frame.DayOfWeek[24]);
+  EXPECT_EQ(6, frame.DayOfWeek[167]);
+  EXPECT_EQ(0, frame.DayOfWeek[168]);
 }
 
 TEST(TimeFrameTests, MonthTests) {
@@ -380,10 +380,10 @@ TEST(TimeFrameTests, MonthTests) {
 
 TEST(TimeFrameTests, YTDTests) {
   openstudio::isomodel::TimeFrame frame;
-  EXPECT_EQ(1, frame.YTD[0]);
-  EXPECT_EQ(31, frame.YTD[743]);
-  EXPECT_EQ(32, frame.YTD[744]);
-  EXPECT_EQ(365, frame.YTD[8759]);
+  EXPECT_EQ(0, frame.YTD[0]);
+  EXPECT_EQ(30, frame.YTD[743]);
+  EXPECT_EQ(31, frame.YTD[744]);
+  EXPECT_EQ(364, frame.YTD[8759]);
 }
 
 int main(int argc, char** argv)

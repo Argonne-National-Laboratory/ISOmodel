@@ -5,14 +5,14 @@ namespace isomodel {
 TimeFrame::TimeFrame(void)
 {
   int hourOfYear = 0;
-  int dayOfYear = 1;
-  int dayOfWeek = 1;
+  int dayOfYear = 0;
+  int dayOfWeek = 0;
   int dim;
 
   for (int month = 1; month <= 12; month++) {
     dim = monthLength(month);
     for (int dayOfMonth = 1; dayOfMonth <= dim; dayOfMonth++) {
-      for (int hourOfDay = 1; hourOfDay <= 24; hourOfDay++) {
+      for (int hourOfDay = 0; hourOfDay <= 23; hourOfDay++) {
         this->Hour[hourOfYear] = hourOfDay;
         this->DayOfMonth[hourOfYear] = dayOfMonth;
         this->DayOfWeek[hourOfYear] = dayOfWeek;
@@ -21,7 +21,7 @@ TimeFrame::TimeFrame(void)
         ++hourOfYear;
       }
       ++dayOfYear;
-      dayOfWeek = (dayOfWeek == 7) ? 1 : dayOfWeek + 1;
+      dayOfWeek = (dayOfWeek == 6) ? 0 : dayOfWeek + 1;
     }
   }
 

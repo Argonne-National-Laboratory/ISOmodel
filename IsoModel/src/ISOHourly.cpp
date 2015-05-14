@@ -99,9 +99,6 @@ ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
     rawResults.phi_plug.push_back(tempHourResults.phi_plug);
     rawResults.externalEquipmentEnergyWperm2.push_back(tempHourResults.externalEquipmentEnergyWperm2);
     rawResults.Q_dhw.push_back(tempHourResults.Q_dhw);
-
-    // Increment the hour.
-    ++hourOfDay;
   }
 
   // Factor the raw need results by the distribution efficiencies.

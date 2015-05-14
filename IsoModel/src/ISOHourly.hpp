@@ -143,49 +143,49 @@ protected:
   /** Returns the fan schedule. */
   virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedFanSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedFanSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the ventilation schedule. */
   virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedVentilationSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedVentilationSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the exterior equipment schedule. */
   virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedExteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedExteriorEquipmentSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the interior equipment schedule. */
   virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedInteriorEquipmentSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedInteriorEquipmentSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the exterior lighting schedule. */
   virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedExteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedExteriorLightingSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the interior lighting schedule. */
   virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedInteriorLightingSchedule[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedInteriorLightingSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the heating setpoint schedule. */
   virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedActualHeatingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedActualHeatingSetpoint[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the cooling setpoint schedule. */
   virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
   {
-    return fixedActualCoolingSetpoint[(int) hourOfDay - 1][(int) scheduleOffset - 1];
+    return fixedActualCoolingSetpoint[(int) hourOfDay][(int) scheduleOffset];
   }
 
   std::shared_ptr<Population> pop;
