@@ -68,8 +68,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
     Revolution = 2.0 * PI * ((double) frame->YTD[i]) / 365.0;	//should be .25? //calculation revolution angle around sun in radians
     EquationOfTime = 2.2918
         * (0.0075 + 0.1868 * cos(Revolution) - 3.2077 * sin(Revolution) - 1.4615 * cos(2 * Revolution) - 4.089 * sin(2 * Revolution));//equation of time??
-    // XXX Addded the "+1" when changing the hour range from 1-24 to 0-23, but need to confirm this is correct. BAA@2015-05-14
-    ApparentSolarTime = frame->Hour[i] + 1 + EquationOfTime / 60.0 + (m_longitude - m_localMeridian) / 15.0; // Apparent Solar Time in hours
+    ApparentSolarTime = frame->Hour[i] + EquationOfTime / 60.0 + (m_longitude - m_localMeridian) / 15.0; // Apparent Solar Time in hours
 
     //the following is a more accurate formula for declination as taken from - Duffie and Beckman P. 14
     SolarDeclination = 0.006918 - 0.399913 * cos(Revolution) + 0.070257 * sin(Revolution) - 0.006758 * cos(2.0 * Revolution)
