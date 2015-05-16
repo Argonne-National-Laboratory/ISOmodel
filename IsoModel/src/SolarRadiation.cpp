@@ -65,21 +65,17 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
   std::vector<double>* vecEGI;
   for (int i = 0; i < TIMESLICES; i++) {
     // First compute the solar azimuth for each hour of the year for our location
-    Revolution = 2.0 * PI * ((double) frame->YTD[i]) / 365.0;	//should be .25? //calculation revolution angle around sun in radians
-    EquationOfTime = 2.2918
-        * (0.0075 + 0.1868 * cos(Revolution) - 3.2077 * sin(Revolution) - 1.4615 * cos(2 * Revolution) - 4.089 * sin(2 * Revolution));//equation of time??
-    ApparentSolarTime = frame->Hour[i] + EquationOfTime / 60.0 + (m_longitude - m_localMeridian) / 15.0; // Apparent Solar Time in hours
+    Revolution = calculateRevolutionAngle(frame->YTD[i]);
+    EquationOfTime = calculateEquationOfTime(Revolution);
+    ApparentSolarTime = calculateApparentSolarTime(frame->Hour[i], EquationOfTime);
 
-    //the following is a more accurate formula for declination as taken from - Duffie and Beckman P. 14
-    SolarDeclination = 0.006918 - 0.399913 * cos(Revolution) + 0.070257 * sin(Revolution) - 0.006758 * cos(2.0 * Revolution)
-        + 0.00907 * sin(2.0 * Revolution) - 0.002679 * cos(3.0 * Revolution) + 0.00148 * sin(3.0 * Revolution);  //solar declination in radians
-    SolarHourAngles = 15 * (ApparentSolarTime - 12) * PI / 180.0; //solar hour angle in radians
-    SolarAltitudeAngles = asin(cos(this->m_latitude) * cos(SolarDeclination) * cos(SolarHourAngles) + sin(this->m_latitude) * sin(SolarDeclination)); //solar altitude angle in radians
+    SolarDeclination = calculateSolarDeclination(Revolution);
+    SolarHourAngles = calculateSolarHourAngle(ApparentSolarTime);
+    SolarAltitudeAngles = calculateSolarAltitudeAngle(SolarDeclination, SolarHourAngles);
 
-    SolarAzimuthSin = sin(SolarHourAngles) * cos(SolarDeclination) / cos(SolarAltitudeAngles);  //sin of the solar azimuth
-    SolarAzimuthCos = (cos(SolarHourAngles) * cos(SolarDeclination) * sin(this->m_latitude) - sin(SolarDeclination) * cos(this->m_latitude))
-        / cos(SolarAltitudeAngles);  //cosine of solar azimuth
-    SolarAzimuth = atan2(SolarAzimuthSin, SolarAzimuthCos); //compute solar azimuth in radians
+    SolarAzimuthSin = calculateSolarAzimuthSin(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
+    SolarAzimuthCos = calculateSolarAzimuthCos(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
+    SolarAzimuth = calculateSolarAzimuth(SolarAzimuthSin, SolarAzimuthCos);
 
     GroundReflected = (vecEB[i] * sin(SolarAltitudeAngles) + vecED[i]) * rhog * (1 - cos(m_surfaceTilt)) / 2;  // ground reflected component
     vecEGI = &(m_eglobe[i]);

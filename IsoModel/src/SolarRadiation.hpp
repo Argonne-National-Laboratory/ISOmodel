@@ -38,14 +38,6 @@ class SolarRadiation
 protected:
   openstudio::isomodel::TimeFrame* frame;
   openstudio::isomodel::EpwData* weatherData;
-  void
-  calculateSurfaceSolarRadiation();
-  void
-  calculateAverages();
-  void
-  calculateMonthAvg(int midx, int cnt);
-  void
-  clearMonthlyAvg(int midx);
 
   //inputs
   double m_surfaceTilt;
@@ -65,52 +57,110 @@ protected:
   std::vector<std::vector<double> > m_hourlyDryBulbTemp;
   std::vector<std::vector<double> > m_hourlyDewPointTemp;
   std::vector<std::vector<double> > m_hourlyGlobalHorizontalRadiation;
+
 public:
-  void
-  Calculate();
+  void Calculate();
 
   SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt = PI);
   ~SolarRadiation(void);
-  //outputs
-  std::vector<std::vector<double> > eglobe()
-  {
+
+  void calculateSurfaceSolarRadiation();
+  void calculateAverages();
+  void calculateMonthAvg(int midx, int cnt);
+  void clearMonthlyAvg(int midx);
+
+  // Solar equations.
+
+  /// Calculates the revolution angle in radians of the earth around the sun.
+  double calculateRevolutionAngle(int dayOfYear) {
+    return 2.0 * PI * dayOfYear / 365.0;	//should be .25? <- BAA@2015-05-16: I'm not sure where the previous comment about .25 is from but am leaving it for now to be investigated further.
+  }
+
+  /// Calculates the difference between the apparent solar time and mean solar time (the equation of time).
+  double calculateEquationOfTime(double revolutionAngle) {
+    return 2.2918 * (0.0075 + 0.1868 * cos(revolutionAngle) - 3.2077 * sin(revolutionAngle)
+           - 1.4615 * cos(2 * revolutionAngle) - 4.089 * sin(2 * revolutionAngle));
+  }
+
+  /// Calculates the apparent Solar Time in hours.
+  double calculateApparentSolarTime(int hourOfDay, double equationOfTime) {
+    return hourOfDay + equationOfTime / 60.0 + (m_longitude - m_localMeridian) / 15.0;
+  }
+
+  /**
+  * Calculates the solar declination in radians. The following is a more accurate formula
+  * for declination as taken from - Duffie and Beckman P. 14.
+  */
+  double calculateSolarDeclination(double revolutionAngle) {
+    return 0.006918 - 0.399913 * cos(revolutionAngle) + 0.070257 * sin(revolutionAngle) - 0.006758 * cos(2.0 * revolutionAngle)
+           + 0.00907 * sin(2.0 * revolutionAngle) - 0.002679 * cos(3.0 * revolutionAngle) + 0.00148 * sin(3.0 * revolutionAngle);
+  }
+
+  /// Calculates the solar hour angle in radians.
+  double calculateSolarHourAngle(double apparentSolarTime) {
+    return 15 * (apparentSolarTime - 12) * PI / 180.0;
+  }
+
+  /// Calculates the solar altitude angle in radians.
+  double calculateSolarAltitudeAngle(double solarDeclination, double solarHourAngles) {
+    return asin(cos(this->m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(this->m_latitude) * sin(solarDeclination));
+  }
+
+  /// Calculates the sin of the solar azimuth.
+  double calculateSolarAzimuthSin(double solarDeclination, double solarHourAngle, double solarAltitudeAngle) {
+    return sin(solarHourAngle) * cos(solarDeclination) / cos(solarAltitudeAngle);
+  }
+
+  /// Calculates the cosine of the solar azimuth.
+  double calculateSolarAzimuthCos(double solarDeclination, double solarHourAngle, double solarAltitudeAngle) {
+    return (cos(solarHourAngle) * cos(solarDeclination) * sin(this->m_latitude) - sin(solarDeclination) * cos(this->m_latitude))
+           / cos(solarAltitudeAngle);
+  }
+
+  /// Calculates the solar azimuth from its sin and cos.
+  double calculateSolarAzimuth(double solarAzimuthSin, double solarAzimuthCos) {
+    return atan2(solarAzimuthSin, solarAzimuthCos);
+  }
+
+  // Outputs
+  std::vector<std::vector<double> > eglobe() {
     return m_eglobe;
   }	//total solar radiation from direct beam, ground reflect and diffuse
-  //averages
-  std::vector<double> monthlyDryBulbTemp()
-  {
+
+  // Averages
+  std::vector<double> monthlyDryBulbTemp() {
     return m_monthlyDryBulbTemp;
   }
-  std::vector<double> monthlyDewPointTemp()
-  {
+
+  std::vector<double> monthlyDewPointTemp() {
     return m_monthlyDewPointTemp;
   }
-  std::vector<double> monthlyRelativeHumidity()
-  {
+
+  std::vector<double> monthlyRelativeHumidity() {
     return m_monthlyRelativeHumidity;
   }
-  std::vector<double> monthlyWindspeed()
-  {
+
+  std::vector<double> monthlyWindspeed() {
     return m_monthlyWindspeed;
   }
-  std::vector<double> monthlyGlobalHorizontalRadiation()
-  {
+
+  std::vector<double> monthlyGlobalHorizontalRadiation() {
     return m_monthlyGlobalHorizontalRadiation;
   }
-  std::vector<std::vector<double> > monthlySolarRadiation()
-  {
+
+  std::vector<std::vector<double> > monthlySolarRadiation() {
     return m_monthlySolarRadiation;
   }
-  std::vector<std::vector<double> > hourlyDryBulbTemp()
-  {
+
+  std::vector<std::vector<double> > hourlyDryBulbTemp() {
     return m_hourlyDryBulbTemp;
   }
-  std::vector<std::vector<double> > hourlyDewPointTemp()
-  {
+
+  std::vector<std::vector<double> > hourlyDewPointTemp() {
     return m_hourlyDewPointTemp;
   }
-  std::vector<std::vector<double> > hourlyGlobalHorizontalRadiation()
-  {
+
+  std::vector<std::vector<double> > hourlyGlobalHorizontalRadiation() {
     return m_hourlyGlobalHorizontalRadiation;
   }
 
