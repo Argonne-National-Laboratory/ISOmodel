@@ -390,6 +390,47 @@ TEST(TimeFrameTests, YTDTests) {
   EXPECT_EQ(364, frame.YTD[8759]);
 }
 
+// Solar tests. Expected results from http://www.usc.edu/dept-00/dept/architecture/mbs/tools/thermal/sun_calc.html
+// Inputs:
+// 41.98 N, 87.92 W (matches ORD.EPW)
+// Jan 1, 2009, 12:00 (noon).
+// GMT -6, Daylight savings: No.
+// Outputs:
+// Declination: -22.96 deg
+// Altitude Angle: 25.05 deg
+// Azimuth Angle: -1.18 deg
+// Local Solar Time: 12:04
+// Hour Angle: -1.16
+// Equation of Time: -3.67
+
+TEST(SolarTests, SunPositionTests) {
+  openstudio::isomodel::UserModel userModel;
+  userModel.load(test_data_path + "/SmallOffice_v2.ism");
+  userModel.loadWeather();
+
+  TimeFrame frame;
+  SolarRadiation solarRadiation(&frame, userModel.epwData().get());
+
+  int hourOfYear = 12;
+  std::cout << "frame.YTD[hourOfYear] = " << frame.YTD[hourOfYear] << std::endl;
+
+  auto revolution = solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
+  std::cout << "revolution = " << revolution << std::endl;
+
+  auto equationOfTime = solarRadiation.calculateEquationOfTime(revolution);
+  EXPECT_NEAR(-3.67, equationOfTime, 0.01);
+
+  auto apparentSolarTime = solarRadiation.calculateApparentSolarTime(frame.Hour[hourOfYear], equationOfTime);
+
+  auto solarDeclination = solarRadiation.calculateSolarDeclination(revolution);
+  auto solarHourAngle = solarRadiation.calculateSolarHourAngle(apparentSolarTime);
+  auto solarAltitudeAngle = solarRadiation.calculateSolarAltitudeAngle(solarDeclination, solarHourAngle);
+
+  auto solarAzimuthSin = solarRadiation.calculateSolarAzimuthSin(solarDeclination, solarHourAngle, solarAltitudeAngle);
+  auto solarAzimuthCos = solarRadiation.calculateSolarAzimuthCos(solarDeclination, solarHourAngle, solarAltitudeAngle);
+  auto solarAzimuth = solarRadiation.calculateSolarAzimuth(solarAzimuthSin, solarAzimuthCos);
+}
+
 int main(int argc, char** argv)
 {
   if (argc < 2) {
