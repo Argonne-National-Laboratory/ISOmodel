@@ -390,18 +390,14 @@ TEST(TimeFrameTests, YTDTests) {
   EXPECT_EQ(364, frame.YTD[8759]);
 }
 
-// Solar tests. Expected results from http://www.usc.edu/dept-00/dept/architecture/mbs/tools/thermal/sun_calc.html
+// Solar tests. Expected results based on ASHRAE Fundamentals, Ch. 14 Climatic Design Information
 // Inputs:
 // 41.98 N, 87.92 W (matches ORD.EPW)
-// Jan 1, 2009, 12:00 (noon).
+// Jan 21, 2009, 12:00 (noon).
 // GMT -6, Daylight savings: No.
-// Outputs:
-// Declination: -22.96 deg
-// Altitude Angle: 25.05 deg
-// Azimuth Angle: -1.18 deg
-// Local Solar Time: 12:04
-// Hour Angle: -1.16
-// Equation of Time: -3.67
+// Expected results from Ch. 14, table 2:
+// Equation of Time: -10.6
+// Declination: -20.1 deg (.3508 rad).
 
 TEST(SolarTests, SunPositionTests) {
   openstudio::isomodel::UserModel userModel;
@@ -411,18 +407,28 @@ TEST(SolarTests, SunPositionTests) {
   TimeFrame frame;
   SolarRadiation solarRadiation(&frame, userModel.epwData().get());
 
-  int hourOfYear = 12;
-  std::cout << "frame.YTD[hourOfYear] = " << frame.YTD[hourOfYear] << std::endl;
+  int hourOfYear = 492;
+
+  // Confirm that we are testing 12noon, Jan 21.
+  EXPECT_EQ(1, frame.Month[hourOfYear]);
+  EXPECT_EQ(21, frame.DayOfMonth[hourOfYear]);
+  EXPECT_EQ(12, frame.Hour[hourOfYear]);
 
   auto revolution = solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
-  std::cout << "revolution = " << revolution << std::endl;
+  // 2.0 * PI * 20 / 365.0 = 0.34428412642
+  EXPECT_NEAR(0.344284, revolution, 0.0001);
 
   auto equationOfTime = solarRadiation.calculateEquationOfTime(revolution);
-  EXPECT_NEAR(-3.67, equationOfTime, 0.01);
+  // Hand calcs: -10.602150
+  EXPECT_NEAR(-10.602150, equationOfTime, 0.0001);
 
   auto apparentSolarTime = solarRadiation.calculateApparentSolarTime(frame.Hour[hourOfYear], equationOfTime);
+  // Hand calcs: 11.961964
+  EXPECT_NEAR(11.961964, apparentSolarTime, 0.0001);
 
   auto solarDeclination = solarRadiation.calculateSolarDeclination(revolution);
+  EXPECT_NEAR(-0.3508, solarDeclination, 0.01); // Result varies slightly from ASHRAE Ch. 14 because a different eq. is used.
+
   auto solarHourAngle = solarRadiation.calculateSolarHourAngle(apparentSolarTime);
   auto solarAltitudeAngle = solarRadiation.calculateSolarAltitudeAngle(solarDeclination, solarHourAngle);
 
