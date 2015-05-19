@@ -23,17 +23,33 @@ namespace openstudio {
 namespace isomodel {
 #define TIMESLICES 8760
 
+/**
+* Simple data structure that allows conversion from the hour of the year 
+* to a variety of useful times (day of week, month, etc.).
+*/
 class TimeFrame
 {
 protected:
 
 public:
+  /// Returns the number of days in the month.
   int monthLength(int month);
+
+  /// Returns the day of the year (0-364).
   int YTD[TIMESLICES];
+
+  /// Returns the hour of the day (0-23).
   int Hour[TIMESLICES];
+
+  /// Returns the day of the month (1-monthLength)
   int DayOfMonth[TIMESLICES]; // XXX: This does not appear to ever be used. BAA@2015-05-04
+
+  /// Returns the day of the week (0-6).
   int DayOfWeek[TIMESLICES];
+
+  /// Returns the month (1-12).
   int Month[TIMESLICES];
+
   TimeFrame(void);
   ~TimeFrame(void);
 };
