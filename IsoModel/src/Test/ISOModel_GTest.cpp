@@ -406,6 +406,10 @@ TEST(TimeFrameTests, YTDTests) {
 // Apparent Solar Time: 11.961964163392835 hours
 // Declination: -0.35056553686581415 rad
 // Hour angle: -0.009957758738184193 rad
+// Altitude: 0.4875023918786105 rad
+// sin(azimuth): -0.010585060645453042
+// cos(azimuth): 0.9999439766762598
+// Azimuth: -0.010585258319975917
 
 TEST(SolarTests, SunPositionTests) {
   openstudio::isomodel::UserModel userModel;
@@ -438,10 +442,16 @@ TEST(SolarTests, SunPositionTests) {
   EXPECT_NEAR(-0.009957758738184193, solarHourAngle, 0.0001);
 
   auto solarAltitudeAngle = solarRadiation.calculateSolarAltitudeAngle(solarDeclination, solarHourAngle);
+  EXPECT_NEAR(0.4875023918786105, solarAltitudeAngle, 0.0001);
 
   auto solarAzimuthSin = solarRadiation.calculateSolarAzimuthSin(solarDeclination, solarHourAngle, solarAltitudeAngle);
+  EXPECT_NEAR(-0.010585060645453042, solarAzimuthSin, 0.0001);
+
   auto solarAzimuthCos = solarRadiation.calculateSolarAzimuthCos(solarDeclination, solarHourAngle, solarAltitudeAngle);
+  EXPECT_NEAR(0.9999439766762598, solarAzimuthCos, 0.0001);
+
   auto solarAzimuth = solarRadiation.calculateSolarAzimuth(solarAzimuthSin, solarAzimuthCos);
+  EXPECT_NEAR(-0.010585258319975917, solarAzimuth, 0.0001);
 }
 
 int main(int argc, char** argv)
