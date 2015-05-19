@@ -27,7 +27,6 @@
 
 namespace openstudio {
 namespace isomodel {
-// const double PI = 3.1416; //3.1415926535897932384626433832795028841971693993751058209 
 const double PI = 3.1415926535897;
 const int NUM_SURFACES = 8;
 const int MONTHS = 12;
@@ -104,8 +103,8 @@ public:
   * Duffie and Beckman p. 14, eq. 1.6.1b.
   */
   double calculateSolarDeclination(double revolutionAngle) {
-    return 0.006918 - 0.399913 * cos(revolutionAngle) + 0.070257 * sin(revolutionAngle) - 0.006758 * cos(2.0 * revolutionAngle)
-           + 0.00907 * sin(2.0 * revolutionAngle) - 0.002679 * cos(3.0 * revolutionAngle) + 0.00148 * sin(3.0 * revolutionAngle);
+    return 0.006918 - 0.399912 * cos(revolutionAngle) + 0.070257 * sin(revolutionAngle) - 0.006758 * cos(2.0 * revolutionAngle)
+           + 0.000907 * sin(2.0 * revolutionAngle) - 0.002697 * cos(3.0 * revolutionAngle) + 0.00148 * sin(3.0 * revolutionAngle);
   }
 
   /**

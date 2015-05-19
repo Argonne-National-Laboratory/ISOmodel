@@ -390,14 +390,22 @@ TEST(TimeFrameTests, YTDTests) {
   EXPECT_EQ(364, frame.YTD[8759]);
 }
 
-// Solar tests. Expected results based on ASHRAE Fundamentals, Ch. 14 Climatic Design Information
+// Solar tests. Expected results based on working through the equations in
+// ASHRAE Fundamentals, Ch. 14 Climatic Design Information (with the exception of using
+// Duffie and Beckman p.14, eq. 1.6.1b for declination). An ipython notebook of
+// the hand calculations is saved in the test_data directory.
+
 // Inputs:
 // 41.98 N, 87.92 W (matches ORD.EPW)
 // Jan 21, 2009, 12:00 (noon).
 // GMT -6, Daylight savings: No.
-// Expected results from Ch. 14, table 2:
-// Equation of Time: -10.6
-// Declination: -20.1 deg (.3508 rad).
+
+// Expected results:
+// Rotation: 0.34428412642079925 rad
+// Equation of Time: -10.602150196429877 min
+// Apparent Solar Time: 11.961964163392835 hours
+// Declination: -0.35056553686581415 rad
+// Hour angle: -0.009957758738184193 rad
 
 TEST(SolarTests, SunPositionTests) {
   openstudio::isomodel::UserModel userModel;
@@ -415,21 +423,20 @@ TEST(SolarTests, SunPositionTests) {
   EXPECT_EQ(12, frame.Hour[hourOfYear]);
 
   auto revolution = solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
-  // 2.0 * PI * 20 / 365.0 = 0.34428412642
-  EXPECT_NEAR(0.344284, revolution, 0.0001);
+  EXPECT_NEAR(0.34428412642079925, revolution, 0.0001);
 
   auto equationOfTime = solarRadiation.calculateEquationOfTime(revolution);
-  // Hand calcs: -10.602150
-  EXPECT_NEAR(-10.602150, equationOfTime, 0.0001);
+  EXPECT_NEAR(-10.602150196429877, equationOfTime, 0.0001);
 
   auto apparentSolarTime = solarRadiation.calculateApparentSolarTime(frame.Hour[hourOfYear], equationOfTime);
-  // Hand calcs: 11.961964
-  EXPECT_NEAR(11.961964, apparentSolarTime, 0.0001);
+  EXPECT_NEAR(11.961964163392835, apparentSolarTime, 0.0001);
 
   auto solarDeclination = solarRadiation.calculateSolarDeclination(revolution);
-  EXPECT_NEAR(-0.3508, solarDeclination, 0.01); // Result varies slightly from ASHRAE Ch. 14 because a different eq. is used.
+  EXPECT_NEAR(-0.35056553686581415, solarDeclination, 0.0001);
 
   auto solarHourAngle = solarRadiation.calculateSolarHourAngle(apparentSolarTime);
+  EXPECT_NEAR(-0.009957758738184193, solarHourAngle, 0.0001);
+
   auto solarAltitudeAngle = solarRadiation.calculateSolarAltitudeAngle(solarDeclination, solarHourAngle);
 
   auto solarAzimuthSin = solarRadiation.calculateSolarAzimuthSin(solarDeclination, solarHourAngle, solarAltitudeAngle);
