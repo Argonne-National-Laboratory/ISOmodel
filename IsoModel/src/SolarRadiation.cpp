@@ -3,10 +3,12 @@
 namespace openstudio {
 namespace isomodel {
 /**
- * Surface Azimuths of the "building" to calculate solar radiation for
+ * Surface Azimuths of the "building" to calculate solar radiation for, in radians.
+ * In the order S, SE, E, NE, N, NW, W, SW.
+ * In degrees, the azimuths are: 0, -45, -90, -135, 180, 135, 90, 45.
  */
 double SurfaceAzimuths[] =
-{ 0, -45, -90, -135, 180, 135, 90, 45 };
+{ 0, -PI/4, -PI/2, -3*PI/4, PI, 3*PI/4, PI/2, PI/4 };
 
 SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
 {
@@ -56,7 +58,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
   double GroundReflected = 0, SolarAzimuthSin = 0, SolarAzimuthCos = 0, SolarAzimuth = 0, Revolution, EquationOfTime, ApparentSolarTime,
       SolarDeclination, SolarHourAngles, SolarAltitudeAngles;
 
-  double AngleOfIncidence, SurfaceSolarAzimuth, DirectBeam, DiffuseRadiation, DiffuseComponent;
+  double AngleOfIncidence, SurfaceSolarAzimuth, DirectBeam, diffuseAngleOfIncidenceFactor, DiffuseComponent;
 
   //avoid calling data() to reduce copy time
   std::vector<std::vector<double> > data = weatherData->data();
@@ -71,31 +73,26 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
 
     SolarDeclination = calculateSolarDeclination(Revolution);
     SolarHourAngles = calculateSolarHourAngle(ApparentSolarTime);
-    SolarAltitudeAngles = calculateSolarAltitudeAngle(SolarDeclination, SolarHourAngles);
+    SolarAltitudeAngles = calculateSolarAltitude(SolarDeclination, SolarHourAngles);
 
     SolarAzimuthSin = calculateSolarAzimuthSin(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
     SolarAzimuthCos = calculateSolarAzimuthCos(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
     SolarAzimuth = calculateSolarAzimuth(SolarAzimuthSin, SolarAzimuthCos);
 
-    GroundReflected = (vecEB[i] * sin(SolarAltitudeAngles) + vecED[i]) * rhog * (1 - cos(m_surfaceTilt)) / 2;  // ground reflected component
+    GroundReflected = calculateGroundReflectedRadiation(vecEB[i], vecED[i], rhog, SolarAltitudeAngles, m_surfaceTilt);
     vecEGI = &(m_eglobe[i]);
 
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour
     for (int s = 0; s < NUM_SURFACES; s++) {
-      SurfaceSolarAzimuth = fabs(SolarAzimuth - (SurfaceAzimuths[s] * (PI / 180.0))); //surface - solar azimuth in degrees, >pi/2 means surface is in shade
+      SurfaceSolarAzimuth = calculateSurfaceSolarAzimuth(SolarAzimuth, SurfaceAzimuths[s]);
+      AngleOfIncidence = calculateAngleOfIncidence(SolarAltitudeAngles, SurfaceSolarAzimuth, m_surfaceTilt);
 
-      AngleOfIncidence = acos(
-          cos(SolarAltitudeAngles) * cos(SurfaceSolarAzimuth) * sin(m_surfaceTilt) + sin(SolarAltitudeAngles) * cos(m_surfaceTilt)); //ancle of incidence of sun's rays on surface in rad
+      DirectBeam = calculateTotalDirectBeamIrradiance(vecEB[i], AngleOfIncidence);
 
-      DirectBeam = vecEB[i] * std::max(cos(AngleOfIncidence), 0.0); //Beam component of radiation
+      diffuseAngleOfIncidenceFactor = calculateDiffuseAngleOfIncidenceFactor(AngleOfIncidence);
+      DiffuseComponent = calculateTotalDiffuseIrradiance(vecED[i], diffuseAngleOfIncidenceFactor, m_surfaceTilt);
 
-      DiffuseRadiation = std::max(0.45, 0.55 + 0.437 * cos(AngleOfIncidence) + 0.313 * pow(cos(AngleOfIncidence), 2.0)); //Diffuse component of radiation 
-      //diffuse component for sigma> pi/2 meaning it is a wall tilted outward, for sigma<= pi/2 meaning wall vertical or tilted inward
-      DiffuseComponent =
-          (m_surfaceTilt > PI / 2) ?
-              vecED[i] * DiffuseRadiation * sin(m_surfaceTilt) : vecED[i] * (DiffuseRadiation * sin(m_surfaceTilt) + cos(m_surfaceTilt));
-
-      (*vecEGI)[s] = DirectBeam + DiffuseComponent + GroundReflected; // add up all the components
+      (*vecEGI)[s] = calculateTotalIrradiance(DirectBeam, DiffuseComponent, GroundReflected);
     }
   }
 }

@@ -69,7 +69,7 @@ public:
   void calculateMonthAvg(int midx, int cnt);
   void clearMonthlyAvg(int midx);
 
-  // Solar equations.
+  // Sun position equations.
 
   /**
   * Calculates the revolution angle in radians of the earth around the sun.
@@ -119,7 +119,7 @@ public:
   * Calculates the solar altitude angle in radians.
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 12.
   */
-  double calculateSolarAltitudeAngle(double solarDeclination, double solarHourAngles) {
+  double calculateSolarAltitude(double solarDeclination, double solarHourAngles) {
     return asin(cos(this->m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(this->m_latitude) * sin(solarDeclination));
   }
 
@@ -127,17 +127,17 @@ public:
   * Calculates the sin of the solar azimuth.
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 14.
   */
-  double calculateSolarAzimuthSin(double solarDeclination, double solarHourAngle, double solarAltitudeAngle) {
-    return sin(solarHourAngle) * cos(solarDeclination) / cos(solarAltitudeAngle);
+  double calculateSolarAzimuthSin(double solarDeclination, double solarHourAngle, double solarAltitude) {
+    return sin(solarHourAngle) * cos(solarDeclination) / cos(solarAltitude);
   }
 
   /**
   * Calculates the cosine of the solar azimuth.
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 15.
   */
-  double calculateSolarAzimuthCos(double solarDeclination, double solarHourAngle, double solarAltitudeAngle) {
+  double calculateSolarAzimuthCos(double solarDeclination, double solarHourAngle, double solarAltitude) {
     return (cos(solarHourAngle) * cos(solarDeclination) * sin(this->m_latitude) - sin(solarDeclination) * cos(this->m_latitude))
-           / cos(solarAltitudeAngle);
+           / cos(solarAltitude);
   }
 
   /**
@@ -145,6 +145,81 @@ public:
   */
   double calculateSolarAzimuth(double solarAzimuthSin, double solarAzimuthCos) {
     return atan2(solarAzimuthSin, solarAzimuthCos);
+  }
+
+  // Radiation equations.
+
+  /**
+  * Calculates the total ground reflected radiation.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 31.
+  */
+  double calculateGroundReflectedRadiation(double directBeamIrradiance, 
+                                           double diffuseIrradiance,
+                                           double groundReflectance,
+                                           double solarAltitude,
+                                           double surfaceTilt) {
+    return (directBeamIrradiance * sin(solarAltitude) + diffuseIrradiance)
+           * groundReflectance * (1 - cos(surfaceTilt)) / 2;
+  }
+
+  /**
+  * Calculates the surface solar azimuth (the difference between the surface and solar azimuths). 
+  * solarAzimuth and surfaceAzimuth should be in radians. Result in radians.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 21.
+  */
+  double calculateSurfaceSolarAzimuth(double solarAzimuth, double surfaceAzimuth) {
+    return fabs(solarAzimuth - surfaceAzimuth);
+  }
+
+  /**
+  * Calculates the angle of incidence of the sun on the surface.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 22.
+  */
+  double calculateAngleOfIncidence(double solarAltitude, double surfaceSolarAzimuth, double surfaceTilt) {
+    return acos(cos(solarAltitude) * cos(surfaceSolarAzimuth) * sin(surfaceTilt)
+           + sin(solarAltitude) * cos(surfaceTilt));
+  }
+
+  /** 
+  * Calculates the total direct beam irradiance on a surface.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 26.
+  */
+  double calculateTotalDirectBeamIrradiance(double directBeamIrradiance, double angleOfIncidence) {
+    return directBeamIrradiance * std::max(cos(angleOfIncidence), 0.0);
+  }
+
+  /**
+  * Calculates the ratio of clear-sky diffuse irradiance on a vertical surface to that on a horizontal surface.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 28.
+  */
+  double calculateDiffuseAngleOfIncidenceFactor(double angleOfIncidence) {
+    return std::max(0.45, 0.55 + 0.437 * cos(angleOfIncidence) + 0.313 * std::pow(cos(angleOfIncidence), 2.0));
+  }
+
+  /**
+  * Calculates the total diffuse irradiance on the surface.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 29, 30.
+  */
+  double calculateTotalDiffuseIrradiance(double diffuseIrradiance,
+                                         double diffuseAngleOfIncidenceFactor,
+                                         double surfaceTilt) {
+    if (surfaceTilt > PI / 2) {
+      // Wall tilted outward.
+      return diffuseIrradiance * diffuseAngleOfIncidenceFactor * sin(surfaceTilt);
+    } else {
+      // Wall vertical or tilted inward.
+      return diffuseIrradiance * (diffuseAngleOfIncidenceFactor * sin(surfaceTilt) + cos(surfaceTilt));
+    }
+  }
+
+  /** 
+  * Calculates the total irradiance reaching a surface.
+  * ASHRAE2013 Fundamentals, Ch. 14, eq. 25.
+  */
+  double calculateTotalIrradiance(double totalDirectBeamIrradiance,
+                                  double totalDiffuseIrradiance,
+                                  double totalGroundReflectedIrradiance) {
+    return totalDirectBeamIrradiance + totalDiffuseIrradiance + totalGroundReflectedIrradiance;
   }
 
   // Outputs

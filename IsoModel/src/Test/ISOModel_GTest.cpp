@@ -441,7 +441,7 @@ TEST(SolarTests, SunPositionTests) {
   auto solarHourAngle = solarRadiation.calculateSolarHourAngle(apparentSolarTime);
   EXPECT_NEAR(-0.009957758738184193, solarHourAngle, 0.0001);
 
-  auto solarAltitudeAngle = solarRadiation.calculateSolarAltitudeAngle(solarDeclination, solarHourAngle);
+  auto solarAltitudeAngle = solarRadiation.calculateSolarAltitude(solarDeclination, solarHourAngle);
   EXPECT_NEAR(0.4875023918786105, solarAltitudeAngle, 0.0001);
 
   auto solarAzimuthSin = solarRadiation.calculateSolarAzimuthSin(solarDeclination, solarHourAngle, solarAltitudeAngle);
