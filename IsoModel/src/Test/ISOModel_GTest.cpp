@@ -426,6 +426,12 @@ TEST(SolarTests, SunPositionTests) {
   EXPECT_EQ(21, frame.DayOfMonth[hourOfYear]);
   EXPECT_EQ(12, frame.Hour[hourOfYear]);
 
+  // Confirm the radiation values for 12noon, Jan 21 are what we expect them to be:
+  auto directBeamIrradiance = userModel.epwData()->data()[EB][hourOfYear];
+  auto diffuseIrradiance = userModel.epwData()->data()[ED][hourOfYear];
+  EXPECT_NEAR(320.0, directBeamIrradiance, 0.0001);
+  EXPECT_NEAR(175.0, diffuseIrradiance, 0.0001);
+
   auto revolution = solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
   EXPECT_NEAR(0.34428412642079925, revolution, 0.0001);
 
