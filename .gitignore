@@ -17,4 +17,4 @@ Session.vim
 *~
 
 # ipython notebook
-.ipynb_checkpoints/
+**/.ipynb_checkpoints/
