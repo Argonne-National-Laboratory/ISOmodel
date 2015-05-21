@@ -44,6 +44,7 @@ protected:
   double m_localMeridian; //LSM
   double m_longitude;
   double m_latitude; //latitude in radians
+  double m_groundReflectance;
 
   //outputs
   std::vector<std::vector<double> > m_eglobe; //total solar radiation from direct beam, ground reflect and diffuse
@@ -153,7 +154,7 @@ public:
   * Calculates the total ground reflected radiation.
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 31.
   */
-  double calculateGroundReflectedRadiation(double directBeamIrradiance, 
+  double calculateGroundReflectedIrradiance(double directBeamIrradiance, 
                                            double diffuseIrradiance,
                                            double groundReflectance,
                                            double solarAltitude,
@@ -220,6 +221,28 @@ public:
                                   double totalDiffuseIrradiance,
                                   double totalGroundReflectedIrradiance) {
     return totalDirectBeamIrradiance + totalDiffuseIrradiance + totalGroundReflectedIrradiance;
+  }
+
+  // Getter methods
+
+  double surfaceTilt() {
+    return m_surfaceTilt;
+  }
+
+  double localMeridian() {
+    return m_localMeridian; // meridian of the local time zone, in radians.
+  }
+
+  double lon() {
+    return m_longitude; // in radians.
+  }
+
+  double lat() {
+    return m_latitude; // in radians
+  }
+  
+  double groundReflectance() {
+    return m_groundReflectance;
   }
 
   // Outputs

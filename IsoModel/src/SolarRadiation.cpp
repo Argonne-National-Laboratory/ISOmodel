@@ -39,7 +39,8 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
   this->m_longitude = wdata->longitude() * PI / 180.0; // Convert to radians.
   this->m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
   this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
-  this->m_surfaceTilt = tilt / 2.0;	//surface tilt in radians (pi/2 is vertical, 0 is horizontal);
+  this->m_surfaceTilt = tilt / 2.0;	// surface tilt in radians (pi/2 is vertical, 0 is horizontal);
+  this->m_groundReflectance = 0.14; // TODO: This should be able to be set based on the ism file.
 }
 SolarRadiation::~SolarRadiation(void)
 {
@@ -79,7 +80,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
     SolarAzimuthCos = calculateSolarAzimuthCos(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
     SolarAzimuth = calculateSolarAzimuth(SolarAzimuthSin, SolarAzimuthCos);
 
-    GroundReflected = calculateGroundReflectedRadiation(vecEB[i], vecED[i], rhog, SolarAltitudeAngles, m_surfaceTilt);
+    GroundReflected = calculateGroundReflectedIrradiance(vecEB[i], vecED[i], rhog, SolarAltitudeAngles, m_surfaceTilt);
     vecEGI = &(m_eglobe[i]);
 
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour
