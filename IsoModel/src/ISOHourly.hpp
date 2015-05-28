@@ -259,6 +259,23 @@ private:
   std::vector<double> solarRatio;
   std::vector<double> solarShadeRatioReduction;
 
+  // Fan power variables
+  // Heating temp difference between supply air and room air.
+  double n_dT_supp_ht;
+  // Cooling temp difference between supply air and room air.
+  double n_dT_supp_cl;
+  // rho*Cp for air in watt-hr/m3/K.
+  double n_rhoC_a;
+
+  // ISO 15242 Air leakage values.
+  // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
+  double n50;
+
+  // Pump variables.
+  // Specific power of systems pumps + control systems in W/m2.
+  double n_E_pumps;
+
+  // Heat transfer coefficients.
   double hci; // Value of 2.5 used to generate standard values for h_ms and h_is.
   double hri; // Value of 5.5 used to generate standard values for h_ms and h_is.
   double h_ms; // h_{ms} Heat transfer coefficient, mass(m) to surface(s).

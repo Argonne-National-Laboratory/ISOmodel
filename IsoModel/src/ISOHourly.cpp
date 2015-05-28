@@ -34,7 +34,12 @@ ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
                          ventPreheatDegC(-50), // SingleBldg.Q40
                          R_se(0.04), // Thermal surface resistance.
                          forcedAirHeating(true),
-                         forcedAirCooling(true)
+                         forcedAirCooling(true),
+                         n50(2.0),
+                         n_dT_supp_ht(7.0),
+                         n_dT_supp_cl(7.0),
+                         n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
+                         n_E_pumps(0.25) 
 {
 }
 
@@ -353,11 +358,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
   
   // Fan power
-  auto n_dT_supp_ht = 7.0; //% set heating temp diff between supply air and room air
-  auto n_dT_supp_cl = 7.0; //%set cooling temp diff between supply air and room air
   auto T_sup_ht = heating->temperatureSetPointOccupied() + n_dT_supp_ht; //%hot air supply temp  - assume supply air is 7C hotter than room
   auto T_sup_cl = cooling->temperatureSetPointOccupied() - n_dT_supp_cl; //%cool air supply temp - assume 7C lower than room
-  auto n_rhoC_a = 1.22521 * 0.001012 * 277.777778; // First two numbers give rho*Cp for air in MJ/m3/K, last number converts to watt-hr/m3/K.
 
   auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
 
@@ -373,7 +375,6 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Determine pump energy by using the fixed pump power of .25 W/m2 if the heating
   // or cooling system is active, 0.0 if not. The .25 W/m2 comes from the monthly
   // pump calculations.
-  auto n_E_pumps = 0.25; // Specific power of systems pumps + control systems in W/m2
   if (results.Qneed_cl > 0.0) {
     results.Qpump_tot = n_E_pumps * cooling->pumpControlReduction();
   } else if (results.Qneed_ht > 0.0) {
@@ -477,8 +478,6 @@ void ISOHourly::initialize()
   shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;
 
   // ISO 15242 Air leakage values.
-  // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
-  auto n50 = 2.0; // SingleBldg.V4
   // Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
   auto buildingv8 = 0.19 * (n50 * (structure->floorArea() * structure->buildingHeight()));
   // Air leakage per area at 4Pa (m3/hr/m2).
