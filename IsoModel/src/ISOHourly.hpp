@@ -267,6 +267,9 @@ private:
   // rho*Cp for air in watt-hr/m3/K.
   double n_rhoC_a;
 
+  // Wind
+  double hzone; // Not totally clear what this is. Something wind related.
+
   // ISO 15242 Air leakage values.
   // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
   double n50;

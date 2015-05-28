@@ -286,7 +286,21 @@ const double EECALC_NUM_HOURS = 24;
 const double EECALC_WEEKDAY_START = 7;
 const double kWh2MJ = 3.6f;
 
-SimModel::SimModel()
+// TODO: All member variables initialized in the constructor should eventually be initialized
+// by the .ism file or a default initialization of some sort.
+SimModel::SimModel() : n_day_start(7),
+                       n_day_end(18),
+                       n_weeks(50),
+                       n_win_ff(0.25),
+                       n_win_F_W(0.9),
+                       n_R_sc_ext(0.04),
+                       T_ht_ctrl_flag(1),
+                       T_cl_ctrl_flag(1),
+                       H_ve(0),
+                       n_p_exp(0.65),
+                       n_zone_frac(0.7),
+                       n_stack_exp(0.667), // Reset the pressure exponent to 0.667 for this part of the calc
+                       n_stack_coeff(0.0146)
 {
 }
 
@@ -474,9 +488,6 @@ void SimModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illu
    F_C=In.lighting_constant_illumination; %F_c = constant illuminance control fraction
    */
 
-  double n_day_start = 7;
-  double n_day_end = 18;
-  double n_weeks = 50;
   double t_lt_D = (std::min(n_day_end, pop->hoursEnd()) - std::max(pop->hoursStart(), n_day_start) + 1)
       * (pop->daysEnd() - pop->daysStart() + 1) * n_weeks;
   double t_lt_N = (std::max(n_day_start - pop->hoursStart(), 0.0) + std::max(pop->hoursEnd() - n_day_end, 0.0))
@@ -606,7 +617,6 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
    % cooling.  Use 0.25 as a compromise
    */
   int vsize = 9;
-  double n_win_ff = 0.25;
   Vector v_win_ff = Vector(vsize);
 
   double n_win_SDF_table[] =
@@ -634,7 +644,6 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
    v_win_F_shgl = v_win_SDF.*v_win_SDF_frac;
    */
   Vector v_g_gln = structure->windowNormalIncidenceSolarEnergyTransmittance();
-  double n_win_F_W = 0.9;
   Vector v_g_gl = mult(v_g_gln, n_win_F_W);
 
   v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
@@ -652,7 +661,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
 
   double n_v_env_form_factors[] =
   { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
-  double n_R_sc_ext = 0.04;
+ 
   v_wall_R_sc = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
     v_wall_R_sc[i] = n_R_sc_ext;
@@ -972,8 +981,6 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
    v_ht_tset_ctrl = ones(12,1).*ht_tset_ctrl;  % create a column vector of the interior heating temp set point for each month
    v_cl_tset_ctrl = ones(12,1).*cl_tset_ctrl;
    */
-
-  double T_ht_ctrl_flag = 1, T_cl_ctrl_flag = 1;
   double Cm_int = structure->interiorHeatCapacity() * structure->floorArea(); //% set the interior heat capacity
 
   double Cm_env = structure->wallHeatCapacity() * sum(v_wall_A);
@@ -1007,7 +1014,6 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
    %Cm_env=0;  % use this to match old spreadsheet Cm calc;
    Cm=Cm_int+Cm_env;
    */
-  double H_ve = 0.0;
   double H_tot = H_tr + H_ve;
   tau = Cm / H_tot / 3600.0;
   /*
@@ -1361,14 +1367,10 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    % infilatration source EN 15242:2007 Sec 6.7 direct method
    tot_env_A=sum(In.wall_area)+sum(In.win_area);
    */
-  double n_p_exp = 0.65;
   double v_Q75pa = structure->infiltrationRate();
   double floorArea = structure->floorArea();
   double v_Q4pa = v_Q75pa * tot_env_A / floorArea * (std::pow((4.0 / 75.0), n_p_exp));
-  double n_zone_frac = 0.7;
   double h_stack = n_zone_frac * vent_zone_height;
-  double n_stack_exp = 0.667; //% reset the pressure exponent to 0.667 for this part of the calc
-  double n_stack_coeff = 0.0146;
   Vector dbtDiff = dif(location->weather()->mdbt(), v_Th_avg);
   printVector("dbtDiff", dbtDiff);
   Vector dbtDiffAbs = abs(dbtDiff);

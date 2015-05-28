@@ -39,7 +39,8 @@ ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
                          n_dT_supp_ht(7.0),
                          n_dT_supp_cl(7.0),
                          n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
-                         n_E_pumps(0.25) 
+                         n_E_pumps(0.25),
+                         hzone(39.0)
 {
 }
 
@@ -417,7 +418,9 @@ void ISOHourly::calculateHour(int hourOfYear,
 
 void ISOHourly::initialize()
 {
-  //TODO where do all these static numbers come from?
+  // TODO: where do all these static numbers come from?
+  // TODO: All member variables initialized here should eventually be initialized
+  // by the .ism file or a default initialization of some sort.
   fanDeltaPinPa = 800;
   fanN = 0.8;
   provisionalCFlowad = 1;
@@ -541,7 +544,6 @@ void ISOHourly::initialize()
   // ISO 13790 12.2.2 eq. 63
   hem = 1 / (1 / hOpaqueWperkm2 - 1 / H_ms);
 
-  auto hzone = 39.0;
   windImpactHz = std::max(0.1, hzone);
   windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
 }

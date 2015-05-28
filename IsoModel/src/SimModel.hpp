@@ -120,6 +120,59 @@ private:
   std::shared_ptr<Cooling> cooling;
   std::shared_ptr<Ventilation> ventilation;
 
+  // Lighting energy use variables
+  // Sunrise. TODO: This shouldn't be the same every month.
+  double n_day_start;
+
+  // Sunset. TODO: This shouldn't be the same every month.
+  double n_day_end;
+
+  // Occupied weeks for lighting (e.g. n_weeks = 50 assumes 2 weeks holiday.)
+  double n_weeks;
+
+  // Window solar gain variables.
+  // Window frame factor.
+  double n_win_ff;
+
+  // Correction factor for non-scattering window as per ISO 13790 11.4.2
+  double n_win_F_W;
+
+  // Vertical wall external convection surface heat resistance as per ISO 6946
+  double n_R_sc_ext;
+
+  // Interior temp variables.
+
+  // Flag to signify if we have heating and controls turned on or off. E.g., might be off for school in summer.
+  double T_ht_ctrl_flag;
+
+  // Flag to signify if we have cooling and controls turned on or off. E.g., might be off for school in summer.
+  double T_cl_ctrl_flag;
+
+  // Overall heat transfer coefficient by ventilation as per ISO 13790 9.3.
+  // TODO: This is not implemented yet.
+  double H_ve;
+
+  // Ventillation variables.
+  // infiltration data from
+  // Tamura, (1976), Studies on exterior wall air tightness and air infiltration of tall buildings, ASHRAE Transactions, 82(1), 122-134.
+  // Orm (1998), AIVC TN44: Numerical data for air infiltration and natural ventilation calculations, Air Infiltration and Ventilation Centre.
+  // Emmerich, (2005), Investigation of the Impact of Commercial Building Envelope Airtightness on HVAC Energy Use.
+  // create a different table for different building types
+  // n_highrise_inf_table=[4 6 10 15 20];  % infiltration table for high rise buildings as per Tamura, Orm and Emmerich
+
+  // Assumed floor exponent for infiltration pressure conversion.
+  double n_p_exp;
+
+  // Fraction that h_stack/zone height.  assume 0.7 as per en 15242
+  double n_zone_frac;
+
+  // Reset the pressure exponent to 0.667 for this part of the calc
+  double n_stack_exp;
+
+  double n_stack_coeff;
+
+
+
   void
   scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
       Vector& weekendUnoccupiedMegaseconds, Vector& clockHourOccupied, Vector& clockHourUnoccupied, double& frac_hrs_wk_day,
