@@ -120,7 +120,7 @@ private:
   std::shared_ptr<Cooling> cooling;
   std::shared_ptr<Ventilation> ventilation;
 
-  // Lighting energy use variables
+  // Lighting energy use constants
   // Sunrise. TODO: This shouldn't be the same every month.
   double n_day_start;
 
@@ -130,7 +130,7 @@ private:
   // Occupied weeks for lighting (e.g. n_weeks = 50 assumes 2 weeks holiday.)
   double n_weeks;
 
-  // Window solar gain variables.
+  // Window solar gain constants.
   // Window frame factor.
   double n_win_ff;
 
@@ -140,7 +140,7 @@ private:
   // Vertical wall external convection surface heat resistance as per ISO 6946
   double n_R_sc_ext;
 
-  // Interior temp variables.
+  // Interior temp constants.
 
   // Flag to signify if we have heating and controls turned on or off. E.g., might be off for school in summer.
   double T_ht_ctrl_flag;
@@ -152,7 +152,7 @@ private:
   // TODO: This is not implemented yet.
   double H_ve;
 
-  // Ventillation variables.
+  // Ventillation constants.
   // infiltration data from
   // Tamura, (1976), Studies on exterior wall air tightness and air infiltration of tall buildings, ASHRAE Transactions, 82(1), 122-134.
   // Orm (1998), AIVC TN44: Numerical data for air infiltration and natural ventilation calculations, Air Infiltration and Ventilation Centre.
@@ -170,8 +170,70 @@ private:
   double n_stack_exp;
 
   double n_stack_coeff;
+  double n_wind_exp;
+  double n_wind_coeff;
 
+  // conventional value for cp difference between windward and leeward sides for low rise buildings as per 15242.
+  double n_dCp;
 
+  // vent_rate_flag set to 0 for constant ventilation, 1 if vent of in unoccupied times or 2 if vent rate dropped proportional to population.
+  int vent_rate_flag;
+
+  // Heat capacity of air per unit volume in J/(m3 K)
+  double n_rhoc_air;
+
+  // Heating and cooling constants.
+
+  // Reference dimensionless parameter. (Used to set a_H, the building heating dimensionless constant).
+  double a_H0;
+
+  // Reference time constant. (Used to set a_H, the building heating dimensionless constant).
+  double tau_H0;
+
+  // Heating temp diff between supply air and room air.
+  double n_dT_supp_ht;
+
+  // Cooling temp diff between supply air and room air.
+  double n_dT_supp_cl;
+
+  // rho*Cp for air (MJ/m3/K)
+  double n_rhoC_a;
+
+  // HVAC constants
+  // District heating and cooling constants.
+  // Building connected to DH (0=no, 1=yes.  Assume DH is powered by natural gas).
+  double DH_YesNo;
+  // Efficiency of DH network. Typical value 0l75-0l9 EN 15316-4-5
+  double n_eta_DH_network;
+  // Efficiency of DH system.
+  double n_eta_DH_sys;
+  // Fraction fo free heat source to DH (0 to 1).
+  double n_frac_DH_free;
+
+  // Building connected to DC (0 = no, 1 = yes).
+  double DC_YesNo;
+  // Efficiency of DC network
+  double n_eta_DC_network;
+  // COP of DC elec chillers.
+  double n_eta_DC_COP;
+  // Fraction of DC chillers that are absorption
+  double n_eta_DC_frac_abs;
+  // COP of DC absorption chillers.
+  double n_eta_DC_COP_abs;
+  // Fraction of free heat source to absorption DC chillers (0 to 1).
+  double n_frac_DC_free;
+
+  // Pump constants
+  // Specific power of systems pumps + control systems in W/m2.
+  double n_E_pumps;
+
+  // Heated water constants.
+  // Water temp set point (C).
+  double n_dhw_tset;
+  // Water initial temp (C).
+  double n_dhw_tsupply;
+  // Specific heat of water in MJ/m3/K.
+  double n_CP_h20;
 
   void
   scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,

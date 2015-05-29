@@ -288,19 +288,58 @@ const double kWh2MJ = 3.6f;
 
 // TODO: All member variables initialized in the constructor should eventually be initialized
 // by the .ism file or a default initialization of some sort.
-SimModel::SimModel() : n_day_start(7),
+SimModel::SimModel() : // Lighting energy use constants.
+                       n_day_start(7),
                        n_day_end(18),
                        n_weeks(50),
+
+                       // Window solar gain constants.
                        n_win_ff(0.25),
                        n_win_F_W(0.9),
                        n_R_sc_ext(0.04),
+
+                       // Interior temp constants.
                        T_ht_ctrl_flag(1),
                        T_cl_ctrl_flag(1),
                        H_ve(0),
+
+                       // Ventillation constants.
                        n_p_exp(0.65),
                        n_zone_frac(0.7),
                        n_stack_exp(0.667), // Reset the pressure exponent to 0.667 for this part of the calc
-                       n_stack_coeff(0.0146)
+                       n_stack_coeff(0.0146),
+                       n_wind_exp(0.667),
+                       n_wind_coeff(0.0769),
+                       n_dCp(0.75),
+                       vent_rate_flag(1),
+                       n_rhoc_air(1200),
+
+                       // Heating and cooling constants.
+                       a_H0(1),
+                       tau_H0(15),
+                       n_dT_supp_ht(7.0),
+                       n_dT_supp_cl(7.0),
+                       n_rhoC_a(1.22521 * 0.001012),
+
+                       // HVAC Constants
+                       DH_YesNo(0),
+                       n_eta_DH_network(0.9),
+                       n_eta_DH_sys(0.87),
+                       n_frac_DH_free(0.000),
+                       DC_YesNo(0),
+                       n_eta_DC_network(0.9),
+                       n_eta_DC_COP(5.5),
+                       n_eta_DC_frac_abs(0),
+                       n_eta_DC_COP_abs(1),
+                       n_frac_DC_free(0),
+
+                       // Pump constants.
+                       n_E_pumps(.25),
+
+                       // Heated water constants
+                       n_dhw_tset(60),
+                       n_dhw_tsupply(20),
+                       n_CP_h20(4.18)
 {
 }
 
@@ -1417,9 +1456,6 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    v_qv_stack_ht=max(n_stack_coeff.*v_Q4pa*(h_stack.*abs(W.mdbt-v_Th_avg)).^n_stack_exp,0.001); %qv_stack_heating m3/h/m2
    v_qv_stack_cl=max(n_stack_coeff.*v_Q4pa*(h_stack.*abs(W.mdbt-v_Tc_avg)).^n_stack_exp,0.001); %qv_stack_cooling
    */
-  double n_wind_exp = 0.667;
-  double n_wind_coeff = 0.0769;
-  double n_dCp = 0.75; // % conventional value for cp difference between windward and leeward sides for low rise buildings as per 15242
 
   Vector v_qv_wind_ht = mult(
       mult(pow(mult(mult(location->weather()->mwind(), location->weather()->mwind()), n_dCp * location->terrain()), n_wind_exp), v_Q4pa),
@@ -1478,7 +1514,6 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    %
    % set to 1 to mimic the behavior of the original spreadsheet
    */
-  int vent_rate_flag = 1;
   double vent_op_frac;
   switch (vent_rate_flag) {
   case 0:
@@ -1514,8 +1549,6 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("v_qve_ht", v_qve_ht);
   printVector("v_qve_cl", v_qve_cl);
 
-  double n_rhoc_air = 1200;
-
   v_Hve_ht = div(mult(v_qve_ht, n_rhoc_air), 3600.0);
   v_Hve_cl = div(mult(v_qve_cl, n_rhoc_air), 3600.0);
   /*
@@ -1549,8 +1582,6 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   Vector temp = mult(megasecondsInMonth, phi_I_tot, 12);
   Vector v_tot_mo_ht_gain = sum(temp, v_E_sol);
 
-  double a_H0 = 1;
-  double tau_H0 = 15;
   double a_H = a_H0 + tau / tau_H0;
 
   Vector v_QT_ht = mult(mult(dif(v_Th_avg, location->weather()->mdbt()), megasecondsInMonth), H_tr);
@@ -1646,11 +1677,8 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
    v_Qneed_cl = v_tot_mo_ht_gain - v_eta_g_CL.*v_Qtot_cl; % QNC = Q_G_C - eta*Q_L_C = total cooling need
    Qneed_cl_yr=sum(v_Qneed_cl);
    */
-  double n_dT_supp_ht = 7.0; //% set heating temp diff between supply air and room air
-  double n_dT_supp_cl = 7.0; //%set cooling temp diff between supply air and room air
   double T_sup_ht = heating->temperatureSetPointOccupied() + n_dT_supp_ht; //%hot air supply temp  - assume supply air is 7C hotter than room
   double T_sup_cl = cooling->temperatureSetPointOccupied() - n_dT_supp_cl; //%cool air supply temp - assume 7C lower than room
-  double n_rhoC_a = 1.22521 * 0.001012;
   /*
    %% Fan Energy
 
@@ -1693,17 +1721,6 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
 void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Qelec_ht, Vector& v_Qgas_ht,
     Vector& v_Qcl_elec_tot, Vector& v_Qcl_gas_tot) const
 {
-  double DH_YesNo = 0;
-  double n_eta_DH_network = 0.9;
-  double n_eta_DH_sys = 0.87;
-  double n_frac_DH_free = 0.000;
-
-  double DC_YesNo = 0;
-  double n_eta_DC_network = 0.9;
-  double n_eta_DC_COP = 5.5;
-  double n_eta_DC_frac_abs = 0;
-  double n_eta_DC_COP_abs = 1;
-  double n_frac_DC_free = 0;
   /*
    %% District H/C info
 
@@ -1857,7 +1874,6 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
    % European Performance Assessment - Non Residential
    
    */
-  double n_E_pumps = 0.25;
   Vector v_Q_pumps = mult(megasecondsInMonth, n_E_pumps, 12);
   double Q_pumps_yr = sum(v_Q_pumps);
 
@@ -1931,9 +1947,6 @@ void SimModel::energyGeneration() const
 }
 void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
 {
-  double n_dhw_tset = 60; // % water temperature set point (C)
-  double n_dhw_tsupply = 20; //% water initial temp (C)
-  double n_CP_h20 = 4.18;  //% specific heat of water in MJ/m3/K
   Vector v_Q_dhw_solar(12);
   zero(v_Q_dhw_solar); //Q from solar energy hot water collectors - not included yet
   double Q_dhw_yr = heating->hotWaterDemand() * (n_dhw_tset - n_dhw_tsupply) * n_CP_h20;
