@@ -512,7 +512,7 @@ void ISOHourly::initialize()
   }
 
   auto hWind = 0.0;
-  auto hWall = 0;
+  auto hWall = 0.0;
 
   for (auto i = 0; i < ROOF + 1; ++i) {
     hWind += hWindow[i];
