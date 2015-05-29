@@ -28,18 +28,34 @@ namespace openstudio {
 namespace isomodel {
 
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
-ISOHourly::ISOHourly() : electInternalGains(1), // SingleBldg.L51
+// There are a bunch more similar constants that are initialized in ISOHourly::initialize().
+ISOHourly::ISOHourly() : // Lighting constants.
+                         electInternalGains(1), // SingleBldg.L51
                          permLightPowerDensityWperM2(0), // SingleBldg.L50
+
+                         // External equipment constants.
                          externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
+
+                         // Ventillation constants.
                          ventPreheatDegC(-50), // SingleBldg.Q40
-                         R_se(0.04), // Thermal surface resistance.
-                         forcedAirHeating(true),
-                         forcedAirCooling(true),
-                         n50(2.0),
+
+                         // Fan power constants.
                          n_dT_supp_ht(7.0),
                          n_dT_supp_cl(7.0),
                          n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
+                         forcedAirHeating(true),
+                         forcedAirCooling(true),
+
+                         // Solar surface constants.
+                         R_se(0.04), // Thermal surface resistance.
+
+                         // Air leakage constants.
+                         n50(2.0),
+
+                         // Pump constants.
                          n_E_pumps(0.25),
+
+                         // Wind constants
                          hzone(39.0)
 {
 }

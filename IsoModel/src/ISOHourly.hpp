@@ -259,7 +259,10 @@ private:
   std::vector<double> solarRatio;
   std::vector<double> solarShadeRatioReduction;
 
-  // Fan power variables
+  // Ventillation constants.
+  double ventPreheatDegC;
+
+  // Fan power constants.
   // Heating temp difference between supply air and room air.
   double n_dT_supp_ht;
   // Cooling temp difference between supply air and room air.
@@ -267,14 +270,14 @@ private:
   // rho*Cp for air in watt-hr/m3/K.
   double n_rhoC_a;
 
-  // Wind
+  // Wind constants.
   double hzone; // Not totally clear what this is. Something wind related.
 
   // ISO 15242 Air leakage values.
   // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
   double n50;
 
-  // Pump variables.
+  // Pump constants.
   // Specific power of systems pumps + control systems in W/m2.
   double n_E_pumps;
 
@@ -319,12 +322,9 @@ private:
   //XXX External Equipment usage Q56
   double externalEquipment;
 
-  //XXX Unknown Lighting Variables
+  // Lighting Constants
   double electInternalGains;
   double permLightPowerDensityWperM2;
-
-  //XXX Unknown Vent Variables
-  double ventPreheatDegC;
 
   double fixedVentilationSchedule[24][7];
   double fixedFanSchedule[24][7];
