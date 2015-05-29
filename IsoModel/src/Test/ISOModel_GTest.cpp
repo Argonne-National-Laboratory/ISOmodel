@@ -212,7 +212,11 @@ TEST(IsoModelTests, DefaultsTests)
   UserModel userModel;
   userModel.load(test_data_path + "/defaults_test_building.ism", test_data_path + "/defaults_test_defaults.ism");
 
-  EXPECT_DOUBLE_EQ(0.366569597990189, userModel.terrainClass());
+  // The building and the defaults files both set the terrainClass.
+  // The building file should take precedence.
+  EXPECT_DOUBLE_EQ(0.9, userModel.terrainClass());
+
+  // The rest of the values are only set in one of the other of the two files.
   EXPECT_DOUBLE_EQ(0.13797878192703, userModel.floorArea());
   EXPECT_DOUBLE_EQ(0.425419263581922, userModel.buildingHeight());
   EXPECT_DOUBLE_EQ(0.665995505182317, userModel.buildingOccupancyFrom());

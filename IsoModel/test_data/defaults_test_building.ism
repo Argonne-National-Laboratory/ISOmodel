@@ -1,3 +1,7 @@
+# Set the terrainClass in both the building and defaults files to test that
+# the building file has precedence.
+terrainClass = .9
+
 gasAppliancePowerDensityOccupied = 0.413231779700794
 gasAppliancePowerDensityUnoccupied = 0.735954395099727
 lightingPowerDensityOccupied = 0.827607402688993
