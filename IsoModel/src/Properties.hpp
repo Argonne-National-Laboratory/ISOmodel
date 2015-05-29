@@ -62,6 +62,12 @@ public:
    * @param file the properties file path
    */
   Properties(const std::string& file);
+  
+  /**
+  * Creates a new Properties using the properties defined in the specified
+  * buildingFile and defaults from the specified defaultsFile
+  */
+  Properties(const std::string& buildingFile, const std::string& defaultFile);
 
   virtual ~Properties()
   {

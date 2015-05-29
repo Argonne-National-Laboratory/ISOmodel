@@ -725,6 +725,13 @@ void UserModel::loadBuilding(std::string buildingFile)
   initializeStructure(buildingParams);
 }
 
+void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
+{
+  Properties buildingParams(buildingFile, defaultsFile);
+  initializeParameters(buildingParams);
+  initializeStructure(buildingParams);
+}
+
 int UserModel::weatherState(std::string header)
 {
   if (!header.compare("solar"))
@@ -908,6 +915,38 @@ void UserModel::load(std::string buildingFile)
     std::cout << "Weather File Loaded" << std::endl;
 }
 
+void UserModel::load(std::string buildingFile, std::string defaultsFile)
+{
+  this->dataFile = buildingFile;
+  _valid = true;
+
+  // Check for the .ism file.
+  if (!boost::filesystem::exists(buildingFile)) {
+    std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    _valid = false;
+    return;
+  }
+
+  // Check for the defaults file.
+  if (!boost::filesystem::exists(defaultsFile)) {
+    std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
+    _valid = false;
+    return;
+  }
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Loading Building File: " << buildingFile << std::endl;
+
+  loadBuilding(buildingFile, defaultsFile);
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Loading Weather File: " << this->weatherFilePath() << std::endl;
+
+  loadWeather();
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Weather File Loaded" << std::endl;
+}
 } // isomodel
 } // openstudio
 

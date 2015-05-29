@@ -40,6 +40,14 @@ Properties::Properties(const std::string& file) {
   readFile(file);
 }
 
+Properties::Properties(const std::string& buildingFile, const std::string& defaultsFile) {
+  // Read the buildingsFile first, then the defaultsFile because map::insert does not overwrite
+  // values and if a property exists in both files, we want the buildingFile to take precedence
+  // over the defaultsFile.
+  readFile(buildingFile);
+  readFile(defaultsFile);
+}
+
 void Properties::getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const {
   std::string val = getProperty(key);
   vec.clear();

@@ -217,6 +217,7 @@ private:
 
   void initializeParameters(const Properties& props);
   void loadBuilding(std::string buildingFile);
+  void loadBuilding(std::string buildingFile, std::string defaultsFile);
   int weatherState(std::string header);
   void initializeSolar();
 
@@ -241,6 +242,11 @@ public:
    * Loads an ISO model from the specified .ISO file
    */
   void load(std::string buildingFile);
+
+  /**
+  * Loads an ISO model file from the specified .ism file and defaults properties from the specified .ism.
+  */
+  void load(std::string buildingFile, std::string defaultsFile);
 
   UserModel();
   virtual ~UserModel();
