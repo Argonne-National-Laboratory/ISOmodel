@@ -44,7 +44,7 @@ protected:
   double m_localMeridian; //LSM
   double m_longitude;
   double m_latitude; //latitude in radians
-  double m_groundReflectance;
+  double m_groundReflectance; // rho_g
 
   //outputs
   std::vector<std::vector<double> > m_eglobe; //total solar radiation from direct beam, ground reflect and diffuse

@@ -10,7 +10,9 @@ namespace isomodel {
 double SurfaceAzimuths[] =
 { 0, -PI/4, -PI/2, -3*PI/4, PI, 3*PI/4, PI/2, PI/4 };
 
+// TODO: Member variables set to constants in this initializer list should be set based on the ism file.
 SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
+  : m_groundReflectance(0.14) 
 {
   m_monthlyDryBulbTemp.resize(MONTHS);
   m_monthlyDewPointTemp.resize(MONTHS);
@@ -40,7 +42,6 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
   this->m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
   this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
   this->m_surfaceTilt = tilt / 2.0;	// surface tilt in radians (pi/2 is vertical, 0 is horizontal);
-  this->m_groundReflectance = 0.14; // TODO: This should be able to be set based on the ism file.
 }
 SolarRadiation::~SolarRadiation(void)
 {
@@ -55,7 +56,6 @@ SolarRadiation::~SolarRadiation(void)
  */
 void SolarRadiation::calculateSurfaceSolarRadiation()
 {
-  double rhog = 0.14;	//ground reflectivity coefficient
   double GroundReflected = 0, SolarAzimuthSin = 0, SolarAzimuthCos = 0, SolarAzimuth = 0, Revolution, EquationOfTime, ApparentSolarTime,
       SolarDeclination, SolarHourAngles, SolarAltitudeAngles;
 
@@ -80,7 +80,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
     SolarAzimuthCos = calculateSolarAzimuthCos(SolarDeclination, SolarHourAngles, SolarAltitudeAngles);
     SolarAzimuth = calculateSolarAzimuth(SolarAzimuthSin, SolarAzimuthCos);
 
-    GroundReflected = calculateGroundReflectedIrradiance(vecEB[i], vecED[i], rhog, SolarAltitudeAngles, m_surfaceTilt);
+    GroundReflected = calculateGroundReflectedIrradiance(vecEB[i], vecED[i], m_groundReflectance, SolarAltitudeAngles, m_surfaceTilt);
     vecEGI = &(m_eglobe[i]);
 
     //then compute the hourly radiation on each vertical surface given the solar azimuth for each hour

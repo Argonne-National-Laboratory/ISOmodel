@@ -274,11 +274,11 @@ public:
   bool valid() const  {
     return _valid;
   }
-  std::string weatherFilePath()
+  std::string weatherFilePath() const
   {
     return _weatherFilePath;
   }
-  double terrainClass()
+  double terrainClass() const
   {
     return _terrainClass;
   }
