@@ -4,15 +4,15 @@ set(target_name isomodel)
 cmake_minimum_required(VERSION 3.0)
 
 set(${target_name}_test
-	Test/ISOModel_GTest.cpp
+  Test/ISOModel_GTest.cpp
 )
 
 set(${target_name}_benchmark
-	Test/ISOModel_Benchmark.cpp
+  Test/ISOModel_Benchmark.cpp
 )
 
 set(${target_name}_standalone
-	standalone_main.cpp
+  standalone_main.cpp
 )
 
 set(${target_name}_solar_debug
@@ -20,46 +20,46 @@ set(${target_name}_solar_debug
 )
 
 set(${target_name}_src
-	Building.hpp
-	Cooling.hpp
-	EpwData.hpp
-	ForwardTranslator.hpp
-	Heating.hpp
-    ISOHourly.hpp
-	ISOModelAPI.hpp
-	Lighting.hpp
-	Location.hpp
-	Population.hpp
-	SimModel.hpp
-        Simulation.hpp
-	SolarRadiation.hpp
-	Structure.hpp
-	TimeFrame.hpp
-	UserModel.hpp
-	Ventilation.hpp
-	WeatherData.hpp
-	EndUses.hpp
-	Matrix.hpp
-	Vector.hpp
-	Properties.hpp
-	Building.cpp
-	Cooling.cpp
-	EpwData.cpp
-	ForwardTranslator.cpp
-	Heating.cpp
-    ISOHourly.cpp
-	Lighting.cpp
-	Location.cpp
-	Population.cpp
-	SimModel.cpp
-        Simulation.cpp
-	SolarRadiation.cpp
-	Structure.cpp
-	TimeFrame.cpp
-	UserModel.cpp
-	Ventilation.cpp
-	WeatherData.cpp
-	Properties.cpp
+  Building.hpp
+  Cooling.hpp
+  EpwData.hpp
+  ForwardTranslator.hpp
+  Heating.hpp
+  ISOHourly.hpp
+  ISOModelAPI.hpp
+  Lighting.hpp
+  Location.hpp
+  Population.hpp
+  SimModel.hpp
+  Simulation.hpp
+  SolarRadiation.hpp
+  Structure.hpp
+  TimeFrame.hpp
+  UserModel.hpp
+  Ventilation.hpp
+  WeatherData.hpp
+  EndUses.hpp
+  Matrix.hpp
+  Vector.hpp
+  Properties.hpp
+  Building.cpp
+  Cooling.cpp
+  EpwData.cpp
+  ForwardTranslator.cpp
+  Heating.cpp
+  ISOHourly.cpp
+  Lighting.cpp
+  Location.cpp
+  Population.cpp
+  SimModel.cpp
+  Simulation.cpp
+  SolarRadiation.cpp
+  Structure.cpp
+  TimeFrame.cpp
+  UserModel.cpp
+  Ventilation.cpp
+  WeatherData.cpp
+  Properties.cpp
 )
 
 
@@ -109,8 +109,8 @@ target_link_libraries(solar_debug ${${target_name}_depends})
 # define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
 # this allows use to test parsing the as yet unused parameters 
 set_property(
-	TARGET isomodel_unit_tests 
-	PROPERTY COMPILE_DEFINITIONS USE_NEW_BUILDING_PARAMS
+  TARGET isomodel_unit_tests 
+  PROPERTY COMPILE_DEFINITIONS USE_NEW_BUILDING_PARAMS
 )
 
 
