@@ -104,16 +104,16 @@ ISOResults ISOHourly::simulate(bool aggregateByMonth)
   TimeFrame frame;
   auto TMT1 = 20.0;
   auto tiHeatCool = 20.0;
-  std::vector<double> wind = weatherData->data()[WSPD];
-  std::vector<double> temp = weatherData->data()[DBT];
+  std::vector<double> wind = epwData->data()[WSPD];
+  std::vector<double> temp = epwData->data()[DBT];
 
-  SolarRadiation pos(&frame, weatherData.get());
+  SolarRadiation pos(&frame, epwData.get());
   pos.Calculate();
   std::vector<std::vector<double> > radiation = pos.eglobe(); // Radiation for 8 directions (N, NE, E, etc.).
   // Add the roof radiation (9th direction). EGH is global horizontal radiation.
   // TODO BAA@2015-02-25: There ought to be a more efficient way of setting up the radiation.
   for (auto i = 0; i != radiation.size(); ++i) {
-    radiation[i].push_back(weatherData->data()[EGH][i]);
+    radiation[i].push_back(epwData->data()[EGH][i]);
   }
 
   HourResults<double> tempHourResults;

@@ -37,7 +37,7 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
     m_eglobe[i].resize(NUM_SURFACES);
   }
   this->frame = frame;
-  this->weatherData = wdata;
+  this->epwData = wdata;
   this->m_longitude = wdata->longitude() * PI / 180.0; // Convert to radians.
   this->m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
   this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
@@ -62,7 +62,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
   double AngleOfIncidence, SurfaceSolarAzimuth, DirectBeam, diffuseAngleOfIncidenceFactor, DiffuseComponent;
 
   //avoid calling data() to reduce copy time
-  std::vector<std::vector<double> > data = weatherData->data();
+  std::vector<std::vector<double> > data = epwData->data();
   std::vector<double> vecEB = data[EB];
   std::vector<double> vecED = data[ED];
   std::vector<double>* vecEGI;
@@ -146,7 +146,7 @@ void SolarRadiation::calculateAverages()
   int cnt = 0;
   int h = 0;
 
-  std::vector<std::vector<double> > data = weatherData->data();
+  std::vector<std::vector<double> > data = epwData->data();
   std::vector<double> vecDBT = data[DBT];
   std::vector<double> vecDPT = data[DPT];
   std::vector<double> vecRH = data[RH];

@@ -47,6 +47,9 @@ struct LatLon {
 class ISOMODEL_API UserModel
 {
 private:
+
+  void setCoreSimulationProperties(Simulation& sim) const;
+
   std::string resolveFilename(std::string baseFile, std::string relativeFile);
   void initializeStructure(const Properties& buildingParams);
 

@@ -52,8 +52,8 @@ public:
     ventilation = value;
   }
   
-  void setWeatherData(std::shared_ptr<EpwData> value) {
-    weatherData = value;
+  void setEpwData(std::shared_ptr<EpwData> value) {
+    epwData = value;
   }
 
 protected:
@@ -66,7 +66,7 @@ protected:
   std::shared_ptr<Heating> heating;
   std::shared_ptr<Cooling> cooling;
   std::shared_ptr<Ventilation> ventilation;
-  std::shared_ptr<EpwData> weatherData;
+  std::shared_ptr<EpwData> epwData;
 };
 } // isomodel
 } // openstudio

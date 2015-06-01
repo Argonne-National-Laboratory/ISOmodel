@@ -37,7 +37,7 @@ class SolarRadiation
 {
 protected:
   openstudio::isomodel::TimeFrame* frame;
-  openstudio::isomodel::EpwData* weatherData;
+  openstudio::isomodel::EpwData* epwData;
 
   //inputs
   double m_surfaceTilt;
