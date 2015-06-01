@@ -478,7 +478,7 @@ TEST(IsoModelTests, ISOHourlyTests)
   openstudio::isomodel::UserModel userModel;
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
   ISOHourly hourlyModel = userModel.toHourlyModel();
-  ISOResults results = hourlyModel.calculateHourly(true); // aggregateByMonth = true
+  ISOResults results = hourlyModel.simulate(true); // aggregateByMonth = true
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {

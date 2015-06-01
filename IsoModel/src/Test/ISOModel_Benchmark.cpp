@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     ISOResults hourlyResults;
     auto hourStart = std::chrono::steady_clock::now();
     for (int i = 0; i != iterations; ++i){
-      hourlyResults = hourlyModel.calculateHourly();
+      hourlyResults = hourlyModel.simulate();
     }
     auto hourEnd = std::chrono::steady_clock::now(); 
 

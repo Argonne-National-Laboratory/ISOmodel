@@ -8,15 +8,9 @@
 #ifndef ISOHOURLY_H_
 #define ISOHOURLY_H_
 
+#include "Simulation.hpp"
+
 #include "TimeFrame.hpp"
-#include "EpwData.hpp"
-#include "Structure.hpp"
-#include "Building.hpp"
-#include "Lighting.hpp"
-#include "Ventilation.hpp"
-#include "Cooling.hpp"
-#include "Heating.hpp"
-#include "Population.hpp"
 #include "SimModel.hpp"
 
 #include <memory>
@@ -41,7 +35,7 @@ struct HourResults
   T Q_dhw;
 };
 
-class ISOHourly
+class ISOHourly : public Simulation
 {
 public:
   ISOHourly();
@@ -52,62 +46,15 @@ public:
    * those described by the simple hourly method in ISO 13790 Annex C. A key
    * difference is that this implementation describes everything in terms of
    * EUI (i.e., per area). */
-  ISOResults calculateHourly(bool aggregateByMonth = false);
+  ISOResults simulate(bool aggregateByMonth = false);
 
-  /** Set the population. */
-  void setPop(std::shared_ptr<Population> value)
-  {
-    pop = value;
-  }
-
-  /** Set the lighting. */
-  void setLights(std::shared_ptr<Lighting> value)
-  {
-    lights = value;
-  }
-
-  /** Set the building. */
-  void setBuilding(std::shared_ptr<Building> value)
-  {
-    building = value;
-  }
-
-  /** Set the structure. */
-  void setStructure(std::shared_ptr<Structure> value)
-  {
-    structure = value;
-  }
-
-  /** Set the heating. */
-  void setHeating(std::shared_ptr<Heating> value)
-  {
-    heating = value;
-  }
-
-  /** Set the cooling. */
-  void setCooling(std::shared_ptr<Cooling> value)
-  {
-    cooling = value;
-  }
-
-  /** Set the ventilation. */
-  void setVentilation(std::shared_ptr<Ventilation> value)
-  {
-    ventilation = value;
-  }
-
-  /** Set the weather data. */
-  void setWeatherData(std::shared_ptr<EpwData> value)
-  {
-    weatherData = value;
-  }
-
-protected:
-
+private:
   /** Populates the ventilation, fan, exterior equipment, interior equipment,
    * exterior lighting, interior lighting, heating setpoint, and cooling
    * setpoint schedules. */
   void populateSchedules();
+
+  void initialize();
 
   /** Calculates the energy use for one hour and sets the state for the next
    * hour. The hourly calculations largely correspond to those described by the
@@ -125,8 +72,6 @@ protected:
                      double& TMT1,
                      double& tiHeatCool,
                      HourResults<double>& results);
-  
-  void initialize();
 
   void structureCalculations(double SHGC,
                              double wallAreaM2,
@@ -141,63 +86,44 @@ protected:
   std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
   /** Returns the fan schedule. */
-  virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedFanSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the ventilation schedule. */
-  virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedVentilationSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the exterior equipment schedule. */
-  virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double exteriorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedExteriorEquipmentSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the interior equipment schedule. */
-  virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double interiorEquipmentSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedInteriorEquipmentSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the exterior lighting schedule. */
-  virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double exteriorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedExteriorLightingSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the interior lighting schedule. */
-  virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double interiorLightingSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedInteriorLightingSchedule[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the heating setpoint schedule. */
-  virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double heatingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedActualHeatingSetpoint[(int) hourOfDay][(int) scheduleOffset];
   }
 
   /** Returns the cooling setpoint schedule. */
-  virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset)
-  {
+  virtual double coolingSetpointSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedActualCoolingSetpoint[(int) hourOfDay][(int) scheduleOffset];
   }
-
-  std::shared_ptr<Population> pop;
-  std::shared_ptr<Lighting> lights;
-  std::shared_ptr<Building> building;
-  std::shared_ptr<Structure> structure;
-  std::shared_ptr<Heating> heating;
-  std::shared_ptr<Cooling> cooling;
-  std::shared_ptr<Ventilation> ventilation;
-  std::shared_ptr<EpwData> weatherData;
-
-private:
 
   // BAA@20150717: Variables that correspond to symbols in ISO 13790 have the symbols noted
   // in LaTeX format in the comments. Symbols from other standards have their
@@ -226,6 +152,7 @@ private:
   // Used to determine the amount of electric light used.
   double maxRatioElectricLighting; // Ratio of electric light used due to lighting controls.
   double elightNatural; // Target lux level in naturally lit area.
+  double lightedNaturalAream2; // SingleBuilding.L53
 
   // Ventilation from wind. ISO 15242
   double ventDcpWindImpact; // ISO 15242 dcp. G119

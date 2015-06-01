@@ -56,7 +56,30 @@ ISOHourly::ISOHourly() : // Lighting constants.
                          n_E_pumps(0.25),
 
                          // Wind constants
-                         hzone(39.0)
+                         hzone(39.0),
+
+                         // Constants extracted from ISOHourly::initialize()
+                         // TODO: where do all these static numbers come from?
+                         fanDeltaPinPa(800),
+                         fanN(0.8),
+                         provisionalCFlowad(1),
+                         solarPair(0),
+                         intPair(0.5),
+                         presenceSensorAd(0.6),
+                         automaticAd(0.8),
+                         presenceAutoAd(0.6),
+                         manualSwitchAd(1),
+                         presenceSensorLux(500),
+                         automaticLux(300),
+                         presenceAutoLux(300),
+                         manualSwitchLux(500),
+                         shadingRatioWtoM2(500),
+                         shadingMaximumUseRatio(0.5),
+                         ventDcpWindImpact(0.75),
+                         AtPerAFloor(4.5),
+                         hci(2.5),
+                         hri(5.5),
+                         lightedNaturalAream2(0.0) // TODO: This should be a regular .ism parameter.
 {
 }
 
@@ -64,7 +87,7 @@ ISOHourly::~ISOHourly()
 {
 }
 
-ISOResults ISOHourly::calculateHourly(bool aggregateByMonth)
+ISOResults ISOHourly::simulate(bool aggregateByMonth)
 {
   populateSchedules();
 
@@ -434,28 +457,6 @@ void ISOHourly::calculateHour(int hourOfYear,
 
 void ISOHourly::initialize()
 {
-  // TODO: where do all these static numbers come from?
-  // TODO: All member variables initialized here should eventually be initialized
-  // by the .ism file or a default initialization of some sort.
-  fanDeltaPinPa = 800;
-  fanN = 0.8;
-  provisionalCFlowad = 1;
-  solarPair = 0;
-  intPair = 0.5;
-  presenceSensorAd = 0.6;
-  automaticAd = 0.8;
-  presenceAutoAd = 0.6;
-  manualSwitchAd = 1;
-  presenceSensorLux = 500;
-  automaticLux = 300;
-  presenceAutoLux = 300;
-  manualSwitchLux = 500;
-  shadingRatioWtoM2 = 500;
-  shadingMaximumUseRatio = 0.5;
-  ventDcpWindImpact = 0.75;
-  AtPerAFloor = 4.5;
-  hci = 2.5;
-  hri = 5.5;
 
   // TODO BAA@2014-12-22: This is still pretty rough and needs ought to be confirmed to be working correctly.
   auto lightingOccupancySensorDimmingFraction = building->lightingOccupancySensor();
@@ -475,8 +476,6 @@ void ISOHourly::initialize()
     elightNatural = manualSwitchLux;
   }
 
-  // TODO BAA@2015-02-25: lightedNaturalAreaM2 should be set by an .ism parameter.
-  auto lightedNaturalAream2 = 0.0; // SingleBuilding.L53
   areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
 

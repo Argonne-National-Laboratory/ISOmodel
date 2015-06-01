@@ -54,7 +54,7 @@ void runMonthlySimulation(const UserModel& umodel) {
 void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   // Run the hourly simulation (with results aggregated by month).
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.calculateHourly(aggregateByMonth);
+  ISOResults hourlyResults = hourly.simulate(aggregateByMonth);
 
   std::string monthOrHour = aggregateByMonth ? "month" : "hour";
   int numberOfResults = aggregateByMonth ? 12 : 8760;
