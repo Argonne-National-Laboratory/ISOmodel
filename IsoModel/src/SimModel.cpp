@@ -288,64 +288,77 @@ const double kWh2MJ = 3.6f;
 
 // TODO: All member variables initialized in the constructor should eventually be initialized
 // by the .ism file or a default initialization of some sort.
-SimModel::SimModel() : // Lighting energy use constants.
-                       n_day_start(7),
-                       n_day_end(18),
-                       n_weeks(50),
+SimModel::SimModel()
+  : // Population defaults:
+    // No defaults.
 
-                       // Window solar gain constants.
-                       n_win_ff(0.25),
-                       n_win_F_W(0.9),
-                       n_R_sc_ext(0.04),
+    // Location defaults:
+    // No defaults
 
-                       // Interior temp constants.
-                       T_ht_ctrl_flag(1),
-                       T_cl_ctrl_flag(1),
-                       H_ve(0),
+    // Lighting defaults:
+    // Lighting energy use constants.
+    n_day_start(7),
+    n_day_end(18),
+    n_weeks(50),
 
-                       // Ventillation constants.
-                       n_p_exp(0.65),
-                       n_zone_frac(0.7),
-                       n_stack_exp(0.667), // Reset the pressure exponent to 0.667 for this part of the calc
-                       n_stack_coeff(0.0146),
-                       n_wind_exp(0.667),
-                       n_wind_coeff(0.0769),
-                       n_dCp(0.75),
-                       vent_rate_flag(1),
-                       n_rhoc_air(1200),
+    // Building defaults:
+    // No defaults
 
-                       // Heating and cooling constants.
-                       a_H0(1),
-                       tau_H0(15),
-                       n_dT_supp_ht(7.0),
-                       n_dT_supp_cl(7.0),
-                       n_rhoC_a(1.22521 * 0.001012),
+    // Structure defaults:
+    // Window solar gain constants.
+    n_win_ff(0.25),
+    n_win_F_W(0.9),
+    n_R_sc_ext(0.04),
 
-                       // HVAC Constants
-                       DH_YesNo(0),
-                       n_eta_DH_network(0.9),
-                       n_eta_DH_sys(0.87),
-                       n_frac_DH_free(0.000),
-                       DC_YesNo(0),
-                       n_eta_DC_network(0.9),
-                       n_eta_DC_COP(5.5),
-                       n_eta_DC_frac_abs(0),
-                       n_eta_DC_COP_abs(1),
-                       n_frac_DC_free(0),
+    // Heating defaults:
+    // Interior temp constants.
+    T_ht_ctrl_flag(1),
+    a_H0(1),
+    tau_H0(15),
+    n_dT_supp_ht(7.0),
+    n_rhoC_a(1.22521 * 0.001012),
+    DH_YesNo(0),
+    n_eta_DH_network(0.9),
+    n_eta_DH_sys(0.87),
+    n_frac_DH_free(0.000),
+    // Pumps
+    n_E_pumps(.25),
+    // Heated water constants
+    n_dhw_tset(60),
+    n_dhw_tsupply(20),
+    n_CP_h20(4.18),
 
-                       // Pump constants.
-                       n_E_pumps(.25),
+    // Cooling defaults:
+    // Interior temp constants.
+    T_cl_ctrl_flag(1),
+    // a_H0 also relates to cooling
+    // tau_H0 also relates to cooling
+    n_dT_supp_cl(7.0),
+    // n_rhoC_a also rhelates to cooling.
+    DC_YesNo(0),
+    n_eta_DC_network(0.9),
+    n_eta_DC_COP(5.5),
+    n_eta_DC_frac_abs(0),
+    n_eta_DC_COP_abs(1),
+    n_frac_DC_free(0),
+    // n_E_pumps also relates to cooling.
 
-                       // Heated water constants
-                       n_dhw_tset(60),
-                       n_dhw_tsupply(20),
-                       n_CP_h20(4.18)
-{
-}
+    // Ventilation defaults:
+    // Ventilation constants.
+    n_p_exp(0.65),
+    n_zone_frac(0.7),
+    n_stack_exp(0.667), // Reset the pressure exponent to 0.667 for this part of the calc
+    n_stack_coeff(0.0146),
+    n_wind_exp(0.667),
+    n_wind_coeff(0.0769),
+    n_dCp(0.75),
+    vent_rate_flag(1),
+    n_rhoc_air(1200),
+    H_ve(0)
+{}
 
-SimModel::~SimModel()
-{
-}
+SimModel::~SimModel() {}
+
 //Solver functions
 void SimModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
     Vector& weekendUnoccupiedMegaseconds, Vector& clockHourOccupied, Vector& clockHourUnoccupied, double& frac_hrs_wk_day,

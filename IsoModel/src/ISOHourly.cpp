@@ -29,63 +29,85 @@ namespace isomodel {
 
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
 // There are a bunch more similar constants that are initialized in ISOHourly::initialize().
-ISOHourly::ISOHourly() : // Lighting constants.
-                         electInternalGains(1), // SingleBldg.L51
-                         permLightPowerDensityWperM2(0), // SingleBldg.L50
+ISOHourly::ISOHourly() 
+  : // Population defaults:
+    // No Population defaults.
 
-                         // External equipment constants.
-                         externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
+    // Location defaults:
+    // No location defaults.
 
-                         // Ventillation constants.
-                         ventPreheatDegC(-50), // SingleBldg.Q40
+    // Lighting defaults:
+    electInternalGains(1), // SingleBldg.L51
+    permLightPowerDensityWperM2(0), // SingleBldg.L50
 
-                         // Fan power constants.
-                         n_dT_supp_ht(7.0),
-                         n_dT_supp_cl(7.0),
-                         n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
-                         forcedAirHeating(true),
-                         forcedAirCooling(true),
+    // Building defaults:
+    // Equipment:
+    externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
+    // Sensors and automation controls:
+    // I'm not sure if these belong in Building, grouping all automation controls together,
+    // or if they belong with what they automate (Lighting in this case). - BAA@2015-06-02.
+    presenceSensorAd(0.6),
+    automaticAd(0.8),
+    presenceAutoAd(0.6),
+    manualSwitchAd(1),
+    presenceSensorLux(500),
+    automaticLux(300),
+    presenceAutoLux(300),
+    manualSwitchLux(500),
 
-                         // Solar surface constants.
-                         R_se(0.04), // Thermal surface resistance.
+    // Structure defaults:
+    // Solar surface:
+    R_se(0.04), // Thermal surface resistance.
+    // Shading:
+    shadingRatioWtoM2(500),
+    shadingMaximumUseRatio(0.5),
+    // Natural light:
+    // I'm not sure if natural light should be here with other solar parameters,
+    // or with lighting. - BAA@2015-06-02.
+    lightedNaturalAream2(0.0), // TODO: This should be a regular .ism parameter.
+    // Geometry
+    AtPerAFloor(4.5),
 
-                         // Air leakage constants.
-                         n50(2.0),
+    // Heating defaults:
+    // Fan power:
+    n_dT_supp_ht(7.0),
+    forcedAirHeating(true),
+    n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
+    // Pumps:
+    n_E_pumps(0.25),
 
-                         // Pump constants.
-                         n_E_pumps(0.25),
+    // Cooling defaults:
+    // Fan power:
+    n_dT_supp_cl(7.0),
+    forcedAirCooling(true),
+    // n_rhoC_a is also a cooling default.
+    // Pumps:
+    // n_E_pumps is also a cooling default.
 
-                         // Wind constants
-                         hzone(39.0),
+    // Ventilation defaults:
+    ventPreheatDegC(-50), // SingleBldg.Q40
+    // Air leakage:
+    n50(2.0),
+    // Wind:
+    hzone(39.0),
+    ventDcpWindImpact(0.75),
 
-                         // Constants extracted from ISOHourly::initialize()
-                         // TODO: where do all these static numbers come from?
-                         fanDeltaPinPa(800),
-                         fanN(0.8),
-                         provisionalCFlowad(1),
-                         solarPair(0),
-                         intPair(0.5),
-                         presenceSensorAd(0.6),
-                         automaticAd(0.8),
-                         presenceAutoAd(0.6),
-                         manualSwitchAd(1),
-                         presenceSensorLux(500),
-                         automaticLux(300),
-                         presenceAutoLux(300),
-                         manualSwitchLux(500),
-                         shadingRatioWtoM2(500),
-                         shadingMaximumUseRatio(0.5),
-                         ventDcpWindImpact(0.75),
-                         AtPerAFloor(4.5),
-                         hci(2.5),
-                         hri(5.5),
-                         lightedNaturalAream2(0.0) // TODO: This should be a regular .ism parameter.
-{
-}
+    // EpwData defaults:
+    // No EpwData defaults.
 
-ISOHourly::~ISOHourly()
-{
-}
+    // ISO13790 RC Model defaults
+    solarPair(0),
+    intPair(0.5),
+    hci(2.5),
+    hri(5.5),
+
+    // Unused:
+    fanDeltaPinPa(800), // Appears to be unused - BAA@2015-06-02.
+    fanN(0.8), // Appears to be unused - BAA@2015-06-02.
+    provisionalCFlowad(1) // Appears to be unused - BAA@2015-06-02.
+{}
+
+ISOHourly::~ISOHourly() {}
 
 ISOResults ISOHourly::simulate(bool aggregateByMonth)
 {
