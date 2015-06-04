@@ -26,107 +26,109 @@ class Heating
 public:
   Heating(void);
   ~Heating(void);
-  double temperatureSetPointOccupied() const
-  {
-    return _temperatureSetPointOccupied;
+
+  // Getters
+  double temperatureSetPointOccupied() const {
+    return m_temperatureSetPointOccupied;
   }
-  double temperatureSetPointUnoccupied() const
-  {
-    return _temperatureSetPointUnoccupied;
+
+  double temperatureSetPointUnoccupied() const {
+    return m_temperatureSetPointUnoccupied;
   }
-  double hvacLossFactor() const
-  {
-    return _hvacLossFactor;
+
+  double hvacLossFactor() const {
+    return m_hvacLossFactor;
   }
-  double hotcoldWasteFactor() const
-  {
-    return _hotcoldWasteFactor;
+
+  double hotcoldWasteFactor() const {
+    return m_hotcoldWasteFactor;
   }
-  double efficiency() const
-  {
-    return _efficiency;
+
+  double efficiency() const {
+    return m_efficiency;
   }
-  double energyType() const
-  {
-    return _energyType;
+
+  double energyType() const {
+    return m_energyType;
   }
-  double pumpControlReduction() const
-  {
-    return _pumpControlReduction;
+
+  double pumpControlReduction() const {
+    return m_pumpControlReduction;
   }
-  double hotWaterDemand() const
-  {
-    return _hotWaterDemand;
+
+  double hotWaterDemand() const {
+    return m_hotWaterDemand;
   }
-  double hotWaterDistributionEfficiency() const
-  {
-    return _hotWaterDistributionEfficiency;
+
+  double hotWaterDistributionEfficiency() const {
+    return m_hotWaterDistributionEfficiency;
   }
-  double hotWaterSystemEfficiency() const
-  {
-    return _hotWaterSystemEfficiency;
+
+  double hotWaterSystemEfficiency() const {
+    return m_hotWaterSystemEfficiency;
   }
-  double hotWaterEnergyType() const
-  {
-    return _hotWaterEnergyType;
+
+  double hotWaterEnergyType() const {
+    return m_hotWaterEnergyType;
   }
-  void setTemperatureSetPointOccupied(double value)
-  {
-    _temperatureSetPointOccupied = value;
+
+  // Setters
+  void setTemperatureSetPointOccupied(double value) {
+    m_temperatureSetPointOccupied = value;
   }
-  void setTemperatureSetPointUnoccupied(double value)
-  {
-    _temperatureSetPointUnoccupied = value;
+
+  void setTemperatureSetPointUnoccupied(double value) {
+    m_temperatureSetPointUnoccupied = value;
   }
-  void setHvacLossFactor(double value)
-  {
-    _hvacLossFactor = value;
+
+  void setHvacLossFactor(double value) {
+    m_hvacLossFactor = value;
   }
-  void setHotcoldWasteFactor(double value)
-  {
-    _hotcoldWasteFactor = value;
+
+  void setHotcoldWasteFactor(double value) {
+    m_hotcoldWasteFactor = value;
   }
-  void setEfficiency(double value)
-  {
-    _efficiency = value;
+
+  void setEfficiency(double value) {
+    m_efficiency = value;
   }
-  void setEnergyType(double value)
-  {
-    _energyType = value;
+
+  void setEnergyType(double value) {
+    m_energyType = value;
   }
-  void setPumpControlReduction(double value)
-  {
-    _pumpControlReduction = value;
+
+  void setPumpControlReduction(double value) {
+    m_pumpControlReduction = value;
   }
-  void setHotWaterDemand(double value)
-  {
-    _hotWaterDemand = value;
+
+  void setHotWaterDemand(double value) {
+    m_hotWaterDemand = value;
   }
-  void setHotWaterDistributionEfficiency(double value)
-  {
-    _hotWaterDistributionEfficiency = value;
+
+  void setHotWaterDistributionEfficiency(double value) {
+    m_hotWaterDistributionEfficiency = value;
   }
-  void setHotWaterSystemEfficiency(double value)
-  {
-    _hotWaterSystemEfficiency = value;
+
+  void setHotWaterSystemEfficiency(double value) {
+    m_hotWaterSystemEfficiency = value;
   }
-  void setHotWaterEnergyType(double value)
-  {
-    _hotWaterEnergyType = value;
+
+  void setHotWaterEnergyType(double value) {
+    m_hotWaterEnergyType = value;
   }
 
 private:
-  double _temperatureSetPointOccupied;
-  double _temperatureSetPointUnoccupied;
-  double _hvacLossFactor;
-  double _efficiency;
-  double _energyType;
-  double _pumpControlReduction;
-  double _hotWaterDemand;
-  double _hotWaterDistributionEfficiency;
-  double _hotWaterSystemEfficiency;
-  double _hotWaterEnergyType;
-  double _hotcoldWasteFactor;
+  double m_temperatureSetPointOccupied;
+  double m_temperatureSetPointUnoccupied;
+  double m_hvacLossFactor;
+  double m_efficiency;
+  double m_energyType;
+  double m_pumpControlReduction;
+  double m_hotWaterDemand;
+  double m_hotWaterDistributionEfficiency;
+  double m_hotWaterSystemEfficiency;
+  double m_hotWaterEnergyType;
+  double m_hotcoldWasteFactor;
 
 };
 

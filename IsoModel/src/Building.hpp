@@ -26,70 +26,101 @@ class Building
 public:
   Building(void);
   ~Building(void);
-  double lightingOccupancySensor() const
-  {
-    return _lightingOccupancySensor;
+
+  /**
+  * Lighting occupancy sensor dimming fraction (unitless).
+  * Illum controls are set to 1 if there is no control.
+  * See iso 15193 Annex F/G for values.
+  */
+  double lightingOccupancySensor() const {
+    return m_lightingOccupancySensor;
   }
-  double constantIllumination() const
-  {
-    return _constantIllumination;
+
+  void setLightingOccupancySensor(double value) {
+    m_lightingOccupancySensor = value;
   }
-  double electricApplianceHeatGainOccupied() const
-  {
-    return _electricApplianceHeatGainOccupied;
+
+  /**
+  * Constant illumination control multiplier (unitless).
+  * Illum controls are set to 1 if there is no control.
+  * See iso 15193 Annex F/G for values.
+  */
+  double constantIllumination() const {
+    return m_constantIllumination;
   }
-  double electricApplianceHeatGainUnoccupied() const
-  {
-    return _electricApplianceHeatGainUnoccupied;
+
+  void setConstantIllumination(double value) {
+    m_constantIllumination = value;
   }
-  double gasApplianceHeatGainOccupied() const
-  {
-    return _gasApplianceHeatGainOccupied;
+
+  /**
+  * Electric appliance power density occupied (W/m2).
+  * This value is used for both the electricity consumed and the heat produced by the appliances.
+  */
+  double electricApplianceHeatGainOccupied() const {
+    return m_electricApplianceHeatGainOccupied;
   }
-  double gasApplianceHeatGainUnoccupied() const
-  {
-    return _gasApplianceHeatGainUnoccupied;
+
+  void setElectricApplianceHeatGainOccupied(double value) {
+    m_electricApplianceHeatGainOccupied = value;
   }
-  double buildingEnergyManagement() const
-  {
-    return _buildingEnergyManagement;
+
+  /**
+  * Electric appliance power density unoccupied (W/m2).
+  * This value is used for both the electricity consumed and the heat produced by the appliances.
+  */
+  double electricApplianceHeatGainUnoccupied() const {
+    return m_electricApplianceHeatGainUnoccupied;
   }
-  void setLightingOccupancySensor(double value)
-  {
-    _lightingOccupancySensor = value;
+
+  void setElectricApplianceHeatGainUnoccupied(double value) {
+    m_electricApplianceHeatGainUnoccupied = value;
   }
-  void setConstantIllumination(double value)
-  {
-    _constantIllumination = value;
+
+  /**
+  * Gas appliance power density occupied (W/m2).
+  * This value is used for both the energy consumed and the heat produced by the appliances.
+  */
+  double gasApplianceHeatGainOccupied() const {
+    return m_gasApplianceHeatGainOccupied;
   }
-  void setElectricApplianceHeatGainOccupied(double value)
-  {
-    _electricApplianceHeatGainOccupied = value;
+
+  void setGasApplianceHeatGainOccupied(double value) {
+    m_gasApplianceHeatGainOccupied = value;
   }
-  void setElectricApplianceHeatGainUnoccupied(double value)
-  {
-    _electricApplianceHeatGainUnoccupied = value;
+
+  /**
+  * Gas appliance power density unoccupied (W/m2).
+  * This value is used for both the energy consumed and the heat produced by the appliances.
+  */
+  double gasApplianceHeatGainUnoccupied() const {
+    return m_gasApplianceHeatGainUnoccupied;
   }
-  void setGasApplianceHeatGainOccupied(double value)
-  {
-    _gasApplianceHeatGainOccupied = value;
+
+  void setGasApplianceHeatGainUnoccupied(double value) {
+    m_gasApplianceHeatGainUnoccupied = value;
   }
-  void setGasApplianceHeatGainUnoccupied(double value)
-  {
-    _gasApplianceHeatGainUnoccupied = value;
+
+  /**
+  * Building energy management type: none (0), simple (1) or advanced (2).
+  * Used to adjust the heating and cooling set points in the monthly calculations.
+  */
+  double buildingEnergyManagement() const {
+    return m_buildingEnergyManagement;
   }
-  void setBuildingEnergyManagement(double value)
-  {
-    _buildingEnergyManagement = value;
+
+  void setBuildingEnergyManagement(double value) {
+    m_buildingEnergyManagement = value;
   }
+
 private:
-  double _lightingOccupancySensor;
-  double _constantIllumination;
-  double _electricApplianceHeatGainOccupied;
-  double _electricApplianceHeatGainUnoccupied;
-  double _gasApplianceHeatGainOccupied;
-  double _gasApplianceHeatGainUnoccupied;
-  double _buildingEnergyManagement;
+  double m_lightingOccupancySensor;
+  double m_constantIllumination;
+  double m_electricApplianceHeatGainOccupied;
+  double m_electricApplianceHeatGainUnoccupied;
+  double m_gasApplianceHeatGainOccupied;
+  double m_gasApplianceHeatGainUnoccupied;
+  double m_buildingEnergyManagement;
 };
 
 } // isomodel

@@ -26,80 +26,82 @@ class Ventilation
 public:
   Ventilation(void);
   ~Ventilation(void);
-  double supplyRate() const
-  {
-    return _supplyRate;
+
+  // Getters.
+  double supplyRate() const {
+    return m_supplyRate;
   }
-  double supplyDifference() const
-  {
-    return _supplyDifference;
+
+  double supplyDifference() const {
+    return m_supplyDifference;
   }
-  double heatRecoveryEfficiency() const
-  {
-    return _heatRecoveryEfficiency;
+
+  double heatRecoveryEfficiency() const {
+    return m_heatRecoveryEfficiency;
   }
-  double exhaustAirRecirculated() const
-  {
-    return _exhaustAirRecirculated;
+
+  double exhaustAirRecirculated() const {
+    return m_exhaustAirRecirculated;
   }
-  double type() const
-  {
-    return _type;
+
+  double type() const {
+    return m_type;
   }
-  double fanPower() const
-  {
-    return _fanPower;
+
+  double fanPower() const {
+    return m_fanPower;
   }
-  double fanControlFactor() const
-  {
-    return _fanControlFactor;
+
+  double fanControlFactor() const {
+    return m_fanControlFactor;
   }
-  double wasteFactor() const
-  {
-    return _wasteFactor;
+
+  double wasteFactor() const {
+    return m_wasteFactor;
   }
-  void setSupplyRate(double value)
-  {
-    _supplyRate = value;
+
+  // Setters.
+  void setSupplyRate(double value) {
+    m_supplyRate = value;
   }
-  void setSupplyDifference(double value)
-  {
-    _supplyDifference = value;
+
+  void setSupplyDifference(double value) {
+    m_supplyDifference = value;
   }
-  void setHeatRecoveryEfficiency(double value)
-  {
-    _heatRecoveryEfficiency = value;
+
+  void setHeatRecoveryEfficiency(double value) {
+    m_heatRecoveryEfficiency = value;
   }
-  void setExhaustAirRecirculated(double value)
-  {
-    _exhaustAirRecirculated = value;
+
+  void setExhaustAirRecirculated(double value) {
+    m_exhaustAirRecirculated = value;
   }
-  void setType(double value)
-  {
-    _type = value;
+
+  void setType(double value) {
+    m_type = value;
   }
-  void setFanPower(double value)
-  {
-    _fanPower = value;
+
+  void setFanPower(double value) {
+    m_fanPower = value;
   }
-  void setFanControlFactor(double value)
-  {
-    _fanControlFactor = value;
+
+  void setFanControlFactor(double value) {
+    m_fanControlFactor = value;
   }
-  void setWasteFactor(double value)
-  {
-    _wasteFactor = value;
+
+  void setWasteFactor(double value) {
+    m_wasteFactor = value;
   }
 
 private:
-  double _supplyRate;
-  double _supplyDifference;
-  double _heatRecoveryEfficiency;
-  double _exhaustAirRecirculated;
-  double _type;
-  double _fanPower;
-  double _fanControlFactor;
-  double _wasteFactor;
+  double m_supplyRate;
+  double m_supplyDifference;
+  double m_heatRecoveryEfficiency;
+  double m_exhaustAirRecirculated;
+  double m_type;
+  double m_fanPower;
+  double m_fanControlFactor;
+  double m_wasteFactor;
 };
 } // isomodel
 } // openstudio

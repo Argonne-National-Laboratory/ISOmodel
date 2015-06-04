@@ -26,72 +26,98 @@ class Population
 public:
   Population(void);
   ~Population(void);
-  double hoursEnd() const
-  {
-    return _hoursEnd;
+
+  /**
+  * First occupied hour (0-23). Note that hoursStart() and hoursEnd() form a closed interval.
+  * For example, a "nine to five" eight hour day would have hoursStart() == 9 and hoursEnd() == 16.
+  */
+  double hoursStart() const {
+    return m_hoursStart;
   }
-  double hoursStart() const
-  {
-    return _hoursStart;
+
+  void setHoursStart(double value) {
+    m_hoursStart = value;
   }
-  double daysEnd() const
-  {
-    return _daysEnd;
+
+  /**
+  * Last occupied hour (0-23). Note that hoursStart() and hoursEnd() form a closed interval.
+  * For example, a "nine to five" eight hour day would have hoursStart() == 9 and hoursEnd() == 16.
+  */
+  double hoursEnd() const {
+    return m_hoursEnd;
   }
-  double daysStart() const
-  {
-    return _daysStart;
+
+  void setHoursEnd(double value) {
+    m_hoursEnd = value;
   }
-  double densityOccupied() const
-  {
-    return _densityOccupied;
+
+  /**
+  * First occupied Day (0-6). Note that daysStart() and daysEnd() form a closed interval.
+  * For example, a "mondey to friday" five day work week would have daysStart() == 1 and
+  * daysEnd() == 5.
+  */
+  double daysStart() const {
+    return m_daysStart;
   }
-  double densityUnoccupied() const
-  {
-    return _densityUnoccupied;
+
+  void setDaysStart(double value) {
+    m_daysStart = value;
   }
-  double heatGainPerPerson() const
-  {
-    return _heatGainPerPerson;
+
+  /**
+  * Last occupied Day (0-6). Note that daysStart() and daysEnd() form a closed interval.
+  * For example, a "mondey to friday" five day work week would have daysStart() == 1 and
+  * daysEnd() == 5.
+  */
+  double daysEnd() const {
+    return m_daysEnd;
   }
-  void setHoursEnd(double value)
-  {
-    _hoursEnd = value;
+
+  void setDaysEnd(double value) {
+    m_daysEnd = value;
   }
-  void setHoursStart(double value)
-  {
-    _hoursStart = value;
+
+  /**
+  * People density occupied (m2/person).
+  */
+  double densityOccupied() const {
+    return m_densityOccupied;
   }
-  void setDaysEnd(double value)
-  {
-    _daysEnd = value;
+
+  void setDensityOccupied(double value) {
+    m_densityOccupied = value;
   }
-  void setDaysStart(double value)
-  {
-    _daysStart = value;
+
+  /**
+  * People density unoccupied (m2/person).
+  */
+  double densityUnoccupied() const {
+    return m_densityUnoccupied;
   }
-  void setDensityOccupied(double value)
-  {
-    _densityOccupied = value;
+
+  void setDensityUnoccupied(double value) {
+    m_densityUnoccupied = value;
   }
-  void setDensityUnoccupied(double value)
-  {
-    _densityUnoccupied = value;
+
+/**
+* Heat gain per person (W/m2).
+*/
+  double heatGainPerPerson() const {
+    return m_heatGainPerPerson;
   }
-  void setHeatGainPerPerson(double value)
-  {
-    _heatGainPerPerson = value;
+
+  void setHeatGainPerPerson(double value) {
+    m_heatGainPerPerson = value;
   }
 
 private:
-  double _hoursEnd;
-  double _hoursStart;
-  double _daysEnd;
-  double _daysStart;
-  double _densityOccupied;
-  double _densityUnoccupied;
-  double _heatGainPerPerson;
-
+  double m_hoursEnd;
+  double m_hoursStart;
+  double m_daysEnd;
+  double m_daysStart;
+  double m_densityOccupied;
+  double m_densityUnoccupied;
+  double m_heatGainPerPerson;
 };
 
 } // isomodel

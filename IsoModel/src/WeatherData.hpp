@@ -38,77 +38,77 @@ public:
   /**
    * mean monthly Global Horizontal Radiation (W/m2)
    */
-  Vector mEgh()
-  {
-    return _mEgh;
+  Vector mEgh() {
+    return m_mEgh;
   }
-  void setMEgh(Vector val)
-  {
-    _mEgh = val;
+
+  void setMEgh(Vector val) {
+    m_mEgh = val;
   }
+
   /**
    * mean monthly dry bulb temp (C)
    */
-  Vector mdbt()
-  {
-    return _mdbt;
+  Vector mdbt() {
+    return m_mdbt;
   }
-  void setMdbt(Vector val)
-  {
-    _mdbt = val;
+
+  void setMdbt(Vector val) {
+    m_mdbt = val;
   }
+
   /**
    * mean monthly wind speed; (m/s) 
    */
-  Vector mwind()
-  {
-    return _mwind;
+  Vector mwind() {
+    return m_mwind;
   }
-  void setMwind(Vector val)
-  {
-    _mwind = val;
+
+  void setMwind(Vector val) {
+    m_mwind = val;
   }
+
 
   /**
    * mean monthly total solar radiation (W/m2) on a vertical surface for each of the 8 cardinal directions
    */
-  Matrix msolar()
-  {
-    return _msolar;
+  Matrix msolar() {
+    return m_msolar;
   }
+
+  void setMsolar(Matrix val) {
+    m_msolar = val;
+  }
+
   /**
    * mean monthly dry bulb temp for each of the 24 hours of the day (C)
    */
-  Matrix mhdbt()
-  {
-    return _mhdbt;
+  Matrix mhdbt() {
+    return m_mhdbt;
   }
+
+  void setMhdbt(Matrix val) {
+    m_mhdbt = val;
+  }
+
   /**
    * mean monthly Global Horizontal Radiation for each of the 24 hours of the day (W/m2)
    */
-  Matrix mhEgh()
-  {
-    return _mhEgh;
+  Matrix mhEgh() {
+    return m_mhEgh;
   }
-  void setMhEgh(Matrix val)
-  {
-    _mhEgh = val;
+
+  void setMhEgh(Matrix val) {
+    m_mhEgh = val;
   }
-  void setMsolar(Matrix val)
-  {
-    _msolar = val;
-  }
-  void setMhdbt(Matrix val)
-  {
-    _mhdbt = val;
-  }
+
 private:
-  Matrix _msolar;
-  Matrix _mhdbt;
-  Matrix _mhEgh;
-  Vector _mEgh;
-  Vector _mdbt;
-  Vector _mwind;
+  Matrix m_msolar;
+  Matrix m_mhdbt;
+  Matrix m_mhEgh;
+  Vector m_mEgh;
+  Vector m_mdbt;
+  Vector m_mwind;
 };
 }
 }

@@ -113,14 +113,14 @@ ISOResults ISOHourly::simulate(bool aggregateByMonth)
 {
   populateSchedules();
 
-  printMatrix("Cooling Setpoint", (double*) this->fixedActualCoolingSetpoint, 24, 7);
-  printMatrix("Heating Setpoint", (double*) this->fixedActualHeatingSetpoint, 24, 7);
-  printMatrix("Exterior Equipment", (double*) this->fixedExteriorEquipmentSchedule, 24, 7);
-  printMatrix("Exterior Lighting", (double*) this->fixedExteriorLightingSchedule, 24, 7);
-  printMatrix("Fan", (double*) this->fixedFanSchedule, 24, 7);
-  printMatrix("Interior Equipment", (double*) this->fixedInteriorEquipmentSchedule, 24, 7);
-  printMatrix("Interior Lighting", (double*) this->fixedInteriorLightingSchedule, 24, 7);
-  printMatrix("Ventilation", (double*) this->fixedVentilationSchedule, 24, 7);
+  printMatrix("Cooling Setpoint", (double*) fixedActualCoolingSetpoint, 24, 7);
+  printMatrix("Heating Setpoint", (double*) fixedActualHeatingSetpoint, 24, 7);
+  printMatrix("Exterior Equipment", (double*) fixedExteriorEquipmentSchedule, 24, 7);
+  printMatrix("Exterior Lighting", (double*) fixedExteriorLightingSchedule, 24, 7);
+  printMatrix("Fan", (double*) fixedFanSchedule, 24, 7);
+  printMatrix("Interior Equipment", (double*) fixedInteriorEquipmentSchedule, 24, 7);
+  printMatrix("Interior Lighting", (double*) fixedInteriorLightingSchedule, 24, 7);
+  printMatrix("Ventilation", (double*) fixedVentilationSchedule, 24, 7);
 
   initialize();
   TimeFrame frame;
@@ -502,9 +502,15 @@ void ISOHourly::initialize()
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
 
   for (auto i = 0; i != 9; ++i) {
-    this->structureCalculations(structure->windowShadingDevice(), structure->wallArea()[i], structure->windowArea()[i], structure->wallUniform()[i],
-        structure->windowUniform()[i], structure->wallSolarAbsorbtion()[i], structure->windowShadingCorrectionFactor()[i],
-        structure->windowNormalIncidenceSolarEnergyTransmittance()[i], i);
+    structureCalculations(structure->windowShadingDevice(),
+                          structure->wallArea()[i],
+                          structure->windowArea()[i],
+                          structure->wallUniform()[i],
+                          structure->windowUniform()[i],
+                          structure->wallSolarAbsorbtion()[i],
+                          structure->windowShadingCorrectionFactor()[i],
+                          structure->windowNormalIncidenceSolarEnergyTransmittance()[i],
+                          i);
 
     nlaWMovableShading.push_back(nlams[i] / structure->floorArea());
     naturalLightRatio.push_back(nla[i] / structure->floorArea());

@@ -28,134 +28,176 @@ class Structure
 public:
   Structure(void);
   ~Structure(void);
-  double floorArea() const
-  {
-    return _floorArea;
+
+  /**
+  * Floor area (m2).
+  */
+  double floorArea() const {
+    return m_floorArea;
   }
-  Vector wallArea() const
-  {
-    return _wallArea;
+
+  void setFloorArea(double value) {
+    m_floorArea = value;
   }
-  Vector windowArea() const
-  {
-    return _windowArea;
+
+  /**
+  * Wall and roof area (m2).
+  */
+  Vector wallArea() const {
+    return m_wallArea;
   }
-  Vector wallUniform() const
-  {
-    return _wallUniform;
+
+  void setWallArea(Vector value) {
+    m_wallArea = value;
   }
-  Vector windowUniform() const
-  {
-    return _windowUniform;
+
+  /**
+  *
+  */
+  Vector windowArea() const {
+    return m_windowArea;
   }
-  Vector wallThermalEmissivity() const
-  {
-    return _wallThermalEmissivity;
+
+  void setWindowArea(Vector value) {
+    m_windowArea = value;
   }
-  Vector wallSolarAbsorbtion() const
-  {
-    return _wallSolarAbsorbtion;
+
+  /**
+  *
+  */
+  Vector wallUniform() const {
+    return m_wallUniform;
   }
-  double windowShadingDevice() const
-  {
-    return _windowShadingDevice;
+
+  void setWallUniform(Vector value) {
+    m_wallUniform = value;
   }
-  Vector windowNormalIncidenceSolarEnergyTransmittance() const
-  {
-    return _windowNormalIncidenceSolarEnergyTransmittance;
+
+  /**
+  *
+  */
+  Vector windowUniform() const {
+    return m_windowUniform;
   }
-  Vector windowShadingCorrectionFactor() const
-  {
-    return _windowShadingCorrectionFactor;
+
+  void setWindowUniform(Vector value) {
+    m_windowUniform = value;
   }
-  double interiorHeatCapacity() const
-  {
-    return _interiorHeatCapacity;
+
+  /**
+  *
+  */
+  Vector wallThermalEmissivity() const {
+    return m_wallThermalEmissivity;
   }
-  double wallHeatCapacity() const
-  {
-    return _wallHeatCapacity;
+
+  void setWallThermalEmissivity(Vector value) {
+    m_wallThermalEmissivity = value;
   }
-  double buildingHeight() const
-  {
-    return _buildingHeight;
+
+  /**
+  *
+  */
+  Vector wallSolarAbsorbtion() const {
+    return m_wallSolarAbsorbtion;
   }
-  double infiltrationRate() const
-  {
-    return _infiltrationRate;
+
+  void setWallSolarAbsorbtion(Vector value) {
+    m_wallSolarAbsorbtion = value;
   }
-  void setFloorArea(double value)
-  {
-    _floorArea = value;
+
+  /**
+  *
+  */
+  double windowShadingDevice() const {
+    return m_windowShadingDevice;
   }
-  void setWallArea(Vector value)
-  {
-    _wallArea = value;
+
+  void setWindowShadingDevice(double value) {
+    m_windowShadingDevice = value;
   }
-  void setWindowArea(Vector value)
-  {
-    _windowArea = value;
+
+  /**
+  *
+  */
+  Vector windowNormalIncidenceSolarEnergyTransmittance() const {
+    return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
-  void setWallUniform(Vector value)
-  {
-    _wallUniform = value;
+
+  void setWindowNormalIncidenceSolarEnergyTransmittance(Vector value) {
+    m_windowNormalIncidenceSolarEnergyTransmittance = value;
   }
-  void setWindowUniform(Vector value)
-  {
-    _windowUniform = value;
+
+  /**
+  *
+  */
+  Vector windowShadingCorrectionFactor() const {
+    return m_windowShadingCorrectionFactor;
   }
-  void setWallThermalEmissivity(Vector value)
-  {
-    _wallThermalEmissivity = value;
+
+  void setWindowShadingCorrectionFactor(Vector value) {
+    m_windowShadingCorrectionFactor = value;
   }
-  void setWallSolarAbsorbtion(Vector value)
-  {
-    _wallSolarAbsorbtion = value;
+
+  /**
+  *
+  */
+  double interiorHeatCapacity() const {
+    return m_interiorHeatCapacity;
   }
-  void setWindowShadingDevice(double value)
-  {
-    _windowShadingDevice = value;
+
+  void setInteriorHeatCapacity(double value) {
+    m_interiorHeatCapacity = value;
   }
-  void setWindowNormalIncidenceSolarEnergyTransmittance(Vector value)
-  {
-    _windowNormalIncidenceSolarEnergyTransmittance = value;
+
+  /**
+  *
+  */
+  double wallHeatCapacity() const {
+    return m_wallHeatCapacity;
   }
-  void setWindowShadingCorrectionFactor(Vector value)
-  {
-    _windowShadingCorrectionFactor = value;
+
+  void setWallHeatCapacity(double value) {
+    m_wallHeatCapacity = value;
   }
-  void setInteriorHeatCapacity(double value)
-  {
-    _interiorHeatCapacity = value;
+
+  /**
+  *
+  */
+  double buildingHeight() const {
+    return m_buildingHeight;
   }
-  void setWallHeatCapacity(double value)
-  {
-    _wallHeatCapacity = value;
+
+  void setBuildingHeight(double value) {
+    m_buildingHeight = value;
   }
-  void setBuildingHeight(double value)
-  {
-    _buildingHeight = value;
+
+  /**
+  *
+  */
+  double infiltrationRate() const {
+    return m_infiltrationRate;
   }
-  void setInfiltrationRate(double value)
-  {
-    _infiltrationRate = value;
+
+  void setInfiltrationRate(double value) {
+    m_infiltrationRate = value;
   }
 
 private:
-  double _floorArea;
-  Vector _wallArea;
-  Vector _windowArea;
-  Vector _wallUniform;
-  Vector _windowUniform;
-  Vector _wallThermalEmissivity;
-  Vector _wallSolarAbsorbtion;
-  double _windowShadingDevice;
-  Vector _windowNormalIncidenceSolarEnergyTransmittance;
-  Vector _windowShadingCorrectionFactor;
-  double _interiorHeatCapacity;
-  double _wallHeatCapacity;
-  double _buildingHeight;
-  double _infiltrationRate;
+  double m_floorArea;
+  Vector m_wallArea;
+  Vector m_windowArea;
+  Vector m_wallUniform;
+  Vector m_windowUniform;
+  Vector m_wallThermalEmissivity;
+  Vector m_wallSolarAbsorbtion;
+  double m_windowShadingDevice;
+  Vector m_windowNormalIncidenceSolarEnergyTransmittance;
+  Vector m_windowShadingCorrectionFactor;
+  double m_interiorHeatCapacity;
+  double m_wallHeatCapacity;
+  double m_buildingHeight;
+  double m_infiltrationRate;
 
 };
 

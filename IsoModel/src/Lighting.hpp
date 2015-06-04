@@ -26,45 +26,58 @@ class Lighting
 public:
   Lighting(void);
   ~Lighting(void);
-  double powerDensityOccupied() const
-  {
-    return _powerDensityOccupied;
+
+  /**
+  * Lighting power density occupied (W/m2).
+  */
+  double powerDensityOccupied() const {
+    return m_powerDensityOccupied;
   }
-  double powerDensityUnoccupied() const
-  {
-    return _powerDensityUnoccupied;
+
+  void setPowerDensityOccupied(double value) {
+    m_powerDensityOccupied = value;
   }
-  double dimmingFraction() const
-  {
-    return _dimmingFraction;
+
+  /**
+  * Lighting power density unoccupied (W/m2).
+  */
+  double powerDensityUnoccupied() const {
+    return m_powerDensityUnoccupied;
   }
-  double exteriorEnergy() const
-  {
-    return _exteriorEnergy;
+
+  void setPowerDensityUnoccupied(double value) {
+    m_powerDensityUnoccupied = value;
   }
-  void setPowerDensityOccupied(double value)
-  {
-    _powerDensityOccupied = value;
+
+  /**
+  * Daylight sensor dimming fraction (unitless).
+  * Illum controls are set to 1 if there is no control.
+  * See iso 15193 Annex F/G for values.
+  */
+  double dimmingFraction() const {
+    return m_dimmingFraction;
   }
-  void setPowerDensityUnoccupied(double value)
-  {
-    _powerDensityUnoccupied = value;
+
+  void setDimmingFraction(double value) {
+    m_dimmingFraction = value;
   }
-  void setDimmingFraction(double value)
-  {
-    _dimmingFraction = value;
+
+  /**
+  * Exterior lighting power (W).
+  */
+  double exteriorEnergy() const {
+    return m_exteriorEnergy;
   }
-  void setExteriorEnergy(double value)
-  {
-    _exteriorEnergy = value;
+
+  void setExteriorEnergy(double value) {
+    m_exteriorEnergy = value;
   }
 
 private:
-  double _powerDensityOccupied;
-  double _powerDensityUnoccupied;
-  double _dimmingFraction;
-  double _exteriorEnergy;
-
+  double m_powerDensityOccupied;
+  double m_powerDensityUnoccupied;
+  double m_dimmingFraction;
+  double m_exteriorEnergy;
 };
 
 } // isomodel

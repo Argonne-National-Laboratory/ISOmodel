@@ -26,61 +26,64 @@ class Cooling
 public:
   Cooling(void);
   ~Cooling(void);
-  double temperatureSetPointOccupied() const
-  {
-    return _temperatureSetPointOccupied;
+
+  // Getters.
+  double temperatureSetPointOccupied() const {
+    return m_temperatureSetPointOccupied;
   }
-  double temperatureSetPointUnoccupied() const
-  {
-    return _temperatureSetPointUnoccupied;
+
+  double temperatureSetPointUnoccupied() const {
+    return m_temperatureSetPointUnoccupied;
   }
-  double cop() const
-  {
-    return _cOP;
+
+  double cop() const {
+    return m_COP;
   }
-  double partialLoadValue() const
-  {
-    return _partialLoadValue;
+
+  double partialLoadValue() const {
+    return m_partialLoadValue;
   }
-  double hvacLossFactor() const
-  {
-    return _hvacLossFactor;
+
+  double hvacLossFactor() const {
+    return m_hvacLossFactor;
   }
-  double pumpControlReduction() const
-  {
-    return _pumpControlReduction;
+
+  double pumpControlReduction() const {
+    return m_pumpControlReduction;
   }
-  void setTemperatureSetPointOccupied(double value)
-  {
-    _temperatureSetPointOccupied = value;
+
+  // Setters.
+  void setTemperatureSetPointOccupied(double value) {
+    m_temperatureSetPointOccupied = value;
   }
-  void setTemperatureSetPointUnoccupied(double value)
-  {
-    _temperatureSetPointUnoccupied = value;
+
+  void setTemperatureSetPointUnoccupied(double value) {
+    m_temperatureSetPointUnoccupied = value;
   }
-  void setCOP(double value)
-  {
-    _cOP = value;
+
+  void setCOP(double value) {
+    m_COP = value;
   }
-  void setPartialLoadValue(double value)
-  {
-    _partialLoadValue = value;
+
+  void setPartialLoadValue(double value) {
+    m_partialLoadValue = value;
   }
-  void setHvacLossFactor(double value)
-  {
-    _hvacLossFactor = value;
+
+  void setHvacLossFactor(double value) {
+    m_hvacLossFactor = value;
   }
-  void setPumpControlReduction(double value)
-  {
-    _pumpControlReduction = value;
+
+  void setPumpControlReduction(double value) {
+    m_pumpControlReduction = value;
   }
+
 private:
-  double _temperatureSetPointOccupied;
-  double _temperatureSetPointUnoccupied;
-  double _cOP;
-  double _partialLoadValue;
-  double _hvacLossFactor;
-  double _pumpControlReduction;
+  double m_temperatureSetPointOccupied;
+  double m_temperatureSetPointUnoccupied;
+  double m_COP;
+  double m_partialLoadValue;
+  double m_hvacLossFactor;
+  double m_pumpControlReduction;
 };
 
 } // isomodel
