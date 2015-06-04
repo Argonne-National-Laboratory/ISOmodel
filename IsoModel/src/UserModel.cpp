@@ -639,7 +639,7 @@ void UserModel::loadWeather()
   if (boost::filesystem::exists(_weatherFilePath)) {
     weatherFilename = _weatherFilePath;
   } else {
-    weatherFilename = resolveFilename(this->dataFile, _weatherFilePath);
+    weatherFilename = resolveFilename(dataFile, _weatherFilePath);
     if (!boost::filesystem::exists(weatherFilename)) {
       std::cout << "Weather File Not Found: " << _weatherFilePath << std::endl;
       _valid = false;
@@ -754,7 +754,7 @@ void UserModel::initializeSolar()
 
 void UserModel::load(std::string buildingFile)
 {
-  this->dataFile = buildingFile;
+  dataFile = buildingFile;
   _valid = true;
   if (!boost::filesystem::exists(buildingFile)) {
     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
@@ -765,7 +765,7 @@ void UserModel::load(std::string buildingFile)
     std::cout << "Loading Building File: " << buildingFile << std::endl;
   loadBuilding(buildingFile);
   if (DEBUG_ISO_MODEL_SIMULATION)
-    std::cout << "Loading Weather File: " << this->weatherFilePath() << std::endl;
+    std::cout << "Loading Weather File: " << weatherFilePath() << std::endl;
   loadWeather();
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "Weather File Loaded" << std::endl;
@@ -773,7 +773,7 @@ void UserModel::load(std::string buildingFile)
 
 void UserModel::load(std::string buildingFile, std::string defaultsFile)
 {
-  this->dataFile = buildingFile;
+  dataFile = buildingFile;
   _valid = true;
 
   // Check for the .ism file.
@@ -796,7 +796,7 @@ void UserModel::load(std::string buildingFile, std::string defaultsFile)
   loadBuilding(buildingFile, defaultsFile);
 
   if (DEBUG_ISO_MODEL_SIMULATION)
-    std::cout << "Loading Weather File: " << this->weatherFilePath() << std::endl;
+    std::cout << "Loading Weather File: " << weatherFilePath() << std::endl;
 
   loadWeather();
 

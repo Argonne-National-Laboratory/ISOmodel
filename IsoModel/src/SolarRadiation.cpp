@@ -36,12 +36,12 @@ SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
   for (int i = 0; i < TIMESLICES; i++) {
     m_eglobe[i].resize(NUM_SURFACES);
   }
-  this->frame = frame;
-  this->epwData = wdata;
-  this->m_longitude = wdata->longitude() * PI / 180.0; // Convert to radians.
-  this->m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
-  this->m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
-  this->m_surfaceTilt = tilt / 2.0;	// surface tilt in radians (pi/2 is vertical, 0 is horizontal);
+  m_frame = frame;
+  m_epwData = wdata;
+  m_longitude = wdata->longitude() * PI / 180.0; // Convert to radians.
+  m_localMeridian = wdata->timezone() * 15.0 * PI / 180.0; //compute the local meridian from the time zone.  Negative is W of the prime meridian. Convert to radians.
+  m_latitude = wdata->latitude() * PI / 180.0; //convert latitute to radians
+  m_surfaceTilt = tilt / 2.0;	// surface tilt in radians (pi/2 is vertical, 0 is horizontal);
 }
 SolarRadiation::~SolarRadiation(void)
 {
@@ -62,15 +62,15 @@ void SolarRadiation::calculateSurfaceSolarRadiation()
   double AngleOfIncidence, SurfaceSolarAzimuth, DirectBeam, diffuseAngleOfIncidenceFactor, DiffuseComponent;
 
   //avoid calling data() to reduce copy time
-  std::vector<std::vector<double> > data = epwData->data();
+  std::vector<std::vector<double> > data = m_epwData->data();
   std::vector<double> vecEB = data[EB];
   std::vector<double> vecED = data[ED];
   std::vector<double>* vecEGI;
   for (int i = 0; i < TIMESLICES; i++) {
     // First compute the solar azimuth for each hour of the year for our location
-    Revolution = calculateRevolutionAngle(frame->YTD[i]);
+    Revolution = calculateRevolutionAngle(m_frame->YTD[i]);
     EquationOfTime = calculateEquationOfTime(Revolution);
-    ApparentSolarTime = calculateApparentSolarTime(frame->Hour[i], EquationOfTime);
+    ApparentSolarTime = calculateApparentSolarTime(m_frame->Hour[i], EquationOfTime);
 
     SolarDeclination = calculateSolarDeclination(Revolution);
     SolarHourAngles = calculateSolarHourAngle(ApparentSolarTime);
@@ -113,7 +113,7 @@ void SolarRadiation::calculateMonthAvg(int midx, int cnt)
       m_monthlySolarRadiation[midx][s] /= cnt;
     }
     //hours are averaged over days in the month
-    days = frame->monthLength(midx + 1);
+    days = m_frame->monthLength(midx + 1);
     for (int h = 0; h < 24; h++) {
       m_hourlyDryBulbTemp[midx][h] /= days;
       m_hourlyDewPointTemp[midx][h] /= days;
@@ -146,7 +146,7 @@ void SolarRadiation::calculateAverages()
   int cnt = 0;
   int h = 0;
 
-  std::vector<std::vector<double> > data = epwData->data();
+  std::vector<std::vector<double> > data = m_epwData->data();
   std::vector<double> vecDBT = data[DBT];
   std::vector<double> vecDPT = data[DPT];
   std::vector<double> vecRH = data[RH];
@@ -155,8 +155,8 @@ void SolarRadiation::calculateAverages()
   std::vector<double> vecWSPD = data[WSPD];
 
   for (int i = 0; i < TIMESLICES; i++, cnt++) {
-    if (frame->Month[i] != month) {
-      month = frame->Month[i];
+    if (m_frame->Month[i] != month) {
+      month = m_frame->Month[i];
       //on month change, average bin out over count
       calculateMonthAvg(midx, cnt);
       midx++;
@@ -172,7 +172,7 @@ void SolarRadiation::calculateAverages()
     m_monthlyWindspeed[midx] += vecWSPD[i];
     for (int s = 0; s < NUM_SURFACES; s++)
       m_monthlySolarRadiation[midx][s] += m_eglobe[i][s];
-    h = frame->Hour[i];
+    h = m_frame->Hour[i];
     m_hourlyDryBulbTemp[midx][h] += vecDBT[i];
     m_hourlyDewPointTemp[midx][h] += vecDPT[i];
     m_hourlyGlobalHorizontalRadiation[midx][h] += vecEGH[i];

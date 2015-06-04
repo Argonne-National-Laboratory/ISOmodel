@@ -36,8 +36,8 @@ class EpwData;
 class SolarRadiation
 {
 protected:
-  openstudio::isomodel::TimeFrame* frame;
-  openstudio::isomodel::EpwData* epwData;
+  openstudio::isomodel::TimeFrame* m_frame;
+  openstudio::isomodel::EpwData* m_epwData;
 
   //inputs
   double m_surfaceTilt;
@@ -121,7 +121,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 12.
   */
   double calculateSolarAltitude(double solarDeclination, double solarHourAngles) {
-    return asin(cos(this->m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(this->m_latitude) * sin(solarDeclination));
+    return asin(cos(m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(m_latitude) * sin(solarDeclination));
   }
 
   /**
@@ -137,7 +137,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 15.
   */
   double calculateSolarAzimuthCos(double solarDeclination, double solarHourAngle, double solarAltitude) {
-    return (cos(solarHourAngle) * cos(solarDeclination) * sin(this->m_latitude) - sin(solarDeclination) * cos(this->m_latitude))
+    return (cos(solarHourAngle) * cos(solarDeclination) * sin(m_latitude) - sin(solarDeclination) * cos(m_latitude))
            / cos(solarAltitude);
   }
 

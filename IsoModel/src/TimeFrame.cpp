@@ -13,11 +13,11 @@ TimeFrame::TimeFrame(void)
     dim = monthLength(month);
     for (int dayOfMonth = 1; dayOfMonth <= dim; dayOfMonth++) {
       for (int hourOfDay = 0; hourOfDay <= 23; hourOfDay++) {
-        this->Hour[hourOfYear] = hourOfDay;
-        this->DayOfMonth[hourOfYear] = dayOfMonth;
-        this->DayOfWeek[hourOfYear] = dayOfWeek;
-        this->Month[hourOfYear] = month;
-        this->YTD[hourOfYear] = dayOfYear;
+        Hour[hourOfYear] = hourOfDay;
+        DayOfMonth[hourOfYear] = dayOfMonth;
+        DayOfWeek[hourOfYear] = dayOfWeek;
+        Month[hourOfYear] = month;
+        YTD[hourOfYear] = dayOfYear;
         ++hourOfYear;
       }
       ++dayOfYear;
