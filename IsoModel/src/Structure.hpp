@@ -41,7 +41,8 @@ public:
   }
 
   /**
-  * Wall and roof area (m2).
+  * Wall and roof area (m2). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * conventions for sun angles where south is zero.
   */
   Vector wallArea() const {
     return m_wallArea;
@@ -52,7 +53,8 @@ public:
   }
 
   /**
-  *
+  * Window and skylight area (m2). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * conventions for sun angles where south is zero.
   */
   Vector windowArea() const {
     return m_windowArea;
@@ -63,7 +65,8 @@ public:
   }
 
   /**
-  *
+  * Wall and roof U-values (W/m2/K). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * conventions for sun angles where south is zero.
   */
   Vector wallUniform() const {
     return m_wallUniform;
@@ -74,7 +77,8 @@ public:
   }
 
   /**
-  *
+  * Window and skylight U-values (W/m2/K). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * conventions for sun angles where south is zero.
   */
   Vector windowUniform() const {
     return m_windowUniform;
@@ -85,7 +89,9 @@ public:
   }
 
   /**
-  *
+  * Wall and roof thermal emissivity (ratio compared to black body, 0 to 1).
+  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * angles where south is zero.
   */
   Vector wallThermalEmissivity() const {
     return m_wallThermalEmissivity;
@@ -96,7 +102,9 @@ public:
   }
 
   /**
-  *
+  * Wall and roof solar absorbtion coeficient (0 to 1).1
+  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * angles where south is zero.
   */
   Vector wallSolarAbsorbtion() const {
     return m_wallSolarAbsorbtion;
@@ -109,11 +117,11 @@ public:
   /**
   *
   */
-  double windowShadingDevice() const {
+  Vector windowShadingDevice() const {
     return m_windowShadingDevice;
   }
 
-  void setWindowShadingDevice(double value) {
+  void setWindowShadingDevice(Vector value) {
     m_windowShadingDevice = value;
   }
 
@@ -191,7 +199,7 @@ private:
   Vector m_windowUniform;
   Vector m_wallThermalEmissivity;
   Vector m_wallSolarAbsorbtion;
-  double m_windowShadingDevice;
+  Vector m_windowShadingDevice;
   Vector m_windowNormalIncidenceSolarEnergyTransmittance;
   Vector m_windowShadingCorrectionFactor;
   double m_interiorHeatCapacity;

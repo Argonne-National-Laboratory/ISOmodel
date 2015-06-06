@@ -29,25 +29,26 @@ class Location
 public:
   Location(void);
   ~Location(void);
-  double terrain() const
-  {
-    return _terrain;
+
+  double terrain() const {
+    return m_terrain;
   }
-  void setTerrain(double value)
-  {
-    _terrain = value;
+  
+  void setTerrain(double value) {
+    m_terrain = value;
   }
-  std::shared_ptr<WeatherData> weather() const
-  {
-    return _weather;
+
+  std::shared_ptr<WeatherData> weather() const {
+    return m_weather;
   }
-  void setWeatherData(std::shared_ptr<WeatherData> value)
-  {
-    _weather = value;
+
+  void setWeatherData(std::shared_ptr<WeatherData> value) {
+    m_weather = value;
   }
+
 private:
-  double _terrain;
-  std::shared_ptr<WeatherData> _weather;
+  double m_terrain;
+  std::shared_ptr<WeatherData> m_weather;
 };
 
 } // isomodel

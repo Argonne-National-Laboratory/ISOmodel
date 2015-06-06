@@ -7,8 +7,7 @@ namespace isomodel {
  * In the order S, SE, E, NE, N, NW, W, SW.
  * In degrees, the azimuths are: 0, -45, -90, -135, 180, 135, 90, 45.
  */
-double SurfaceAzimuths[] =
-{ 0, -PI/4, -PI/2, -3*PI/4, PI, 3*PI/4, PI/2, PI/4 };
+double SurfaceAzimuths[] = { 0, -PI/4, -PI/2, -3*PI/4, PI, 3*PI/4, PI/2, PI/4 };
 
 // TODO: Member variables set to constants in this initializer list should be set based on the ism file.
 SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)

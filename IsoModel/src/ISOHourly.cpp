@@ -502,7 +502,7 @@ void ISOHourly::initialize()
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
 
   for (auto i = 0; i != 9; ++i) {
-    structureCalculations(structure->windowShadingDevice(),
+    structureCalculations(structure->windowShadingDevice()[i],
                           structure->wallArea()[i],
                           structure->windowArea()[i],
                           structure->wallUniform()[i],

@@ -184,7 +184,18 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   winSCF[7] = _windowSCFSW;
   winSCF[8] = _windowSCFN;
   structure->setWindowShadingCorrectionFactor(winSCF); //vector
-  structure->setWindowShadingDevice(_windowSDFN);
+  
+  Vector winSDF(9);
+  winSDF[0] = _windowSDFS;
+  winSDF[1] = _windowSDFSE;
+  winSDF[2] = _windowSDFE;
+  winSDF[3] = _windowSDFNE;
+  winSDF[4] = _windowSDFN;
+  winSDF[5] = _windowSDFNW;
+  winSDF[6] = _windowSDFW;
+  winSDF[7] = _windowSDFSW;
+  winSDF[8] = _windowSDFN;
+  structure->setWindowShadingDevice(winSDF);
 
   Vector winU(9);
   winU[0] = _windowUvalueS;

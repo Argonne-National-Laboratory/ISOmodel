@@ -677,7 +677,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
   Vector v_win_SDF_frac = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
     v_win_ff[i] = 1.0 - n_win_ff;
-    v_win_SDF[i] = n_win_SDF_table[((int) structure->windowShadingDevice()) - 1];
+    v_win_SDF[i] = n_win_SDF_table[((int) structure->windowShadingDevice()[i]) - 1];
     v_win_SDF_frac[i] = 1.0;
   }
   Vector v_win_F_shgl = mult(v_win_SDF, v_win_SDF_frac);
