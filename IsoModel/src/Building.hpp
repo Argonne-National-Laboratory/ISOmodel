@@ -31,6 +31,7 @@ public:
   * Lighting occupancy sensor dimming fraction (unitless).
   * Illum controls are set to 1 if there is no control.
   * See iso 15193 Annex F/G for values.
+  * XXX: Should this be in the Lighting class?
   */
   double lightingOccupancySensor() const {
     return m_lightingOccupancySensor;
@@ -44,6 +45,7 @@ public:
   * Constant illumination control multiplier (unitless).
   * Illum controls are set to 1 if there is no control.
   * See iso 15193 Annex F/G for values.
+  * XXX: Should this be in the Lighting class?
   */
   double constantIllumination() const {
     return m_constantIllumination;
@@ -113,6 +115,18 @@ public:
     m_buildingEnergyManagement = value;
   }
 
+  /**
+  * External equipment energy use (W).
+  */
+
+  double externalEquipment() {
+    return m_externalEquipment;
+  }
+
+  void setExternalEquipment(double externalEquipment) {
+    m_externalEquipment = externalEquipment;
+  }
+
 private:
   double m_lightingOccupancySensor;
   double m_constantIllumination;
@@ -121,6 +135,8 @@ private:
   double m_gasApplianceHeatGainOccupied;
   double m_gasApplianceHeatGainUnoccupied;
   double m_buildingEnergyManagement;
+  // Members with default values:
+  double m_externalEquipment = 0.0;
 };
 
 } // isomodel

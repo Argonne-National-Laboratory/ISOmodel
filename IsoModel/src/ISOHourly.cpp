@@ -37,10 +37,6 @@ ISOHourly::ISOHourly()
     // No location defaults.
 
     // Lighting defaults:
-
-    // Building defaults:
-    // Equipment:
-    externalEquipment(0), // Used to have a hardcoded value of 244000. Set to 0 until it gets added as an ism attribute. Q56
     // Sensors and automation controls:
     // I'm not sure if these belong in Building, grouping all automation controls together,
     // or if they belong with what they automate (Lighting in this case). - BAA@2015-06-02.
@@ -52,6 +48,8 @@ ISOHourly::ISOHourly()
     automaticLux(300),
     presenceAutoLux(300),
     manualSwitchLux(500),
+
+    // Building defaults:
 
     // Structure defaults:
     // Solar surface:
@@ -303,7 +301,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
   auto actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
-  results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * externalEquipment / structure->floorArea();
+  results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * building->externalEquipment() / structure->floorArea();
 
   // \Phi_{int,A}, ISO 13790 10.4.2.
   // Monthly name: phi_plug_occ and phi_plug_unocc.
