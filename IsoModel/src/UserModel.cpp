@@ -218,7 +218,6 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   ventilation->setSupplyDifference(_supplyExhaustRate);
   ventilation->setSupplyRate(_freshAirFlowRate);
   ventilation->setType(_ventilationType);
-  ventilation->setWasteFactor(_hvacWasteFactor); //??
   sim.setVentilation(ventilation);
 }
 

@@ -106,18 +106,6 @@ public:
     m_fanControlFactor = value;
   }
 
-  /**
-  * XXX this appears to be the HVAC heating and cooling waste factor, which is not used in
-  * the ventilation calculations.
-  */
-  double wasteFactor() const {
-    return m_wasteFactor;
-  }
-
-  void setWasteFactor(double value) {
-    m_wasteFactor = value;
-  }
-
 private:
   double m_supplyRate;
   double m_supplyDifference;
@@ -126,7 +114,6 @@ private:
   double m_type;
   double m_fanPower;
   double m_fanControlFactor;
-  double m_wasteFactor;
 };
 } // isomodel
 } // openstudio
