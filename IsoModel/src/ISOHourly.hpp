@@ -139,16 +139,6 @@ private:
   bool forcedAirCooling; // Only calculate fan power to deliver cooling if forced air cooling is used.
 
   // Lighting controls.
-  // Occupancy based lighting control lighting use adjustment factors.
-  double presenceSensorAd; // Calc.E92 table **************
-  double automaticAd;
-  double presenceAutoAd;
-  double manualSwitchAd;
-  // Daylight based lighting control target lux levels.
-  double presenceSensorLux;
-  double automaticLux;
-  double presenceAutoLux;
-  double manualSwitchLux; // Finish Calc.E92 table ************
   // Used to determine the amount of electric light used.
   double maxRatioElectricLighting; // Ratio of electric light used due to lighting controls.
   double elightNatural; // Target lux level in naturally lit area.

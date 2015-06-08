@@ -37,17 +37,6 @@ ISOHourly::ISOHourly()
     // No location defaults.
 
     // Lighting defaults:
-    // Sensors and automation controls:
-    // I'm not sure if these belong in Building, grouping all automation controls together,
-    // or if they belong with what they automate (Lighting in this case). - BAA@2015-06-02.
-    presenceSensorAd(0.6),
-    automaticAd(0.8),
-    presenceAutoAd(0.6),
-    manualSwitchAd(1),
-    presenceSensorLux(500),
-    automaticLux(300),
-    presenceAutoLux(300),
-    manualSwitchLux(500),
 
     // Building defaults:
 
@@ -481,17 +470,17 @@ void ISOHourly::initialize()
   auto daylightSensorDimmingFraction = lights->dimmingFraction();
 
   if (lightingOccupancySensorDimmingFraction < 1.0 && daylightSensorDimmingFraction < 1.0) {
-    maxRatioElectricLighting = presenceAutoAd;
-    elightNatural = presenceAutoLux;
+    maxRatioElectricLighting = lights->presenceAutoAd();
+    elightNatural = lights->presenceAutoLux();
   } else if (lightingOccupancySensorDimmingFraction < 1.0) {
-    maxRatioElectricLighting = presenceSensorAd;
-    elightNatural = presenceSensorLux;
+    maxRatioElectricLighting = lights->presenceSensorAd();
+    elightNatural = lights->presenceSensorLux();
   } else if (daylightSensorDimmingFraction < 1.0) {
-    maxRatioElectricLighting = automaticAd;
-    elightNatural = automaticLux;
+    maxRatioElectricLighting = lights->automaticAd();
+    elightNatural = lights->automaticLux();
   } else {
-    maxRatioElectricLighting = manualSwitchAd;
-    elightNatural = manualSwitchLux;
+    maxRatioElectricLighting = lights->manualSwitchAd();
+    elightNatural = lights->manualSwitchLux();
   }
 
   areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);

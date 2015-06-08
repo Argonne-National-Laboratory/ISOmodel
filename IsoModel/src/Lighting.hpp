@@ -121,13 +121,100 @@ public:
   * Permanent lighting power density (W/m2). Lighting that is always on regardless of occupancy
   * (e.g. emergency lights).
   */
-
   double permLightPowerDensity() {
     return m_permLightPowerDensity;
   }
 
   void setPermLightPowerDensity(double permLightPowerDensity) {
     m_permLightPowerDensity = permLightPowerDensity;
+  }
+
+  /**
+  * Occupancy based lighting controls use adjustment factors.
+  */
+  double presenceSensorAd() {
+    return m_presenceSensorAd;
+  }
+
+  void setPresenceSensorAd(double presenceSensorAd) {
+    m_presenceSensorAd = presenceSensorAd;
+  }
+
+  /**
+  * Occupancy based lighting controls use adjustment factors.
+  */
+  double automaticAd() {
+    return m_automaticAd;
+  }
+
+  void setAutomaticAd(double automaticAd) {
+    m_automaticAd = automaticAd;
+  }
+
+  /**
+  * Occupancy based lighting controls use adjustment factors.
+  */
+  double presenceAutoAd() {
+    return m_presenceAutoAd;
+  }
+
+  void setPresenceAutoAd(double presenceAutoAd) {
+    m_presenceAutoAd = presenceAutoAd;
+  }
+
+  /**
+  * Occupancy based lighting controls use adjustment factors.
+  */
+  double manualSwitchAd() {
+    return m_manualSwitchAd;
+  }
+
+  void setManualSwitchAd(double manualSwitchAd) {
+    m_manualSwitchAd = manualSwitchAd;
+  }
+
+  /**
+  * Daylight based lighting control target lux levels.
+  */
+  double presenceSensorLux() {
+    return m_presenceSensorLux;
+  }
+
+  void setPresenceSensorLux(double presenceSensorLux) {
+    m_presenceSensorLux = presenceSensorLux;
+  }
+
+  /**
+  * Daylight based lighting control target lux levels.
+  */
+  double automaticLux() {
+    return m_automaticLux;
+  }
+
+  void setAutomaticLux(double automaticLux) {
+    m_automaticLux = automaticLux;
+  }
+
+  /**
+  * Daylight based lighting control target lux levels.
+  */
+  double presenceAutoLux() {
+    return m_presenceAutoLux;
+  }
+
+  void setPresenceAutoLux(double presenceAutoLux) {
+    m_presenceAutoLux = presenceAutoLux;
+  }
+
+  /**
+  * Daylight based lighting control target lux levels.
+  */
+  double manualSwitchLux() {
+    return m_manualSwitchLux;
+  }
+
+  void setManualSwitchLux(double manualSwitchLux) {
+    m_manualSwitchLux = manualSwitchLux;
   }
 
 private:
@@ -141,6 +228,15 @@ private:
   double m_n_weeks = 50.0;
   double m_elecInternalGains = 1.0;
   double m_permLightPowerDensity = 0.0;
+  // Automatic lighting control defaults:
+  double m_presenceSensorAd = 0.6;
+  double m_automaticAd = 0.8;
+  double m_presenceAutoAd = 0.6;
+  double m_manualSwitchAd = 1;
+  double m_presenceSensorLux = 500;
+  double m_automaticLux = 300;
+  double m_presenceAutoLux = 300;
+  double m_manualSwitchLux = 500;
 };
 
 } // isomodel
