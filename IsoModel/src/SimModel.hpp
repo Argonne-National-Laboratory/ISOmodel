@@ -147,15 +147,6 @@ private:
       const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const;
 
   // Internal member variables for various defaults and constants in the simulation calcs.
-  // Lighting energy use constants
-  // Sunrise. TODO: This shouldn't be the same every month.
-  double n_day_start;
-
-  // Sunset. TODO: This shouldn't be the same every month.
-  double n_day_end;
-
-  // Occupied weeks for lighting (e.g. n_weeks = 50 assumes 2 weeks holiday.)
-  double n_weeks;
 
   // Window solar gain constants.
   // Window frame factor.

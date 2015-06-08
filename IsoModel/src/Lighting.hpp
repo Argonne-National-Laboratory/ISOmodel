@@ -73,11 +73,74 @@ public:
     m_exteriorEnergy = value;
   }
 
+  /**
+  * Sunrise (24-hour time). Defaults to 7.0.
+  */
+  double n_day_start() {
+    return m_n_day_start;
+  }
+
+  void set_n_day_start(double n_day_start) {
+    m_n_day_start = n_day_start;
+  }
+
+  /**
+  * Sunset (24-hour time). Defaults to 18.0.
+  */
+  double n_day_end() {
+    return m_n_day_end;
+  }
+
+  void set_n_day_end(double n_day_end) {
+    m_n_day_end = n_day_end;
+  }
+
+  /**
+  * Number of occupied weeks for lighting purposes.
+  */
+  double n_weeks() {
+    return m_n_weeks;
+  }
+
+  void set_n_weeks(double n_weeks) {
+    m_n_weeks = n_weeks;
+  }
+
+  /**
+  * Electric internal gains. XXX: This appears to be a ratio/factor but I'm not sure - BAA@2015-06-08.
+  */
+  double elecInternalGains() {
+    return m_elecInternalGains;
+  }
+
+  void setElecInternalGains(double electInternalGains) {
+    m_elecInternalGains = electInternalGains;
+  }
+
+  /**
+  * Permanent lighting power density (W/m2). Lighting that is always on regardless of occupancy
+  * (e.g. emergency lights).
+  */
+
+  double permLightPowerDensity() {
+    return m_permLightPowerDensity;
+  }
+
+  void setPermLightPowerDensity(double permLightPowerDensity) {
+    m_permLightPowerDensity = permLightPowerDensity;
+  }
+
 private:
   double m_powerDensityOccupied;
   double m_powerDensityUnoccupied;
   double m_dimmingFraction;
   double m_exteriorEnergy;
+  // Members with default values:
+  double m_n_day_start = 7.0; // TODO: sunrise shouldn't be the same every month.
+  double m_n_day_end = 18.0; // TODO: sunrise shouldbe be the same every month.
+  double m_n_weeks = 50.0;
+  double m_elecInternalGains = 1.0;
+  double m_permLightPowerDensity = 0.0;
 };
 
 } // isomodel

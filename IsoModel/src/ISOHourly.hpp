@@ -249,10 +249,6 @@ private:
   //XXX External Equipment usage Q56
   double externalEquipment;
 
-  // Lighting Constants
-  double electInternalGains;
-  double permLightPowerDensityWperM2;
-
   double fixedVentilationSchedule[24][7];
   double fixedFanSchedule[24][7];
   double fixedExteriorEquipmentSchedule[24][7];

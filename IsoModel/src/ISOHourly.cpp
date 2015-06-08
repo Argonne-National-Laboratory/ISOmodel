@@ -37,8 +37,6 @@ ISOHourly::ISOHourly()
     // No location defaults.
 
     // Lighting defaults:
-    electInternalGains(1), // SingleBldg.L51
-    permLightPowerDensityWperM2(0), // SingleBldg.L50
 
     // Building defaults:
     // Equipment:
@@ -325,9 +323,9 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Heat produced by lighting.
   // \Phi_{int,L}, ISO 13790 10.4.3. 
   // Monthly name: phi_illum_occ, phi_illum_unocc
-  auto phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * electInternalGains;
+  auto phi_illum = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled * lights->elecInternalGains();
 
-  // TODO: permLightPowerDensityWperM2 is unused.
+  // TODO: lights->permLightPowerDensity() is unused.
   
   results.Q_illum_tot = electricForTotalLightArea * lights->powerDensityOccupied() * internalLightingEnabled;
 
