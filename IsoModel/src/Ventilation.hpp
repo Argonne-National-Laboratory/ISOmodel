@@ -27,66 +27,91 @@ public:
   Ventilation(void);
   ~Ventilation(void);
 
-  // Getters.
+  /**
+  * Ventilation intake rate occupied (L/s). Use 10 L/s/person as a default.
+  */
   double supplyRate() const {
     return m_supplyRate;
   }
 
-  double supplyDifference() const {
-    return m_supplyDifference;
-  }
-
-  double heatRecoveryEfficiency() const {
-    return m_heatRecoveryEfficiency;
-  }
-
-  double exhaustAirRecirculated() const {
-    return m_exhaustAirRecirculated;
-  }
-
-  double type() const {
-    return m_type;
-  }
-
-  double fanPower() const {
-    return m_fanPower;
-  }
-
-  double fanControlFactor() const {
-    return m_fanControlFactor;
-  }
-
-  double wasteFactor() const {
-    return m_wasteFactor;
-  }
-
-  // Setters.
   void setSupplyRate(double value) {
     m_supplyRate = value;
+  }
+
+  /**
+  * Ventilation exhaust rate occupied (L/s).
+  */
+  double supplyDifference() const {
+    return m_supplyDifference;
   }
 
   void setSupplyDifference(double value) {
     m_supplyDifference = value;
   }
 
+  /**
+  * Efficiency of heat recovery (unitless. Use 0.0 for no heat recovery).
+  */
+  double heatRecoveryEfficiency() const {
+    return m_heatRecoveryEfficiency;
+  }
+
   void setHeatRecoveryEfficiency(double value) {
     m_heatRecoveryEfficiency = value;
+  }
+
+  /**
+  * Fraction of supply air recirculated (unitless).
+  */
+  double exhaustAirRecirculated() const {
+    return m_exhaustAirRecirculated;
   }
 
   void setExhaustAirRecirculated(double value) {
     m_exhaustAirRecirculated = value;
   }
 
+  /**
+  * Ventilation type (mechanical = 1.0, natural = 2.0, combined = 3.0).
+  * XXX TODO: change this to an enum.
+  */
+  double type() const {
+    return m_type;
+  }
+
   void setType(double value) {
     m_type = value;
+  }
+
+  /**
+  * Specific fan power (W/(L/s)).
+  */
+  double fanPower() const {
+    return m_fanPower;
   }
 
   void setFanPower(double value) {
     m_fanPower = value;
   }
 
+  /**
+  * Fan flow control factor (unitless). This is the energy reduction from fan control measures.
+  * 1 = no control, 0.75 = inlet blade adjuct, 0.65 = variable speed see NEN 2916 7.3.3.4.
+  */
+  double fanControlFactor() const {
+    return m_fanControlFactor;
+  }
+
   void setFanControlFactor(double value) {
     m_fanControlFactor = value;
+  }
+
+  /**
+  * XXX this appears to be the HVAC heating and cooling waste factor, which is not used in
+  * the ventilation calculations.
+  */
+  double wasteFactor() const {
+    return m_wasteFactor;
   }
 
   void setWasteFactor(double value) {

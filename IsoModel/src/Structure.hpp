@@ -102,7 +102,7 @@ public:
   }
 
   /**
-  * Wall and roof solar absorbtion coeficient (0 to 1).1
+  * Wall and roof solar absorbtion coeficient (0 to 1).
   * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
   * angles where south is zero.
   */
@@ -115,7 +115,9 @@ public:
   }
 
   /**
-  *
+  * Window shading device factors.
+  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * angles where south is zero.
   */
   Vector windowShadingDevice() const {
     return m_windowShadingDevice;
@@ -126,7 +128,9 @@ public:
   }
 
   /**
-  *
+  * Window solar heat gain coeficcient (0 to 1).
+  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * angles where south is zero.
   */
   Vector windowNormalIncidenceSolarEnergyTransmittance() const {
     return m_windowNormalIncidenceSolarEnergyTransmittance;
@@ -137,7 +141,7 @@ public:
   }
 
   /**
-  *
+  * Window solar control factor (external control) (0 to 1).
   */
   Vector windowShadingCorrectionFactor() const {
     return m_windowShadingCorrectionFactor;
@@ -148,7 +152,7 @@ public:
   }
 
   /**
-  *
+  * Interior surface heat capacity (J/K/m2).
   */
   double interiorHeatCapacity() const {
     return m_interiorHeatCapacity;
@@ -159,7 +163,7 @@ public:
   }
 
   /**
-  *
+  * Exterior surface (wall) heat capacity (J/K/m2).
   */
   double wallHeatCapacity() const {
     return m_wallHeatCapacity;
@@ -170,7 +174,7 @@ public:
   }
 
   /**
-  *
+  * Building height (m).
   */
   double buildingHeight() const {
     return m_buildingHeight;
@@ -181,7 +185,7 @@ public:
   }
 
   /**
-  *
+  * Infiltration rate occupied (m3/m2/hr, based on surface area).
   */
   double infiltrationRate() const {
     return m_infiltrationRate;

@@ -65,7 +65,7 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   sim.setBuilding(building);
 
   std::shared_ptr<Cooling> cooling(new Cooling);
-  cooling->setCOP(_coolingSystemCOP);
+  cooling->setCop(_coolingSystemCOP);
   cooling->setHvacLossFactor(_hvacCoolingLossFactor);
   cooling->setPartialLoadValue(_coolingSystemIPLVToCOPRatio);
   cooling->setPumpControlReduction(_coolingPumpControl);

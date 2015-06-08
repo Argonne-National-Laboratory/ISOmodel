@@ -27,90 +27,125 @@ public:
   Heating(void);
   ~Heating(void);
 
-  // Getters
+  /**
+  * Heating setpoint occupied (C).
+  */
   double temperatureSetPointOccupied() const {
     return m_temperatureSetPointOccupied;
   }
 
-  double temperatureSetPointUnoccupied() const {
-    return m_temperatureSetPointUnoccupied;
-  }
-
-  double hvacLossFactor() const {
-    return m_hvacLossFactor;
-  }
-
-  double hotcoldWasteFactor() const {
-    return m_hotcoldWasteFactor;
-  }
-
-  double efficiency() const {
-    return m_efficiency;
-  }
-
-  double energyType() const {
-    return m_energyType;
-  }
-
-  double pumpControlReduction() const {
-    return m_pumpControlReduction;
-  }
-
-  double hotWaterDemand() const {
-    return m_hotWaterDemand;
-  }
-
-  double hotWaterDistributionEfficiency() const {
-    return m_hotWaterDistributionEfficiency;
-  }
-
-  double hotWaterSystemEfficiency() const {
-    return m_hotWaterSystemEfficiency;
-  }
-
-  double hotWaterEnergyType() const {
-    return m_hotWaterEnergyType;
-  }
-
-  // Setters
   void setTemperatureSetPointOccupied(double value) {
     m_temperatureSetPointOccupied = value;
+  }
+
+  /**
+  * Heating setpoint unoccupied (C).
+  */
+  double temperatureSetPointUnoccupied() const {
+    return m_temperatureSetPointUnoccupied;
   }
 
   void setTemperatureSetPointUnoccupied(double value) {
     m_temperatureSetPointUnoccupied = value;
   }
 
+  /**
+  * Heating HVAC loss factor, set based on EN 15243 (unitless).
+  */
+  double hvacLossFactor() const {
+    return m_hvacLossFactor;
+  }
+
   void setHvacLossFactor(double value) {
     m_hvacLossFactor = value;
+  }
+
+  /**
+  * Heating and cooling HVAC waste factor, set based on EN 15243 (unitless).
+  */
+  double hotcoldWasteFactor() const {
+    return m_hotcoldWasteFactor;
   }
 
   void setHotcoldWasteFactor(double value) {
     m_hotcoldWasteFactor = value;
   }
 
+  /**
+  * Heating system efficiency (unitless).
+  */
+  double efficiency() const {
+    return m_efficiency;
+  }
+  
   void setEfficiency(double value) {
     m_efficiency = value;
+  }
+
+  /**
+  * Heating system energy type (electric: energyType() == 1, gas: energyType() != 1).
+  * XXX TODO: this probably should be an enum.
+  */
+  double energyType() const {
+    return m_energyType;
   }
 
   void setEnergyType(double value) {
     m_energyType = value;
   }
 
+  /**
+  * Heating pump control reduction (pump control 0 = no pump, 0.5 = auto pump controls 
+  * for more 50% of pumps, 1.0 = all other cases). See NEN 2914 9.4.3.
+  */
+  double pumpControlReduction() const {
+    return m_pumpControlReduction;
+  }
+
   void setPumpControlReduction(double value) {
     m_pumpControlReduction = value;
+  }
+
+  /**
+  * Domestic hot water demand (m3/yr). Use 10 m3/yr/person as a default for offices.
+  */
+  double hotWaterDemand() const {
+    return m_hotWaterDemand;
   }
 
   void setHotWaterDemand(double value) {
     m_hotWaterDemand = value;
   }
 
+  /**
+  * Domestic hot water distribution efficiency (all taps within 3m = 1, taps more 
+  * than 3m = 0.8, circulation or unknown = 0.6, see NEN 2916 12.6). 
+  */
+  double hotWaterDistributionEfficiency() const {
+    return m_hotWaterDistributionEfficiency;
+  }
+
   void setHotWaterDistributionEfficiency(double value) {
     m_hotWaterDistributionEfficiency = value;
   }
 
+  /**
+  * Domestic hot water system efficiency.
+  */
+  double hotWaterSystemEfficiency() const {
+    return m_hotWaterSystemEfficiency;
+  }
+
   void setHotWaterSystemEfficiency(double value) {
     m_hotWaterSystemEfficiency = value;
+  }
+
+  /**
+  * Domestic hot water system energy type (electric: energyType() == 1, gas: energyType() != 1).
+  * XXX TODO: this probably should be an enum.
+  */
+  double hotWaterEnergyType() const {
+    return m_hotWaterEnergyType;
   }
 
   void setHotWaterEnergyType(double value) {

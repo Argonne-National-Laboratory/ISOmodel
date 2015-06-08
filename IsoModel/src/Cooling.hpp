@@ -27,50 +27,67 @@ public:
   Cooling(void);
   ~Cooling(void);
 
-  // Getters.
+  /**
+  * Cooling setpoint occupied (C).
+  */
   double temperatureSetPointOccupied() const {
     return m_temperatureSetPointOccupied;
   }
-
-  double temperatureSetPointUnoccupied() const {
-    return m_temperatureSetPointUnoccupied;
-  }
-
-  double cop() const {
-    return m_COP;
-  }
-
-  double partialLoadValue() const {
-    return m_partialLoadValue;
-  }
-
-  double hvacLossFactor() const {
-    return m_hvacLossFactor;
-  }
-
-  double pumpControlReduction() const {
-    return m_pumpControlReduction;
-  }
-
-  // Setters.
+  
   void setTemperatureSetPointOccupied(double value) {
     m_temperatureSetPointOccupied = value;
+  }
+
+  /**
+  * Cooling setpoint unoccupied (C).
+  */
+  double temperatureSetPointUnoccupied() const {
+    return m_temperatureSetPointUnoccupied;
   }
 
   void setTemperatureSetPointUnoccupied(double value) {
     m_temperatureSetPointUnoccupied = value;
   }
 
-  void setCOP(double value) {
-    m_COP = value;
+  /**
+  * Coefficient of performance (W/W).
+  */
+  double cop() const {
+    return m_cop;
   }
 
+  void setCop(double value) {
+    m_cop = value;
+  }
+
+  /**
+  * Cooling system IPLV (integrated part load value) to COP ratio (unitless).
+  */
+  double partialLoadValue() const {
+    return m_partialLoadValue;
+  }
+  
   void setPartialLoadValue(double value) {
     m_partialLoadValue = value;
   }
 
+  /**
+  * Cooling HVAC loss factor, set based on EN 15243 (unitless).
+  */
+  double hvacLossFactor() const {
+    return m_hvacLossFactor;
+  }
+
   void setHvacLossFactor(double value) {
     m_hvacLossFactor = value;
+  }
+
+  /**
+  * Cooling pump control reduction (pump control 0 = no pump, 0.5 = auto pump controls 
+  * for more 50% of pumps, 1.0 = all other cases). See NEN 2914 9.4.3.
+  */
+  double pumpControlReduction() const {
+    return m_pumpControlReduction;
   }
 
   void setPumpControlReduction(double value) {
@@ -80,7 +97,7 @@ public:
 private:
   double m_temperatureSetPointOccupied;
   double m_temperatureSetPointUnoccupied;
-  double m_COP;
+  double m_cop;
   double m_partialLoadValue;
   double m_hvacLossFactor;
   double m_pumpControlReduction;
