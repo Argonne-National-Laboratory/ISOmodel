@@ -41,17 +41,7 @@ ISOHourly::ISOHourly()
     // Building defaults:
 
     // Structure defaults:
-    // Solar surface:
-    R_se(0.04), // Thermal surface resistance.
-    // Shading:
-    shadingRatioWtoM2(500),
-    shadingMaximumUseRatio(0.5),
-    // Natural light:
-    // I'm not sure if natural light should be here with other solar parameters,
-    // or with lighting. - BAA@2015-06-02.
-    lightedNaturalAream2(0.0), // TODO: This should be a regular .ism parameter.
     // Geometry
-    AtPerAFloor(4.5),
 
     // Heating defaults:
     // Fan power:
@@ -299,7 +289,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   std::vector<double> lightingContribution;
   for (auto i = 0; i != 9; ++i) {
     lightingContribution.push_back(53 / areaNaturallyLightedRatio * solarRadiation[i]
-        * (naturalLightRatio[i] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i] * std::min(shadingRatioWtoM2, solarRadiation[i])));
+        * (naturalLightRatio[i] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i] * std::min(structure->irradianceForMaxShadingUse(), solarRadiation[i])));
   }
 
   auto lightingLevel = std::accumulate(std::begin(lightingContribution), std::end(lightingContribution), 0.0);
@@ -326,7 +316,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   std::vector<double> solarHeatGain;
   for (auto i = 0; i != 9; ++i) {
     solarHeatGain.push_back(
-      solarRadiation[i] * (solarRatio[i] + solarShadeRatioReduction[i] * shadingUsePerWPerM2 * std::min(solarRadiation[i], shadingRatioWtoM2)));
+      solarRadiation[i] * (solarRatio[i] + solarShadeRatioReduction[i] * shadingUsePerWPerM2 * std::min(solarRadiation[i], structure->irradianceForMaxShadingUse())));
   }
 
   // \Phi_{sol}, ISO 13790 11.2.2 eq. 41.
@@ -483,7 +473,7 @@ void ISOHourly::initialize()
     elightNatural = lights->manualSwitchLux();
   }
 
-  areaNaturallyLighted = std::max(0.0001, lightedNaturalAream2);
+  areaNaturallyLighted = std::max(0.0001, lights->naturallyLightedArea());
   areaNaturallyLightedRatio = areaNaturallyLighted / structure->floorArea();
 
   for (auto i = 0; i != 9; ++i) {
@@ -506,7 +496,7 @@ void ISOHourly::initialize()
     solarShadeRatioReduction.push_back(saWMovableShading[i] - solarRatio[i]);
   }
 
-  shadingUsePerWPerM2 = shadingMaximumUseRatio / shadingRatioWtoM2;
+  shadingUsePerWPerM2 = structure->shadingFactorAtMaxUse() / structure->irradianceForMaxShadingUse();
 
   // ISO 15242 Air leakage values.
   // Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
@@ -519,7 +509,7 @@ void ISOHourly::initialize()
   // ISO 13790 7.2.2.2: h_is is fixed at 3.45 W/(m^2*K).
   h_is = 1 / (1 / hci - 1 / h_ms);
   // ISO 13790 7.2.2.2 eq. 9 
-  H_tris = h_is * AtPerAFloor;
+  H_tris = h_is * structure->totalAreaPerFloorArea();
 
   // Calculate Cm from the data in the .ism file.
   // Units seem to need to be in KJ, so divide by 1000.
@@ -552,7 +542,7 @@ void ISOHourly::initialize()
 
   // Constant portion of \Phi_{st}, i.e. without multiplying by
   // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.3.
-  prs = (AtPerAFloor - Am - hwindowWperkm2 / h_ms) / AtPerAFloor;
+  prs = (structure->totalAreaPerFloorArea() - Am - hwindowWperkm2 / h_ms) / structure->totalAreaPerFloorArea();
   // intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
   // eq. C.3. When used in phisPhi0.
   prsInterior = (1 - intPair) * prs;
@@ -560,7 +550,7 @@ void ISOHourly::initialize()
 
   // Constant portion of \Phi_{m}, i.e. without multiplying by
   // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.2.
-  prm = Am / AtPerAFloor;
+  prm = Am / structure->totalAreaPerFloorArea();
   prmInterior = (1 - intPair) * prm;
   prmSolar = (1 - solarPair) * prm;
 
@@ -614,8 +604,8 @@ void ISOHourly::structureCalculations(double SHGC,
   double WindowT = SHGC / 0.87;
   nlams[direction] = windowAreaM2 * WindowT; // Natural lighted area movable shade.
   nla[direction] = windowAreaM2 * WindowT; // Natural lighted area.
-  sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWith;
-  sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * R_se) + windowAreaM2 * solarFactorWithout;
+  sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * structure->R_se()) + windowAreaM2 * solarFactorWith;
+  sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * structure->R_se()) + windowAreaM2 * solarFactorWithout;
   htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
   hWindow[direction] = windowAreaM2 * windowUValue;
 }

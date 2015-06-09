@@ -195,6 +195,87 @@ public:
     m_infiltrationRate = value;
   }
 
+  /**
+  * External thermal surface resistance (m2*k/W).
+  */
+  double R_se() {
+    return m_R_se;
+  }
+
+  void setR_se(double R_se) {
+    m_R_se = R_se;
+  }
+
+  /**
+  * Irradiance at which moveable shading is at maximum use (W). This is used to model movable 
+  * shading. ISO 13790 does it by switching between g_{gl} and g_{gl+sh}. The method here allows
+  * varying degrees of shading rather than just on or off.
+  */
+  double irradianceForMaxShadingUse() {
+    return m_irradianceForMaxShadingUse;
+  }
+
+  void setIrradianceForMaxShadingUse(double irradianceForMaxShadingUse) {
+    m_irradianceForMaxShadingUse = irradianceForMaxShadingUse;
+  }
+
+  /**
+  * Shading factor at max use of moveable shading (unitless). This is used to model movable 
+  * shading. ISO 13790 does it by switching between g_{gl} and g_{gl+sh}. The method here allows
+  * varying degrees of shading rather than just on or off.
+  */
+  double shadingFactorAtMaxUse() {
+    return m_shadingFactorAtMaxUse;
+  }
+
+  void setShadingFactorAtMaxUse(double shadingFactorAtMaxUse) {
+    m_shadingFactorAtMaxUse = shadingFactorAtMaxUse;
+  }
+
+  /**
+  * Total interior surface area per floor area (m2/m2).
+  */
+  double totalAreaPerFloorArea() {
+    return m_totalAreaPerFloorArea;
+  }
+
+  void setTotalAreaPerFloorArea(double totalAreaPerFloorArea) {
+    m_totalAreaPerFloorArea = totalAreaPerFloorArea;
+  }
+
+  /**
+  * Window frame factor.
+  */
+  double n_win_ff() {
+    return m_n_win_ff;
+  }
+
+  void setN_win_ff(double n_win_ff) {
+    m_n_win_ff = n_win_ff;
+  }
+
+  /**
+  * Correction factor for non-scattering window as per ISO 13790 11.4.2.
+  */
+  double n_win_F_W() {
+    return m_n_win_F_W;
+  }
+
+  void setN_win_F_W(double n_win_F_W) {
+    m_n_win_F_W = n_win_F_W;
+  }
+
+  /**
+  * Vertical wall external convection surface heat resistance as per ISO 6946.
+  */
+  double n_R_sc_ext() {
+    return m_n_R_sc_ext;
+  }
+
+  void setN_R_sc_ext(double n_R_sc_ext) {
+    m_n_R_sc_ext = n_R_sc_ext;
+  }
+
 private:
   double m_floorArea;
   Vector m_wallArea;
@@ -210,6 +291,14 @@ private:
   double m_wallHeatCapacity;
   double m_buildingHeight;
   double m_infiltrationRate;
+  // Members with default values:
+  double m_R_se = 0.04; // Exterior surface thermal resistance.
+  double m_irradianceForMaxShadingUse = 500; // The irradiance at which shading is in full use.
+  double m_shadingFactorAtMaxUse = 0.5; // Shading factor of moveable shading when in full use.
+  double m_totalAreaPerFloorArea = 4.5; // \Lambda_{at}. Ratio of total interior surface area to floor area.
+  double m_n_win_ff = 0.25; // Window frame factor.
+  double m_n_win_F_W = 0.9; // Correction factor for non-scattering window as per ISO 13790 11.4.2
+  double m_n_R_sc_ext = 0.04; // Vertical wall external convection surface heat resistance as per ISO 6946
 
 };
 

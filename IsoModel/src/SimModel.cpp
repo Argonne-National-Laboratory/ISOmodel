@@ -301,10 +301,6 @@ SimModel::SimModel()
     // No defaults
 
     // Structure defaults:
-    // Window solar gain constants.
-    n_win_ff(0.25),
-    n_win_F_W(0.9),
-    n_R_sc_ext(0.04),
 
     // Heating defaults:
     // Interior temp constants.
@@ -672,7 +668,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
   Vector v_win_SDF = Vector(vsize);
   Vector v_win_SDF_frac = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
-    v_win_ff[i] = 1.0 - n_win_ff;
+    v_win_ff[i] = 1.0 - structure->n_win_ff();
     v_win_SDF[i] = n_win_SDF_table[((int) structure->windowShadingDevice()[i]) - 1];
     v_win_SDF_frac[i] = 1.0;
   }
@@ -692,7 +688,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
    v_win_F_shgl = v_win_SDF.*v_win_SDF_frac;
    */
   Vector v_g_gln = structure->windowNormalIncidenceSolarEnergyTransmittance();
-  Vector v_g_gl = mult(v_g_gln, n_win_F_W);
+  Vector v_g_gl = mult(v_g_gln, structure->n_win_F_W());
 
   v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
 
@@ -712,7 +708,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
  
   v_wall_R_sc = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
-    v_wall_R_sc[i] = n_R_sc_ext;
+    v_wall_R_sc[i] = structure->n_R_sc_ext();
   }
   v_win_hr = mult(v_wall_emiss, 5.0);
   v_wall_A_sol = mult(mult(mult(v_wall_alpha_sc, v_wall_R_sc), v_wall_U), v_wall_A);

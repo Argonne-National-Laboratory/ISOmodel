@@ -148,16 +148,6 @@ private:
 
   // Internal member variables for various defaults and constants in the simulation calcs.
 
-  // Window solar gain constants.
-  // Window frame factor.
-  double n_win_ff;
-
-  // Correction factor for non-scattering window as per ISO 13790 11.4.2
-  double n_win_F_W;
-
-  // Vertical wall external convection surface heat resistance as per ISO 6946
-  double n_R_sc_ext;
-
   // Interior temp constants.
 
   // Flag to signify if we have heating and controls turned on or off. E.g., might be off for school in summer.

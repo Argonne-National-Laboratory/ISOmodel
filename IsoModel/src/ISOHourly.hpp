@@ -142,7 +142,6 @@ private:
   // Used to determine the amount of electric light used.
   double maxRatioElectricLighting; // Ratio of electric light used due to lighting controls.
   double elightNatural; // Target lux level in naturally lit area.
-  double lightedNaturalAream2; // SingleBuilding.L53
 
   // Ventilation from wind. ISO 15242
   double ventDcpWindImpact; // ISO 15242 dcp. G119
@@ -150,19 +149,14 @@ private:
   double q4Pa; // ISO 15242 Q_{4Pa}. XXX infiltrationM3PerHourAt4Pa ???
   double windImpactHz; // ISO 15242 H_{z}. H119
 
-  // Geometry
-  double AtPerAFloor; // \Lambda_{at}. Ratio of total interior surface area to floor area. J97
-
   // Thermal Mass
   double Am; // A_{m}. XXX: effectiveMassAreaM2
   double Cm; // C_{m}. XXX: internalHeatCapacityJPerK 
 
   // Movable shading.
-  // These three variables are used to model movable shading. ISO 13790 does it
+  // These variables are used to model movable shading. ISO 13790 does it
   // by switching between g_{gl} and g_{gl+sh}. The method here allows varying
   // degrees of shading rather than just on or off.
-  double shadingMaximumUseRatio; // The shading factor of the movable shading when in full use. E101
-  double shadingRatioWtoM2; // The irradiance at which shading is in full use. E102
   double shadingUsePerWPerM2; // K146. The shading factor per unit irradiance. XXX: shadingUsePerWPerM2
 
   double areaNaturallyLighted;
@@ -225,8 +219,6 @@ private:
   double hem; // H_{em}
 
   static const int NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, ROOF;
-
-  double R_se; // Thermal surface resistance. Used in solar surface value calculations.
 
   // Calculated surface values
   double nlams[9];

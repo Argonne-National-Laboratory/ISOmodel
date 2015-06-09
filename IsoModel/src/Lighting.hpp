@@ -217,6 +217,17 @@ public:
     m_manualSwitchLux = manualSwitchLux;
   }
 
+  /**
+  * Area that utlizes natural lighting (m2).
+  */
+  double naturallyLightedArea() {
+    return m_naturallyLightedArea;
+  }
+
+  void setNaturallyLightedArea(double naturallyLightedArea) {
+    m_naturallyLightedArea = naturallyLightedArea;
+  }
+
 private:
   double m_powerDensityOccupied;
   double m_powerDensityUnoccupied;
@@ -233,10 +244,12 @@ private:
   double m_automaticAd = 0.8;
   double m_presenceAutoAd = 0.6;
   double m_manualSwitchAd = 1;
-  double m_presenceSensorLux = 500;
-  double m_automaticLux = 300;
-  double m_presenceAutoLux = 300;
-  double m_manualSwitchLux = 500;
+  double m_presenceSensorLux = 500.0;
+  double m_automaticLux = 300.0;
+  double m_presenceAutoLux = 300.0;
+  double m_manualSwitchLux = 500.0;
+  // Daylighting
+  double m_naturallyLightedArea = 0.0;
 };
 
 } // isomodel
