@@ -156,39 +156,13 @@ private:
   // Flag to signify if we have cooling and controls turned on or off. E.g., might be off for school in summer.
   double T_cl_ctrl_flag;
 
-  // Overall heat transfer coefficient by ventilation as per ISO 13790 9.3.
-  // TODO: This is not implemented yet.
-  double H_ve;
-
   // Ventillation constants.
   // infiltration data from
   // Tamura, (1976), Studies on exterior wall air tightness and air infiltration of tall buildings, ASHRAE Transactions, 82(1), 122-134.
   // Orm (1998), AIVC TN44: Numerical data for air infiltration and natural ventilation calculations, Air Infiltration and Ventilation Centre.
   // Emmerich, (2005), Investigation of the Impact of Commercial Building Envelope Airtightness on HVAC Energy Use.
-  // create a different table for different building types
+  // TODO: create a different table for different building types
   // n_highrise_inf_table=[4 6 10 15 20];  % infiltration table for high rise buildings as per Tamura, Orm and Emmerich
-
-  // Assumed floor exponent for infiltration pressure conversion.
-  double n_p_exp;
-
-  // Fraction that h_stack/zone height.  assume 0.7 as per en 15242
-  double n_zone_frac;
-
-  // Reset the pressure exponent to 0.667 for this part of the calc
-  double n_stack_exp;
-
-  double n_stack_coeff;
-  double n_wind_exp;
-  double n_wind_coeff;
-
-  // conventional value for cp difference between windward and leeward sides for low rise buildings as per 15242.
-  double n_dCp;
-
-  // vent_rate_flag set to 0 for constant ventilation, 1 if vent of in unoccupied times or 2 if vent rate dropped proportional to population.
-  int vent_rate_flag;
-
-  // Heat capacity of air per unit volume in J/(m3 K)
-  double n_rhoc_air;
 
   // Heating and cooling constants.
 

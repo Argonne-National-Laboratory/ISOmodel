@@ -59,13 +59,6 @@ ISOHourly::ISOHourly()
     // Pumps:
     // n_E_pumps is also a cooling default.
 
-    // Ventilation defaults:
-    ventPreheatDegC(-50), // SingleBldg.Q40
-    // Air leakage:
-    n50(2.0),
-    // Wind:
-    hzone(39.0),
-    ventDcpWindImpact(0.75),
 
     // EpwData defaults:
     // No EpwData defaults.
@@ -335,9 +328,9 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;
   auto exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}.
   auto tAfterExchange = (1 - ventilation->heatRecoveryEfficiency()) * temperature + ventilation->heatRecoveryEfficiency() * 20;
-  auto tSuppliedAir = std::max(ventPreheatDegC, tAfterExchange);
+  auto tSuppliedAir = std::max(ventilation->ventPreheatDegC(), tAfterExchange);
   // ISO 15242 6.7.1 Step 1.
-  auto qWind = 0.0769 * q4Pa * std::pow((ventDcpWindImpact * windMps * windMps), 0.667);
+  auto qWind = 0.0769 * q4Pa * std::pow((ventilation->dCp() * windMps * windMps), 0.667);
   auto qStackPrevIntTemp = 0.0146 * q4Pa * std::pow((0.5 * windImpactHz * (std::max(0.00001, fabs(temperature - tiHeatCool)))), 0.667);
   // ISO 15242 6.7.1 Step 2.
   auto qExfiltration = std::max(0.0,
@@ -500,7 +493,7 @@ void ISOHourly::initialize()
 
   // ISO 15242 Air leakage values.
   // Total air leakage at 4Pa in m3/hr. ISO 15242 Annex D Table D.1.
-  auto buildingv8 = 0.19 * (n50 * (structure->floorArea() * structure->buildingHeight()));
+  auto buildingv8 = 0.19 * (ventilation->n50() * (structure->floorArea() * structure->buildingHeight()));
   // Air leakage per area at 4Pa (m3/hr/m2).
   q4Pa = std::max(0.000001, buildingv8 / structure->floorArea());
 
@@ -562,7 +555,7 @@ void ISOHourly::initialize()
   // ISO 13790 12.2.2 eq. 63
   hem = 1 / (1 / hOpaqueWperkm2 - 1 / H_ms);
 
-  windImpactHz = std::max(0.1, hzone);
+  windImpactHz = std::max(0.1, ventilation->hzone());
   windImpactSupplyRatio = std::max(0.00001, ventilation->fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
 }
 

@@ -119,7 +119,7 @@ public:
   * External equipment energy use (W).
   */
 
-  double externalEquipment() {
+  double externalEquipment() const {
     return m_externalEquipment;
   }
 

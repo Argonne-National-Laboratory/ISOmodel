@@ -144,7 +144,6 @@ private:
   double elightNatural; // Target lux level in naturally lit area.
 
   // Ventilation from wind. ISO 15242
-  double ventDcpWindImpact; // ISO 15242 dcp. G119
   double windImpactSupplyRatio; //I119
   double q4Pa; // ISO 15242 Q_{4Pa}. XXX infiltrationM3PerHourAt4Pa ???
   double windImpactHz; // ISO 15242 H_{z}. H119
@@ -170,9 +169,6 @@ private:
   std::vector<double> solarRatio;
   std::vector<double> solarShadeRatioReduction;
 
-  // Ventillation constants.
-  double ventPreheatDegC;
-
   // Fan power constants.
   // Heating temp difference between supply air and room air.
   double n_dT_supp_ht;
@@ -183,10 +179,6 @@ private:
 
   // Wind constants.
   double hzone; // Not totally clear what this is. Something wind related.
-
-  // ISO 15242 Air leakage values.
-  // Air leakage at 50 Pa in air-changes/hr. (Such as from blower door test).
-  double n50;
 
   // Pump constants.
   // Specific power of systems pumps + control systems in W/m2.

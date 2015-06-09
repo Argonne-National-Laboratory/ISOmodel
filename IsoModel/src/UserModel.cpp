@@ -217,7 +217,7 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   ventilation->setHeatRecoveryEfficiency(_heatRecovery);
   ventilation->setSupplyDifference(_supplyExhaustRate);
   ventilation->setSupplyRate(_freshAirFlowRate);
-  ventilation->setType(_ventilationType);
+  ventilation->setVentType(_ventilationType);
   sim.setVentilation(ventilation);
 }
 

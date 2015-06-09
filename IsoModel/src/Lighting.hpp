@@ -76,7 +76,7 @@ public:
   /**
   * Sunrise (24-hour time). Defaults to 7.0.
   */
-  double n_day_start() {
+  double n_day_start() const {
     return m_n_day_start;
   }
 
@@ -87,7 +87,7 @@ public:
   /**
   * Sunset (24-hour time). Defaults to 18.0.
   */
-  double n_day_end() {
+  double n_day_end() const {
     return m_n_day_end;
   }
 
@@ -98,7 +98,7 @@ public:
   /**
   * Number of occupied weeks for lighting purposes.
   */
-  double n_weeks() {
+  double n_weeks() const {
     return m_n_weeks;
   }
 
@@ -109,7 +109,7 @@ public:
   /**
   * Electric internal gains. XXX: This appears to be a ratio/factor but I'm not sure - BAA@2015-06-08.
   */
-  double elecInternalGains() {
+  double elecInternalGains() const {
     return m_elecInternalGains;
   }
 
@@ -121,7 +121,7 @@ public:
   * Permanent lighting power density (W/m2). Lighting that is always on regardless of occupancy
   * (e.g. emergency lights).
   */
-  double permLightPowerDensity() {
+  double permLightPowerDensity() const {
     return m_permLightPowerDensity;
   }
 
@@ -132,7 +132,7 @@ public:
   /**
   * Occupancy based lighting controls use adjustment factors.
   */
-  double presenceSensorAd() {
+  double presenceSensorAd() const {
     return m_presenceSensorAd;
   }
 
@@ -143,7 +143,7 @@ public:
   /**
   * Occupancy based lighting controls use adjustment factors.
   */
-  double automaticAd() {
+  double automaticAd() const {
     return m_automaticAd;
   }
 
@@ -154,7 +154,7 @@ public:
   /**
   * Occupancy based lighting controls use adjustment factors.
   */
-  double presenceAutoAd() {
+  double presenceAutoAd() const {
     return m_presenceAutoAd;
   }
 
@@ -165,7 +165,7 @@ public:
   /**
   * Occupancy based lighting controls use adjustment factors.
   */
-  double manualSwitchAd() {
+  double manualSwitchAd() const {
     return m_manualSwitchAd;
   }
 
@@ -176,7 +176,7 @@ public:
   /**
   * Daylight based lighting control target lux levels.
   */
-  double presenceSensorLux() {
+  double presenceSensorLux() const {
     return m_presenceSensorLux;
   }
 
@@ -187,7 +187,7 @@ public:
   /**
   * Daylight based lighting control target lux levels.
   */
-  double automaticLux() {
+  double automaticLux() const {
     return m_automaticLux;
   }
 
@@ -198,7 +198,7 @@ public:
   /**
   * Daylight based lighting control target lux levels.
   */
-  double presenceAutoLux() {
+  double presenceAutoLux() const {
     return m_presenceAutoLux;
   }
 
@@ -209,7 +209,7 @@ public:
   /**
   * Daylight based lighting control target lux levels.
   */
-  double manualSwitchLux() {
+  double manualSwitchLux() const {
     return m_manualSwitchLux;
   }
 
@@ -220,7 +220,7 @@ public:
   /**
   * Area that utlizes natural lighting (m2).
   */
-  double naturallyLightedArea() {
+  double naturallyLightedArea() const {
     return m_naturallyLightedArea;
   }
 

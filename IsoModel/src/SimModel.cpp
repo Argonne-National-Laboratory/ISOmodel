@@ -332,21 +332,10 @@ SimModel::SimModel()
     n_eta_DC_COP(5.5),
     n_eta_DC_frac_abs(0),
     n_eta_DC_COP_abs(1),
-    n_frac_DC_free(0),
+    n_frac_DC_free(0)
     // n_E_pumps also relates to cooling.
 
     // Ventilation defaults:
-    // Ventilation constants.
-    n_p_exp(0.65),
-    n_zone_frac(0.7),
-    n_stack_exp(0.667), // Reset the pressure exponent to 0.667 for this part of the calc
-    n_stack_coeff(0.0146),
-    n_wind_exp(0.667),
-    n_wind_coeff(0.0769),
-    n_dCp(0.75),
-    vent_rate_flag(1),
-    n_rhoc_air(1200),
-    H_ve(0)
 {}
 
 SimModel::~SimModel() {}
@@ -668,7 +657,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
   Vector v_win_SDF = Vector(vsize);
   Vector v_win_SDF_frac = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
-    v_win_ff[i] = 1.0 - structure->n_win_ff();
+    v_win_ff[i] = 1.0 - structure->win_ff();
     v_win_SDF[i] = n_win_SDF_table[((int) structure->windowShadingDevice()[i]) - 1];
     v_win_SDF_frac[i] = 1.0;
   }
@@ -688,7 +677,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
    v_win_F_shgl = v_win_SDF.*v_win_SDF_frac;
    */
   Vector v_g_gln = structure->windowNormalIncidenceSolarEnergyTransmittance();
-  Vector v_g_gl = mult(v_g_gln, structure->n_win_F_W());
+  Vector v_g_gl = mult(v_g_gln, structure->win_F_W());
 
   v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
 
@@ -708,7 +697,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
  
   v_wall_R_sc = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
-    v_wall_R_sc[i] = structure->n_R_sc_ext();
+    v_wall_R_sc[i] = structure->R_sc_ext();
   }
   v_win_hr = mult(v_wall_emiss, 5.0);
   v_wall_A_sol = mult(mult(mult(v_wall_alpha_sc, v_wall_R_sc), v_wall_U), v_wall_A);
@@ -1058,7 +1047,7 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
    %Cm_env=0;  % use this to match old spreadsheet Cm calc;
    Cm=Cm_int+Cm_env;
    */
-  double H_tot = H_tr + H_ve;
+  double H_tot = H_tr + ventilation->H_ve();
   tau = Cm / H_tot / 3600.0;
   /*
    % H_ve is overall heat transfer coefficient by ventilation as per ISO 13790 9.3  
@@ -1413,17 +1402,17 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    */
   double v_Q75pa = structure->infiltrationRate();
   double floorArea = structure->floorArea();
-  double v_Q4pa = v_Q75pa * tot_env_A / floorArea * (std::pow((4.0 / 75.0), n_p_exp));
-  double h_stack = n_zone_frac * vent_zone_height;
+  double v_Q4pa = v_Q75pa * tot_env_A / floorArea * (std::pow((4.0 / 75.0), ventilation->p_exp()));
+  double h_stack = ventilation->zone_frac() * vent_zone_height;
   Vector dbtDiff = dif(location->weather()->mdbt(), v_Th_avg);
   printVector("dbtDiff", dbtDiff);
   Vector dbtDiffAbs = abs(dbtDiff);
   printVector("dbtDiffAbs", dbtDiffAbs);
   Vector dbtHStack = mult(dbtDiffAbs, h_stack);
   printVector("dbtHstack", dbtHStack);
-  Vector dbtPowered = pow(dbtHStack, n_stack_exp);
+  Vector dbtPowered = pow(dbtHStack, ventilation->stack_exp());
   printVector("dbtPowered", dbtPowered);
-  Vector dbtMultQ4 = mult(dbtPowered, n_stack_coeff * v_Q4pa);
+  Vector dbtMultQ4 = mult(dbtPowered, ventilation->stack_coeff() * v_Q4pa);
   printVector("dbtMultQ4", dbtMultQ4);
 
   Vector v_qv_stack_ht = maximum(dbtMultQ4, 0.001); //%qv_stack_heating m3/h/m2
@@ -1433,9 +1422,9 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("dbtDiffAbs", dbtDiffAbs);
   dbtHStack = mult(dbtDiffAbs, h_stack);
   printVector("dbtHstack", dbtHStack);
-  dbtPowered = pow(dbtHStack, n_stack_exp);
+  dbtPowered = pow(dbtHStack, ventilation->stack_exp());
   printVector("dbtPowered", dbtPowered);
-  dbtMultQ4 = mult(dbtPowered, n_stack_coeff * v_Q4pa);
+  dbtMultQ4 = mult(dbtPowered, ventilation->stack_coeff() * v_Q4pa);
   printVector("dbtMultQ4", dbtMultQ4);
   Vector v_qv_stack_cl = maximum(dbtMultQ4, 0.001); //%qv_stack_cooling
   printVector("v_qv_stack_ht", v_qv_stack_ht);
@@ -1463,11 +1452,11 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    */
 
   Vector v_qv_wind_ht = mult(
-      mult(pow(mult(mult(location->weather()->mwind(), location->weather()->mwind()), n_dCp * location->terrain()), n_wind_exp), v_Q4pa),
-      n_wind_coeff); // % qv_wind_heating
+      mult(pow(mult(mult(location->weather()->mwind(), location->weather()->mwind()), ventilation->dCp() * location->terrain()), ventilation->wind_exp()), v_Q4pa),
+      ventilation->wind_coeff()); // % qv_wind_heating
   Vector v_qv_wind_cl = mult(
-      mult(pow(mult(mult(location->weather()->mwind(), location->weather()->mwind()), n_dCp * location->terrain()), n_wind_exp), v_Q4pa),
-      n_wind_coeff); // % qv_wind_cooling
+      mult(pow(mult(mult(location->weather()->mwind(), location->weather()->mwind()), ventilation->dCp() * location->terrain()), ventilation->wind_exp()), v_Q4pa),
+      ventilation->wind_coeff()); // % qv_wind_cooling
 
   printVector("v_qv_wind_ht", v_qv_wind_ht);
   printVector("v_qv_wind_cl", v_qv_wind_cl);
@@ -1520,7 +1509,7 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    % set to 1 to mimic the behavior of the original spreadsheet
    */
   double vent_op_frac;
-  switch (vent_rate_flag) {
+  switch (ventilation->vent_rate_flag()) {
   case 0:
     vent_op_frac = 1;
     break;
@@ -1543,7 +1532,7 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
    vent_op_frac=frac_hrs_wk_day+(1-frac_hrs_wk_day)*occ_dens/unocc_dens;
    end
    */
-  double initVal = ventilation->type() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
+  double initVal = ventilation->ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
   Vector v_qv_mve_ht(12);
   Vector v_qv_mve_cl(12);
   for (uint i = 0; i < v_qv_mve_ht.size(); i++) {
@@ -1554,8 +1543,8 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("v_qve_ht", v_qve_ht);
   printVector("v_qve_cl", v_qve_cl);
 
-  v_Hve_ht = div(mult(v_qve_ht, n_rhoc_air), 3600.0);
-  v_Hve_cl = div(mult(v_qve_cl, n_rhoc_air), 3600.0);
+  v_Hve_ht = div(mult(v_qve_ht, ventilation->rhoc_air()), 3600.0);
+  v_Hve_cl = div(mult(v_qve_cl, ventilation->rhoc_air()), 3600.0);
   /*
    if In.vent_type==3
    v_qv_mve_ht=zeros(12,1); %qv_me_heating for calc

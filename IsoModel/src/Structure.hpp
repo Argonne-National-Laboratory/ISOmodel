@@ -246,34 +246,34 @@ public:
   /**
   * Window frame factor.
   */
-  double n_win_ff() {
-    return m_n_win_ff;
+  double win_ff() {
+    return m_win_ff;
   }
 
-  void setN_win_ff(double n_win_ff) {
-    m_n_win_ff = n_win_ff;
+  void setWin_ff(double win_ff) {
+    m_win_ff = win_ff;
   }
 
   /**
   * Correction factor for non-scattering window as per ISO 13790 11.4.2.
   */
-  double n_win_F_W() {
-    return m_n_win_F_W;
+  double win_F_W() {
+    return m_win_F_W;
   }
 
-  void setN_win_F_W(double n_win_F_W) {
-    m_n_win_F_W = n_win_F_W;
+  void setWin_F_W(double win_F_W) {
+    m_win_F_W = win_F_W;
   }
 
   /**
   * Vertical wall external convection surface heat resistance as per ISO 6946.
   */
-  double n_R_sc_ext() {
-    return m_n_R_sc_ext;
+  double R_sc_ext() {
+    return m_R_sc_ext;
   }
 
-  void setN_R_sc_ext(double n_R_sc_ext) {
-    m_n_R_sc_ext = n_R_sc_ext;
+  void setR_sc_ext(double R_sc_ext) {
+    m_R_sc_ext = R_sc_ext;
   }
 
 private:
@@ -296,9 +296,9 @@ private:
   double m_irradianceForMaxShadingUse = 500; // The irradiance at which shading is in full use.
   double m_shadingFactorAtMaxUse = 0.5; // Shading factor of moveable shading when in full use.
   double m_totalAreaPerFloorArea = 4.5; // \Lambda_{at}. Ratio of total interior surface area to floor area.
-  double m_n_win_ff = 0.25; // Window frame factor.
-  double m_n_win_F_W = 0.9; // Correction factor for non-scattering window as per ISO 13790 11.4.2
-  double m_n_R_sc_ext = 0.04; // Vertical wall external convection surface heat resistance as per ISO 6946
+  double m_win_ff = 0.25; // Window frame factor.
+  double m_win_F_W = 0.9; // Correction factor for non-scattering window as per ISO 13790 11.4.2
+  double m_R_sc_ext = 0.04; // Vertical wall external convection surface heat resistance as per ISO 6946
 
 };
 
