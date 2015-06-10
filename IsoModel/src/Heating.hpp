@@ -152,6 +152,164 @@ public:
     m_hotWaterEnergyType = value;
   }
 
+  /**
+  * Heating temperature difference between room air and supply air (C).
+  */
+  double dT_supp_ht() const {
+    return m_dT_supp_ht;
+  }
+
+  void setDT_supp_ht(double dT_supp_ht) {
+    m_dT_supp_ht = dT_supp_ht;
+  }
+
+  /**
+  * Flag to indicate if heating is delivered by air or not, and thus, 
+  * whether or not fan power for heating should be calculated.
+  */
+  bool forcedAirHeating() const {
+    return m_forcedAirHeating;
+  }
+
+  void setForcedAirHeating(bool forcedAirHeating) {
+    m_forcedAirHeating = forcedAirHeating;
+  }
+
+  /**
+  * Specific power of systems pumps and control systems (W/m2).
+  */
+  double E_pumps() const {
+    return m_E_pumps;
+  }
+
+  void setE_pumps(double E_pumps) {
+    m_E_pumps = E_pumps;
+  }
+
+  /**
+  * Flag to signify if we have heating and controls turned on or off. 
+  * E.g., might be off for school in summer.
+  */
+  double T_ht_ctrl_flag() const {
+    return m_T_ht_ctrl_flag;
+  }
+
+  void setT_ht_ctrl_flag(double T_ht_ctrl_flag) {
+    m_T_ht_ctrl_flag = T_ht_ctrl_flag;
+  }
+
+  /**
+  * Reference dimensionless parameter. (Used to set a_H, the building heating dimensionless constant).
+  */
+  double a_H0() const {
+    return m_a_H0;
+  }
+
+  void setA_H0(double a_H0) {
+    m_a_H0 = a_H0;
+  }
+
+  /**
+  * Reference time constant. (Used to set a_H, the building heating dimensionless constant).
+  */
+  double tau_H0() const {
+    return m_tau_H0;
+  }
+
+  void setTau_H0(double tau_H0) {
+    m_tau_H0 = tau_H0;
+  }
+
+  /**
+  * Heat capacity of air per volume (MJ/m3/K).
+  * Multiply by 277.777778 to convert to watt-hr/m3/K.
+  * TODO: Combine this with ventilation rhoc_a, which is in W/m3/K.
+  */
+  double rhoC_a() const {
+    return m_rhoC_a;
+  }
+
+  void setRhoC_a(double rhoC_a) {
+    m_rhoC_a = rhoC_a;
+  }
+
+  /**
+  * Building connected to District Heating (DH) (0=no, 1=yes.  Assume DH is powered by natural gas).
+  */
+  double DH_YesNo() const {
+    return m_DH_YesNo;
+  }
+
+  void setDH_YesNo(double DH_YesNo) {
+    m_DH_YesNo = DH_YesNo;
+  }
+
+  /**
+  * Efficiency of DH network. Typical value 0l75-0l9 EN 15316-4-5
+  */
+  double eta_DH_network() const {
+    return m_eta_DH_network;
+  }
+
+  void setEta_DH_network(double eta_DH_network) {
+    m_eta_DH_network = eta_DH_network;
+  }
+
+  /**
+  * Efficiency of DH system.
+  */
+  double eta_DH_sys() const {
+    return m_eta_DH_sys;
+  }
+
+  void setEta_DH_sys(double eta_DH_sys) {
+    m_eta_DH_sys = eta_DH_sys;
+  }
+
+  /**
+  * Fraction of free heat source to DH (0 to 1).
+  */
+  double frac_DH_free() const {
+    return m_frac_DH_free;
+  }
+
+  void setFrac_DH_free(double frac_DH_free) {
+    m_frac_DH_free = frac_DH_free;
+  }
+
+  /**
+  * Water temp set point (C).
+  */
+  double dhw_tset() const {
+    return m_dhw_tset;
+  }
+
+  void setDhw_tset(double dhw_tset) {
+    m_dhw_tset = dhw_tset;
+  }
+
+  /**
+  * Water initial temp (C).
+  */
+  double dhw_tsupply() const {
+    return m_dhw_tsupply;
+  }
+
+  void setDhw_tsupply(double dhw_tsupply) {
+    m_dhw_tsupply = dhw_tsupply;
+  }
+
+  /**
+  * Specific heat of water in MJ/m3/K.
+  */
+  double CP_h20() const {
+    return m_CP_h20;
+  }
+
+  void setCP_h20(double CP_h20) {
+    m_CP_h20 = CP_h20;
+  }
+
 private:
   double m_temperatureSetPointOccupied;
   double m_temperatureSetPointUnoccupied;
@@ -164,7 +322,24 @@ private:
   double m_hotWaterSystemEfficiency;
   double m_hotWaterEnergyType;
   double m_hotcoldWasteFactor;
-
+  // Members with default values:
+  double m_dT_supp_ht = 7.0;
+  bool m_forcedAirHeating = true;
+  // Pumps:
+  double m_E_pumps = 0.25;
+  // Interior temp constants.
+  double m_T_ht_ctrl_flag = 1;
+  double m_a_H0 = 1;
+  double m_tau_H0 = 15;
+  double m_rhoC_a = 1.22521 * 0.001012; // rho (kg/m3) * Cp (MJ/kg/K) = rhoCp (MJ/m3/K).
+  double m_DH_YesNo = 0;
+  double m_eta_DH_network = 0.9;
+  double m_eta_DH_sys = 0.87;
+  double m_frac_DH_free = 0.000;
+  // Heated water constants
+  double m_dhw_tset = 60;
+  double m_dhw_tsupply = 20;
+  double m_CP_h20 = 4.18;
 };
 
 } // isomodel

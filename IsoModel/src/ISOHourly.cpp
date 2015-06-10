@@ -30,49 +30,11 @@ namespace isomodel {
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
 // There are a bunch more similar constants that are initialized in ISOHourly::initialize().
 ISOHourly::ISOHourly() 
-  : // Population defaults:
-    // No Population defaults.
-
-    // Location defaults:
-    // No location defaults.
-
-    // Lighting defaults:
-
-    // Building defaults:
-
-    // Structure defaults:
-    // Geometry
-
-    // Heating defaults:
-    // Fan power:
-    n_dT_supp_ht(7.0),
-    forcedAirHeating(true),
-    n_rhoC_a(1.22521 * 0.001012 * 277.777778), // First 2 numbers give rho*Cp for air in MJ/m3/K, last converts to watt-hr/m3/K.
-    // Pumps:
-    n_E_pumps(0.25),
-
-    // Cooling defaults:
-    // Fan power:
-    n_dT_supp_cl(7.0),
-    forcedAirCooling(true),
-    // n_rhoC_a is also a cooling default.
-    // Pumps:
-    // n_E_pumps is also a cooling default.
-
-
-    // EpwData defaults:
-    // No EpwData defaults.
-
-    // ISO13790 RC Model defaults
+  : // ISO13790 RC Model defaults
     solarPair(0),
     intPair(0.5),
     hci(2.5),
-    hri(5.5),
-
-    // Unused:
-    fanDeltaPinPa(800), // Appears to be unused - BAA@2015-06-02.
-    fanN(0.8), // Appears to be unused - BAA@2015-06-02.
-    provisionalCFlowad(1) // Appears to be unused - BAA@2015-06-02.
+    hri(5.5)
 {}
 
 ISOHourly::~ISOHourly() {}
@@ -388,14 +350,14 @@ void ISOHourly::calculateHour(int hourOfYear,
   results.Qneed_ht = std::max(0.0, phiActual); // Raw need. Not adjusted for efficiency.
   
   // Fan power
-  auto T_sup_ht = heating->temperatureSetPointOccupied() + n_dT_supp_ht; //%hot air supply temp  - assume supply air is 7C hotter than room
-  auto T_sup_cl = cooling->temperatureSetPointOccupied() - n_dT_supp_cl; //%cool air supply temp - assume 7C lower than room
+  auto T_sup_ht = heating->temperatureSetPointOccupied() + heating->dT_supp_ht(); //%hot air supply temp  - assume supply air is 7C hotter than room
+  auto T_sup_cl = cooling->temperatureSetPointOccupied() - cooling->dT_supp_cl(); //%cool air supply temp - assume 7C lower than room
 
   auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
 
   // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
-  auto Vair_ht = forcedAirHeating ? results.Qneed_ht / (((T_sup_ht - TMT1) * n_rhoC_a) + DBL_MIN) : 0.0;
-  auto Vair_cl = forcedAirCooling ? results.Qneed_cl / (((TMT1 - T_sup_cl) * n_rhoC_a) + DBL_MIN) : 0.0;
+  auto Vair_ht = heating->forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - TMT1) * heating->rhoC_a()*277.777778) + DBL_MIN) : 0.0;
+  auto Vair_cl = cooling->forcedAirCooling() ? results.Qneed_cl / (((TMT1 - T_sup_cl) * heating->rhoC_a()*277.777778) + DBL_MIN) : 0.0;
 
   auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
 
@@ -406,9 +368,9 @@ void ISOHourly::calculateHour(int hourOfYear,
   // or cooling system is active, 0.0 if not. The .25 W/m2 comes from the monthly
   // pump calculations.
   if (results.Qneed_cl > 0.0) {
-    results.Qpump_tot = n_E_pumps * cooling->pumpControlReduction();
+    results.Qpump_tot = cooling->E_pumps() * cooling->pumpControlReduction();
   } else if (results.Qneed_ht > 0.0) {
-    results.Qpump_tot = n_E_pumps * heating->pumpControlReduction();
+    results.Qpump_tot = heating->E_pumps() * heating->pumpControlReduction();
   } else {
     results.Qpump_tot = 0.0;
   }

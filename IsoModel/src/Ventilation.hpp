@@ -257,7 +257,8 @@ public:
   }
 
   /**
-  * Heat capacity of air per unit volume, rho*Cp (J/(m3*K)).
+  * Heat capacity of air per unit volume, rho*Cp (W/(m3*K)).
+  * TODO: Combine this with heating/cooling rhoC_air, which is in MJ/m3/K.
   */
   double rhoc_air() const {
     return m_rhoc_air;

@@ -288,56 +288,7 @@ const double kWh2MJ = 3.6f;
 
 // TODO: All member variables initialized in the constructor should eventually be initialized
 // by the .ism file or a default initialization of some sort.
-SimModel::SimModel()
-  : // Population defaults:
-    // No defaults.
-
-    // Location defaults:
-    // No defaults
-
-    // Lighting defaults:
-
-    // Building defaults:
-    // No defaults
-
-    // Structure defaults:
-
-    // Heating defaults:
-    // Interior temp constants.
-    T_ht_ctrl_flag(1),
-    a_H0(1),
-    tau_H0(15),
-    n_dT_supp_ht(7.0),
-    n_rhoC_a(1.22521 * 0.001012),
-    DH_YesNo(0),
-    n_eta_DH_network(0.9),
-    n_eta_DH_sys(0.87),
-    n_frac_DH_free(0.000),
-    // Pumps
-    n_E_pumps(.25),
-    // Heated water constants
-    n_dhw_tset(60),
-    n_dhw_tsupply(20),
-    n_CP_h20(4.18),
-
-    // Cooling defaults:
-    // Interior temp constants.
-    T_cl_ctrl_flag(1),
-    // a_H0 also relates to cooling
-    // tau_H0 also relates to cooling
-    n_dT_supp_cl(7.0),
-    // n_rhoC_a also rhelates to cooling.
-    DC_YesNo(0),
-    n_eta_DC_network(0.9),
-    n_eta_DC_COP(5.5),
-    n_eta_DC_frac_abs(0),
-    n_eta_DC_COP_abs(1),
-    n_frac_DC_free(0)
-    // n_E_pumps also relates to cooling.
-
-    // Ventilation defaults:
-{}
-
+SimModel::SimModel() {}
 SimModel::~SimModel() {}
 
 //Solver functions
@@ -1131,7 +1082,7 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
    % compute the change in temp from setback to another heating temp in unoccupied times 
    if T_ht_ctrl_flag ==1  % if the HVAC heating controls are turned on.*/
 
-  if (T_ht_ctrl_flag == 1) { //if the HVAC heating controls are turned on.
+  if (heating->T_ht_ctrl_flag() == 1) { //if the HVAC heating controls are turned on.
     Matrix M_Ta(12, 4);
     Vector v_Tstart(v_ht_tset_ctrl);
     for (uint i = 0; i < M_Ta.size2(); i++) {
@@ -1246,7 +1197,7 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
    v_Tc_wke_avg=v_cl_tset_ctrl;
    end*/
 
-  if (T_cl_ctrl_flag == 1) {
+  if (cooling->T_cl_ctrl_flag() == 1) {
     Matrix M_Tc(12, 4);
     Vector v_Tstart(v_cl_tset_ctrl);
     for (uint i = 0; i < M_Tc.size2(); i++) {
@@ -1576,7 +1527,7 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   Vector temp = mult(megasecondsInMonth, phi_I_tot, 12);
   Vector v_tot_mo_ht_gain = sum(temp, v_E_sol);
 
-  double a_H = a_H0 + tau / tau_H0;
+  double a_H = heating->a_H0() + tau / heating->tau_H0();
 
   Vector v_QT_ht = mult(mult(dif(v_Th_avg, location->weather()->mdbt()), megasecondsInMonth), H_tr);
   Vector v_QV_ht = mult(mult(mult(v_Hve_ht, structure->floorArea()), dif(v_Th_avg, location->weather()->mdbt())), megasecondsInMonth);
@@ -1671,8 +1622,8 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
    v_Qneed_cl = v_tot_mo_ht_gain - v_eta_g_CL.*v_Qtot_cl; % QNC = Q_G_C - eta*Q_L_C = total cooling need
    Qneed_cl_yr=sum(v_Qneed_cl);
    */
-  double T_sup_ht = heating->temperatureSetPointOccupied() + n_dT_supp_ht; //%hot air supply temp  - assume supply air is 7C hotter than room
-  double T_sup_cl = cooling->temperatureSetPointOccupied() - n_dT_supp_cl; //%cool air supply temp - assume 7C lower than room
+  double T_sup_ht = heating->temperatureSetPointOccupied() + heating->dT_supp_ht(); //%hot air supply temp  - assume supply air is 7C hotter than room
+  double T_sup_cl = cooling->temperatureSetPointOccupied() - cooling->dT_supp_cl(); //%cool air supply temp - assume 7C lower than room
   /*
    %% Fan Energy
 
@@ -1684,8 +1635,8 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
    n_rhoC_a = 1.22521.*0.001012; % rho*Cp for air (MJ/m3/K)
    */
 
-  Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), n_rhoC_a), DBL_MIN));
-  Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), n_rhoC_a), DBL_MIN));
+  Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), heating->rhoC_a()), DBL_MIN));
+  Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), heating->rhoC_a()), DBL_MIN));
   ventilation->fanPower();
   ventilation->fanControlFactor();
   structure->floorArea();
@@ -1776,13 +1727,13 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   zero(v_Qht_DH);
   zero(v_Qcl_sys);
   zero(v_Qcool_DC);
-  if (DH_YesNo == 1) {
+  if (heating->DH_YesNo() == 1) {
     v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
   } else {
     v_Qht_sys = div(sum(v_Qloss_ht_dist, v_Qneed_ht), heating->efficiency() + DBL_MIN);
   }
 
-  if (DC_YesNo == 1) {
+  if (cooling->DC_YesNo() == 1) {
     v_Qcool_DC = sum(v_Qneed_cl, v_Qloss_cl_dist);
   } else {
     v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl), IEER + DBL_MIN);
@@ -1810,12 +1761,12 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
 
 
    */
-  Vector v_Qcl_DC_elec = div(mult(v_Qcool_DC, 1 - n_eta_DC_frac_abs), n_eta_DC_COP * n_eta_DC_network);
-  Vector v_Qcl_DC_abs = div(mult(v_Qcool_DC, 1 - n_frac_DC_free), n_eta_DC_COP_abs);
+  Vector v_Qcl_DC_elec = div(mult(v_Qcool_DC, 1 - cooling->eta_DC_frac_abs()), cooling->eta_DC_COP() * cooling->eta_DC_network());
+  Vector v_Qcl_DC_abs = div(mult(v_Qcool_DC, 1 - cooling->frac_DC_free()), cooling->eta_DC_COP_abs());
   printVector("v_Qcl_DC_elec", v_Qcl_DC_elec);
   printVector("v_Qcl_DC_abs", v_Qcl_DC_abs);
 
-  Vector v_Qht_DH_total = div(mult(v_Qht_DH, 1 - n_frac_DH_free), n_eta_DH_sys * n_eta_DH_network);
+  Vector v_Qht_DH_total = div(mult(v_Qht_DH, 1 - heating->frac_DH_free()), heating->eta_DH_sys() * heating->eta_DH_network());
   v_Qcl_elec_tot = sum(v_Qcl_sys, v_Qcl_DC_elec);
   v_Qcl_gas_tot = v_Qcl_DC_abs;
   printVector("v_Qht_DH_total", v_Qht_DH_total);
@@ -1868,12 +1819,12 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
    % European Performance Assessment - Non Residential
    
    */
-  Vector v_Q_pumps = mult(megasecondsInMonth, n_E_pumps, 12);
-  double Q_pumps_yr = sum(v_Q_pumps);
+  double Q_pumps_yr_ht = sum(mult(megasecondsInMonth, heating->E_pumps(), 12));
+  double Q_pumps_yr_cl = sum(mult(megasecondsInMonth, cooling->E_pumps(), 12));
 
   Vector v_frac_ht_mode = div(v_Qneed_ht, sum(v_Qneed_ht, v_Qneed_cl));
   double frac_ht_total = sum(v_frac_ht_mode);
-  double Q_pumps_ht = Q_pumps_yr * heating->pumpControlReduction() * structure->floorArea();
+  double Q_pumps_ht = Q_pumps_yr_ht * heating->pumpControlReduction() * structure->floorArea();
   Vector v_Q_pumps_ht = div(mult(v_frac_ht_mode, Q_pumps_ht), frac_ht_total);
   /*
    n_E_pumps = 0.25;  % specific power of systems pumps + control systems in W/m2
@@ -1893,7 +1844,7 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
    */
   Vector v_frac_cl_mode = div(v_Qneed_cl, sum(v_Qneed_ht, v_Qneed_cl));
   double frac_cl_total = sum(v_frac_cl_mode);
-  double Q_pumps_cl = Q_pumps_yr * cooling->pumpControlReduction() * structure->floorArea();
+  double Q_pumps_cl = Q_pumps_yr_cl * cooling->pumpControlReduction() * structure->floorArea();
   Vector v_Q_pumps_cl = div(mult(v_frac_cl_mode, Q_pumps_cl), frac_cl_total);
 
   /*
@@ -1943,7 +1894,7 @@ void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
 {
   Vector v_Q_dhw_solar(12);
   zero(v_Q_dhw_solar); //Q from solar energy hot water collectors - not included yet
-  double Q_dhw_yr = heating->hotWaterDemand() * (n_dhw_tset - n_dhw_tsupply) * n_CP_h20;
+  double Q_dhw_yr = heating->hotWaterDemand() * (heating->dhw_tset() - heating->dhw_tsupply()) * heating->CP_h20();
 
   /*%% DHW and Solar Water Heating
    %

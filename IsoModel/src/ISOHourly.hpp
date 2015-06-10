@@ -132,12 +132,6 @@ private:
   // ISOHourly spreadsheet.  Suggested name changes are marked with XXX. If I'm
   // not confident in the suggested name, it's followed with '???'.  
 
-  // Fans. http://www.engineeringtoolbox.com/fans-efficiency-power-consumption-d_197.html
-  double fanDeltaPinPa; // dp. Total pressure increase in the fan. Calculation.T15
-  double fanN; // \mu_{f}. Fan efficiency. Calculation.T16
-  bool forcedAirHeating; // Only calculate fan power to deliver heat if forced air heating is used.
-  bool forcedAirCooling; // Only calculate fan power to deliver cooling if forced air cooling is used.
-
   // Lighting controls.
   // Used to determine the amount of electric light used.
   double maxRatioElectricLighting; // Ratio of electric light used due to lighting controls.
@@ -170,19 +164,12 @@ private:
   std::vector<double> solarShadeRatioReduction;
 
   // Fan power constants.
-  // Heating temp difference between supply air and room air.
-  double n_dT_supp_ht;
-  // Cooling temp difference between supply air and room air.
-  double n_dT_supp_cl;
-  // rho*Cp for air in watt-hr/m3/K.
-  double n_rhoC_a;
 
   // Wind constants.
   double hzone; // Not totally clear what this is. Something wind related.
 
   // Pump constants.
-  // Specific power of systems pumps + control systems in W/m2.
-  double n_E_pumps;
+
 
   // Heat transfer coefficients.
   double hci; // Value of 2.5 used to generate standard values for h_ms and h_is.
@@ -230,7 +217,7 @@ private:
   double fixedActualCoolingSetpoint[24][7];
 
   // XXX Unused variables.
-  double provisionalCFlowad; // Appears to be unused. Calculation.S106
+  double provisionalCFlowad = 1; // Appears to be unused. Calculation.S106
 };
 }
 }
