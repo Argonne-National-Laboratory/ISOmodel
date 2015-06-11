@@ -1494,8 +1494,9 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("v_qve_ht", v_qve_ht);
   printVector("v_qve_cl", v_qve_cl);
 
-  v_Hve_ht = div(mult(v_qve_ht, ventilation->rhoc_air()), 3600.0);
-  v_Hve_cl = div(mult(v_qve_cl, ventilation->rhoc_air()), 3600.0);
+  v_Hve_ht = div(mult(v_qve_ht, phys->rhoCpAir()*1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+  v_Hve_cl = div(mult(v_qve_cl, phys->rhoCpAir()*1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+
   /*
    if In.vent_type==3
    v_qv_mve_ht=zeros(12,1); %qv_me_heating for calc
@@ -1635,8 +1636,8 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
    n_rhoC_a = 1.22521.*0.001012; % rho*Cp for air (MJ/m3/K)
    */
 
-  Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), heating->rhoC_a()), DBL_MIN));
-  Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), heating->rhoC_a()), DBL_MIN));
+  Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), phys->rhoCpAir()), DBL_MIN));
+  Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), phys->rhoCpAir()), DBL_MIN));
   ventilation->fanPower();
   ventilation->fanControlFactor();
   structure->floorArea();
@@ -1894,7 +1895,7 @@ void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
 {
   Vector v_Q_dhw_solar(12);
   zero(v_Q_dhw_solar); //Q from solar energy hot water collectors - not included yet
-  double Q_dhw_yr = heating->hotWaterDemand() * (heating->dhw_tset() - heating->dhw_tsupply()) * heating->CP_h20();
+  double Q_dhw_yr = heating->hotWaterDemand() * (heating->dhw_tset() - heating->dhw_tsupply()) * phys->rhoCpWater();
 
   /*%% DHW and Solar Water Heating
    %

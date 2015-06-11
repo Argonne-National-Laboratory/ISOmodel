@@ -356,8 +356,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
 
   // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
-  auto Vair_ht = heating->forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - TMT1) * heating->rhoC_a()*277.777778) + DBL_MIN) : 0.0;
-  auto Vair_cl = cooling->forcedAirCooling() ? results.Qneed_cl / (((TMT1 - T_sup_cl) * heating->rhoC_a()*277.777778) + DBL_MIN) : 0.0;
+  auto Vair_ht = heating->forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - TMT1) * phys->rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
+  auto Vair_cl = cooling->forcedAirCooling() ? results.Qneed_cl / (((TMT1 - T_sup_cl) * phys->rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
 
   auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
 

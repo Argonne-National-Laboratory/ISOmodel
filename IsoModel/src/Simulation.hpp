@@ -10,6 +10,7 @@
 #include "Structure.hpp"
 #include "Ventilation.hpp"
 #include "EpwData.hpp"
+#include "PhysicalQuantities.hpp"
 
 namespace openstudio {
 namespace isomodel {
@@ -56,6 +57,10 @@ public:
     epwData = value;
   }
 
+  void setPhysicalQuantities(std::shared_ptr<PhysicalQuantities> value) {
+    phys = value;
+  }
+
 protected:
   // Pointers to classes that store the .ism parameters.
   std::shared_ptr<Population> pop;
@@ -67,6 +72,7 @@ protected:
   std::shared_ptr<Cooling> cooling;
   std::shared_ptr<Ventilation> ventilation;
   std::shared_ptr<EpwData> epwData;
+  std::shared_ptr<PhysicalQuantities> phys;
 };
 } // isomodel
 } // openstudio

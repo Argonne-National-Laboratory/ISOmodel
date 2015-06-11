@@ -257,18 +257,6 @@ public:
   }
 
   /**
-  * Heat capacity of air per unit volume, rho*Cp (W/(m3*K)).
-  * TODO: Combine this with heating/cooling rhoC_air, which is in MJ/m3/K.
-  */
-  double rhoc_air() const {
-    return m_rhoc_air;
-  }
-
-  void setRhoc_air(double rhoc_air) {
-    m_rhoc_air = rhoc_air;
-  }
-
-  /**
   * Overall heat transfer coefficient by ventilation as per ISO 13790 9.3.
   */
   double H_ve() const {
@@ -299,7 +287,6 @@ private:
   double m_wind_coeff = 0.0769;
   double m_dCp = 0.75;
   int m_vent_rate_flag = 1;
-  double m_rhoc_air = 1200.0; // XXX: This value is also used in heating and cooling. Consilidate these?
   double m_H_ve = 0.0;
   
 };

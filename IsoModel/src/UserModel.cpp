@@ -219,6 +219,9 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   ventilation->setSupplyRate(_freshAirFlowRate);
   ventilation->setVentType(_ventilationType);
   sim.setVentilation(ventilation);
+  
+  std::shared_ptr<PhysicalQuantities> phys(new PhysicalQuantities);
+  sim.setPhysicalQuantities(phys);
 }
 
 ISOHourly UserModel::toHourlyModel() const

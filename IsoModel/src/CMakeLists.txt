@@ -29,6 +29,7 @@ set(${target_name}_src
   ISOModelAPI.hpp
   Lighting.hpp
   Location.hpp
+  PhysicalQuantities.hpp
   Population.hpp
   SimModel.hpp
   Simulation.hpp
@@ -50,6 +51,7 @@ set(${target_name}_src
   ISOHourly.cpp
   Lighting.cpp
   Location.cpp
+  PhysicalQuantities.cpp
   Population.cpp
   SimModel.cpp
   Simulation.cpp

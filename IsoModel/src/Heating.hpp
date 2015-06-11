@@ -221,19 +221,6 @@ public:
   }
 
   /**
-  * Heat capacity of air per volume (MJ/m3/K).
-  * Multiply by 277.777778 to convert to watt-hr/m3/K.
-  * TODO: Combine this with ventilation rhoc_a, which is in W/m3/K.
-  */
-  double rhoC_a() const {
-    return m_rhoC_a;
-  }
-
-  void setRhoC_a(double rhoC_a) {
-    m_rhoC_a = rhoC_a;
-  }
-
-  /**
   * Building connected to District Heating (DH) (0=no, 1=yes.  Assume DH is powered by natural gas).
   */
   double DH_YesNo() const {
@@ -299,17 +286,6 @@ public:
     m_dhw_tsupply = dhw_tsupply;
   }
 
-  /**
-  * Specific heat of water in MJ/m3/K.
-  */
-  double CP_h20() const {
-    return m_CP_h20;
-  }
-
-  void setCP_h20(double CP_h20) {
-    m_CP_h20 = CP_h20;
-  }
-
 private:
   double m_temperatureSetPointOccupied;
   double m_temperatureSetPointUnoccupied;
@@ -331,7 +307,6 @@ private:
   double m_T_ht_ctrl_flag = 1;
   double m_a_H0 = 1;
   double m_tau_H0 = 15;
-  double m_rhoC_a = 1.22521 * 0.001012; // rho (kg/m3) * Cp (MJ/kg/K) = rhoCp (MJ/m3/K).
   double m_DH_YesNo = 0;
   double m_eta_DH_network = 0.9;
   double m_eta_DH_sys = 0.87;
@@ -339,7 +314,6 @@ private:
   // Heated water constants
   double m_dhw_tset = 60;
   double m_dhw_tsupply = 20;
-  double m_CP_h20 = 4.18;
 };
 
 } // isomodel
