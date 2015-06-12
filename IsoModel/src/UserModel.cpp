@@ -232,8 +232,9 @@ ISOHourly UserModel::toHourlyModel() const
   }
   
   setCoreSimulationProperties(sim);
-
   sim.setEpwData(_edata);
+  std::shared_ptr<SimulationSettings> simSettings(new SimulationSettings);
+  sim.setSimulationSettings(simSettings);
 
   return sim;
 }

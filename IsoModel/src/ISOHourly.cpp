@@ -29,14 +29,7 @@ namespace isomodel {
 
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
 // There are a bunch more similar constants that are initialized in ISOHourly::initialize().
-ISOHourly::ISOHourly() 
-  : // ISO13790 RC Model defaults
-    solarPair(0),
-    intPair(0.5),
-    hci(2.5),
-    hri(5.5)
-{}
-
+ISOHourly::ISOHourly() {}
 ISOHourly::~ISOHourly() {}
 
 ISOResults ISOHourly::simulate(bool aggregateByMonth)
@@ -278,14 +271,14 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto qSolarHeatGain = std::accumulate(std::begin(solarHeatGain), std::end(solarHeatGain), 0.0);
   // \Phi_{ia}, ISO 13790 C.2 eq. C.1. 
   // (Note that solarPair = 0 and intPair = 0.5).
-  auto phii = solarPair * qSolarHeatGain + intPair * phi_int;
+  auto phii = simSettings->phiSolFractionToAirNode() * qSolarHeatGain + simSettings->phiIntFractionToAirNode() * phi_int;
   // \Phi_{ia10}, ISO 13790 C.4.2. 
   // Used to calculate \theta_{air,ac} when available heating or cooling power
   // is insufficient to achieve the setpoint. Adding 10 is equivalent to
   // applying 10 W/m^2 to the building because all the values in this
   // implementation are expressed per area (so as to get final results in EUI).
   auto phii10 = phii + 10;
-
+  
   // Ventilation from wind. ISO 15242.
   auto qSupplyBySystem = ventExhaustM3phpm2 * windImpactSupplyRatio;
   auto exhaustSupply = -(qSupplyBySystem - ventExhaustM3phpm2); // ISO 15242 q_{v-diff}.
@@ -460,9 +453,9 @@ void ISOHourly::initialize()
   q4Pa = std::max(0.000001, buildingv8 / structure->floorArea());
 
   // ISO 13790 12.2.2: h_ms is fixed at 9.1 W/(m^2*K).
-  h_ms = hci + hri * 1.2; 
+  h_ms = simSettings->hci() + simSettings->hri() * 1.2; 
   // ISO 13790 7.2.2.2: h_is is fixed at 3.45 W/(m^2*K).
-  h_is = 1 / (1 / hci - 1 / h_ms);
+  h_is = 1 / (1 / simSettings->hci() - 1 / h_ms);
   // ISO 13790 7.2.2.2 eq. 9 
   H_tris = h_is * structure->totalAreaPerFloorArea();
 
@@ -500,14 +493,14 @@ void ISOHourly::initialize()
   prs = (structure->totalAreaPerFloorArea() - Am - hwindowWperkm2 / h_ms) / structure->totalAreaPerFloorArea();
   // intPair = 0.5, this ends up providing the ".5" in ".5*\Phi_{int}" in
   // eq. C.3. When used in phisPhi0.
-  prsInterior = (1 - intPair) * prs;
-  prsSolar = (1 - solarPair) * prs;
+  prsInterior = (1 - simSettings->phiIntFractionToAirNode()) * prs;
+  prsSolar = (1 - simSettings->phiSolFractionToAirNode()) * prs;
 
   // Constant portion of \Phi_{m}, i.e. without multiplying by
   // (.5*\Phi_{int} + \Phi_{sol}).  ISO 13790 C.2 eq. C.2.
   prm = Am / structure->totalAreaPerFloorArea();
-  prmInterior = (1 - intPair) * prm;
-  prmSolar = (1 - solarPair) * prm;
+  prmInterior = (1 - simSettings->phiIntFractionToAirNode()) * prm;
+  prmSolar = (1 - simSettings->phiSolFractionToAirNode()) * prm;
 
   // ISO 13790 12.2.2 eq. 64
   H_ms = h_ms * Am;

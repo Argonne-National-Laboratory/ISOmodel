@@ -172,8 +172,6 @@ private:
 
 
   // Heat transfer coefficients.
-  double hci; // Value of 2.5 used to generate standard values for h_ms and h_is.
-  double hri; // Value of 5.5 used to generate standard values for h_ms and h_is.
   double h_ms; // h_{ms} Heat transfer coefficient, mass(m) to surface(s).
   double h_is; // h_{is} Heat transfer coefficient, air(s) to surface(s).
 
@@ -184,8 +182,6 @@ private:
   // allow variation in the values that factor the amount of interior and solar
   // heat gain that heats the air. These variables are used in those
   // calculations.
-  double solarPair; // Fraction of solar heat gain that heats the air. Calculation.V95
-  double intPair; // Fraction of interior heat gain that heats the air. Calc.T95
   double prs; // Constant part of \Phi_{st}.
   double prsInterior; // Interior part of \Phi_{st}.
   double prsSolar; // Solar part of \Phi_{st}.

@@ -33,6 +33,7 @@ set(${target_name}_src
   Population.hpp
   SimModel.hpp
   Simulation.hpp
+  SimulationSettings.hpp
   SolarRadiation.hpp
   Structure.hpp
   TimeFrame.hpp
@@ -55,6 +56,7 @@ set(${target_name}_src
   Population.cpp
   SimModel.cpp
   Simulation.cpp
+  SimulationSettings.cpp
   SolarRadiation.cpp
   Structure.cpp
   TimeFrame.cpp
