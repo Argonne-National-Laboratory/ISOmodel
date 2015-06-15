@@ -405,56 +405,56 @@ void UserModel::initializeStructure(const Properties& buildingParams)
 
 void UserModel::initializeParameters(const Properties& buildingParams)
 {
-  double attributeValue = buildingParams.getPropertyAsDouble("terrainclass");
+  double attributeValue = *buildingParams.getPropertyAsDouble("terrainclass");
   setTerrainClass(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("buildingheight");
+  attributeValue = *buildingParams.getPropertyAsDouble("buildingheight");
   setBuildingHeight(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("floorarea");
+  attributeValue = *buildingParams.getPropertyAsDouble("floorarea");
   setFloorArea(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydayfirst");
+  attributeValue = *buildingParams.getPropertyAsDouble("occupancydayfirst");
   setBuildingOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydaylast");
+  attributeValue = *buildingParams.getPropertyAsDouble("occupancydaylast");
   setBuildingOccupancyTo(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourfirst");
+  attributeValue = *buildingParams.getPropertyAsDouble("occupancyhourfirst");
   setEquivFullLoadOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourlast");
+  attributeValue = *buildingParams.getPropertyAsDouble("occupancyhourlast");
   setEquivFullLoadOccupancyTo(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("peopledensityoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("peopledensityoccupied");
   setPeopleDensityOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("peopledensityunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("peopledensityunoccupied");
   setPeopleDensityUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("lightingpowerdensityoccupied");
   setLightingPowerIntensityOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("lightingpowerdensityunoccupied");
   setLightingPowerIntensityUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("electricappliancepowerdensityoccupied");
   setElecPowerAppliancesOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("electricappliancepowerdensityunoccupied");
   setElecPowerAppliancesUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("gasappliancepowerdensityoccupied");
   setGasPowerAppliancesOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("gasappliancepowerdensityunoccupied");
   setGasPowerAppliancesUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exteriorlightingpower");
+  attributeValue = *buildingParams.getPropertyAsDouble("exteriorlightingpower");
   setExteriorLightingPower(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvacwastefactor");
+  attributeValue = *buildingParams.getPropertyAsDouble("hvacwastefactor");
   setHvacWasteFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvacheatinglossfactor");
+  attributeValue = *buildingParams.getPropertyAsDouble("hvacheatinglossfactor");
   setHvacHeatingLossFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvaccoolinglossfactor");
+  attributeValue = *buildingParams.getPropertyAsDouble("hvaccoolinglossfactor");
   setHvacCoolingLossFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("daylightsensordimmingfraction");
+  attributeValue = *buildingParams.getPropertyAsDouble("daylightsensordimmingfraction");
   setDaylightSensorSystem(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingoccupancysensordimmingfraction");
+  attributeValue = *buildingParams.getPropertyAsDouble("lightingoccupancysensordimmingfraction");
   setLightingOccupancySensorSystem(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("constantilluminationcontrolmultiplier");	//constantilluminaitoncontrol
+  attributeValue = *buildingParams.getPropertyAsDouble("constantilluminationcontrolmultiplier");	//constantilluminaitoncontrol
   setConstantIlluminationControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemcop");
+  attributeValue = *buildingParams.getPropertyAsDouble("coolingsystemcop");
   setCoolingSystemCOP(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemiplvtocopratio");
+  attributeValue = *buildingParams.getPropertyAsDouble("coolingsystemiplvtocopratio");
   setCoolingSystemIPLVToCOPRatio(attributeValue);
 
-  std::string type = buildingParams.getProperty("heatingfueltype");
+  std::string type = *buildingParams.getProperty("heatingfueltype");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
   if (type == ELECTRIC)
     attributeValue = 1.0;
@@ -464,10 +464,10 @@ void UserModel::initializeParameters(const Properties& buildingParams)
     throw invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
   setHeatingEnergyCarrier(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsystemefficiency");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatingsystemefficiency");
   setHeatingSystemEfficiency(attributeValue);
 
-  type = buildingParams.getProperty("ventilationtype");
+  type = *buildingParams.getProperty("ventilationtype");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
   if (type == MECHANICAL)
     attributeValue = 1.0;
@@ -479,29 +479,29 @@ void UserModel::initializeParameters(const Properties& buildingParams)
     throw invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
   setVentilationType(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationintakerateoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("ventilationintakerateoccupied");
   setFreshAirFlowRate(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateOccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("ventilationExhaustRateOccupied");
   setSupplyExhaustRate(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatrecovery");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatrecovery");
   setHeatRecovery(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exhaustairrecirculation");
+  attributeValue = *buildingParams.getPropertyAsDouble("exhaustairrecirculation");
   setExhaustAirRecirclation(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("infiltrationrateoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("infiltrationrateoccupied");
   // set both of these to infiltration. Prior version set only the
   // buildingAirLeakage from the infiltration and the _infiltration var
   // wasn't used. Its still not used, but does have a getter and setter
   // so we set it
   setBuildingAirLeakage(attributeValue);
   setInfiltration(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwdemand");
+  attributeValue = *buildingParams.getPropertyAsDouble("dhwdemand");
   setDhwDemand(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwsystemefficiency");
+  attributeValue = *buildingParams.getPropertyAsDouble("dhwsystemefficiency");
   setDhwEfficiency(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwdistributionefficiency");
+  attributeValue = *buildingParams.getPropertyAsDouble("dhwdistributionefficiency");
   setDhwDistributionEfficiency(attributeValue);
 
-  type = buildingParams.getProperty("dhwfueltype");
+  type = *buildingParams.getProperty("dhwfueltype");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
   if (type == ELECTRIC)
     attributeValue = 1.0;
@@ -511,7 +511,7 @@ void UserModel::initializeParameters(const Properties& buildingParams)
     throw invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
   setDhwEnergyCarrier(attributeValue);
 
-  type = buildingParams.getProperty("bemtype");
+  type = *buildingParams.getProperty("bemtype");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
   if (type == NONE)
     attributeValue = 1.0;
@@ -523,65 +523,65 @@ void UserModel::initializeParameters(const Properties& buildingParams)
     throw invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
   setBemType(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("interiorheatcapacity");
+  attributeValue = *buildingParams.getPropertyAsDouble("interiorheatcapacity");
   setInteriorHeatCapacity(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exteriorheatcapacity");
+  attributeValue = *buildingParams.getPropertyAsDouble("exteriorheatcapacity");
   setExteriorHeatCapacity(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingpumpcontrol");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatingpumpcontrol");
   setHeatingPumpControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingpumpcontrol");
+  attributeValue = *buildingParams.getPropertyAsDouble("coolingpumpcontrol");
   setCoolingPumpControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatgainperperson");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatgainperperson");
   setHeatGainPerPerson(attributeValue);
   //specificFanPower
-  attributeValue = buildingParams.getPropertyAsDouble("specificfanpower");
+  attributeValue = *buildingParams.getPropertyAsDouble("specificfanpower");
   setSpecificFanPower(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("fanflowcontrolfactor");
+  attributeValue = *buildingParams.getPropertyAsDouble("fanflowcontrolfactor");
   setFanFlowControlFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("coolingsetpointoccupied");
   setCoolingOccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("coolingsetpointunoccupied");
   setCoolingUnoccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatingsetpointoccupied");
   setHeatingOccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");
   setHeatingUnoccupiedSetpoint(attributeValue);
 
 #if (USE_NEW_BUILDING_PARAMS)
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationIntakeRateUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("ventilationIntakeRateUnoccupied");
   setVentilationIntakeRateUnoccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("ventilationExhaustRateUnoccupied");
   setVentilationExhaustRateUnoccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("infiltrationRateUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("infiltrationRateUnoccupied");
   setInfiltrationRateUnoccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedOccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("lightingPowerFixedOccupied");
   setLightingPowerFixedOccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("lightingPowerFixedUnoccupied");
   setLightingPowerFixedUnoccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedOccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("electricAppliancePowerFixedOccupied");
   setElectricAppliancePowerFixedOccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("electricAppliancePowerFixedUnoccupied");
   setElectricAppliancePowerFixedUnoccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedOccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("gasAppliancePowerFixedOccupied");
   setGasAppliancePowerFixedOccupied(attributeValue);
 
-  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedUnoccupied");
+  attributeValue = *buildingParams.getPropertyAsDouble("gasAppliancePowerFixedUnoccupied");
   setGasAppliancePowerFixedUnoccupied(attributeValue);
 
-  std::string scheduleFilePath = buildingParams.getProperty("schedulefilepath");
+  std::string scheduleFilePath = *buildingParams.getProperty("schedulefilepath");
   if (scheduleFilePath == "")
     throw invalid_argument("scheduleFilePath building parameter is missing");
   setScheduleFilePath(scheduleFilePath);
 #endif
 
-  std::string weatherFilePath = buildingParams.getProperty("weatherfilepath");
+  std::string weatherFilePath = *buildingParams.getProperty("weatherfilepath");
   if (weatherFilePath == "")
     throw invalid_argument("weatherFilePath building parameter is missing");
 

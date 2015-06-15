@@ -10,6 +10,7 @@
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 
 namespace openstudio {
 
@@ -98,10 +99,10 @@ public:
    *
    * @param key the property key
    *
-   * @return the value for that key, or an empty string
+   * @return the value for that key, or boost::none
    * if the property is not found.
    */
-  std::string getProperty(const std::string& key) const;
+  boost::optional<std::string> getProperty(const std::string& key) const;
 
   /**
    * Gets the property with the specified key as a double value
@@ -109,9 +110,9 @@ public:
    * @param key the property key
    *
    * @return the value for that key
-   * @throws std::invalid_argument if the specified property is not found or is not a double.
+   * @return boost::none if the specified property is not found or is not a double.
    */
-  double getPropertyAsDouble(const std::string& key) const;
+  boost::optional<double> getPropertyAsDouble(const std::string& key) const;
 
   /**
    * Gets the property with the specified key as a vector of doubles. The
@@ -121,9 +122,9 @@ public:
    * @param key the property key
    *
    * @return the vector of doubles for that key
-   * @throws std::invalid_argument if the specified property is not found or is not a double.
+   * @return false if the specified property is not found or is not a double.
    */
-  void getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
+  bool getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
 
   /**
    * Gets whether or not this Properties contains the specified key.

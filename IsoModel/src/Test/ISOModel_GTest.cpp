@@ -28,19 +28,19 @@ TEST(PropertiesTests, KeyValueTests)
   Properties props(test_data_path + "/test_properties.props");
   ASSERT_EQ(5, props.size());
 
-  ASSERT_EQ("ORD.epw", props.getProperty("weatherFilePath"));
-  ASSERT_EQ(0.8, props.getPropertyAsDouble("terrainClass"));
-  ASSERT_EQ(6.33, props.getPropertyAsDouble("buildingHeight"));
-  ASSERT_EQ(17.0, props.getPropertyAsDouble("occupancyHourLast"));
-  ASSERT_STREQ("2.1, 234.3, 12.3", props.getProperty("wallU").c_str());
+  ASSERT_EQ("ORD.epw", *props.getProperty("weatherFilePath"));
+  ASSERT_EQ(0.8, *props.getPropertyAsDouble("terrainClass"));
+  ASSERT_EQ(6.33, *props.getPropertyAsDouble("buildingHeight"));
+  ASSERT_EQ(17.0, *props.getPropertyAsDouble("occupancyHourLast"));
+  ASSERT_STREQ("2.1, 234.3, 12.3", (*props.getProperty("wallU")).c_str());
 
   props.putProperty("a string", "some string");
-  ASSERT_STREQ("some string", props.getProperty("a string").c_str());
+  ASSERT_STREQ("some string", (*props.getProperty("a string")).c_str());
   props.putProperty("some double", 3.14);
-  ASSERT_EQ(3.14, props.getPropertyAsDouble("some double"));
+  ASSERT_EQ(3.14, *props.getPropertyAsDouble("some double"));
 
   // test case insensitivity
-  ASSERT_EQ(6.33, props.getPropertyAsDouble("BUILDINGHEIGHT"));
+  ASSERT_EQ(6.33, *props.getPropertyAsDouble("BUILDINGHEIGHT"));
 
   std::vector<double> vec;
   props.getPropertyAsDoubleVector("wallU", vec);
@@ -48,6 +48,24 @@ TEST(PropertiesTests, KeyValueTests)
   ASSERT_EQ(2.1, vec[0]);
   ASSERT_EQ(234.3, vec[1]);
   ASSERT_EQ(12.3, vec[2]);
+}
+
+TEST(PropertiesTests, MissingValueTests) {
+  Properties props(test_data_path + "/test_properties.props");
+  
+  // Test methods that return boost::optional:
+  // Note: MSVS intellisense doesn't like EXPECT_TRUE with boost::optional, but it seems to work fine.
+  EXPECT_TRUE(props.getProperty("weatherFilePath"));
+  EXPECT_TRUE(props.getPropertyAsDouble("buildingHeight"));
+  EXPECT_FALSE(props.getProperty("aMissingProperty")); // Missing.
+  EXPECT_FALSE(props.getPropertyAsDouble("aMissingProperty")); // Missing.
+  EXPECT_FALSE(props.getPropertyAsDouble("weatherFilePath")); // Cannot convert to double.
+
+  // Test methods that return bool
+  std::vector<double> vec;
+  EXPECT_TRUE(props.getPropertyAsDoubleVector("wallU", vec));
+  EXPECT_FALSE(props.getPropertyAsDoubleVector("aMissingProperty", vec)); // Mising
+  EXPECT_FALSE(props.getPropertyAsDoubleVector("weatherFilePath", vec)); // Cannot convert to double.
 }
 
 TEST(IsoModelTests, InitializationTests)
