@@ -44,48 +44,17 @@ UserModel::~UserModel()
 }
 
 void UserModel::setCoreSimulationProperties(Simulation& sim) const {
-  auto pPop = std::make_shared<Population>(pop);
-  sim.setPop(pPop);
-  // sim.setPop(pop);
-
-  auto pBuilding = std::make_shared<Building>(building);
-  sim.setBuilding(pBuilding);
-  // sim.setBuilding(building);
-
-  auto pCooling = std::make_shared<Cooling>(cooling);
-  sim.setCooling(pCooling);
-  // sim.setCooling(cooling);
-
-  auto pHeating = std::make_shared<Heating>(heating);
-  sim.setHeating(pHeating);
-  // sim.setHeating(heating);
-
-  auto pLights = std::make_shared<Lighting>(lights);
-  sim.setLights(pLights);
-  // sim.setLights(lights);
-
-  auto pStructure = std::make_shared<Structure>(structure);
-  sim.setStructure(pStructure);
-  // sim.setStructure(structure);
-
-  auto pVentilation = std::make_shared<Ventilation>(ventilation);
-  sim.setVentilation(pVentilation);
-  // sim.setVentilation(ventilation);
-
-  std::shared_ptr<Location> loc(new Location);
-  loc->setTerrain(terrainClass());
-  loc->setWeatherData(_weather);
-  sim.setLocation(loc);
-
-  sim.setEpwData(_edata);
-  
-  auto pSimSettings = std::make_shared<SimulationSettings>(simSettings);
-  sim.setSimulationSettings(pSimSettings);
-  // sim.setSimulationSettings(simSettings);
-
-  auto pPhys = std::make_shared<PhysicalQuantities>(phys);
-  sim.setPhysicalQuantities(pPhys);
-  // sim.setPhysicalQuantities(phys);
+  sim.setPop(pop);
+  sim.setBuilding(building);
+  sim.setCooling(cooling);
+  sim.setHeating(heating);
+  sim.setLights(lights);
+  sim.setStructure(structure);
+  sim.setVentilation(ventilation);
+  sim.setLocation(location);
+  sim.setEpwData(_edata); // TODO: should this stay a shared pointer between the UserModel and the SimModel?
+  sim.setSimulationSettings(simSettings);
+  sim.setPhysicalQuantities(phys);
 }
 
 ISOHourly UserModel::toHourlyModel() const
@@ -138,6 +107,8 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
 
 void UserModel::initializeStructure(const Properties& buildingParams)
 {
+  // TODO: If the .ism file used the same order of directions as the isomodel code,
+  // this conversion wouldn't be needed.
   auto northToSouth = [](Vector& vec) {
     // .ism file is N, NE, E, SE, S, SW, W, NW, Roof
     // Structure is S, SE, E, NE, N, NW, W, SW, Roof
@@ -484,6 +455,7 @@ void UserModel::loadWeather()
 
   _edata->loadData(weatherFilename);
   initializeSolar();
+  location.setWeatherData(_weather);
 }
 
 void UserModel::loadAndSetWeather()
@@ -518,6 +490,8 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     //std::cout << "in cache" << std::endl;
     _weather = iter->second;
   }
+
+  location.setWeatherData(_weather);
 
   _valid = true;
 }

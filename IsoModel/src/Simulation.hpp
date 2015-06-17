@@ -22,35 +22,35 @@ public:
   virtual ~Simulation() {}
 
   // Setters for the pointers to the classes that store the .ism parameters.
-  void setPop(std::shared_ptr<Population> value) {
+  void setPop(Population value) {
     pop = value;
   }
 
-  void setLocation(std::shared_ptr<Location> value) {
+  void setLocation(Location value) {
     location = value;
   }
 
-  void setLights(std::shared_ptr<Lighting> value) {
+  void setLights(Lighting value) {
     lights = value;
   }
 
-  void setBuilding(std::shared_ptr<Building> value) {
+  void setBuilding(Building value) {
     building = value;
   }
 
-  void setStructure(std::shared_ptr<Structure> value) {
+  void setStructure(Structure value) {
     structure = value;
   }
 
-  void setHeating(std::shared_ptr<Heating> value) {
+  void setHeating(Heating value) {
     heating = value;
   }
 
-  void setCooling(std::shared_ptr<Cooling> value) {
+  void setCooling(Cooling value) {
     cooling = value;
   }
 
-  void setVentilation(std::shared_ptr<Ventilation> value) {
+  void setVentilation(Ventilation value) {
     ventilation = value;
   }
   
@@ -58,27 +58,27 @@ public:
     epwData = value;
   }
 
-  void setPhysicalQuantities(std::shared_ptr<PhysicalQuantities> value) {
+  void setPhysicalQuantities(PhysicalQuantities value) {
     phys = value;
   }
 
-  void setSimulationSettings(std::shared_ptr<SimulationSettings> value) {
+  void setSimulationSettings(SimulationSettings value) {
     simSettings = value;
   }
 
 protected:
   // Pointers to classes that store the .ism parameters.
-  std::shared_ptr<Population> pop;
-  std::shared_ptr<Location> location;
-  std::shared_ptr<Lighting> lights;
-  std::shared_ptr<Building> building;
-  std::shared_ptr<Structure> structure;
-  std::shared_ptr<Heating> heating;
-  std::shared_ptr<Cooling> cooling;
-  std::shared_ptr<Ventilation> ventilation;
+  Population pop;
+  Location location;
+  Lighting lights;
+  Building building;
+  Structure structure;
+  Heating heating;
+  Cooling cooling;
+  Ventilation ventilation;
   std::shared_ptr<EpwData> epwData;
-  std::shared_ptr<PhysicalQuantities> phys;
-  std::shared_ptr<SimulationSettings> simSettings;
+  PhysicalQuantities phys;
+  SimulationSettings simSettings;
 };
 } // isomodel
 } // openstudio

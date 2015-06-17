@@ -233,7 +233,7 @@ public:
   /**
   * External thermal surface resistance (m2*k/W).
   */
-  double R_se() {
+  double R_se() const {
     return m_R_se;
   }
 
@@ -246,7 +246,7 @@ public:
   * shading. ISO 13790 does it by switching between g_{gl} and g_{gl+sh}. The method here allows
   * varying degrees of shading rather than just on or off.
   */
-  double irradianceForMaxShadingUse() {
+  double irradianceForMaxShadingUse() const {
     return m_irradianceForMaxShadingUse;
   }
 
@@ -259,7 +259,7 @@ public:
   * shading. ISO 13790 does it by switching between g_{gl} and g_{gl+sh}. The method here allows
   * varying degrees of shading rather than just on or off.
   */
-  double shadingFactorAtMaxUse() {
+  double shadingFactorAtMaxUse() const {
     return m_shadingFactorAtMaxUse;
   }
 
@@ -270,7 +270,7 @@ public:
   /**
   * Total interior surface area per floor area (m2/m2).
   */
-  double totalAreaPerFloorArea() {
+  double totalAreaPerFloorArea() const {
     return m_totalAreaPerFloorArea;
   }
 
@@ -281,7 +281,7 @@ public:
   /**
   * Window frame factor.
   */
-  double win_ff() {
+  double win_ff() const {
     return m_win_ff;
   }
 
@@ -292,7 +292,7 @@ public:
   /**
   * Correction factor for non-scattering window as per ISO 13790 11.4.2.
   */
-  double win_F_W() {
+  double win_F_W() const {
     return m_win_F_W;
   }
 
@@ -303,7 +303,7 @@ public:
   /**
   * Vertical wall external convection surface heat resistance as per ISO 6946.
   */
-  double R_sc_ext() {
+  double R_sc_ext() const {
     return m_R_sc_ext;
   }
 
