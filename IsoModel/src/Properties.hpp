@@ -12,6 +12,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
+#include "Vector.hpp"
+
 namespace openstudio {
 
 namespace isomodel {
@@ -125,6 +127,7 @@ public:
    * @return false if the specified property is not found or is not a double.
    */
   bool getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
+  bool getPropertyAsDoubleVector(const std::string& key, Vector& vec) const;
 
   /**
    * Gets whether or not this Properties contains the specified key.

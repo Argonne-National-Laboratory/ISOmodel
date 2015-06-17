@@ -8,7 +8,15 @@ int main(int argc, char** argv)
 {
   if (argc < 2) {
     std::cout << "Usage: isomodel_unit_tests test_data_directory" << std::endl;
-    return 0;
+    std::cout << "Running with default directory." << std::endl;
+
+    UserModel userModel;
+    userModel.load("../test_data/SmallOffice_v2.ism");
+    auto simModel = userModel.toSimModel();
+    auto monthlyResults = simModel.simulate();
+
+    std::cout << "Finished simulation" << std::endl;
+
   } else {
     std::string test_data_path = argv[argc - 1];
 
@@ -55,6 +63,20 @@ int main(int argc, char** argv)
     auto hourDiff = hourEnd - hourStart;
     double hourlyTime = std::chrono::duration<double, std::micro>(hourDiff).count() / iterations;
     std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over " << iterations << " loops." << std::endl;
+
+    std::cout << "Benchmarking full monthly simulation including loading data.\n";
+    auto monthWithLoadStart = std::chrono::steady_clock::now();
+    for (int i = 0; i != iterations; ++i){
+      UserModel userModel2{};
+      userModel2.load(test_data_path + "/SmallOffice_v2.ism");
+      auto simModel2 = userModel2.toSimModel();
+      auto monthlyResults = simModel2.simulate();
+    }
+    auto monthWithLoadEnd = std::chrono::steady_clock::now();
+
+    auto monthWithLoadDiff = monthWithLoadEnd - monthWithLoadStart;
+    double monthlyTimeWithLoad = std::chrono::duration<double, std::micro>(monthWithLoadDiff).count() / iterations;
+    std::cout << "Monthly simulation including loading data ran in " << monthlyTimeWithLoad << " us, average over " << iterations << " loops." << std::endl;
 
     std::cout << "Done!" << std::endl;
   }

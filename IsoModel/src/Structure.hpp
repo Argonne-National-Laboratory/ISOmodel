@@ -41,7 +41,7 @@ public:
   }
 
   /**
-  * Wall and roof area (m2). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * Wall and roof area (m2). The order is S, SE, E, NE, N, NW, W, SW, roof to match
   * conventions for sun angles where south is zero.
   */
   Vector wallArea() const {
@@ -52,8 +52,12 @@ public:
     m_wallArea = value;
   }
 
+  void setWallArea(int index, double value) {
+    m_wallArea[index] = value;
+  }
+
   /**
-  * Window and skylight area (m2). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * Window and skylight area (m2). The order is S, SE, E, NE, N, NW, W, SW, roof to match
   * conventions for sun angles where south is zero.
   */
   Vector windowArea() const {
@@ -63,9 +67,13 @@ public:
   void setWindowArea(Vector value) {
     m_windowArea = value;
   }
+  
+  void setWindowArea(int index, double value) {
+    m_windowArea[index] = value;
+  }
 
   /**
-  * Wall and roof U-values (W/m2/K). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * Wall and roof U-values (W/m2/K). The order is S, SE, E, NE, N, NW, W, SW, roof to match
   * conventions for sun angles where south is zero.
   */
   Vector wallUniform() const {
@@ -76,8 +84,12 @@ public:
     m_wallUniform = value;
   }
 
+  void setWallUniform(int index, double value) {
+    m_wallUniform[index] = value;
+  }
+
   /**
-  * Window and skylight U-values (W/m2/K). The order is S, SW, W, NW, N, NE, E, SE, roof to match
+  * Window and skylight U-values (W/m2/K). The order is S, SE, E, NE, N, NW, W, SW, roof to match
   * conventions for sun angles where south is zero.
   */
   Vector windowUniform() const {
@@ -88,9 +100,13 @@ public:
     m_windowUniform = value;
   }
 
+  void setWindowUniform(int index, double value) {
+    m_windowUniform[index] = value;
+  }
+
   /**
   * Wall and roof thermal emissivity (ratio compared to black body, 0 to 1).
-  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * The order is S, SE, E, NE, N, NW, W, SW, roof to match conventions for sun
   * angles where south is zero.
   */
   Vector wallThermalEmissivity() const {
@@ -101,9 +117,13 @@ public:
     m_wallThermalEmissivity = value;
   }
 
+  void setWallThermalEmissivity(int index, double value) {
+    m_wallThermalEmissivity[index] = value;
+  }
+
   /**
   * Wall and roof solar absorbtion coeficient (0 to 1).
-  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * The order is S, SE, E, NE, N, NW, W, SW, roof to match conventions for sun
   * angles where south is zero.
   */
   Vector wallSolarAbsorbtion() const {
@@ -114,9 +134,13 @@ public:
     m_wallSolarAbsorbtion = value;
   }
 
+  void setWallSolarAbsorbtion(int index, double value) {
+    m_wallSolarAbsorbtion[index] = value;
+  }
+
   /**
   * Window shading device factors.
-  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * The order is S, SE, E, NE, N, NW, W, SW, roof to match conventions for sun
   * angles where south is zero.
   */
   Vector windowShadingDevice() const {
@@ -127,9 +151,12 @@ public:
     m_windowShadingDevice = value;
   }
 
+  void setWindowShadingDevice(int index, double value) {
+    m_windowShadingDevice[index] = value;
+  }
   /**
   * Window solar heat gain coeficcient (0 to 1).
-  * The order is S, SW, W, NW, N, NE, E, SE, roof to match conventions for sun
+  * The order is S, SE, E, NE, N, NW, W, SW, roof to match conventions for sun
   * angles where south is zero.
   */
   Vector windowNormalIncidenceSolarEnergyTransmittance() const {
@@ -138,6 +165,10 @@ public:
 
   void setWindowNormalIncidenceSolarEnergyTransmittance(Vector value) {
     m_windowNormalIncidenceSolarEnergyTransmittance = value;
+  }
+
+  void setWindowNormalIncidenceSolarEnergyTransmittance(int index, double value) {
+    m_windowNormalIncidenceSolarEnergyTransmittance[index] = value;
   }
 
   /**
@@ -149,6 +180,10 @@ public:
 
   void setWindowShadingCorrectionFactor(Vector value) {
     m_windowShadingCorrectionFactor = value;
+  }
+
+  void setWindowShadingCorrectionFactor(int index, double value) {
+    m_windowShadingCorrectionFactor[index] = value;
   }
 
   /**

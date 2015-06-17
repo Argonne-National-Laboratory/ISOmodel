@@ -69,6 +69,36 @@ bool Properties::getPropertyAsDoubleVector(const std::string& key, std::vector<d
   }
 }
 
+bool Properties::getPropertyAsDoubleVector(const std::string& key, Vector& vec) const {
+  if (auto val = getProperty(key)) {
+    vec.clear();
+    // tokenize the line using boost's escaped list separator which parses CSV format
+    boost::tokenizer<boost::escaped_list_separator<char> > tok(*val);
+    // assign those values to the vector
+
+    // Make sure the ublas vector is the same size as the number of tokens.
+    auto numTokens = std::distance(std::begin(tok), std::end(tok));
+    if (vec.size() != numTokens) {
+      vec.resize(numTokens);
+    }
+
+    try {
+      auto index = 0;
+      for (auto& item : tok) {
+        vec[index] = (std::stod(item));
+        ++index;
+      }
+    }
+    catch (std::invalid_argument& ex) {
+      return false; // Cannot be converted to a double.
+    }
+    return true;
+  }
+  else {
+    return false; // Key missing.
+  }
+}
+
 boost::optional<double> Properties::getPropertyAsDouble(const std::string& key) const
 {
   if (auto val = getProperty(key)) {

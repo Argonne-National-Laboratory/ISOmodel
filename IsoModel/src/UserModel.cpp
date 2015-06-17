@@ -44,184 +44,48 @@ UserModel::~UserModel()
 }
 
 void UserModel::setCoreSimulationProperties(Simulation& sim) const {
-  std::shared_ptr<Population> pop(new Population);
-  pop->setDaysStart(_buildingOccupancyFrom);
-  pop->setDaysEnd(_buildingOccupancyTo);
-  pop->setHoursEnd(_equivFullLoadOccupancyTo);
-  pop->setHoursStart(_equivFullLoadOccupancyFrom);
-  pop->setDensityOccupied(_peopleDensityOccupied);
-  pop->setDensityUnoccupied(_peopleDensityUnoccupied);
-  pop->setHeatGainPerPerson(_heatGainPerPerson);
-  sim.setPop(pop);
+  auto pPop = std::make_shared<Population>(pop);
+  sim.setPop(pPop);
+  // sim.setPop(pop);
 
-  std::shared_ptr<Building> building(new Building);
-  building->setBuildingEnergyManagement(_bemType);
-  building->setConstantIllumination(_constantIlluminationControl);
-  building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
-  building->setElectricApplianceHeatGainUnoccupied(_elecPowerAppliancesUnoccupied);
-  building->setGasApplianceHeatGainOccupied(_gasPowerAppliancesOccupied);
-  building->setGasApplianceHeatGainUnoccupied(_gasPowerAppliancesUnoccupied);
-  building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
-  sim.setBuilding(building);
+  auto pBuilding = std::make_shared<Building>(building);
+  sim.setBuilding(pBuilding);
+  // sim.setBuilding(building);
 
-  std::shared_ptr<Cooling> cooling(new Cooling);
-  cooling->setCop(_coolingSystemCOP);
-  cooling->setHvacLossFactor(_hvacCoolingLossFactor);
-  cooling->setPartialLoadValue(_coolingSystemIPLVToCOPRatio);
-  cooling->setPumpControlReduction(_coolingPumpControl);
-  cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
-  cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
-  sim.setCooling(cooling);
+  auto pCooling = std::make_shared<Cooling>(cooling);
+  sim.setCooling(pCooling);
+  // sim.setCooling(cooling);
 
-  std::shared_ptr<Heating> heating(new Heating);
-  heating->setEfficiency(_heatingSystemEfficiency);
-  heating->setEnergyType(_heatingEnergyCarrier);
-  heating->setHotcoldWasteFactor(_hvacWasteFactor); // Used in hvac distribution efficiency.
-  heating->setHotWaterDemand(_dhwDemand);
-  heating->setHotWaterDistributionEfficiency(_dhwDistributionEfficiency);
-  heating->setHotWaterEnergyType(_dhwEnergyCarrier);
-  heating->setHotWaterSystemEfficiency(_dhwEfficiency);
-  heating->setHvacLossFactor(_hvacHeatingLossFactor);
-  heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
-  heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
-  heating->setPumpControlReduction(_heatingPumpControl);
-  sim.setHeating(heating);
+  auto pHeating = std::make_shared<Heating>(heating);
+  sim.setHeating(pHeating);
+  // sim.setHeating(heating);
 
-  std::shared_ptr<Lighting> lighting(new Lighting);
-  lighting->setDimmingFraction(_daylightSensorSystem);
-  lighting->setExteriorEnergy(_exteriorLightingPower);
-  lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
-  lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
-  sim.setLights(lighting);
+  auto pLights = std::make_shared<Lighting>(lights);
+  sim.setLights(pLights);
+  // sim.setLights(lights);
 
-  std::shared_ptr<Structure> structure(new Structure);
-  structure->setFloorArea(_floorArea);
-  structure->setBuildingHeight(_buildingHeight);
-  structure->setInfiltrationRate(_buildingAirLeakage);
-  structure->setInteriorHeatCapacity(_interiorHeatCapacity);
-  //directions in the order [S, SE, E, NE, N, NW, W, SW, roof/skylight]
-  Vector wallArea(9);
-  wallArea[0] = _wallAreaS;
-  wallArea[1] = _wallAreaSE;
-  wallArea[2] = _wallAreaE;
-  wallArea[3] = _wallAreaNE;
-  wallArea[4] = _wallAreaN;
-  wallArea[5] = _wallAreaNW;
-  wallArea[6] = _wallAreaW;
-  wallArea[7] = _wallAreaSW;
-  wallArea[8] = _roofArea;
-  structure->setWallArea(wallArea); //vector
-  structure->setWallHeatCapacity(_exteriorHeatCapacity); //??
+  auto pStructure = std::make_shared<Structure>(structure);
+  sim.setStructure(pStructure);
+  // sim.setStructure(structure);
 
-  Vector wallSolar(9);
-  wallSolar[0] = _wallSolarAbsorptionS;
-  wallSolar[1] = _wallSolarAbsorptionSE;
-  wallSolar[2] = _wallSolarAbsorptionE;
-  wallSolar[3] = _wallSolarAbsorptionNE;
-  wallSolar[4] = _wallSolarAbsorptionN;
-  wallSolar[5] = _wallSolarAbsorptionNW;
-  wallSolar[6] = _wallSolarAbsorptionW;
-  wallSolar[7] = _wallSolarAbsorptionSW;
-  wallSolar[8] = _roofSolarAbsorption;
-  structure->setWallSolarAbsorbtion(wallSolar); //vector
+  auto pVentilation = std::make_shared<Ventilation>(ventilation);
+  sim.setVentilation(pVentilation);
+  // sim.setVentilation(ventilation);
 
-  Vector wallTherm(9);
-  wallTherm[0] = _wallThermalEmissivityS;
-  wallTherm[1] = _wallThermalEmissivitySE;
-  wallTherm[2] = _wallThermalEmissivityE;
-  wallTherm[3] = _wallThermalEmissivityNE;
-  wallTherm[4] = _wallThermalEmissivityN;
-  wallTherm[5] = _wallThermalEmissivityNW;
-  wallTherm[6] = _wallThermalEmissivityW;
-  wallTherm[7] = _wallThermalEmissivitySW;
-  wallTherm[8] = _roofThermalEmissivity;
-  structure->setWallThermalEmissivity(wallTherm); //vector
+  std::shared_ptr<Location> loc(new Location);
+  loc->setTerrain(terrainClass());
+  loc->setWeatherData(_weather);
+  sim.setLocation(loc);
 
-  Vector wallU(9);
-  wallU[0] = _wallUvalueS;
-  wallU[1] = _wallUvalueSE;
-  wallU[2] = _wallUvalueE;
-  wallU[3] = _wallUvalueNE;
-  wallU[4] = _wallUvalueN;
-  wallU[5] = _wallUvalueNW;
-  wallU[6] = _wallUvalueW;
-  wallU[7] = _wallUvalueSW;
-  wallU[8] = _roofUValue;
-  structure->setWallUniform(wallU); //vector
-
-  Vector windowArea(9);
-  windowArea[0] = _windowAreaS;
-  windowArea[1] = _windowAreaSE;
-  windowArea[2] = _windowAreaE;
-  windowArea[3] = _windowAreaNE;
-  windowArea[4] = _windowAreaN;
-  windowArea[5] = _windowAreaNW;
-  windowArea[6] = _windowAreaW;
-  windowArea[7] = _windowAreaSW;
-  windowArea[8] = _skylightArea;
-  structure->setWindowArea(windowArea); //vector
-
-  Vector winSHGC(9);
-  winSHGC[0] = _windowSHGCS;
-  winSHGC[1] = _windowSHGCSE;
-  winSHGC[2] = _windowSHGCE;
-  winSHGC[3] = _windowSHGCNE;
-  winSHGC[4] = _windowSHGCN;
-  winSHGC[5] = _windowSHGCNW;
-  winSHGC[6] = _windowSHGCW;
-  winSHGC[7] = _windowSHGCSW;
-  winSHGC[8] = _skylightSHGC;
-  structure->setWindowNormalIncidenceSolarEnergyTransmittance(winSHGC); //vector
-
-  Vector winSCF(9);
-  winSCF[0] = _windowSCFS;
-  winSCF[1] = _windowSCFSE;
-  winSCF[2] = _windowSCFE;
-  winSCF[3] = _windowSCFNE;
-  winSCF[4] = _windowSCFN;
-  winSCF[5] = _windowSCFNW;
-  winSCF[6] = _windowSCFW;
-  winSCF[7] = _windowSCFSW;
-  winSCF[8] = _windowSCFN;
-  structure->setWindowShadingCorrectionFactor(winSCF); //vector
+  sim.setEpwData(_edata);
   
-  Vector winSDF(9);
-  winSDF[0] = _windowSDFS;
-  winSDF[1] = _windowSDFSE;
-  winSDF[2] = _windowSDFE;
-  winSDF[3] = _windowSDFNE;
-  winSDF[4] = _windowSDFN;
-  winSDF[5] = _windowSDFNW;
-  winSDF[6] = _windowSDFW;
-  winSDF[7] = _windowSDFSW;
-  winSDF[8] = _windowSDFN;
-  structure->setWindowShadingDevice(winSDF);
+  auto pSimSettings = std::make_shared<SimulationSettings>(simSettings);
+  sim.setSimulationSettings(pSimSettings);
+  // sim.setSimulationSettings(simSettings);
 
-  Vector winU(9);
-  winU[0] = _windowUvalueS;
-  winU[1] = _windowUvalueSE;
-  winU[2] = _windowUvalueE;
-  winU[3] = _windowUvalueNE;
-  winU[4] = _windowUvalueN;
-  winU[5] = _windowUvalueNW;
-  winU[6] = _windowUvalueW;
-  winU[7] = _windowUvalueSW;
-  winU[8] = _skylightUvalue;
-  structure->setWindowUniform(winU); //vector
-  sim.setStructure(structure);
-
-  std::shared_ptr<Ventilation> ventilation(new Ventilation);
-  ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
-  ventilation->setFanControlFactor(_fanFlowControlFactor);
-  ventilation->setFanPower(_specificFanPower);
-  ventilation->setHeatRecoveryEfficiency(_heatRecovery);
-  ventilation->setSupplyDifference(_supplyExhaustRate);
-  ventilation->setSupplyRate(_freshAirFlowRate);
-  ventilation->setVentType(_ventilationType);
-  sim.setVentilation(ventilation);
-  
-  std::shared_ptr<PhysicalQuantities> phys(new PhysicalQuantities);
-  sim.setPhysicalQuantities(phys);
+  auto pPhys = std::make_shared<PhysicalQuantities>(phys);
+  sim.setPhysicalQuantities(pPhys);
+  // sim.setPhysicalQuantities(phys);
 }
 
 ISOHourly UserModel::toHourlyModel() const
@@ -232,10 +96,6 @@ ISOHourly UserModel::toHourlyModel() const
   }
   
   setCoreSimulationProperties(sim);
-  sim.setEpwData(_edata);
-  std::shared_ptr<SimulationSettings> simSettings(new SimulationSettings);
-  sim.setSimulationSettings(simSettings);
-
   return sim;
 }
 
@@ -250,11 +110,6 @@ SimModel UserModel::toSimModel() const
   }
 
   setCoreSimulationProperties(sim);
-
-  std::shared_ptr<Location> loc(new Location);
-  loc->setTerrain(_terrainClass);
-  loc->setWeatherData(_weather);
-  sim.setLocation(loc);
 
   return sim;
 }
@@ -283,124 +138,91 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
 
 void UserModel::initializeStructure(const Properties& buildingParams)
 {
+  auto northToSouth = [](Vector& vec) {
+    // .ism file is N, NE, E, SE, S, SW, W, NW, Roof
+    // Structure is S, SE, E, NE, N, NW, W, SW, Roof
+    double temp;
 
-  std::vector<double> values;
+    // Swap 0 and 4 (N and S).
+    temp = vec[0];
+    vec[0] = vec[4];
+    vec[4] = temp;
+
+    // Swap 1 and 3 (NE and SE).
+    temp = vec[1];
+    vec[1] = vec[3];
+    vec[3] = temp;
+    
+    // Swap 5 and 7 (SW and NW).
+    temp = vec[5];
+    vec[5] = vec[7];
+    vec[7] = temp;
+  };
+
+  Vector values;
   buildingParams.getPropertyAsDoubleVector("wallArea", values);
+
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for wallArea parameter. It must have 9.");
-  _wallAreaN = values[0];
-  _wallAreaNE = values[1];
-  _wallAreaE = values[2];
-  _wallAreaSE = values[3];
-  _wallAreaS = values[4];
-  _wallAreaSW = values[5];
-  _wallAreaW = values[6];
-  _wallAreaNW = values[7];
-  _roofArea = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWallArea(values);
 
   buildingParams.getPropertyAsDoubleVector("wallU", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for wallU parameter. It must have 9.");
-  _wallUvalueN = values[0];
-  _wallUvalueNE = values[1];
-  _wallUvalueE = values[2];
-  _wallUvalueSE = values[3];
-  _wallUvalueS = values[4];
-  _wallUvalueSW = values[5];
-  _wallUvalueW = values[6];
-  _wallUvalueNW = values[7];
-  _roofUValue = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWallUniform(values);
 
   buildingParams.getPropertyAsDoubleVector("wallEmissivity", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for wallEmissivity parameter. It must have 9.");
-  _wallThermalEmissivityN = values[0];
-  _wallThermalEmissivityNE = values[1];
-  _wallThermalEmissivityE = values[2];
-  _wallThermalEmissivitySE = values[3];
-  _wallThermalEmissivityS = values[4];
-  _wallThermalEmissivitySW = values[5];
-  _wallThermalEmissivityW = values[6];
-  _wallThermalEmissivityNW = values[7];
-  _roofThermalEmissivity = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWallThermalEmissivity(values);
 
   buildingParams.getPropertyAsDoubleVector("wallAbsorption", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for wallAbsorption parameter. It must have 9.");
-  _wallSolarAbsorptionN = values[0];
-  _wallSolarAbsorptionNE = values[1];
-  _wallSolarAbsorptionE = values[2];
-  _wallSolarAbsorptionSE = values[3];
-  _wallSolarAbsorptionS = values[4];
-  _wallSolarAbsorptionSW = values[5];
-  _wallSolarAbsorptionW = values[6];
-  _wallSolarAbsorptionNW = values[7];
-  _roofSolarAbsorption = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWallSolarAbsorbtion(values);
 
   buildingParams.getPropertyAsDoubleVector("windowArea", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for windowArea parameter. It must have 9.");
-  _windowAreaN = values[0];
-  _windowAreaNE = values[1];
-  _windowAreaE = values[2];
-  _windowAreaSE = values[3];
-  _windowAreaS = values[4];
-  _windowAreaSW = values[5];
-  _windowAreaW = values[6];
-  _windowAreaNW = values[7];
-  _skylightArea = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWindowArea(values);
 
   buildingParams.getPropertyAsDoubleVector("windowU", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for windowU parameter. It must have 9.");
-  _windowUvalueN = values[0];
-  _windowUvalueNE = values[1];
-  _windowUvalueE = values[2];
-  _windowUvalueSE = values[3];
-  _windowUvalueS = values[4];
-  _windowUvalueSW = values[5];
-  _windowUvalueW = values[6];
-  _windowUvalueNW = values[7];
-  _skylightUvalue = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWindowUniform(values);
 
   buildingParams.getPropertyAsDoubleVector("windowSHGC", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for windowSHGC parameter. It must have 9.");
-  _windowSHGCN = values[0];
-  _windowSHGCNE = values[1];
-  _windowSHGCE = values[2];
-  _windowSHGCSE = values[3];
-  _windowSHGCS = values[4];
-  _windowSHGCSW = values[5];
-  _windowSHGCW = values[6];
-  _windowSHGCNW = values[7];
-  _skylightSHGC = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWindowNormalIncidenceSolarEnergyTransmittance(values);
 
   buildingParams.getPropertyAsDoubleVector("windowSCF", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for windowSCF parameter. It must have 9.");
-  _windowSCFN = values[0];
-  _windowSCFNE = values[1];
-  _windowSCFE = values[2];
-  _windowSCFSE = values[3];
-  _windowSCFS = values[4];
-  _windowSCFSW = values[5];
-  _windowSCFW = values[6];
-  _windowSCFNW = values[7];
-  _skylightSCF = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWindowShadingCorrectionFactor(values);
 
   buildingParams.getPropertyAsDoubleVector("windowSDF", values);
   if (values.size() != 9)
     throw invalid_argument("Invalid number of values for windowSDF parameter. It must have 9.");
-  _windowSDFN = values[0];
-  _windowSDFNE = values[1];
-  _windowSDFE = values[2];
-  _windowSDFSE = values[3];
-  _windowSDFS = values[4];
-  _windowSDFSW = values[5];
-  _windowSDFW = values[6];
-  _windowSDFNW = values[7];
-  _skylightSDF = values[8];
+  // Reorder the values from the .ism order to the order used in Structure.
+  northToSouth(values);
+  structure.setWindowShadingDevice(values);
 }
 
 void UserModel::initializeParameters(const Properties& buildingParams)
