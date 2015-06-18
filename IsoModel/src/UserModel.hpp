@@ -72,17 +72,6 @@ private:
 
   bool _valid;
 
-  // TODO: Implement these new properties. BAA@2015-06-18
-  double _ventilationIntakeRateUnoccupied;
-  double _ventilationExhaustRateUnoccupied;
-  double _infiltrationRateUnoccupied;
-  double _lightingPowerFixedOccupied;
-  double _lightingPowerFixedUnoccupied;
-  double _electricAppliancePowerFixedOccupied;
-  double _electricAppliancePowerFixedUnoccupied;
-  double _gasAppliancePowerFixedOccupied;
-  double _gasAppliancePowerFixedUnoccupied;
-
   std::string _weatherFilePath, _scheduleFilePath;
   std::string dataFile;
 
