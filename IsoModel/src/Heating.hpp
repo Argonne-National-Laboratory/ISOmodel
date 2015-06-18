@@ -299,8 +299,8 @@ private:
   double m_hotWaterEnergyType;
   double m_hotcoldWasteFactor;
   // Members with default values:
-  double m_dT_supp_ht = 7.0;
   bool m_forcedAirHeating = true;
+  double m_dT_supp_ht = 7.0;
   // Pumps:
   double m_E_pumps = 0.25;
   // Interior temp constants.

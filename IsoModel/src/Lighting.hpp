@@ -80,7 +80,7 @@ public:
     return m_n_day_start;
   }
 
-  void set_n_day_start(double n_day_start) {
+  void setN_day_start(double n_day_start) {
     m_n_day_start = n_day_start;
   }
 
@@ -91,7 +91,7 @@ public:
     return m_n_day_end;
   }
 
-  void set_n_day_end(double n_day_end) {
+  void setN_day_end(double n_day_end) {
     m_n_day_end = n_day_end;
   }
 
@@ -102,7 +102,7 @@ public:
     return m_n_weeks;
   }
 
-  void set_n_weeks(double n_weeks) {
+  void setN_weeks(double n_weeks) {
     m_n_weeks = n_weeks;
   }
 

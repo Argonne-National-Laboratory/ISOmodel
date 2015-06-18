@@ -1311,9 +1311,6 @@ public:
   }
 
 
-  // Getters and setters for default properties.
-
-
   // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
   // Population
   /**
@@ -1427,6 +1424,699 @@ public:
 
   void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
     ventilation.setVentilationIntakeRateUnoccupied(ventilationIntakeRateUnoccupied);
+  }
+
+
+  // Getters and setters for default properties.
+
+  // Building
+  /**
+  *
+  */
+  double externalEquipment() const {
+    return building.externalEquipment();
+  }
+
+  void setExternalEquipment(double externalEquipment) {
+    building.setExternalEquipment(externalEquipment);
+  }
+
+  // Cooling
+  /**
+  *
+  */
+  bool forcedAirCooling() const {
+    return cooling.forcedAirCooling();
+  }
+
+  void setForcedAirCooling(bool forcedAirCooling) {
+    cooling.setForcedAirCooling(forcedAirCooling);
+  }
+
+  /**
+  *
+  */
+  double T_cl_ctrl_flag() const {
+    return cooling.T_cl_ctrl_flag();
+  }
+
+  void setT_cl_ctrl_flag(double T_cl_ctrl_flag) {
+    cooling.setT_cl_ctrl_flag(T_cl_ctrl_flag);
+  }
+
+  /**
+  *
+  */
+  double dT_supp_cl() const {
+    return cooling.dT_supp_cl();
+  }
+
+  void setDT_supp_cl(double dT_supp_cl) {
+    cooling.setDT_supp_cl(dT_supp_cl);
+  }
+
+  /**
+  *
+  */
+  double DC_YesNo() const {
+    return cooling.DC_YesNo();
+  }
+
+  void setDC_YesNo(double DC_YesNo) {
+    cooling.setDC_YesNo(DC_YesNo);
+  }
+
+  /**
+  *
+  */
+  double eta_DC_network() const {
+    return cooling.eta_DC_network();
+  }
+
+  void setEta_DC_network(double eta_DC_network) {
+    cooling.setEta_DC_network(eta_DC_network);
+  }
+
+  /**
+  *
+  */
+  double eta_DC_COP() const {
+    return cooling.eta_DC_COP();
+  }
+
+  void setEta_DC_COP(double eta_DC_COP) {
+    cooling.setEta_DC_COP(eta_DC_COP);
+  }
+
+  /**
+  *
+  */
+  double eta_DC_frac_abs() const {
+    return cooling.eta_DC_frac_abs();
+  }
+
+  void setEta_DC_frac_abs(double eta_DC_frac_abs) {
+    cooling.setEta_DC_frac_abs(eta_DC_frac_abs);
+  }
+
+  /**
+  *
+  */
+  double eta_DC_COP_abs() const {
+    return cooling.eta_DC_COP_abs();
+  }
+
+  void setEta_DC_COP_abs(double eta_DC_COP_abs) {
+    cooling.setEta_DC_COP_abs(eta_DC_COP_abs);
+  }
+
+  /**
+  *
+  */
+  double frac_DC_free() const {
+    return cooling.frac_DC_free();
+  }
+
+  void setFrac_DC_free(double frac_DC_free) {
+    cooling.setFrac_DC_free(frac_DC_free);
+  }
+
+  /**
+  *
+  */
+  double E_pumps_cl() const {
+    return cooling.E_pumps();
+  }
+
+  void setE_pumps_cl(double E_pumps) {
+    cooling.setE_pumps(E_pumps);
+  }
+
+  // Heating.
+  /**
+  *
+  */
+  bool forcedAirHeating() const {
+    return heating.forcedAirHeating();
+  }
+
+  void setForcedAirHeating(bool forcedAirHeating) {
+    heating.setForcedAirHeating(forcedAirHeating);
+  }
+
+  /**
+  *
+  */
+  double dT_supp_ht() const {
+    return heating.dT_supp_ht();
+  }
+
+  void setDT_supp_ht(double dT_supp_ht) {
+    heating.setDT_supp_ht(dT_supp_ht);
+  }
+
+  /**
+  *
+  */
+  double E_pumps_ht() const {
+    return heating.E_pumps();
+  }
+
+  void setE_pumps_ht(double E_pumps) {
+    heating.setE_pumps(E_pumps);
+  }
+
+  /**
+  *
+  */
+  double T_ht_ctrl_flag() const {
+    return heating.T_ht_ctrl_flag();
+  }
+
+  void setT_ht_ctrl_flag(double T_ht_ctrl_flag) {
+    heating.setT_ht_ctrl_flag(T_ht_ctrl_flag);
+  }
+
+  /**
+  *
+  */
+  double a_H0() const {
+    return heating.a_H0();
+  }
+
+  void setA_H0(double a_H0) {
+    heating.setA_H0(a_H0);
+  }
+
+  /**
+  *
+  */
+  double tau_H0() const {
+    return heating.tau_H0();
+  }
+
+  void setTau_H0(double tau_H0) {
+    heating.setTau_H0(tau_H0);
+  }
+
+  /**
+  *
+  */
+  double DH_YesNo() const {
+    return heating.DH_YesNo();
+  }
+
+  void setDH_YesNo(double DH_YesNo) {
+    heating.setDH_YesNo(DH_YesNo);
+  }
+
+  /**
+  *
+  */
+  double eta_DH_network() const {
+    return heating.eta_DH_network();
+  }
+
+  void setEta_DH_network(double eta_DH_network) {
+    heating.setEta_DH_network(eta_DH_network);
+  }
+
+  /**
+  *
+  */
+  double eta_DH_sys() const {
+    return heating.eta_DH_sys();
+  }
+
+  void setEta_DH_sys(double eta_DH_sys) {
+    heating.setEta_DH_sys(eta_DH_sys);
+  }
+
+  /**
+  *
+  */
+  double frac_DH_free() const {
+    return heating.frac_DH_free();
+  }
+
+  void setFrac_DH_free(double frac_DH_free) {
+    heating.setFrac_DH_free(frac_DH_free);
+  }
+
+  /**
+  *
+  */
+  double dhw_tset() const {
+    return heating.dhw_tset();
+  }
+
+  void setDhw_tset(double dhw_tset) {
+    heating.setDhw_tset(dhw_tset);
+  }
+
+  /**
+  *
+  */
+  double dhw_tsupply() const {
+    return heating.dhw_tsupply();
+  }
+
+  void setDhw_tsupply(double dhw_tsupply) {
+    heating.setDhw_tsupply(dhw_tsupply);
+  }
+
+  // Lighting
+  /**
+  *
+  */
+  double n_day_start() const {
+    return lights.n_day_start();
+  }
+
+  void setN_day_start(double n_day_start) {
+    lights.setN_day_start(n_day_start);
+  }
+
+  /**
+  *
+  */
+  double n_day_end() const {
+    return lights.n_day_end();
+  }
+
+  void setN_day_end(double n_day_end) {
+    lights.setN_day_end(n_day_end);
+  }
+
+  /**
+  *
+  */
+  double n_weeks() const {
+    return lights.n_weeks();
+  }
+
+  void setN_weeks(double n_weeks) {
+    lights.setN_weeks(n_weeks);
+  }
+
+  /**
+  *
+  */
+  double elecInternalGains() const {
+    return lights.elecInternalGains();
+  }
+
+  void setElecInternalGains(double elecInternalGains) {
+    lights.setElecInternalGains(elecInternalGains);
+  }
+
+  /**
+  *
+  */
+  double permLightPowerDensity() const {
+    return lights.permLightPowerDensity();
+  }
+
+  void setPermLightPowerDensity(double permLightPowerDensity) {
+    lights.setPermLightPowerDensity(permLightPowerDensity);
+  }
+
+  /**
+  *
+  */
+  double presenceSensorAd() const {
+    return lights.presenceSensorAd();
+  }
+
+  void setPresenceSensorAd(double presenceSensorAd) {
+    lights.setPresenceSensorAd(presenceSensorAd);
+  }
+
+  /**
+  *
+  */
+  double automaticAd() const {
+    return lights.automaticAd();
+  }
+
+  void setAutomaticAd(double automaticAd) {
+    lights.setAutomaticAd(automaticAd);
+  }
+
+  /**
+  *
+  */
+  double presenceAutoAd() const {
+    return lights.presenceAutoAd();
+  }
+
+  void setPresenceAutoAd(double presenceAutoAd) {
+    lights.setPresenceAutoAd(presenceAutoAd);
+  }
+
+  /**
+  *
+  */
+  double manualSwitchAd() const {
+    return lights.manualSwitchAd();
+  }
+
+  void setManualSwitchAd(double manualSwitchAd) {
+    lights.setManualSwitchAd(manualSwitchAd);
+  }
+
+  /**
+  *
+  */
+  double presenceSensorLux() const {
+    return lights.presenceSensorLux();
+  }
+
+  void setPresenceSensorLux(double presenceSensorLux) {
+    lights.setPresenceSensorLux(presenceSensorLux);
+  }
+
+  /**
+  *
+  */
+  double automaticLux() const {
+    return lights.automaticLux();
+  }
+
+  void setAutomaticLux(double automaticLux) {
+    lights.setAutomaticLux(automaticLux);
+  }
+
+  /**
+  *
+  */
+  double presenceAutoLux() const {
+    return lights.presenceAutoLux();
+  }
+
+  void setPresenceAutoLux(double presenceAutoLux) {
+    lights.setPresenceAutoLux(presenceAutoLux);
+  }
+
+  /**
+  *
+  */
+  double manualSwitchLux() const {
+    return lights.manualSwitchLux();
+  }
+
+  void setManualSwitchLux(double manualSwitchLux) {
+    lights.setManualSwitchLux(manualSwitchLux);
+  }
+
+  /**
+  *
+  */
+  double naturallyLightedArea() const {
+    return lights.naturallyLightedArea();
+  }
+
+  void setNaturallyLightedArea(double naturallyLightedArea) {
+    lights.setNaturallyLightedArea(naturallyLightedArea);
+  }
+
+  // Physical Quantities
+  /**
+  *
+  */
+  double rhoCpAir() const {
+    return phys.rhoCpAir();
+  }
+
+  void setRhoCpAir(double rhoCpAir) {
+    phys.setRhoCpAir(rhoCpAir);
+  }
+
+  /**
+  *
+  */
+  double rhoCpWater() const {
+    return phys.rhoCpWater();
+  }
+
+  void setRhoCpWater(double rhoCpWater) {
+    phys.setRhoCpWater(rhoCpWater);
+  }
+
+  // Simulation Settings.
+  /**
+  *
+  */
+  double phiIntFractionToAirNode() const {
+    return simSettings.phiIntFractionToAirNode();
+  }
+  
+  void setPhiIntFractionToAirNode(double phiIntFractionToAirNode) {
+    simSettings.setPhiIntFractionToAirNode(phiIntFractionToAirNode);
+  }
+  
+  /**
+  *
+  */
+  double phiSolFractionToAirNode() const {
+    return simSettings.phiSolFractionToAirNode();
+  }
+  
+  void setPhiSolFractionToAirNode(double phiSolFractionToAirNode) {
+    simSettings.setPhiSolFractionToAirNode(phiSolFractionToAirNode);
+  }
+  
+  /**
+  *
+  */
+  double hci() const {
+    return simSettings.hci();
+  }
+  
+  void setHci(double hci) {
+    simSettings.setHci(hci);
+  }
+  
+  /**
+  *
+  */
+  double hri() const {
+    return simSettings.hri();
+  }
+  
+  void setHri(double hri) {
+    simSettings.setHri(hri);
+  }
+
+  // Structure.
+  /**
+  *
+  */
+  double R_se() const {
+    return structure.R_se();
+  }
+
+  void setR_se(double R_se) {
+    structure.setR_se(R_se);
+  }
+
+  /**
+  *
+  */
+  double irradianceForMaxShadingUse() const {
+    return structure.irradianceForMaxShadingUse();
+  }
+
+  void setIrradianceForMaxShadingUse(double irradianceForMaxShadingUse) {
+    structure.setIrradianceForMaxShadingUse(irradianceForMaxShadingUse);
+  }
+
+  /**
+  *
+  */
+  double shadingFactorAtMaxUse() const {
+    return structure.shadingFactorAtMaxUse();
+  }
+
+  void setShadingFactorAtMaxUse(double shadingFactorAtMaxUse) {
+    structure.setShadingFactorAtMaxUse(shadingFactorAtMaxUse);
+  }
+
+  /**
+  *
+  */
+  double totalAreaPerFloorArea() const {
+    return structure.totalAreaPerFloorArea();
+  }
+
+  void setTotalAreaPerFloorArea(double totalAreaPerFloorArea) {
+    structure.setTotalAreaPerFloorArea(totalAreaPerFloorArea);
+  }
+
+  /**
+  *
+  */
+  double win_ff() const {
+    return structure.win_ff();
+  }
+
+  void setWin_ff(double win_ff) {
+    structure.setWin_ff(win_ff);
+  }
+
+  /**
+  *
+  */
+  double win_F_W() const {
+    return structure.win_F_W();
+  }
+
+  void setWin_F_W(double win_F_W) {
+    structure.setWin_F_W(win_F_W);
+  }
+
+  /**
+  *
+  */
+  double R_sc_ext() const {
+    return structure.R_sc_ext();
+  }
+
+  void setR_sc_ext(double R_sc_ext) {
+    structure.setR_sc_ext(R_sc_ext);
+  }
+
+  // Ventilation
+  /**
+  *
+  */
+  double ventPreheatDegC() const {
+    return ventilation.ventPreheatDegC();
+  }
+
+  void setVentPreheatDegC(double ventPreheatDegC) {
+    ventilation.setVentPreheatDegC(ventPreheatDegC);
+  }
+
+  /**
+  *
+  */
+  double n50() const {
+    return ventilation.n50();
+  }
+
+  void setN50(double n50) {
+    ventilation.setN50(n50);
+  }
+
+  /**
+  *
+  */
+  double hzone() const {
+    return ventilation.hzone();
+  }
+
+  void setHzone(double hzone) {
+    ventilation.setHzone(hzone);
+  }
+
+  /**
+  *
+  */
+  double p_exp() const {
+    return ventilation.p_exp();
+  }
+
+  void setP_exp(double p_exp) {
+    ventilation.setP_exp(p_exp);
+  }
+
+  /**
+  *
+  */
+  double zone_frac() const {
+    return ventilation.zone_frac();
+  }
+
+  void setZone_frac(double zone_frac) {
+    ventilation.setZone_frac(zone_frac);
+  }
+
+  /**
+  *
+  */
+  double stack_exp() const {
+    return ventilation.stack_exp();
+  }
+
+  void setStack_exp(double stack_exp) {
+    ventilation.setStack_exp(stack_exp);
+  }
+
+  /**
+  *
+  */
+  double stack_coeff() const {
+    return ventilation.stack_coeff();
+  }
+
+  void setStack_coeff(double stack_coeff) {
+    ventilation.setStack_coeff(stack_coeff);
+  }
+
+  /**
+  *
+  */
+  double wind_exp() const {
+    return ventilation.wind_exp();
+  }
+
+  void setWind_exp(double wind_exp) {
+    ventilation.setWind_exp(wind_exp);
+  }
+
+  /**
+  *
+  */
+  double wind_coeff() const {
+    return ventilation.wind_coeff();
+  }
+
+  void setWind_coeff(double wind_coeff) {
+    ventilation.setWind_coeff(wind_coeff);
+  }
+
+  /**
+  *
+  */
+  double dCp() const {
+    return ventilation.dCp();
+  }
+
+  void setDCp(double dCp) {
+    ventilation.setDCp(dCp);
+  }
+
+  /**
+  *
+  */
+  double vent_rate_flag() const {
+    return ventilation.vent_rate_flag();
+  }
+
+  void setVent_rate_flag(double vent_rate_flag) {
+    ventilation.setVent_rate_flag(vent_rate_flag);
+  }
+
+  /**
+  *
+  */
+  double H_ve() const {
+    return ventilation.H_ve();
+  }
+
+  void setH_ve(double H_ve) {
+    ventilation.setH_ve(H_ve);
   }
 
 };
