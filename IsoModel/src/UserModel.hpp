@@ -71,153 +71,8 @@ private:
   SimulationSettings simSettings;
 
   bool _valid;
-  double _terrainClass;
-  double _floorArea;
-  double _buildingHeight;
-  double _buildingOccupancyFrom;
-  double _buildingOccupancyTo;
-  double _equivFullLoadOccupancyFrom;
-  double _equivFullLoadOccupancyTo;
-  double _peopleDensityOccupied;
-  double _peopleDensityUnoccupied;
-  double _heatingOccupiedSetpoint;
-  double _heatingUnoccupiedSetpoint;
-  double _coolingOccupiedSetpoint;
-  double _coolingUnoccupiedSetpoint;
-  double _elecPowerAppliancesOccupied;
-  double _elecPowerAppliancesUnoccupied;
-  double _gasPowerAppliancesOccupied;
-  double _gasPowerAppliancesUnoccupied;
-  double _lightingPowerIntensityOccupied;
-  double _lightingPowerIntensityUnoccupied;
-  double _exteriorLightingPower;
-  double _daylightSensorSystem;
-  double _lightingOccupancySensorSystem;
-  double _constantIlluminationControl;
-  double _coolingSystemCOP;
-  double _coolingSystemIPLVToCOPRatio;
-  double _heatingEnergyCarrier;
-  double _heatingSystemEfficiency;
-  double _ventilationType;
-  double _freshAirFlowRate;
-  double _supplyExhaustRate;
-  double _heatRecovery;
-  double _exhaustAirRecirclation;
-  double _buildingAirLeakage;
-  double _dhwDemand;
-  double _dhwEfficiency;
-  double _dhwDistributionSystem;
-  double _dhwEnergyCarrier;
-  double _bemType;
-  double _interiorHeatCapacity;
-  double _specificFanPower;
-  double _fanFlowControlFactor;
-  // double _roofSHGC; // Unused. _skylightSHGC is the same.
 
-  /* Area */
-  double _wallAreaS;
-  double _wallAreaSE;
-  double _wallAreaE;
-  double _wallAreaNE;
-  double _wallAreaN;
-  double _wallAreaNW;
-  double _wallAreaW;
-  double _wallAreaSW;
-  double _roofArea;
-
-  /* UValue */
-  double _wallUvalueS;
-  double _wallUvalueSE;
-  double _wallUvalueE;
-  double _wallUvalueNE;
-  double _wallUvalueN;
-  double _wallUvalueNW;
-  double _wallUvalueW;
-  double _wallUvalueSW;
-  double _roofUValue;
-
-  /* SolarAbsorption */
-  double _wallSolarAbsorptionS;
-  double _wallSolarAbsorptionSE;
-  double _wallSolarAbsorptionE;
-  double _wallSolarAbsorptionNE;
-  double _wallSolarAbsorptionN;
-  double _wallSolarAbsorptionNW;
-  double _wallSolarAbsorptionW;
-  double _wallSolarAbsorptionSW;
-  double _roofSolarAbsorption;
-
-  /* ThermalEmissivity */
-  double _wallThermalEmissivityS;
-  double _wallThermalEmissivitySE;
-  double _wallThermalEmissivityE;
-  double _wallThermalEmissivityNE;
-  double _wallThermalEmissivityN;
-  double _wallThermalEmissivityNW;
-  double _wallThermalEmissivityW;
-  double _wallThermalEmissivitySW;
-  double _roofThermalEmissivity;
-
-  double _windowAreaS;
-  double _windowAreaSE;
-  double _windowAreaE;
-  double _windowAreaNE;
-  double _windowAreaN;
-  double _windowAreaNW;
-  double _windowAreaW;
-  double _windowAreaSW;
-  double _skylightArea;
-
-  double _windowUvalueS;
-  double _windowUvalueSE;
-  double _windowUvalueE;
-  double _windowUvalueNE;
-  double _windowUvalueN;
-  double _windowUvalueNW;
-  double _windowUvalueW;
-  double _windowUvalueSW;
-  double _skylightUvalue;
-
-  double _windowSHGCS;
-  double _windowSHGCSE;
-  double _windowSHGCE;
-  double _windowSHGCNE;
-  double _windowSHGCN;
-  double _windowSHGCNW;
-  double _windowSHGCW;
-  double _windowSHGCSW;
-  double _skylightSHGC;
-
-  double _windowSCFS;
-  double _windowSCFSE;
-  double _windowSCFE;
-  double _windowSCFNE;
-  double _windowSCFN;
-  double _windowSCFNW;
-  double _windowSCFW;
-  double _windowSCFSW;
-  double _skylightSCF;
-
-  double _windowSDFS;
-  double _windowSDFSE;
-  double _windowSDFE;
-  double _windowSDFNE;
-  double _windowSDFN;
-  double _windowSDFNW;
-  double _windowSDFW;
-  double _windowSDFSW;
-  double _skylightSDF;
-
-  double _exteriorHeatCapacity;
-  double _infiltration;
-  double _hvacWasteFactor;
-  double _hvacHeatingLossFactor;
-  double _hvacCoolingLossFactor;
-  double _dhwDistributionEfficiency;
-  double _heatingPumpControl;
-  double _coolingPumpControl;
-  double _heatGainPerPerson;
-
+  // TODO: Implement these new properties. BAA@2015-06-18
   double _ventilationIntakeRateUnoccupied;
   double _ventilationExhaustRateUnoccupied;
   double _infiltrationRateUnoccupied;
@@ -469,10 +324,10 @@ public:
   }
 
   // XXX: Appears to be unused. BAA@2015-06-16
-  double dhwDistributionSystem() const
-  {
-    return _dhwDistributionSystem;
-  }
+  // double dhwDistributionSystem() const
+  // {
+  //   return _dhwDistributionSystem;
+  // }
 
   double dhwEnergyCarrier() const
   {
@@ -1120,12 +975,6 @@ public:
     return structure.wallHeatCapacity();
   }
 
-  // XXX: Not used. Seems redundant with buildingAirLeakage, set from "infiltrationrateoccupied"
-  double infiltration()
-  {
-    return _infiltration;
-  }
-
   // Heating
   double hvacWasteFactor()
   {
@@ -1437,12 +1286,6 @@ public:
     structure.setWallHeatCapacity(val);
   }
 
-  // XXX: appears to be unused.
-  void setInfiltration(double val)
-  {
-    _infiltration = val;
-  }
-
   // Heating
   void setHvacWasteFactor(double val)
   {
@@ -1570,6 +1413,8 @@ public:
   {
     _ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
   }
+
+  // Getters and setters for default properties.
 };
 
 } // isomodel

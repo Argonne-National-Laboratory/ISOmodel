@@ -281,12 +281,7 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   attributeValue = *buildingParams.getPropertyAsDouble("exhaustairrecirculation");
   setExhaustAirRecirclation(attributeValue);
   attributeValue = *buildingParams.getPropertyAsDouble("infiltrationrateoccupied");
-  // set both of these to infiltration. Prior version set only the
-  // buildingAirLeakage from the infiltration and the _infiltration var
-  // wasn't used. Its still not used, but does have a getter and setter
-  // so we set it
   setBuildingAirLeakage(attributeValue);
-  setInfiltration(attributeValue);
   attributeValue = *buildingParams.getPropertyAsDouble("dhwdemand");
   setDhwDemand(attributeValue);
   attributeValue = *buildingParams.getPropertyAsDouble("dhwsystemefficiency");

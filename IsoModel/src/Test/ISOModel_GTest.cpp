@@ -201,7 +201,8 @@ TEST(IsoModelTests, InitializationTests)
   EXPECT_DOUBLE_EQ(0.3434343, userModel.skylightSCF());
   EXPECT_DOUBLE_EQ(0.2534335, userModel.skylightSDF());
   EXPECT_DOUBLE_EQ(0.523964673586454, userModel.exteriorHeatCapacity());
-  EXPECT_DOUBLE_EQ(0.139585598177502, userModel.infiltration());
+  // This is redundant with buildingAirLeakage().
+  // EXPECT_DOUBLE_EQ(0.139585598177502, userModel.infiltration());
   EXPECT_DOUBLE_EQ(0.287554068015519, userModel.hvacWasteFactor());
   EXPECT_DOUBLE_EQ(0.801121347575538, userModel.hvacHeatingLossFactor());
   EXPECT_DOUBLE_EQ(0.919509843310335, userModel.hvacCoolingLossFactor());
@@ -362,7 +363,8 @@ TEST(IsoModelTests, DefaultsTests)
   EXPECT_DOUBLE_EQ(0.3434343, userModel.skylightSCF());
   EXPECT_DOUBLE_EQ(0.2534335, userModel.skylightSDF());
   EXPECT_DOUBLE_EQ(0.523964673586454, userModel.exteriorHeatCapacity());
-  EXPECT_DOUBLE_EQ(0.139585598177502, userModel.infiltration());
+  // This is redundant with buildingAirLeakage().
+  // EXPECT_DOUBLE_EQ(0.139585598177502, userModel.infiltration());
   EXPECT_DOUBLE_EQ(0.287554068015519, userModel.hvacWasteFactor());
   EXPECT_DOUBLE_EQ(0.801121347575538, userModel.hvacHeatingLossFactor());
   EXPECT_DOUBLE_EQ(0.919509843310335, userModel.hvacCoolingLossFactor());
