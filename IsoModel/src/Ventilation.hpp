@@ -267,6 +267,40 @@ public:
     m_H_ve = H_ve;
   }
 
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  /**
+  *
+  */
+  double infiltrationRateUnoccupied() const {
+    return m_infiltrationRateUnoccupied;
+  }
+
+  void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied) {
+    m_infiltrationRateUnoccupied = infiltrationRateUnoccupied;
+  }
+
+  /**
+  *
+  */
+  double ventilationExhaustRateUnoccupied() const {
+    return m_ventilationExhaustRateUnoccupied;
+  }
+
+  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
+    m_ventilationExhaustRateUnoccupied = ventilationExhaustRateUnoccupied;
+  }
+
+  /**
+  *
+  */
+  double ventilationIntakeRateUnoccupied() const {
+    return m_ventilationIntakeRateUnoccupied;
+  }
+
+  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
+    m_ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
+  }
+
 private:
   double m_supplyRate;
   double m_supplyDifference;
@@ -288,7 +322,11 @@ private:
   double m_dCp = 0.75;
   int m_vent_rate_flag = 1;
   double m_H_ve = 0.0;
-  
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  double m_infiltrationRateUnoccupied;
+  double m_ventilationExhaustRateUnoccupied;
+  double m_ventilationIntakeRateUnoccupied;
 };
 } // isomodel
 } // openstudio

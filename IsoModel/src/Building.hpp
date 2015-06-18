@@ -127,6 +127,51 @@ public:
     m_externalEquipment = externalEquipment;
   }
 
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  /**
+  *
+  */
+  double electricAppliancePowerFixedOccupied() const {
+    return m_electricAppliancePowerFixedOccupied;
+  }
+
+  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied) {
+    m_electricAppliancePowerFixedOccupied = electricAppliancePowerFixedOccupied;
+  }
+
+  /**
+  *
+  */
+  double electricAppliancePowerFixedUnoccupied() const {
+    return m_electricAppliancePowerFixedUnoccupied;
+  }
+
+  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied) {
+    m_electricAppliancePowerFixedUnoccupied = electricAppliancePowerFixedUnoccupied;
+  }
+
+  /**
+  *
+  */
+  double gasAppliancePowerFixedOccupied() const {
+    return m_gasAppliancePowerFixedOccupied;
+  }
+
+  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied) {
+    m_gasAppliancePowerFixedOccupied = gasAppliancePowerFixedOccupied;
+  }
+
+  /**
+  *
+  */
+  double gasAppliancePowerFixedUnoccupied() const {
+    return m_gasAppliancePowerFixedUnoccupied;
+  }
+
+  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied) {
+    m_gasAppliancePowerFixedUnoccupied = gasAppliancePowerFixedUnoccupied;
+  }
+
 private:
   double m_lightingOccupancySensor;
   double m_constantIllumination;
@@ -135,8 +180,15 @@ private:
   double m_gasApplianceHeatGainOccupied;
   double m_gasApplianceHeatGainUnoccupied;
   double m_buildingEnergyManagement;
+
   // Members with default values:
   double m_externalEquipment = 0.0;
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  double m_electricAppliancePowerFixedOccupied;
+  double m_electricAppliancePowerFixedUnoccupied;
+  double m_gasAppliancePowerFixedOccupied;
+  double m_gasAppliancePowerFixedUnoccupied;
 };
 
 } // isomodel

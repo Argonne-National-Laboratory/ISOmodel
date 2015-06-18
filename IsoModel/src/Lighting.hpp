@@ -228,6 +228,29 @@ public:
     m_naturallyLightedArea = naturallyLightedArea;
   }
 
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  /**
+  *
+  */
+  double lightingPowerFixedOccupied() const {
+    return m_lightingPowerFixedOccupied;
+  }
+
+  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied) {
+    m_lightingPowerFixedOccupied = lightingPowerFixedOccupied;
+  }
+
+  /**
+  *
+  */
+  double lightingPowerFixedUnoccupied() const {
+    return m_lightingPowerFixedUnoccupied;
+  }
+
+  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied) {
+    m_lightingPowerFixedUnoccupied = lightingPowerFixedUnoccupied;
+  }
+
 private:
   double m_powerDensityOccupied;
   double m_powerDensityUnoccupied;
@@ -250,6 +273,10 @@ private:
   double m_manualSwitchLux = 500.0;
   // Daylighting
   double m_naturallyLightedArea = 0.0;
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  double m_lightingPowerFixedOccupied;
+  double m_lightingPowerFixedUnoccupied;
 };
 
 } // isomodel

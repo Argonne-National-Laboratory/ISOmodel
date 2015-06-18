@@ -19,6 +19,8 @@
 #ifndef ISOMODEL_POPULATION_HPP
 #define ISOMODEL_POPULATION_HPP
 
+#include <string>
+
 namespace openstudio {
 namespace isomodel {
 class Population
@@ -99,15 +101,27 @@ public:
     m_densityUnoccupied = value;
   }
 
-/**
-* Heat gain per person (W/m2).
-*/
+  /**
+  * Heat gain per person (W/m2).
+  */
   double heatGainPerPerson() const {
     return m_heatGainPerPerson;
   }
 
   void setHeatGainPerPerson(double value) {
     m_heatGainPerPerson = value;
+  }
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  /**
+  *
+  */
+  std::string scheduleFilePath() const {
+  return m_scheduleFilePath;
+  }
+
+  void setScheduleFilePath(std::string scheduleFilePath) {
+  m_scheduleFilePath = scheduleFilePath;
   }
 
 private:
@@ -118,6 +132,9 @@ private:
   double m_densityOccupied;
   double m_densityUnoccupied;
   double m_heatGainPerPerson;
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  std::string m_scheduleFilePath;
 };
 
 } // isomodel

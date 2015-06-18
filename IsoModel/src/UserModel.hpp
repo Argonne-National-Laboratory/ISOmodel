@@ -1322,99 +1322,124 @@ public:
   }
 
 
-  // TODO: Add these new ism properties to the appropriate classes.
-  // Schedule files.
-  std::string scheduleFilePath() const {
-    return _scheduleFilePath;
-  }
-
-  void setScheduleFilePath(const std::string& path) {
-    _scheduleFilePath = path;
-  }
-
-  // Building.
-  double electricAppliancePowerFixedOccupied() const  {
-    return _electricAppliancePowerFixedOccupied;
-  }
-
-  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied)
-  {
-    _electricAppliancePowerFixedOccupied = electricAppliancePowerFixedOccupied;
-  }
-
-  double electricAppliancePowerFixedUnoccupied() const  {
-    return _electricAppliancePowerFixedUnoccupied;
-  }
-
-  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied)
-  {
-    _electricAppliancePowerFixedUnoccupied = electricAppliancePowerFixedUnoccupied;
-  }
-
-  double gasAppliancePowerFixedOccupied() const  {
-    return _gasAppliancePowerFixedOccupied;
-  }
-
-  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied)
-  {
-    _gasAppliancePowerFixedOccupied = gasAppliancePowerFixedOccupied;
-  }
-
-  double gasAppliancePowerFixedUnoccupied() const  {
-    return _gasAppliancePowerFixedUnoccupied;
-  }
-
-  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied)
-  {
-    _gasAppliancePowerFixedUnoccupied = gasAppliancePowerFixedUnoccupied;
-  }
-
-  double infiltrationRateUnoccupied() const  {
-    return _infiltrationRateUnoccupied;
-  }
-
-  void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied)
-  {
-    _infiltrationRateUnoccupied = infiltrationRateUnoccupied;
-  }
-
-  double lightingPowerFixedOccupied() const  {
-    return _lightingPowerFixedOccupied;
-  }
-
-  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied)
-  {
-    _lightingPowerFixedOccupied = lightingPowerFixedOccupied;
-  }
-
-  double lightingPowerFixedUnoccupied() const  {
-    return _lightingPowerFixedUnoccupied;
-  }
-
-  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied)
-  {
-    _lightingPowerFixedUnoccupied = lightingPowerFixedUnoccupied;
-  }
-
-  double ventilationExhaustRateUnoccupied() const  {
-    return _ventilationExhaustRateUnoccupied;
-  }
-
-  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied)
-  {
-    _ventilationExhaustRateUnoccupied = ventilationExhaustRateUnoccupied;
-  }
-
-  double ventilationIntakeRateUnoccupied() const  {
-    return _ventilationIntakeRateUnoccupied;
-  }
-
-  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied)
-  {
-    _ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
-  }
-
   // Getters and setters for default properties.
+
+
+  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
+  // Population
+  /**
+  *
+  */
+  std::string scheduleFilePath() const {
+    return pop.scheduleFilePath();
+  }
+
+  void setScheduleFilePath(std::string scheduleFilePath) {
+    pop.setScheduleFilePath(scheduleFilePath);
+  }
+
+  // Building
+  /**
+  *
+  */
+  double electricAppliancePowerFixedOccupied() const {
+    return building.electricAppliancePowerFixedOccupied();
+  }
+
+  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied) {
+    building.setElectricAppliancePowerFixedOccupied(electricAppliancePowerFixedOccupied);
+  }
+
+  /**
+  *
+  */
+  double electricAppliancePowerFixedUnoccupied() const {
+    return building.electricAppliancePowerFixedUnoccupied();
+  }
+
+  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied) {
+    building.setElectricAppliancePowerFixedUnoccupied(electricAppliancePowerFixedUnoccupied);
+  }
+
+  /**
+  *
+  */
+  double gasAppliancePowerFixedOccupied() const {
+    return building.gasAppliancePowerFixedOccupied();
+  }
+
+  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied) {
+    building.setGasAppliancePowerFixedOccupied(gasAppliancePowerFixedOccupied);
+  }
+
+  /**
+  *
+  */
+  double gasAppliancePowerFixedUnoccupied() const {
+    return building.gasAppliancePowerFixedUnoccupied();
+  }
+
+  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied) {
+    building.setGasAppliancePowerFixedUnoccupied(gasAppliancePowerFixedUnoccupied);
+  }
+
+  // Lighting
+  /**
+  *
+  */
+  double lightingPowerFixedOccupied() const {
+    return lights.lightingPowerFixedOccupied();
+  }
+
+  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied) {
+    lights.setLightingPowerFixedOccupied(lightingPowerFixedOccupied);
+  }
+
+  /**
+  *
+  */
+  double lightingPowerFixedUnoccupied() const {
+    return lights.lightingPowerFixedUnoccupied();
+  }
+
+  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied) {
+    lights.setLightingPowerFixedUnoccupied(lightingPowerFixedUnoccupied);
+  }
+
+  // Ventilation
+  /**
+  *
+  */
+  double infiltrationRateUnoccupied() const {
+    return ventilation.infiltrationRateUnoccupied();
+  }
+
+  void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied) {
+    ventilation.setInfiltrationRateUnoccupied(infiltrationRateUnoccupied);
+  }
+
+  /**
+  *
+  */
+  double ventilationExhaustRateUnoccupied() const {
+    return ventilation.ventilationExhaustRateUnoccupied();
+  }
+
+  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
+    ventilation.setVentilationExhaustRateUnoccupied(ventilationExhaustRateUnoccupied);
+  }
+
+  /**
+  *
+  */
+  double ventilationIntakeRateUnoccupied() const {
+    return ventilation.ventilationIntakeRateUnoccupied();
+  }
+
+  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
+    ventilation.setVentilationIntakeRateUnoccupied(ventilationIntakeRateUnoccupied);
+  }
+
 };
 
 } // isomodel
