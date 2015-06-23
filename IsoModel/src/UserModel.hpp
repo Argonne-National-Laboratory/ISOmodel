@@ -76,6 +76,11 @@ private:
   std::string dataFile;
 
   void initializeParameters(const Properties& props);
+  
+  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required = true);
+  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required = true);
+  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required = true);
+
   void loadBuilding(std::string buildingFile);
   void loadBuilding(std::string buildingFile, std::string defaultsFile);
   int weatherState(std::string header);

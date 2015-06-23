@@ -374,6 +374,94 @@ void UserModel::initializeParameters(const Properties& buildingParams)
     throw invalid_argument("weatherFilePath building parameter is missing");
 
   setWeatherFilePath(weatherFilePath);
+
+  // Optional properties with hard-coded default values:
+  initializeParameter(&UserModel::setExternalEquipment, buildingParams, "externalequipment", false);
+  initializeParameter(&UserModel::setForcedAirCooling, buildingParams, "forcedaircooling", false);
+  initializeParameter(&UserModel::setT_cl_ctrl_flag, buildingParams, "t_cl_ctrl_flag", false);
+  initializeParameter(&UserModel::setDT_supp_cl, buildingParams, "dt_supp_cl", false);
+  initializeParameter(&UserModel::setDC_YesNo, buildingParams, "dc_yesno", false);
+  initializeParameter(&UserModel::setEta_DC_network, buildingParams, "eta_dc_network", false);
+  initializeParameter(&UserModel::setEta_DC_COP, buildingParams, "eta_dc_cop", false);
+  initializeParameter(&UserModel::setEta_DC_frac_abs, buildingParams, "eta_dc_frac_abs", false);
+  initializeParameter(&UserModel::setEta_DC_COP_abs, buildingParams, "eta_dc_cop_abs", false);
+  initializeParameter(&UserModel::setFrac_DC_free, buildingParams, "frac_dc_free", false);
+  initializeParameter(&UserModel::setE_pumps_cl, buildingParams, "e_pumps_cl", false);
+  initializeParameter(&UserModel::setForcedAirHeating, buildingParams, "forcedairheating", false);
+  initializeParameter(&UserModel::setDT_supp_ht, buildingParams, "dt_supp_ht", false);
+  initializeParameter(&UserModel::setE_pumps_ht, buildingParams, "e_pumps_ht", false);
+  initializeParameter(&UserModel::setT_ht_ctrl_flag, buildingParams, "t_ht_ctrl_flag", false);
+  initializeParameter(&UserModel::setA_H0, buildingParams, "a_h0", false);
+  initializeParameter(&UserModel::setTau_H0, buildingParams, "tau_h0", false);
+  initializeParameter(&UserModel::setDH_YesNo, buildingParams, "dh_yesno", false);
+  initializeParameter(&UserModel::setEta_DH_network, buildingParams, "eta_dh_network", false);
+  initializeParameter(&UserModel::setEta_DH_sys, buildingParams, "eta_dh_sys", false);
+  initializeParameter(&UserModel::setFrac_DH_free, buildingParams, "frac_dh_free", false);
+  initializeParameter(&UserModel::setDhw_tset, buildingParams, "dhw_tset", false);
+  initializeParameter(&UserModel::setDhw_tsupply, buildingParams, "dhw_tsupply", false);
+  initializeParameter(&UserModel::setN_day_start, buildingParams, "n_day_start", false);
+  initializeParameter(&UserModel::setN_day_end, buildingParams, "n_day_end", false);
+  initializeParameter(&UserModel::setN_weeks, buildingParams, "n_weeks", false);
+  initializeParameter(&UserModel::setElecInternalGains, buildingParams, "elecinternalgains", false);
+  initializeParameter(&UserModel::setPermLightPowerDensity, buildingParams, "permlightpowerdensity", false);
+  initializeParameter(&UserModel::setPresenceSensorAd, buildingParams, "presencesensorad", false);
+  initializeParameter(&UserModel::setAutomaticAd, buildingParams, "automaticad", false);
+  initializeParameter(&UserModel::setPresenceAutoAd, buildingParams, "presenceautoad", false);
+  initializeParameter(&UserModel::setManualSwitchAd, buildingParams, "manualswitchad", false);
+  initializeParameter(&UserModel::setPresenceSensorLux, buildingParams, "presencesensorlux", false);
+  initializeParameter(&UserModel::setAutomaticLux, buildingParams, "automaticlux", false);
+  initializeParameter(&UserModel::setPresenceAutoLux, buildingParams, "presenceautolux", false);
+  initializeParameter(&UserModel::setManualSwitchLux, buildingParams, "manualswitchlux", false);
+  initializeParameter(&UserModel::setNaturallyLightedArea, buildingParams, "naturallylightedarea", false);
+  initializeParameter(&UserModel::setRhoCpAir, buildingParams, "rhocpair", false);
+  initializeParameter(&UserModel::setRhoCpWater, buildingParams, "rhocpwater", false);
+  initializeParameter(&UserModel::setPhiIntFractionToAirNode, buildingParams, "phiintfractiontoairnode", false);
+  initializeParameter(&UserModel::setPhiSolFractionToAirNode, buildingParams, "phisolfractiontoairnode", false);
+  initializeParameter(&UserModel::setHci, buildingParams, "hci", false);
+  initializeParameter(&UserModel::setHri, buildingParams, "hri", false);
+  initializeParameter(&UserModel::setR_se, buildingParams, "r_se", false);
+  initializeParameter(&UserModel::setIrradianceForMaxShadingUse, buildingParams, "irradianceformaxshadinguse", false);
+  initializeParameter(&UserModel::setShadingFactorAtMaxUse, buildingParams, "shadingfactoratmaxuse", false);
+  initializeParameter(&UserModel::setTotalAreaPerFloorArea, buildingParams, "totalareaperfloorarea", false);
+  initializeParameter(&UserModel::setWin_ff, buildingParams, "win_ff", false);
+  initializeParameter(&UserModel::setWin_F_W, buildingParams, "win_f_w", false);
+  initializeParameter(&UserModel::setR_sc_ext, buildingParams, "r_sc_ext", false);
+  initializeParameter(&UserModel::setVentPreheatDegC, buildingParams, "ventpreheatdegc", false);
+  initializeParameter(&UserModel::setN50, buildingParams, "n50", false);
+  initializeParameter(&UserModel::setHzone, buildingParams, "hzone", false);
+  initializeParameter(&UserModel::setP_exp, buildingParams, "p_exp", false);
+  initializeParameter(&UserModel::setZone_frac, buildingParams, "zone_frac", false);
+  initializeParameter(&UserModel::setStack_exp, buildingParams, "stack_exp", false);
+  initializeParameter(&UserModel::setStack_coeff, buildingParams, "stack_coeff", false);
+  initializeParameter(&UserModel::setWind_exp, buildingParams, "wind_exp", false);
+  initializeParameter(&UserModel::setWind_coeff, buildingParams, "wind_coeff", false);
+  initializeParameter(&UserModel::setDCp, buildingParams, "dcp", false);
+  initializeParameter(&UserModel::setVent_rate_flag, buildingParams, "vent_rate_flag", false);
+  initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsDouble(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsInt(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsBool(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
 }
 
 void UserModel::loadBuilding(std::string buildingFile)

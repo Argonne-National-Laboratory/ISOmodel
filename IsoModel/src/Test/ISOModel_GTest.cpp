@@ -387,6 +387,22 @@ TEST(IsoModelTests, DefaultsTests)
 
   EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
+
+TEST(IsoModelTests, OptionalPropertiesTests) {
+  UserModel userModelDefaults;
+  userModelDefaults.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
+
+  // Expect to find the default value hardcoded into the Building class.
+  EXPECT_DOUBLE_EQ(0.0, userModelDefaults.externalEquipment());
+
+  UserModel userModelOverrideDefaults;
+  userModelOverrideDefaults.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism", test_data_path + "/optional_defaults.ism");
+
+  // Expect to find the value set in optional_defaults.ism.
+  EXPECT_DOUBLE_EQ(1.0, userModelOverrideDefaults.externalEquipment());
+}
+
+
 // Monthly simulation results.
 /*
  * Month,ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW

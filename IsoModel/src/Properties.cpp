@@ -113,6 +113,35 @@ boost::optional<double> Properties::getPropertyAsDouble(const std::string& key) 
   }
 }
 
+boost::optional<int> Properties::getPropertyAsInt(const std::string& key) const
+{
+  if (auto val = getProperty(key)) {
+    try {
+      return std::stoi(*val);
+    } catch (std::invalid_argument& ex) {
+      return boost::none; // Cannot be converted to a int.
+    }
+  }
+  else {
+    return boost::none; // Key missing.
+  }
+}
+
+boost::optional<bool> Properties::getPropertyAsBool(const std::string& key) const
+{
+  if (auto val = getProperty(key)) {
+    if (*val == "true") {
+      return true;
+    } else if (*val == "false") {
+      return false;
+    } else {
+      return boost::none; // Cannot be converted to a bool.
+    }
+  }
+  else {
+    return boost::none; // Key missing.
+  }
+}
 
 void Properties::putProperty(const string& key, string value)
 {

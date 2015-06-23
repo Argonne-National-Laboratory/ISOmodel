@@ -117,6 +117,26 @@ public:
   boost::optional<double> getPropertyAsDouble(const std::string& key) const;
 
   /**
+   * Gets the property with the specified key as an int value
+   *
+   * @param key the property key
+   *
+   * @return the value for that key
+   * @return boost::none if the specified property is not found or is not an int.
+   */
+  boost::optional<int> getPropertyAsInt(const std::string& key) const;
+
+  /**
+   * Gets the property with the specified key as a bool value
+   *
+   * @param key the property key
+   *
+   * @return the value for that key
+   * @return boost::none if the specified property is not found or is not a bool.
+   */
+  boost::optional<bool> getPropertyAsBool(const std::string& key) const;
+
+  /**
    * Gets the property with the specified key as a vector of doubles. The
    * value is comma separated list of doubles that will be parsed into a
    * vector of doubles.
