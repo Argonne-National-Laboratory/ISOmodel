@@ -48,7 +48,7 @@ public:
     return m_wallArea;
   }
 
-  void setWallArea(Vector value) {
+  void setWallArea(const Vector& value) {
     m_wallArea = value;
   }
 
@@ -64,7 +64,7 @@ public:
     return m_windowArea;
   }
 
-  void setWindowArea(Vector value) {
+  void setWindowArea(const Vector& value) {
     m_windowArea = value;
   }
   
@@ -80,7 +80,7 @@ public:
     return m_wallUniform;
   }
 
-  void setWallUniform(Vector value) {
+  void setWallUniform(const Vector& value) {
     m_wallUniform = value;
   }
 
@@ -96,7 +96,7 @@ public:
     return m_windowUniform;
   }
 
-  void setWindowUniform(Vector value) {
+  void setWindowUniform(const Vector& value) {
     m_windowUniform = value;
   }
 
@@ -113,7 +113,7 @@ public:
     return m_wallThermalEmissivity;
   }
 
-  void setWallThermalEmissivity(Vector value) {
+  void setWallThermalEmissivity(const Vector& value) {
     m_wallThermalEmissivity = value;
   }
 
@@ -122,19 +122,19 @@ public:
   }
 
   /**
-  * Wall and roof solar absorbtion coeficient (0 to 1).
+  * Wall and roof solar absorption coeficient (0 to 1).
   * The order is S, SE, E, NE, N, NW, W, SW, roof to match conventions for sun
   * angles where south is zero.
   */
-  Vector wallSolarAbsorbtion() const {
+  Vector wallSolarAbsorption() const {
     return m_wallSolarAbsorbtion;
   }
 
-  void setWallSolarAbsorbtion(Vector value) {
+  void setWallSolarAbsorption(const Vector& value) {
     m_wallSolarAbsorbtion = value;
   }
 
-  void setWallSolarAbsorbtion(int index, double value) {
+  void setWallSolarAbsorption(int index, double value) {
     m_wallSolarAbsorbtion[index] = value;
   }
 
@@ -147,7 +147,7 @@ public:
     return m_windowShadingDevice;
   }
 
-  void setWindowShadingDevice(Vector value) {
+  void setWindowShadingDevice(const Vector& value) {
     m_windowShadingDevice = value;
   }
 
@@ -163,7 +163,7 @@ public:
     return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
 
-  void setWindowNormalIncidenceSolarEnergyTransmittance(Vector value) {
+  void setWindowNormalIncidenceSolarEnergyTransmittance(const Vector& value) {
     m_windowNormalIncidenceSolarEnergyTransmittance = value;
   }
 
@@ -178,7 +178,7 @@ public:
     return m_windowShadingCorrectionFactor;
   }
 
-  void setWindowShadingCorrectionFactor(Vector value) {
+  void setWindowShadingCorrectionFactor(const Vector& value) {
     m_windowShadingCorrectionFactor = value;
   }
 

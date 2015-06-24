@@ -565,7 +565,7 @@ void SimModel::envelopCalculations(Vector& v_win_A, Vector& v_wall_emiss, Vector
    H_tr=H_D+H_g+H_U+H_A; %total transmission heat transfer coefficient as per eqn 17 in 8.3.1
    */
   v_wall_emiss = structure.wallThermalEmissivity();
-  v_wall_alpha_sc = structure.wallSolarAbsorbtion();
+  v_wall_alpha_sc = structure.wallSolarAbsorption();
   /*
    % copy the following from input structure to vectors for clarity
    v_wall_emiss=In.wall_thermal_emiss; % wall thermal emissivity

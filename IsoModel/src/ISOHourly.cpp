@@ -430,7 +430,7 @@ void ISOHourly::initialize()
                           structure.windowArea()[i],
                           structure.wallUniform()[i],
                           structure.windowUniform()[i],
-                          structure.wallSolarAbsorbtion()[i],
+                          structure.wallSolarAbsorption()[i],
                           structure.windowShadingCorrectionFactor()[i],
                           structure.windowNormalIncidenceSolarEnergyTransmittance()[i],
                           i);

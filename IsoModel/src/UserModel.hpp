@@ -36,6 +36,16 @@ namespace isomodel {
 class SimModel;
 class WeatherData;
 
+const std::string GAS = "gas";
+const std::string ELECTRIC = "electric";
+
+const std::string MECHANICAL = "mechanical";
+const std::string NATURAL = "natural";
+const std::string COMBINED = "combined";
+
+const std::string NONE = "none";
+const std::string SIMPLE = "simple";
+const std::string ADVANCED = "advanced";
 
 struct LatLon {
 
@@ -77,9 +87,29 @@ private:
 
   void initializeParameters(const Properties& props);
   
-  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required = true);
-  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required = true);
-  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required = true);
+  /**
+   * Sets an .ism property in the usermodel to a value gotten from a Properties object.
+   * Takes a pointer to the appropriate UserModel setter function, the Properties object,
+   * the name of the property, and a boolean indicating if the property is required or
+   * if it has a hardcoded fallback default. The overloads attempt to get the property by name
+   * as the appropriate type from the Properties object depending on the argument type
+   * needed by the setter function. If the call to initializeParameter has required=true then
+   * it throws invalid_argument if it gets boost::none when calling props.getPropertyAs..., if it
+   * is optional (required=false), then it does nothing if it gets boost::none (the UserModel
+   * setter is not called).
+   */
+  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required);
+
+  /**
+   * .ism file is N, NE, E, SE, S, SW, W, NW, Roof.
+   * Structure is S, SE, E, NE, N, NW, W, SW, Roof.
+   * This reorders a vector from the .ism format to the Structure format.
+   */
+  void northToSouth(Vector& vec);
 
   void loadBuilding(std::string buildingFile);
   void loadBuilding(std::string buildingFile, std::string defaultsFile);
@@ -390,39 +420,39 @@ public:
 
   double wallSolarAbsorptionS() const
   {
-    return structure.wallSolarAbsorbtion()[0];
+    return structure.wallSolarAbsorption()[0];
   }
   double wallSolarAbsorptionSE() const
   {
-    return structure.wallSolarAbsorbtion()[1];
+    return structure.wallSolarAbsorption()[1];
   }
   double wallSolarAbsorptionE() const
   {
-    return structure.wallSolarAbsorbtion()[2];
+    return structure.wallSolarAbsorption()[2];
   }
   double wallSolarAbsorptionNE() const
   {
-    return structure.wallSolarAbsorbtion()[3];
+    return structure.wallSolarAbsorption()[3];
   }
   double wallSolarAbsorptionN() const
   {
-    return structure.wallSolarAbsorbtion()[4];
+    return structure.wallSolarAbsorption()[4];
   }
   double wallSolarAbsorptionNW() const
   {
-    return structure.wallSolarAbsorbtion()[5];
+    return structure.wallSolarAbsorption()[5];
   }
   double wallSolarAbsorptionW() const
   {
-    return structure.wallSolarAbsorbtion()[6];
+    return structure.wallSolarAbsorption()[6];
   }
   double wallSolarAbsorptionSW() const
   {
-    return structure.wallSolarAbsorbtion()[7];
+    return structure.wallSolarAbsorption()[7];
   }
   double roofSolarAbsorption() const
   {
-    return structure.wallSolarAbsorbtion()[8];
+    return structure.wallSolarAbsorption()[8];
   }
 
   double wallThermalEmissivityS() const
@@ -462,6 +492,13 @@ public:
     return structure.wallThermalEmissivity()[8];
   }
   
+  // Window U values.
+  void setWindowU(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WindowU parameter. It must have 9.");
+    }
+    structure.setWindowUniform(vec);
+  }
   double windowUvalueS() const
   {
     return structure.windowUniform()[0];
@@ -499,6 +536,13 @@ public:
     return structure.windowUniform()[8];
   }
 
+  // Window solar heat gain coefficient.
+  void setWindowSHGC(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WindowSHGC parameter. It must have 9.");
+    }
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(vec);
+  }
   double windowSHGCS() const
   {
     return structure.windowNormalIncidenceSolarEnergyTransmittance()[0];
@@ -623,6 +667,12 @@ public:
   }
 
   // Structure
+  void setWallU(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WallU parameter. It must have 9.");
+    }
+    structure.setWallUniform(vec);
+  }
   void setWallUvalueS(double val)
   {
     structure.setWallUniform(0, val);
@@ -660,43 +710,57 @@ public:
     structure.setWallUniform(8, val);
   }
 
+  // Wall solar absorption
+  void setWallSolarAbsorption(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WallSolarAbsorption parameter. It must have 9.");
+    }
+    structure.setWallSolarAbsorption(vec);
+  }
   void setWallSolarAbsorptionS(double val)
   {
-    structure.setWallSolarAbsorbtion(0, val);
+    structure.setWallSolarAbsorption(0, val);
   }
   void setWallSolarAbsorptionSE(double val)
   {
-    structure.setWallSolarAbsorbtion(1, val);
+    structure.setWallSolarAbsorption(1, val);
   }
   void setWallSolarAbsorptionE(double val)
   {
-    structure.setWallSolarAbsorbtion(2, val);
+    structure.setWallSolarAbsorption(2, val);
   }
   void setWallSolarAbsorptionNE(double val)
   {
-    structure.setWallSolarAbsorbtion(3, val);
+    structure.setWallSolarAbsorption(3, val);
   }
   void setWallSolarAbsorptionN(double val)
   {
-    structure.setWallSolarAbsorbtion(4, val);
+    structure.setWallSolarAbsorption(4, val);
   }
   void setWallSolarAbsorptionNW(double val)
   {
-    structure.setWallSolarAbsorbtion(5, val);
+    structure.setWallSolarAbsorption(5, val);
   }
   void setWallSolarAbsorptionW(double val)
   {
-    structure.setWallSolarAbsorbtion(6, val);
+    structure.setWallSolarAbsorption(6, val);
   }
   void setWallSolarAbsorptionSW(double val)
   {
-    structure.setWallSolarAbsorbtion(7, val);
+    structure.setWallSolarAbsorption(7, val);
   }
   void setRoofSolarAbsorption(double val)
   {
-    structure.setWallSolarAbsorbtion(8, val);
+    structure.setWallSolarAbsorption(8, val);
   }
 
+  // Wall thermal emissivity.
+  void setWallThermalEmissivity(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WallThermalEmissivity parameter. It must have 9.");
+    }
+    structure.setWallThermalEmissivity(vec);
+  }
   void setWallThermalEmissivityS(double val)
   {
     structure.setWallThermalEmissivity(0, val);
@@ -734,6 +798,13 @@ public:
     structure.setWallThermalEmissivity(8, val);
   }
 
+  // Window shading correction factor.
+  void setWindowSCF(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WindowSCF parameter. It must have 9.");
+    }
+    structure.setWindowShadingCorrectionFactor(vec);
+  }
   void setWindowSCFS(double val)
   {
     structure.setWindowShadingCorrectionFactor(0, val);
@@ -772,6 +843,13 @@ public:
   }
 
 
+  // Window shading device factor.
+  void setWindowSDF(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WindowSDF parameter. It must have 9.");
+    }
+    structure.setWindowShadingDevice(vec);
+  }
   void setWindowSDFS(double val)
   {
     structure.setWindowShadingDevice(0, val);
@@ -926,6 +1004,13 @@ public:
     return structure.wallArea()[8];
   }
 
+  // Window area.
+  void setWindowArea(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WindowArea parameter. It must have 9.");
+    }
+    structure.setWindowArea(vec);
+  }
   double windowAreaS()
   {
     return structure.windowArea()[0];
@@ -1128,6 +1213,16 @@ public:
   {
     heating.setEnergyType(val);
   }
+  void setHeatingEnergyCarrier(std::string type) {
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == ELECTRIC)
+      heating.setEnergyType(1.0);
+    else if (type == GAS)
+      heating.setEnergyType(2.0);
+    else
+      throw std::invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
+  }
+
   void setHeatingSystemEfficiency(double val)
   {
     heating.setEfficiency(val);
@@ -1138,6 +1233,20 @@ public:
   {
     ventilation.setVentType(val);
   }
+
+  void setVentilationType(std::string type)
+  {
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == MECHANICAL)
+      ventilation.setVentType(1.0);
+    else if (type == COMBINED)
+      ventilation.setVentType(2.0);
+    else if (type == NATURAL)
+      ventilation.setVentType(3.0);
+    else
+      throw std::invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
+  }
+
   void setFreshAirFlowRate(double val)
   {
     ventilation.setSupplyRate(val);
@@ -1177,11 +1286,31 @@ public:
   {
     heating.setHotWaterEnergyType(val);
   }
+  void setDhwEnergyCarrier(std::string type) {
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == ELECTRIC)
+      heating.setHotWaterEnergyType(1.0);
+    else if (type == GAS)
+      heating.setHotWaterEnergyType(2.0);
+    else
+      throw std::invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
+  }
 
   // Building.
   void setBemType(double val)
   {
     building.setBuildingEnergyManagement(val);
+  }
+  void setBemType(std::string type) {
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == NONE)
+      building.setBuildingEnergyManagement(1.0);
+    else if (type == SIMPLE)
+      building.setBuildingEnergyManagement(2.0);
+    else if (type == ADVANCED)
+      building.setBuildingEnergyManagement(3.0);
+    else
+      throw std::invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
   }
 
   // Structure.
@@ -1201,6 +1330,12 @@ public:
   }
 
   // Structure.
+  void setWallArea(const Vector& vec) {
+    if (vec.size() != 9) {
+      throw std::invalid_argument("Invalid number of values for WallArea parameter. It must have 9.");
+    }
+    structure.setWallArea(vec);
+  }
   void setWallAreaS(double val)
   {
     structure.setWallArea(0, val);

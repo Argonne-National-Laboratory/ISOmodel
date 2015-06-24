@@ -50,6 +50,7 @@ int main(int argc, char** argv)
     double monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
     std::cout << "Monthly simulation ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
 
+    /*
     // Benchmark the hourly simulation.
     std::cout << "Running Hourly Simulation" << std::endl;
     
@@ -63,21 +64,35 @@ int main(int argc, char** argv)
     auto hourDiff = hourEnd - hourStart;
     double hourlyTime = std::chrono::duration<double, std::micro>(hourDiff).count() / iterations;
     std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over " << iterations << " loops." << std::endl;
+    */
 
-    std::cout << "Benchmarking full monthly simulation including loading data.\n";
-    auto monthWithLoadStart = std::chrono::steady_clock::now();
+    std::cout << "Benchmarking monthly simulation with modifying the properties each run.\n";
+
+    monthStart = std::chrono::steady_clock::now();
     for (int i = 0; i != iterations; ++i){
-      UserModel userModel2{};
-      userModel2.load(test_data_path + "/SmallOffice_v2.ism");
-      auto simModel2 = userModel2.toSimModel();
-      auto monthlyResults = simModel2.simulate();
+      userModel.setExternalEquipment(i);
+      auto simModel = userModel.toSimModel();
+      auto monthlyResults = simModel.simulate();
     }
-    auto monthWithLoadEnd = std::chrono::steady_clock::now();
+    monthEnd = std::chrono::steady_clock::now();
 
-    auto monthWithLoadDiff = monthWithLoadEnd - monthWithLoadStart;
-    double monthlyTimeWithLoad = std::chrono::duration<double, std::micro>(monthWithLoadDiff).count() / iterations;
-    std::cout << "Monthly simulation including loading data ran in " << monthlyTimeWithLoad << " us, average over " << iterations << " loops." << std::endl;
+    monthDiff = monthEnd - monthStart;
+    monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
+    std::cout << "Monthly simulation including modifying properties ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
 
+    std::cout << "Benchmarking monthly simulation with reloading the ism file each run (weather is cached).\n";
+
+    monthStart = std::chrono::steady_clock::now();
+    for (int i = 0; i != iterations; ++i){
+      userModel.load(test_data_path + "/SmallOffice_v2.ism");
+      auto simModel = userModel.toSimModel();
+      auto monthlyResults = simModel.simulate();
+    }
+    monthEnd = std::chrono::steady_clock::now();
+
+    monthDiff = monthEnd - monthStart;
+    monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
+    std::cout << "Monthly simulation including reloading the ism file ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
     std::cout << "Done!" << std::endl;
   }
 }
