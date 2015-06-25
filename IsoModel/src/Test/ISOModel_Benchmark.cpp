@@ -1,6 +1,7 @@
 #include "../UserModel.hpp"
 #include <iostream>
 #include <chrono>
+#include "../Vector.hpp"
 
 using namespace openstudio::isomodel;
 
@@ -28,16 +29,12 @@ int main(int argc, char** argv)
 
     std::cout << "Creating SimModel" << std::endl;
     SimModel simModel = userModel.toSimModel();
-    
-    std::cout << "Creating HourlyModel" << std::endl;
-    ISOHourly hourlyModel = userModel.toHourlyModel();
-
 
     // Number of iterations to run for each benchmark.
-    int iterations = 10;
+    int iterations = 10000;
 
     // Benchmark the monthly simulation.
-    std::cout << "Running Monthly Simulation" << std::endl;
+    std::cout << "Benchmark: Running Monthly Simulation. Timing just the simulation. Iterations = " << iterations << std::endl;
 
     ISOResults monthlyResults;
     auto monthStart = std::chrono::steady_clock::now();
@@ -50,27 +47,34 @@ int main(int argc, char** argv)
     double monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
     std::cout << "Monthly simulation ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
 
-    /*
-    // Benchmark the hourly simulation.
-    std::cout << "Running Hourly Simulation" << std::endl;
-    
-    ISOResults hourlyResults;
-    auto hourStart = std::chrono::steady_clock::now();
-    for (int i = 0; i != iterations; ++i){
-      hourlyResults = hourlyModel.simulate();
-    }
-    auto hourEnd = std::chrono::steady_clock::now(); 
-
-    auto hourDiff = hourEnd - hourStart;
-    double hourlyTime = std::chrono::duration<double, std::micro>(hourDiff).count() / iterations;
-    std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over " << iterations << " loops." << std::endl;
-    */
-
-    std::cout << "Benchmarking monthly simulation with modifying the properties each run.\n";
+    std::cout << "Benchmark: Updating .ism properties with UserModel setters, creating simmodel, running monthly simulation.\n";
 
     monthStart = std::chrono::steady_clock::now();
     for (int i = 0; i != iterations; ++i){
-      userModel.setExternalEquipment(i);
+      // Set the floor, wall and window areas, as if one was doing an orientation
+      // optimization study.
+      userModel.setFloorArea(511.16);
+
+      userModel.setWallAreaN(84.45);
+      userModel.setWallAreaNE(0.0);
+      userModel.setWallAreaE(56.3);
+      userModel.setWallAreaSE(0.0);
+      userModel.setWallAreaS(84.45);
+      userModel.setWallAreaSW(0.0);
+      userModel.setWallAreaW(56.3);
+      userModel.setWallAreaNW(0.0);
+      userModel.setRoofArea(598.76);
+
+      userModel.setWindowAreaN(16.74);
+      userModel.setWindowAreaNE(0.0);
+      userModel.setWindowAreaE(11.16);
+      userModel.setWindowAreaSE(0.0);
+      userModel.setWindowAreaS(16.74);
+      userModel.setWindowAreaSW(0.0);
+      userModel.setWindowAreaW(11.16);
+      userModel.setWindowAreaNW(0.0);
+      userModel.setSkylightArea(0.0);
+
       auto simModel = userModel.toSimModel();
       auto monthlyResults = simModel.simulate();
     }
@@ -82,17 +86,6 @@ int main(int argc, char** argv)
 
     std::cout << "Benchmarking monthly simulation with reloading the ism file each run (weather is cached).\n";
 
-    monthStart = std::chrono::steady_clock::now();
-    for (int i = 0; i != iterations; ++i){
-      userModel.load(test_data_path + "/SmallOffice_v2.ism");
-      auto simModel = userModel.toSimModel();
-      auto monthlyResults = simModel.simulate();
-    }
-    monthEnd = std::chrono::steady_clock::now();
-
-    monthDiff = monthEnd - monthStart;
-    monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
-    std::cout << "Monthly simulation including reloading the ism file ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
     std::cout << "Done!" << std::endl;
   }
 }
