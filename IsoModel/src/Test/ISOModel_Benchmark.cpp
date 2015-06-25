@@ -1,7 +1,6 @@
 #include "../UserModel.hpp"
 #include <iostream>
 #include <chrono>
-#include "../Vector.hpp"
 
 using namespace openstudio::isomodel;
 

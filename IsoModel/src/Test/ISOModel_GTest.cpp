@@ -388,18 +388,84 @@ TEST(IsoModelTests, DefaultsTests)
   EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
 
-TEST(IsoModelTests, OptionalPropertiesTests) {
-  UserModel userModelDefaults;
-  userModelDefaults.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
+TEST(IsoModelTests, OptionalPropertiesDefaultsTests) {
+  UserModel userModel;
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
 
   // Expect to find the default value hardcoded into the Building class.
-  EXPECT_DOUBLE_EQ(0.0, userModelDefaults.externalEquipment());
+  EXPECT_DOUBLE_EQ(0.0, userModel.externalEquipment());
+  EXPECT_TRUE(userModel.forcedAirHeating());
+  EXPECT_DOUBLE_EQ(7.0, userModel.dT_supp_ht());
+  EXPECT_DOUBLE_EQ(0.25, userModel.E_pumps_cl());
+  EXPECT_DOUBLE_EQ(1, userModel.T_ht_ctrl_flag());
+  EXPECT_DOUBLE_EQ(1, userModel.a_H0());
+  EXPECT_DOUBLE_EQ(15, userModel.tau_H0());
+  EXPECT_DOUBLE_EQ(0, userModel.DH_YesNo());
+  EXPECT_DOUBLE_EQ(0.9, userModel.eta_DH_network());
+  EXPECT_DOUBLE_EQ(0.87, userModel.eta_DH_sys());
+  EXPECT_DOUBLE_EQ(0.000, userModel.frac_DH_free());
+  EXPECT_DOUBLE_EQ(60, userModel.dhw_tset());
+  EXPECT_DOUBLE_EQ(20, userModel.dhw_tsupply());
+  EXPECT_TRUE(userModel.forcedAirCooling());
+  EXPECT_DOUBLE_EQ(1, userModel.T_cl_ctrl_flag());
+  EXPECT_DOUBLE_EQ(7.0, userModel.dT_supp_cl());
+  EXPECT_DOUBLE_EQ(0, userModel.DC_YesNo());
+  EXPECT_DOUBLE_EQ(0.9, userModel.eta_DC_network());
+  EXPECT_DOUBLE_EQ(5.5, userModel.eta_DC_COP());
+  EXPECT_DOUBLE_EQ(0, userModel.eta_DC_frac_abs());
+  EXPECT_DOUBLE_EQ(1, userModel.eta_DC_COP_abs());
+  EXPECT_DOUBLE_EQ(0, userModel.frac_DC_free());
+  EXPECT_DOUBLE_EQ(0.25, userModel.E_pumps_cl());
+  EXPECT_DOUBLE_EQ(7.0, userModel.n_day_start());
+  EXPECT_DOUBLE_EQ(18.0, userModel.n_day_end());
+  EXPECT_DOUBLE_EQ(50.0, userModel.n_weeks());
+  EXPECT_DOUBLE_EQ(1.0, userModel.elecInternalGains());
+  EXPECT_DOUBLE_EQ(0.0, userModel.permLightPowerDensity());
+  EXPECT_DOUBLE_EQ(0.6, userModel.presenceSensorAd());
+  EXPECT_DOUBLE_EQ(0.8, userModel.automaticAd());
+  EXPECT_DOUBLE_EQ(0.6, userModel.presenceAutoAd());
+  EXPECT_DOUBLE_EQ(1, userModel.manualSwitchAd());
+  EXPECT_DOUBLE_EQ(500.0, userModel.presenceSensorLux());
+  EXPECT_DOUBLE_EQ(300.0, userModel.automaticLux());
+  EXPECT_DOUBLE_EQ(300.0, userModel.presenceAutoLux());
+  EXPECT_DOUBLE_EQ(500.0, userModel.manualSwitchLux());
+  EXPECT_DOUBLE_EQ(0.0, userModel.naturallyLightedArea());
+  EXPECT_DOUBLE_EQ(1.22521 * 0.001012, userModel.rhoCpAir());
+  EXPECT_DOUBLE_EQ(4.1813, userModel.rhoCpWater());
+  EXPECT_DOUBLE_EQ(0.04, userModel.R_se());
+  EXPECT_DOUBLE_EQ(500, userModel.irradianceForMaxShadingUse());
+  EXPECT_DOUBLE_EQ(0.5, userModel.shadingFactorAtMaxUse());
+  EXPECT_DOUBLE_EQ(4.5, userModel.totalAreaPerFloorArea());
+  EXPECT_DOUBLE_EQ(0.25, userModel.win_ff());
+  EXPECT_DOUBLE_EQ(0.9, userModel.win_F_W());
+  EXPECT_DOUBLE_EQ(0.04, userModel.R_sc_ext());
+  EXPECT_DOUBLE_EQ(0.04, userModel.R_se());
+  EXPECT_DOUBLE_EQ(500, userModel.irradianceForMaxShadingUse());
+  EXPECT_DOUBLE_EQ(0.5, userModel.shadingFactorAtMaxUse());
+  EXPECT_DOUBLE_EQ(4.5, userModel.totalAreaPerFloorArea());
+  EXPECT_DOUBLE_EQ(0.25, userModel.win_ff());
+  EXPECT_DOUBLE_EQ(0.9, userModel.win_F_W());
+  EXPECT_DOUBLE_EQ(0.04, userModel.R_sc_ext());
+  EXPECT_DOUBLE_EQ(-50.0, userModel.ventPreheatDegC());
+  EXPECT_DOUBLE_EQ(2.0, userModel.n50());
+  EXPECT_DOUBLE_EQ(39.0, userModel.hzone());
+  EXPECT_DOUBLE_EQ(0.65, userModel.p_exp());
+  EXPECT_DOUBLE_EQ(0.7, userModel.zone_frac());
+  EXPECT_DOUBLE_EQ(0.667, userModel.stack_exp());
+  EXPECT_DOUBLE_EQ(0.0146, userModel.stack_coeff());
+  EXPECT_DOUBLE_EQ(0.667, userModel.wind_exp());
+  EXPECT_DOUBLE_EQ(0.0769, userModel.wind_coeff());
+  EXPECT_DOUBLE_EQ(0.75, userModel.dCp());
+  EXPECT_EQ(1, userModel.vent_rate_flag());
+  EXPECT_DOUBLE_EQ(0.0, userModel.H_ve());
+}
 
-  UserModel userModelOverrideDefaults;
-  userModelOverrideDefaults.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism", test_data_path + "/optional_defaults.ism");
+TEST(IsoModelTests, OptionalPropertiesOverrideTests) {
+  UserModel userModel;
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism", test_data_path + "/optional_defaults.ism");
 
   // Expect to find the value set in optional_defaults.ism.
-  EXPECT_DOUBLE_EQ(1.0, userModelOverrideDefaults.externalEquipment());
+  EXPECT_DOUBLE_EQ(1.0, userModel.externalEquipment());
 }
 
 
