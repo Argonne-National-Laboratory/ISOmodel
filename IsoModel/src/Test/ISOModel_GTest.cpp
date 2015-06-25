@@ -392,7 +392,7 @@ TEST(IsoModelTests, OptionalPropertiesDefaultsTests) {
   UserModel userModel;
   userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
 
-  // Expect to find the default value hardcoded into the Building class.
+  // Expect to find the default values hardcoded into the various Building, Cooling, etc. classes.
   EXPECT_DOUBLE_EQ(0.0, userModel.externalEquipment());
   EXPECT_TRUE(userModel.forcedAirHeating());
   EXPECT_DOUBLE_EQ(7.0, userModel.dT_supp_ht());
