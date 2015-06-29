@@ -96,12 +96,14 @@ int main(int argc, char* argv[])
   po::options_description desc("Options"); 
   desc.add_options()
     ("ismfilepath,i", po::value<std::string>()->required(), "Path to ism file.")
+    ("defaultsfilepath,d", "Path to defaults ism file.")
     ("monthly,m", "Run the monthly simulation (default).")
     ("hourlyByMonth,h", "Run the hourly simulation (results aggregated by month.")
     ("hourlyByHour,H", "Run the hourly simulation (results for each hour).");
 
   po::positional_options_description positionalOptions; 
   positionalOptions.add("ismfilepath", 1); 
+  positionalOptions.add("defaultsfilepath", 2); 
 
   po::variables_map vm;
 
@@ -128,7 +130,14 @@ int main(int argc, char* argv[])
 
   // Load the .ism file.
   openstudio::isomodel::UserModel umodel;
-  umodel.load(vm["ismfilepath"].as<std::string>());
+
+  // If a default ism file was specified, load the usermodel with the defauls.
+  if (vm.count("defaultsfilepath")) {
+    umodel.load(vm["ismfilepath"].as<std::string>(), vm["defaultsfilepath"].as<std::string>());
+  } else {
+    // Load without defaults.
+    umodel.load(vm["ismfilepath"].as<std::string>());
+  }
 
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "User Model Loaded" << std::endl;
