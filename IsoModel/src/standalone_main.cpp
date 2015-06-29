@@ -90,6 +90,29 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   }
 }
 
+void compare(const UserModel& umodel) {
+  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  ISOResults hourlyResults = hourly.simulate(true);
+  
+  openstudio::isomodel::SimModel simModel = umodel.toSimModel();
+  ISOResults monthlyResults = simModel.simulate();
+
+  auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
+                                                "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
+
+  for (auto endUse = 0; endUse != 13; ++endUse) {
+    std::cout << "Month, " << "Monthly " << endUseNames[endUse] << ", Hourly " << endUseNames[endUse] << ", Difference\n";
+
+    for (auto month = 0; month != 12; ++month) {
+      auto monthlyResult = monthlyResults.monthlyResults[month].getEndUse(endUse);
+      auto hourlyResult = hourlyResults.hourlyResults[month].getEndUse(endUse);
+      std::cout << month << ", " << monthlyResult << ", " << hourlyResult << ", " << monthlyResult - hourlyResult << "\n";
+    }
+
+  std::cout << "\n";
+  }
+}
+
 int main(int argc, char* argv[])
 {
   namespace po = boost::program_options; 
@@ -99,7 +122,8 @@ int main(int argc, char* argv[])
     ("defaultsfilepath,d", "Path to defaults ism file.")
     ("monthly,m", "Run the monthly simulation (default).")
     ("hourlyByMonth,h", "Run the hourly simulation (results aggregated by month.")
-    ("hourlyByHour,H", "Run the hourly simulation (results for each hour).");
+    ("hourlyByHour,H", "Run the hourly simulation (results for each hour).")
+    ("compare,c", "Run the monthly and hourly simulations anc compare the resutls.");
 
   po::positional_options_description positionalOptions; 
   positionalOptions.add("ismfilepath", 1); 
@@ -162,6 +186,10 @@ int main(int argc, char* argv[])
 
   bool simulationRan = false;
 
+  if (vm.count("compare")) {
+    compare(umodel);
+    simulationRan = true;
+  }
   if (vm.count("monthly")) {
     runMonthlySimulation(umodel);
     simulationRan = true;
