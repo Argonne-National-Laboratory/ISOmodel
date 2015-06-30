@@ -251,8 +251,14 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto phi_illum = electricForTotalLightArea * lights.powerDensityOccupied() * internalLightingEnabled * lights.elecInternalGains();
 
   // TODO: lights.permLightPowerDensity() is unused.
-  
-  results.Q_illum_tot = electricForTotalLightArea * lights.powerDensityOccupied() * internalLightingEnabled;
+
+  // If the internal lighting is 0.0, use the unoccupied lighting power density, otherwise use the occupied
+  // power density multiplied by the factor in internalLightingEnabled (currently hardcoded to 1.0).
+  if (internalLightingEnabled == 0.0) {
+    results.Q_illum_tot = electricForTotalLightArea * lights.powerDensityUnoccupied();
+  } else {
+    results.Q_illum_tot = electricForTotalLightArea * lights.powerDensityOccupied() * internalLightingEnabled;
+  }
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
@@ -532,7 +538,7 @@ void ISOHourly::populateSchedules()
       fixedExteriorEquipmentSchedule[h][d] = hoccupied ? 0.3 : 0.12;
       fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 0.9 : 0.3;
       fixedExteriorLightingSchedule[h][d] = 1; // in calculateHour, the lights are only turned on when the sun is down.
-      fixedInteriorLightingSchedule[h][d] = popoccupied ? 0.9 : 0.05;
+      fixedInteriorLightingSchedule[h][d] = popoccupied ? 1.0 : 0.0;
       fixedActualHeatingSetpoint[h][d] = popoccupied ? heating.temperatureSetPointOccupied() : heating.temperatureSetPointUnoccupied();
       fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling.temperatureSetPointOccupied() : cooling.temperatureSetPointUnoccupied();
     }
