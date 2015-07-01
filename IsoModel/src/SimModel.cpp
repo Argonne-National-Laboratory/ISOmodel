@@ -1827,6 +1827,7 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   double frac_ht_total = sum(v_frac_ht_mode);
   double Q_pumps_ht = Q_pumps_yr_ht * heating.pumpControlReduction() * structure.floorArea();
   Vector v_Q_pumps_ht = div(mult(v_frac_ht_mode, Q_pumps_ht), frac_ht_total);
+
   /*
    n_E_pumps = 0.25;  % specific power of systems pumps + control systems in W/m2
    v_Q_pumps=n_E_pumps*v_Msec_ina_mo;  % energy per month for pumps + control if running continuously in MJ/m2/mo
@@ -1866,6 +1867,7 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   } else {
     v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot), frac_total);
   }
+
   /*
    v_frac_tot = (v_Qneed_ht+v_Qneed_cl)/(Qneed_ht_yr+Qneed_cl_yr); % total pump operational factor
    frac_total = sum(v_frac_tot);

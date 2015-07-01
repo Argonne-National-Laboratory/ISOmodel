@@ -232,7 +232,11 @@ void ISOHourly::calculateHour(int hourOfYear,
 
   // \Phi_{int,A}, ISO 13790 10.4.2.
   // Monthly name: phi_plug_occ and phi_plug_unocc.
-  results.phi_plug = internalEquipmentEnabled * building.electricApplianceHeatGainOccupied();
+  if (internalEquipmentEnabled == 0.0) {
+    results.phi_plug = building.electricApplianceHeatGainUnoccupied();
+  } else {
+    results.phi_plug = internalEquipmentEnabled * building.electricApplianceHeatGainOccupied();
+  }
 
   std::vector<double> lightingContribution;
   for (auto i = 0; i != 9; ++i) {
@@ -536,7 +540,10 @@ void ISOHourly::populateSchedules()
       fixedVentilationSchedule[h][d] = hoccupied ? ventilation.supplyRate() : 0.0;
       fixedFanSchedule[h][d] = hoccupied ? 1 : 0.0;
       fixedExteriorEquipmentSchedule[h][d] = hoccupied ? 0.3 : 0.12;
-      fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 0.9 : 0.3;
+      // TODO: using 1.0 and 0.0 to bring this in line with monthly results, but this sort of defeats the
+      // purpose of generating these schedules. Once we implement hourly schedules we can address this.
+      // BAA@2015-07-01
+      fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 1.0 : 0.0;
       fixedExteriorLightingSchedule[h][d] = 1; // in calculateHour, the lights are only turned on when the sun is down.
       fixedInteriorLightingSchedule[h][d] = popoccupied ? 1.0 : 0.0;
       fixedActualHeatingSetpoint[h][d] = popoccupied ? heating.temperatureSetPointOccupied() : heating.temperatureSetPointUnoccupied();
