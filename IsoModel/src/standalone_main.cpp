@@ -90,7 +90,7 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   }
 }
 
-void compare(const UserModel& umodel) {
+void compare(const UserModel& umodel, bool markdown = false) {
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
   ISOResults hourlyResults = hourly.simulate(true);
   
@@ -100,13 +100,19 @@ void compare(const UserModel& umodel) {
   auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
                                                 "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
 
+  auto delim = markdown ? " | " : ", ";
+
   for (auto endUse = 0; endUse != 13; ++endUse) {
-    std::cout << "Month, " << "Monthly " << endUseNames[endUse] << ", Hourly " << endUseNames[endUse] << ", Difference\n";
+    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim << "Hourly " << endUseNames[endUse] << delim << "Difference\n";
+
+    if (markdown) {
+      std::cout << "---|---|---|---\n";
+    }
 
     for (auto month = 0; month != 12; ++month) {
       auto monthlyResult = monthlyResults.monthlyResults[month].getEndUse(endUse);
       auto hourlyResult = hourlyResults.hourlyResults[month].getEndUse(endUse);
-      std::cout << month << ", " << monthlyResult << ", " << hourlyResult << ", " << monthlyResult - hourlyResult << "\n";
+      std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult << "\n";
     }
 
   std::cout << "\n";
@@ -123,7 +129,7 @@ int main(int argc, char* argv[])
     ("monthly,m", "Run the monthly simulation (default).")
     ("hourlyByMonth,h", "Run the hourly simulation (results aggregated by month.")
     ("hourlyByHour,H", "Run the hourly simulation (results for each hour).")
-    ("compare,c", "Run the monthly and hourly simulations anc compare the resutls.");
+    ("compare,c", po::value<std::string>(), "Run the monthly and hourly simulations and compare the results. Use 'md' for markdown and 'csv' for csv.");
 
   po::positional_options_description positionalOptions; 
   positionalOptions.add("ismfilepath", 1); 
@@ -187,7 +193,13 @@ int main(int argc, char* argv[])
   bool simulationRan = false;
 
   if (vm.count("compare")) {
-    compare(umodel);
+    if (vm["compare"].as<std::string>() == "md") {
+      compare(umodel, true);
+    } else if (vm["compare"].as<std::string>() == "csv") {
+      compare(umodel, false);
+    } else {
+      std::cout << "No output type given for compare. Please use 'md' or 'csv'.\n";
+    }
     simulationRan = true;
   }
   if (vm.count("monthly")) {

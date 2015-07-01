@@ -12,9 +12,16 @@ Monthly vs Hourly
 
 Notes on the current differences between the monthly and hourly simulations. In
 general, the monthly simulation is considered to be "correct" and the goal is
-to bring the hourly simulation in line with its results.
+to bring the hourly simulation in line with its results, but this is not always
+the case. The goal is for the monthly and hourly simulations to produce
+relatively consistent results, except in cases where the hourly model is better
+able to express the property being studied (e.g., hourly occupancy schedules,
+thermal mass, etc.).
 
 ### ElecHeat ###
+
+**Untested** - Electric heating is untested, but presumably consistent because it's values
+shouldn't differ from gas heating.
 
 | Month | Monthly ElecHeat      | Hourly ElecHeat      | Difference    |
 |-------|-----------------------|----------------------|---------------|
@@ -33,6 +40,8 @@ to bring the hourly simulation in line with its results.
 
 ### ElecCool ###
 
+**Consistent** - Cooling results are fairly consistent across monthly and hourly simulations.
+
 | Month | Monthly ElecCool      | Hourly ElecCool      | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 0.0231166             | 0                    | 0.0231166     |
@@ -49,6 +58,9 @@ to bring the hourly simulation in line with its results.
 | 11    | 0.0185314             | 0                    | 0.0185314     |
 
 ### ElecIntLights ###
+
+**Consistent** - After commit #3124f63, monthly and hourly interior lighting results are
+consistent.
 
 | Month | Monthly ElecIntLights | Hourly ElecIntLights | Difference |
 |-------|-----------------------|----------------------|------------|
@@ -67,6 +79,8 @@ to bring the hourly simulation in line with its results.
 
 ### ElecExtLights ###
 
+**Consistent** - Exterior lighting is consistent.
+
 | Month | Monthly ElecExtLights | Hourly ElecExtLights | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 0.257822              | 0.257822             | -2.38698e-015 |
@@ -83,6 +97,9 @@ to bring the hourly simulation in line with its results.
 | 11    | 0.257822              | 0.258416             | -0.000594061  |
 
 ### ElecFans ###
+
+**Inconsistent** - Issue #44. Fan results are not consistent. Both fan values and pump values differ the most
+in the winter.
 
 | Month | Monthly ElecFans      | Hourly ElecFans      | Difference    |
 |-------|-----------------------|----------------------|---------------|
@@ -101,6 +118,9 @@ to bring the hourly simulation in line with its results.
 
 ### ElecPump ###
 
+**Inconsistent** - Issue #43. Pump results are not consistent. Both fan and pump values differ the most in
+the winter. Their is potentially an error in the monthly pump values.
+
 | Month | Monthly ElecPump      | Hourly ElecPump      | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 0.808168              | 0.186                | 0.622168      |
@@ -118,6 +138,10 @@ to bring the hourly simulation in line with its results.
 
 ### ElecEquipInt ###
 
+**Inconsistent** - Issue #45. Interior electric equipment results are not consistent, but seem to differ
+consistently. This is perhaps due to the way the hourly model generates its
+schedules.
+
 | Month | Monthly ElecEquipInt  | Hourly ElecEquipInt  | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 2.24457               | 1.71598              | 0.528585      |
@@ -134,6 +158,9 @@ to bring the hourly simulation in line with its results.
 | 11    | 2.24457               | 1.687                | 0.557571      |
 
 ### ElecEquipExt ###
+
+**Untested** - Exterior equipment defaults to zero at the moment, so it is untested.
+
 | Month | Monthly ElecEquipExt  | Hourly ElecEquipExt  | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 0                     | 0                    | 0             |
@@ -150,6 +177,8 @@ to bring the hourly simulation in line with its results.
 | 11    | 0                     | 0                    | 0             |
 
 ### ElectDHW ###
+
+**Untested** - Electric hot water defaults to zero at the moment, so it is untested.
 
 | Month | Monthly ElectDHW      | Hourly ElectDHW      | Difference    |
 |-------|-----------------------|----------------------|---------------|
@@ -168,6 +197,8 @@ to bring the hourly simulation in line with its results.
 
 ### GasHeat ###
 
+**Consistent** - Gas heat is consistent.
+
 | Month | Monthly GasHeat       | Hourly GasHeat       | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 42.5212               | 42.273               | 0.248254      |
@@ -184,6 +215,9 @@ to bring the hourly simulation in line with its results.
 | 11    | 40.782                | 40.8199              | -0.0379359    |
 
 ### GasCool ###
+
+**Untested** - Gas cooling is untested, but presumably equally consistant to electric cooling,
+as the fuel source shouldn't change the calculations.
 
 | Month | Monthly GasCool       | Hourly GasCool       | Difference    |
 |-------|-----------------------|----------------------|---------------|
@@ -202,6 +236,8 @@ to bring the hourly simulation in line with its results.
 
 ### GasEquip ###
 
+**Untested** - Gas equipment is untested.
+
 | Month | Monthly GasEquip      | Hourly GasEquip      | Difference    |
 |-------|-----------------------|----------------------|---------------|
 | 0     | 0                     | 0                    | 0             |
@@ -218,6 +254,8 @@ to bring the hourly simulation in line with its results.
 | 11    | 0                     | 0                    | 0             |
 
 ### GasDHW ###
+
+**Untested** - Gas hot water defaults to zero, so is currently untested.
 
 | Month | Monthly GasDHW        | Hourly GasDHW        | Difference    |
 |-------|-----------------------|----------------------|---------------|
