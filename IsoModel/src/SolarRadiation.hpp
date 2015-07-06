@@ -19,7 +19,7 @@
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
 #define ISOMODEL_SOLAR_RADIATION_HPP
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <vector>
 #include "TimeFrame.hpp"
