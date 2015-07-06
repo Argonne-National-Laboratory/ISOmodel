@@ -359,8 +359,8 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
 
   // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
-  auto Vair_ht = heating.forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - TMT1) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
-  auto Vair_cl = cooling.forcedAirCooling() ? results.Qneed_cl / (((TMT1 - T_sup_cl) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
+  auto Vair_ht = heating.forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - tiHeatCool) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
+  auto Vair_cl = cooling.forcedAirCooling() ? results.Qneed_cl / (((tiHeatCool - T_sup_cl) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
 
   auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
 
@@ -394,7 +394,7 @@ void ISOHourly::calculateHour(int hourOfYear,
   // \Phi_{mtot} ISO 13790 C.3 eq. C.5
   auto phimHeatCoolTotal = phimPhi0 + hem * temperature
        + h3 * (phisPhi0 + hwindowWperkm2 * temperature + h1 * (phiiHeatCool / hei + tEnteringAndSupplied)) / h2;
-      // Set tmt to this hour's \theta_{m,t-1}.
+  // Set tmt to this hour's \theta_{m,t-1}.
   auto tmt = TMT1;
   // \theta_{m,t}, ISO 13790 C.3 eq. C.4.
   // Set TMT1 to next hour's \theta_{m,t-1} (this hour's \theta_{m,t}).
