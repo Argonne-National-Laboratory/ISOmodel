@@ -82,4 +82,4 @@ protected:
 };
 } // isomodel
 } // openstudio
-#endif ISOMODEL_SIMULATION_HPP
+#endif // ISOMODEL_SIMULATION_HPP
