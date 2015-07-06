@@ -54,12 +54,12 @@ TEST(PropertiesTests, MissingValueTests) {
   Properties props(test_data_path + "/test_properties.props");
   
   // Test methods that return boost::optional:
-  // Note: MSVS intellisense doesn't like EXPECT_TRUE with boost::optional, but it seems to work fine.
-  EXPECT_TRUE(props.getProperty("weatherFilePath"));
-  EXPECT_TRUE(props.getPropertyAsDouble("buildingHeight"));
-  EXPECT_FALSE(props.getProperty("aMissingProperty")); // Missing.
-  EXPECT_FALSE(props.getPropertyAsDouble("aMissingProperty")); // Missing.
-  EXPECT_FALSE(props.getPropertyAsDouble("weatherFilePath")); // Cannot convert to double.
+  // Cast to bool to force boost::optional to return a bool like when you do "if (some_optional_val) {..."
+  EXPECT_TRUE(bool(props.getProperty("weatherFilePath")));
+  EXPECT_TRUE(bool(props.getPropertyAsDouble("buildingHeight")));
+  EXPECT_FALSE(bool(props.getProperty("aMissingProperty"))); // Missing.
+  EXPECT_FALSE(bool(props.getPropertyAsDouble("aMissingProperty"))); // Missing.
+  EXPECT_FALSE(bool(props.getPropertyAsDouble("weatherFilePath"))); // Cannot convert to double.
 
   // Test methods that return bool
   std::vector<double> vec;
@@ -466,7 +466,7 @@ TEST(IsoModelTests, OptionalPropertiesOverrideTests) {
 
   // Expect to find the value set in optional_defaults_override.ism.
   EXPECT_DOUBLE_EQ(1.0, userModel.externalEquipment());
-  EXPECT_FALSE(false, userModel.forcedAirHeating());
+  EXPECT_FALSE(userModel.forcedAirHeating());
   EXPECT_DOUBLE_EQ(8.0, userModel.dT_supp_ht());
   EXPECT_DOUBLE_EQ(1.25, userModel.E_pumps_cl());
   EXPECT_DOUBLE_EQ(2.0, userModel.T_ht_ctrl_flag());
@@ -478,7 +478,7 @@ TEST(IsoModelTests, OptionalPropertiesOverrideTests) {
   EXPECT_DOUBLE_EQ(1.0, userModel.frac_DH_free());
   EXPECT_DOUBLE_EQ(61.0, userModel.dhw_tset());
   EXPECT_DOUBLE_EQ(21.0, userModel.dhw_tsupply());
-  EXPECT_FALSE(false, userModel.forcedAirCooling());
+  EXPECT_FALSE(userModel.forcedAirCooling());
   EXPECT_DOUBLE_EQ(2.0, userModel.T_cl_ctrl_flag());
   EXPECT_DOUBLE_EQ(8.0, userModel.dT_supp_cl());
   EXPECT_DOUBLE_EQ(1.0, userModel.DC_YesNo());
