@@ -20,7 +20,7 @@ thermal mass, etc.).
 
 ### ElecHeat ###
 
-**Untested** - Electric heating is untested, but presumably consistent because it's values
+**Untested** - Electric heating is untested, but presumably consistent because its values
 shouldn't differ from gas heating.
 
 | Month | Monthly ElecHeat      | Hourly ElecHeat      | Difference    |
