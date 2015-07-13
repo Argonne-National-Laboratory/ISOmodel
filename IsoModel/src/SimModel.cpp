@@ -341,365 +341,265 @@ void SimModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& 
     }
   }
 }
+
+/**
+ * Breaks down the solar radiation and temperature data into day, night, 
+ * weekday and weekend vectors, as appropriate.
+ */
 void SimModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds, const Vector& weekdayUnoccupiedMegaseconds,
     const Vector& weekendOccupiedMegaseconds, const Vector& weekendUnoccupiedMegaseconds, const Vector& clockHourOccupied,
     const Vector& clockHourUnoccupied, Vector& v_hrs_sun_down_mo, Vector& frac_Pgh_wk_nt, Vector& frac_Pgh_wke_day, Vector& frac_Pgh_wke_nt,
     Vector& v_Tdbt_nt, Vector& v_Tdbt_Day) const
 {
-
+  // Copy to a new variables so matrix nature is clear.
   Matrix m_mhEgh = location.weather()->mhEgh();
   Matrix m_mhdbt = location.weather()->mhdbt();
 
+  // Note, these are matrix multiplies (matrix*vector) resulting in a vector.
+
+  // monthly average dry bulb temp (dbt) during the occupied hours of days
   v_Tdbt_Day = prod(m_mhdbt, clockHourOccupied);
   v_Tdbt_Day /= sum(clockHourOccupied);
 
+  // monthly avg dbt during the unoccupied hours of days
   v_Tdbt_nt = prod(m_mhdbt, clockHourUnoccupied);
   v_Tdbt_nt /= sum(clockHourUnoccupied);
 
+  // monthly avg global horiz rad power (Egh)  during the "day" hours
   Vector v_Egh_day = prod(m_mhEgh, clockHourOccupied);
   v_Egh_day /= sum(clockHourOccupied);
 
+  // monthly avg Egh during the "night" hours
   Vector v_Egh_nt = prod(m_mhEgh, clockHourUnoccupied);
   v_Egh_nt /= sum(clockHourUnoccupied);
-  /**    
-   v_mdbt=W.mdbt;  % copy to a new variable so vector nature is clear
-   M_mhdbt=W.mhdbt;  % copy to a new variable so matrix nature is clear
-   M_mhEgh=W.mhEgh; % copy to a new variable so matrix nature is clear
 
-   % Note, these are matrix multiplies (matrix*vector) resulting in a vector  
-   v_Tdbt_day=(M_mhdbt*v_day_hrs_yesno)./sum(v_day_hrs_yesno); %monthly average dry bulb temp (dbt) during the occupied hours of days
-   v_Tdbt_nt=(M_mhdbt*v_nt_hrs_yesno)./sum(v_nt_hrs_yesno); %monthly avg dbt during the unoccupied hours of days
-
-   v_Egh_day=(M_mhEgh*v_day_hrs_yesno)./sum(v_day_hrs_yesno);  %monthly avg global horiz rad power (Egh)  during the "day" hours
-   v_Egh_nt=(M_mhEgh*v_nt_hrs_yesno)./sum(v_nt_hrs_yesno);  %monthly avg Egh during the "night" hours
-   */
-
+  // Monthly avg Egh energy (Wgh) during the week days.
   Vector v_Wgh_wk_day = mult(v_Egh_day, weekdayOccupiedMegaseconds);
+  // Monthly avg Wgh during week nights.
   Vector v_Wgh_wk_nt = mult(v_Egh_nt, weekdayUnoccupiedMegaseconds);
+  // Monthly avg Wgh during weekend days.
   Vector v_Wgh_wke_day = mult(v_Egh_day, weekendOccupiedMegaseconds);
+  // Monthly avg Wgh during weekend nights.
   Vector v_Wgh_wke_nt = mult(v_Egh_nt, weekendUnoccupiedMegaseconds);
+  // Egh_avg_total MJ/m2.
   Vector v_Wgh_tot = sum(sum(v_Wgh_wk_day, v_Wgh_wk_nt), sum(v_Wgh_wke_day, v_Wgh_wke_nt));
-  /**    
-   v_Wgh_wk_day=v_Egh_day.*v_Msec_wk_day; % monthly avg Egh energy (Wgh) during the week days
-   v_Wgh_wk_nt=v_Egh_nt.*v_Msec_wk_nt;  %monthly avg Wgh during week nights 
-   v_Wgh_wke_day=v_Egh_day.*v_Msec_wke_day; %monthly avg Wgh during weekend days
-   v_Wgh_wke_nt=v_Egh_nt.*v_Msec_wke_nt; %monthly avg Wgh during weekend nights
-   v_Wgh_tot=v_Wgh_wk_day+v_Wgh_wk_nt+v_Wgh_wke_day+v_Wgh_wke_nt; %Egh_avg_total MJ/m2
-   */
-  frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
-  frac_Pgh_wke_day = div(v_Wgh_wke_day, v_Wgh_tot);
-  frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
-  /**
 
-   %FRAC_PGH_DAYTIME=v_Wgh_wk_day./v_Wgh_tot; %frac_Egh_occ
-   frac_Pgh_wk_nt=v_Wgh_wk_nt./v_Wgh_tot; %frac_Egh_unocc_weekday_night
-   frac_Pgh_wke_day=v_Wgh_wke_day./v_Wgh_tot; %frac_Egh_unocc_weekend_day
-   frac_Pgh_wke_nt=v_Wgh_wke_nt./v_Wgh_tot; %frac_Egh_unocc_weekend_night
-   */
+  // frac_Egh_unocc_weekday_night
+  frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
+  // frac_Egh_unocc_weekend_day
+  frac_Pgh_wke_day = div(v_Wgh_wke_day, v_Wgh_tot);
+  // frac_Egh_unocc_weekend_night
+  frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
+
+  // Find what time the sun comes up and goes down and the fraction of hours sun is up and down.
   Vector v_frac_hrs_sun_down = Vector(12);
   Vector v_frac_hrs_sun_up = Vector(12);
   Vector v_sun_up_time = Vector(12);
   Vector v_sun_down_time = Vector(12);
+
   for (int i = 0; i < 12; i++) {
     v_frac_hrs_sun_up[i] = 0;
     v_frac_hrs_sun_down[i] = 0;
+
+    // Searching fowards, the first hour with non-zero Egh is the first daylight hour (sunrise).
     for (int j = 0; j < 24; j++) {
       if (m_mhEgh(i, j) != 0) {
-        v_frac_hrs_sun_up[i] = j;
+        v_sun_up_time[i] = j;
         break;
       }
     }
+
+    // Searching backwards, the first hour with non-zero Egh is the last daylight hour (sunset is at the *end* of this hour).
     for (int j = 23; j >= 0; j--) {
       if (m_mhEgh(i, j) != 0) {
-        v_frac_hrs_sun_down[i] = j;
+        v_sun_down_time[i] = j;
         break;
       }
     }
-    v_frac_hrs_sun_up[i] = (v_frac_hrs_sun_down[i] - v_frac_hrs_sun_up[i] + 1) / 24.0;
+
+    // Fraction of hours the sun is up (add 1 to account for the fact that v_sun_down_time is the last daylight hour (i.e. that hour is still daytime).
+    v_frac_hrs_sun_up[i] = (v_sun_down_time[i] - v_sun_up_time[i] + 1) / 24.0;
+    // Fraction of hours the sun is down.
     v_frac_hrs_sun_down[i] = 1.0 - v_frac_hrs_sun_up[i];
   }
-  /**
-   %%  find what time the sun comes up and goes down and the fraction of hours sun is up and down
 
-   %%% CHANGE
-   % the following two lines were in the original spreadsheet and the fraction of hours up was fixed.  
-   % Let's do this properly by looking for the hours the sun is up and down each month
-   % RTM 10-NOV-2012
-   %
-   % v_frac_hrs_sun_down=ones(12,1)*(24-(19-7+1))/24;
-   % v_hrs_sun_down_mo=b_frac_hrs_sun_down.*v_hrs_ina_mo;
-
-   v_frac_hrs_sun_down=zeros(12,1);
-   v_frac_hrs_sun_up=zeros(12,1);
-   v_sun_up_time=zeros(12,1);
-   v_sun_down_time=zeros(12,1);
-
-   for  I=1:12
-   J=find(W.mhEgh(I,:)~=0);  % find the hours where Egh is nonzero and identify as sun being up
-   v_sun_up_time(I)=J(1);  % first element is the sunup hour
-   v_sun_down_time(I)=J(end); % last element is sundown hour
-   v_frac_hrs_sun_up(I)=length(J)/24;  % fraction of hours in the day the sun is up
-   v_frac_hrs_sun_down(I)=1-v_frac_hrs_sun_up(I); % fraction of hours in the day the sun is down
-   end
-   v_hrs_sun_down_mo=v_frac_hrs_sun_down.*v_hrs_ina_mo;  
-   */
-  //Vector v_hrs_sun_down_mo = Vector(v_frac_hrs_sun_down.size());
+  // Nighttime hours per month.
   for (uint i = 0; i < v_frac_hrs_sun_down.size(); i++) {
     v_hrs_sun_down_mo[i] = v_frac_hrs_sun_down[i] * hoursInMonth[i];
   }
 }
 
+/**
+ * Compute lighting energy use as per prEN 15193:2006.
+ */
 void SimModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illum_occ, double& Q_illum_unocc, double& Q_illum_tot_yr,
     Vector& v_Q_illum_tot, Vector& v_Q_illum_ext_tot) const
 {
   double lpd_occ = lights.powerDensityOccupied();
   double lpd_unocc = lights.powerDensityUnoccupied();
+
+  // Daylight sensor dimming fraction.
   double F_D = lights.dimmingFraction();
+  // Occupancy sensor control fraction.
   double F_O = building.lightingOccupancySensor();
+  // Constant illimance control fraction.
   double F_C = building.constantIllumination();
-  /*
-   %% compute lighting energy use as per prEN 15193:2006
 
-   lpd_occ=In.LPD_occ;
-   lpd_unocc=In.LPD_unocc;
+  // TODO: The following assumes day starts at hour 7 and ends at hour 19
+  // and 2 weeks per year are considered completely unoccupied for lighting
+  // This should be converted to a monthly quanitity using the monthly
+  // average sunup and sundown times.
 
-   % assign fractions for daylighting, occupancy sensors, and const illum
-   % sensors as per prEN 1593:2006.
-   % Lookup tables are on the spreadsheet
-
-   F_D=In.daylighting_sensor; % F_D = daylight sensor dimming fraction
-   F_O=In.lighting_occupancy_sensor; % F_O = occupancy sensor control fraction
-   F_C=In.lighting_constant_illumination; %F_c = constant illuminance control fraction
-   */
-
+  // Lighting operational hours during the daytime.
   double t_lt_D = (std::min(lights.n_day_end(), pop.hoursEnd()) - std::max(pop.hoursStart(), lights.n_day_start()) + 1)
       * (pop.daysEnd() - pop.daysStart() + 1) * lights.n_weeks();
+
+  // Lighting operational hours during the nighttime.
   double t_lt_N = (std::max(lights.n_day_start() - pop.hoursStart(), 0.0) + std::max(pop.hoursEnd() - lights.n_day_end(), 0.0))
       * (pop.daysEnd() - pop.daysStart() + 1) * lights.n_weeks();
 
-  Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O * (t_lt_D * F_D + t_lt_N) / 1000.0;
-  /*
-   %%% NOTE 
-   % the following assumes day starts at hour 7 and ends at hour 19
-   % and 2 weeks per year are considered completely unoccupied for lighting
-   % This should be converted to a monthly quanitity using the monthly
-   % average sunup and sundown times
-
-   n_day_start=7;
-   n_day_end=19;
-   n_weeks=50;
-   t_lt_D=(min(In.occ_hour_end,n_day_end)-max(In.occ_hour_start,n_day_start))*(In.occ_day_end+1-In.occ_day_start+1)*n_weeks; %lighting_operating_hours during the daytime
-   t_lt_N=(max(n_day_start-In.occ_hour_start,0)+max(In.occ_hour_end-n_day_end,0))*(In.occ_day_end+1-In.occ_day_start+1)*n_weeks; %lighting_operating_hours during the nighttime
-
-   % total lighting energy 
-   Q_illum_occ=In.cond_flr_area*lpd_occ*F_C*F_O*(t_lt_D*F_D + t_lt_N)/1000;  % find the total lighting energy for occupied times in kWh
-
-   %%% CHANGE
-   % as an alternative to a fixed parasitic lighting energy density use an unoccupied
-   % number for illumuniation LPD
-   % RTM 13-NOV-2012
-   %
-   % this is the original code from the spreadsheet that fixed the parasitic
-   % lighting load at 6 kWh/m2/yr as per pren 15193-2006 B12
-   % Q_lt_par_den=1+5;  % parasitic lighting energy density  is emergency + control lighting kWh/m2/yr
-   % Q_illum_par=Q_lt_par_den*In.cond_flr_area;
-   % Q_illum_tot_yr=Q_illum_occ+Q_illum_par;
-   */
-
+  // Unoccupied hours.
   double t_unocc = hoursInYear - t_lt_D - t_lt_N;
+
+  // Total lighting energy for occupied times (kWh).
+  Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O * (t_lt_D * F_D + t_lt_N) / 1000.0;
+  // Total annual lighting energy for unnocupied times (kWh).
   Q_illum_unocc = structure.floorArea() * lpd_unocc * t_unocc / 1000.0;
+  // Total annual lighting energy (kWh).
   Q_illum_tot_yr = Q_illum_occ + Q_illum_unocc;
+
+  // Split annual lighting energy into monthly lighting energy via the month fraction of the year (kWh).
   v_Q_illum_tot = mult(monthFractionOfYear, Q_illum_tot_yr, 12);
+  // Total exterior lighting (kWh).
   v_Q_illum_ext_tot = mult(v_hrs_sun_down_mo, lights.exteriorEnergy() / 1000.0);
-  /*
-   t_unocc=hrs_ina_yr - t_lt_D - t_lt_N;  % find the number of unoccupied lighting hours in the year
-   Q_illum_unocc = In.cond_flr_area*lpd_unocc*t_unocc/1000;  % find the total annual lighting energy for unoccupied times in kWh
-   Q_illum_tot_yr=Q_illum_occ+Q_illum_unocc;  % find the total annual lighting energy in kWh
-
-   % split annual lighting energy into monthly lighting energy via the month fraction of year
-   v_Q_illum_tot=Q_illum_tot_yr.*v_mo_frac_of_yr; %total interior monthly lighting energy in kWh
-
-   % exterior lighting
-   v_Q_illum_ext_tot=v_hrs_sun_down_mo*In.E_lt_ext/1000;  %etotal exterior monthly lighting energy in kWh
-
-   */
-
 }
+
+/**
+ * Compute envelope parameters as per ISO 13790 8.3.
+ */
 void SimModel::envelopCalculations(Vector& v_win_A, Vector& v_wall_emiss, Vector& v_wall_alpha_sc, Vector& v_wall_U, Vector& v_wall_A,
     double& H_tr) const
 {
+  // TODO: Copying the various structure values to new variables (e.g. v_wall_A) is not necessary. BAA@2015-07-13.
   v_wall_A = structure.wallArea();
   v_win_A = structure.windowArea();
   v_wall_U = structure.wallUniform();
   Vector v_win_U = structure.windowUniform();
 
+  // Compute total envelope U*A.
   Vector v_env_UA = sum(mult(v_wall_A, v_wall_U), mult(v_win_A, v_win_U));
+
+  // Compute direct transmission heat transfer coefficient to exterior in as per ISO 13790 8.3.1 (W/K).
+  // Ignore linear and point thermal bridges for now.
+  // TODO: Implement thermal bridges. BAA@2015-07-13.
   double H_D = sum(v_env_UA);
-  /*
-   %% compute envelope parameters as per ISO 13790 8.3
 
-   % convert vectored inputs to vectors for clarification
-   v_wall_A=In.wall_area;
-   v_win_A=In.win_area;
-   v_wall_U=In.wall_U;
-   v_win_U=In.win_U;
-
-   v_env_UA=v_wall_A.*v_wall_U + v_win_A.*v_win_U; %compute total envelope U*A
-
-
-   % compute direct transmission heat transfer coefficient to exterior in W/K as per 8.3.1
-   % ignore linear and point thermal bridges for now
-   H_D = sum(v_env_UA);  
-   */
+  // For now, also ignore heat transfer to ground (minimal in large buildings), unconditioned spaces, and adjacent buildings.
+  // TODO: Implement ground, unconditioned, and adjacent above heat transfer coefficients. BAA@2015-07-13.
   double H_g = 0;
   double H_U = 0;
   double H_A = 0;
-  H_tr = H_D + H_g + H_U + H_A;
-  /*
-   % for now, also ignore heat transfer to ground (minmal in big office buildings), unconditioned spaces
-   % and to adjacent buildings
-   H_g = 0; % steady state  heat transfer coefficient by transfer to ground - not yet implemented
-   H_U = 0; % heat transfer coefficient for transmission through unconditioned spaces - not yet implemented
-   H_A = 0; % heat transfer coefficient for transmission to adjacent buildings  - not yet implemented
 
-   H_tr=H_D+H_g+H_U+H_A; %total transmission heat transfer coefficient as per eqn 17 in 8.3.1
-   */
+  // Total transmission heat transfer coefficient. ISO 13790 8.3.1 eq. 17.
+  H_tr = H_D + H_g + H_U + H_A;
+
   v_wall_emiss = structure.wallThermalEmissivity();
   v_wall_alpha_sc = structure.wallSolarAbsorption();
-  /*
-   % copy the following from input structure to vectors for clarity
-   v_wall_emiss=In.wall_thermal_emiss; % wall thermal emissivity
-   v_wall_alpha_sc =In.wall_solar_alpha; %wall solar absorption coefficient
-   */
 }
+
+/*
+ * Compute window solar gain per ISO 13790 11.3.
+ */
 void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss, const Vector& v_wall_alpha_sc, const Vector& v_wall_U,
     const Vector& v_wall_A, Vector& v_wall_A_sol, Vector& v_win_hr, Vector& v_wall_R_sc, Vector& v_win_A_sol) const
 {
-  /*
-   %%  Window Solar Gain
+  // TODO: The solar heat gain could be improved
+  // better understand SCF and SDF and how they map to F_sh
+  // calculate effective sky temp so we can better estimate theta_er and
+  // theta_ss, and hr.
 
-   %%% REVISIT THIS SECTION
-   %%% The solar heat gain could be improved
-   %%% better understand SCF and SDF and how they map to F_sh
-   %%% calculate effective sky temp so we can better estimate theta_er and
-   %%% theta_ss, and hr
+  // From ISO 13790 11.3.3 Effective solar collecting area of glazed elements, eqn 44
+  // A_sol = F_sh,gl* g_gl*(1 ? F_f)*A_w,p
+  // A_sol = effective solar collecting area of window in m2
+  // F_sh,gl = shading reduction factor for movable shades as per 11.4.3 (v_win_SDF *v_win_SDF_frac)
+  // g_gl = total solar energy transmittance of transparent element as per 11.4.2
+  // F_f = Frame area fraction (ratio of projected frame area to overall glazed element area) as per 11.4.5 (v_wind_ff)
+  // A_w,p = ovaral projected area of glazed element in m2 (v_wind_A)
 
-   % From ISO 13790 11.3.3 Effective solar collecting area of glazed elements,% eqn 44
-   % A_sol = F_sh,gl* g_gl*(1 ? F_f)*A_w,p
-   % A_sol = effective solar collecting area of window in m2
-   % F_sh,gl = shading reduction factor for movable shades as per 11.4.3 % (v_win_SDF *v_win_SDF_frac)
-   % g_gl = total solar energy transmittance of transparent element as per % 11.4.2
-   % F_f = Frame area fraction (ratio of projected frame area to overall glazed element area) as per 11.4.5 (v_wind_ff)
-   % A_w,p = ovaral projected area of glazed element in m2 (v_wind_A)
+  int vsize = 9; // 8 compass directions + roof = 9.
 
-   %v_win_SHGC=In.win_SHGC; % copy to a new variable with a v_ for clarification
-   %v_win_SCF=In.win_SCF;  % copy to a new variable with a v_ for clarification
-
-
-   % The frame factor, v_win_ff is found using ISO 10077-1, in absence a national standard
-   % can be used.  Examples range from 0.2 for heating climates to 0.3 for
-   % cooling.  Use 0.25 as a compromise
-   */
-  int vsize = 9;
+  // Frame factor.
   Vector v_win_ff = Vector(vsize);
 
-  double n_win_SDF_table[] =
-  { 0.5, 0.35, 1.0 };
+  double n_win_SDF_table[] = { 0.5, 0.35, 1.0 };
   Vector v_win_SDF = Vector(vsize);
   Vector v_win_SDF_frac = Vector(vsize);
+
   for (int i = 0; i < vsize; i++) {
     v_win_ff[i] = 1.0 - structure.win_ff();
+    // Assign SDF based on pulldown value of 1, 2 or 3.
+    // TODO: This needs to be clarified in the .ism file as it's not obvious that the
+    // window SDF is a magic number rather than the actual value. BAA@2015-07-13 BAA@2015-07-143
     v_win_SDF[i] = n_win_SDF_table[((int) structure.windowShadingDevice()[i]) - 1];
+    // Set the SDF fractions which include heat transfer - set at 100% for now.
     v_win_SDF_frac[i] = 1.0;
   }
+
   Vector v_win_F_shgl = mult(v_win_SDF, v_win_SDF_frac);
-  /*
-   n_win_ff=0.25;
-   v_win_ff=ones(size(1,9))*n_win_ff; %window frame_factor;
 
-   % assign SDF based on pulldown:
-   n_win_SDF_table=[0.5,0.35,1.0];% assign SDF based on pulldown value of 1, 2 or 3
-   v_win_SDF=n_win_SDF_table(In.win_SDF); %window SDF
-
-   % set the SCF and SDF fractions which includes heat transfer - set at 100% for now
-   %v_win_SCF_frac=ones(size(In.win_SCF)); % SCF fraction to include in HX;
-   v_win_SDF_frac=ones(size(v_win_SDF)); % SDF fraction to include in HX; Fixed at 100% for now
-
-   v_win_F_shgl = v_win_SDF.*v_win_SDF_frac;
-   */
+  // Normal incidence solar energy transmittance which is SHGC in america.
   Vector v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittance();
+  // Solar energy transmittance of glazing as per ISO 13790 11.4.2.
   Vector v_g_gl = mult(v_g_gln, structure.win_F_W());
 
   v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
 
-  /*
-   v_g_gln = In.win_SHGC ; % normal incidence solar energy transmittance which is SHGC in america
-   n_win_F_W = 0.9;%  correction factor for non-scattering window as per ISO 13790 11.4.2
-   v_g_gl = v_g_gln*n_win_F_W; % solar energy transmittance of glazing as per 11.4.2
-
-   v_win_A_sol=v_win_F_shgl.*v_g_gl.*(1-v_win_ff).*v_win_A; 
-
-   % form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for unshaded roof
-
-   */
-
+  // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for unshaded roof
   double n_v_env_form_factors[] =
   { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
  
+  // Vertical wall external convective surface heat resistances. 
   v_wall_R_sc = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
     v_wall_R_sc[i] = structure.R_sc_ext();
   }
+
+  // Window external radiative heat xfer coeff.
+  // ISO 13790 11.4.6 says use hr=5 as a first approx.
   v_win_hr = mult(v_wall_emiss, 5.0);
+
   v_wall_A_sol = mult(mult(mult(v_wall_alpha_sc, v_wall_R_sc), v_wall_U), v_wall_A);
-  /*
-   n_v_env_form_factors=[0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 1]; %formfactor_to_sky.  Walls are all 0.5, roof is 1.0
-   n_R_sc_ext=0.04;  % vertical wall external convection surface heat resistance as per ISO 6946
-   v_wall_R_sc=ones(size(1,9))*n_R_sc_ext; %vertical wall external convective surface heat resistances 
-
-   % 11.4.6 says use hr=5 as a first approx.
-   v_win_hr=5*v_wall_emiss; %window external radiative heat xfer coeff.
-
-   % effective collecting area of opaque building elements, A_sol EN ISO 13790 11.3.4
-   % A_sol = ?_S,c � R_se � U_c � A_c
-   % A_sol = effective solar collecting area
-   % ?_S,c = dimensionless solar absorption coefficient
-   % R_se = external surface heat rsistance determined via ISO 6946 in m2*K/W
-   % U_c = thermal transmittance of opaque part determined via ISO 6946 W/m2K
-   % A_c = projected area of opaque part in m2
-
-   v_wall_A_sol=v_wall_alpha_sc.*v_wall_R_sc.*v_wall_U.*v_wall_A; 
-
-   */
 }
+
+/**
+ * Calculate solar heat gain. ISO 13790 11.3.2.
+ */
 void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_sc, const Vector& v_wall_U, const Vector& v_wall_A,
     const Vector& v_win_hr, const Vector& v_wall_A_sol, Vector& v_E_sol) const
 {
-  /*
-   %% Solar Heat Gain
-   % From EN ISo 13790 11.3.2  eqn 43
-   % 
-   % ?sol,k = F_sh,ob,k * A_sol,k *  I_sol,k ? F*r,k ?_r,k
-   %
-   % ?_sol,k = solar heat flow gains through building element k
-   % F_sh,ob,k = shading reduction factor for external obstacles calculated via 11.4.4
-   % A_sol,k = effective collecting area of surface calculated via 11.3.3 (glazing ) 11.3.4 (opaque)
-   % I_sol,k = solar irradiance, mean energy of solar irradiation per square meter calculated using Annex F
-   % F_r,k form factor between building and sky determined using 11.4.6
-   % ?_r,k extra heat flow from thermal radiation to sky determined using 11.3.5
+  // EN ISO 13790 11.3.2 eq. 43.
+  // \Phi_sol,k = F_sh,ob,k * A_sol,k * I_sol,k - F_r,k * \Phi_r,k
+  
+  // \Phi_sol,k = solar heat flow gains through building element k
+  // F_sh,ob,k = shading reduction factor for external obstacles calculated via 11.4.4
+  // A_sol,k = effective collecting area of surface calculated via 11.3.3 (glazing ) 11.3.4 (opaque)
+  // I_sol,k = solar irradiance, mean energy of solar irradiation per square meter calculated using Annex F
+  // F_r,k form factor between building and sky determined using 11.4.6
+  // \Phi_r,k extra heat flow from thermal radiation to sky determined using 11.3.5
 
+  // TODO: The solar heat gain could be improved
+  // better understand SCF and SDF and how they map to F_SH
+  // calculate effective sky temp so we can better estimate theta_er and
+  // theta_ss.
 
-   %%% REVISIT THIS SECTION
-   %%% The solar heat gain could be improved
-   %%%  better understand SCF and SDF and how they map to F_SH
-   %%% calculate effective sky temp so we can better estimate theta_er and
-   %%% theta_ss
-   */
   Vector v_win_SCF_frac(structure.windowShadingCorrectionFactor().size());
   for (unsigned int i = 0; i < v_win_SCF_frac.size(); i++) {
+    // SCF fraction to include in HX. Fixed at 100% for now.
     v_win_SCF_frac[i] = 1;
   }
-  Matrix m_I_sol(12, 9); //month x direction + 1 (roof?)
+
+  // Combine vertical surface radiation (mosolar) and horizontal radiation (mEgh) into one matrix (W/m2).
+  Matrix m_I_sol(12, 9); // 12 months, 8 directions + 1 roof.
   for (uint r = 0; r < m_I_sol.size1(); r++) {
     for (uint c = 0; c < m_I_sol.size2() - 1; c++) {
       m_I_sol(r, c) = location.weather()->msolar()(r, c);
@@ -707,11 +607,8 @@ void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_s
     m_I_sol(r, m_I_sol.size2() - 1) = location.weather()->mEgh()[r];
   }
   printMatrix("m_I_sol", m_I_sol);
-  /*
-   v_win_SCF_frac=ones(size(In.win_SCF)); % SCF fraction to include in HX;  Fixed at 100% for now
 
-   v_I_sol=[W.msolar W.mEgh];  % create a new solar irradiance vector with the horizontal included as the last column
-   */
+  // Compute the total solar heat gain for the glazing area.
   Vector v_win_phi_sol(12);
   Vector temp(9);
   for (uint i = 0; i < v_win_phi_sol.size(); i++) {
@@ -720,36 +617,33 @@ void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_s
     }
     v_win_phi_sol[i] = sum(temp);
   }
-  /*
-   % compute the total solar heat gain for the glazing area
-   % note that the stuff in the sum is a 1x9 row vector for each surface since
-   % the .* multiplies element by element not a vector multiply.
-   v_win_phi_sol=zeros(12,1);
-   for I=1:12
-   temp=In.win_SCF.*v_win_SCF_frac.*v_win_A_sol.*v_I_sol(I,:);
-   v_win_phi_sol(I)=sum(temp);
-   end
 
-   % compute opaque area thermal radiation to the sky from EN ISO 13790 11.3.5
-   % ?_r,k = Rse�Uc�Ac�hr�??er (46)
-   % ?_r,k = thermal radiation to sky in W
-   % R_se = external heat resistance as defined above m2K/W
-   % U_c = U value of element as defined above W/m2K
-   % A_c = area of element  defined above m2
-   % ??er = is the average difference between the external air temperature and the apparent sky temperature,
-   % determined in accordance with 11.4.6, expressed in degrees centigrade.
+  // Compute opaque area thermal radiation to the sky from EN ISO 13790 11.3.5
+  // \Phi_r,k = R_se * U_c  * A_c * h_h * \delta\theta_er (46)
+  // \Phi_r,k = thermal radiation to sky in W
+  // R_se = external heat resistance as defined above m2K/W
+  // U_c = U value of element as defined above W/m2K
+  // A_c = area of element  defined above m2
+  // \delta\theta_er = is the average difference between the external air temperature and the apparent sky temperature,
+  // determined in accordance with 11.4.6, expressed in degrees centigrade.
 
-   % 11.4.6 says take ?er=9k in sub polar zones, 13 K in tropical or 11 K in intermediate
-   */
   Vector theta_er(9);
   for (uint i = 0; i < theta_er.size(); i++) {
+    // Average difference between air temperature and sky temperature.
+    // ISO 13790 11.4.6 says take \Theta_er=9k in sub polar zones, 13 K in tropical or 11 K in intermediate
+    // TODO: Does the .epw file contain the sky temperature? If not, use the weather file's lat/lon to 
+    // determine which default value to use for theta_er. BAA@2015-07-13.
     theta_er[i] = 11.0;
   }
   double n_v_env_form_factors[] =
   { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
 
   Vector v_wall_phi_r = mult(mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
+
+  // Total solar heat gain for opaque area.
   Vector v_wall_phi_sol(12);
+  
+  // Compute the total solar heat gain for the opaque area.
   for (uint i = 0; i < v_win_phi_sol.size(); i++) {
     for (uint j = 0; j < temp.size(); j++) {
       temp[j] = v_wall_A_sol[j] * m_I_sol(i, j) - v_wall_phi_r[j] * n_v_env_form_factors[j];
@@ -760,114 +654,85 @@ void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_s
   printVector("v_wall_phi_r", v_wall_phi_r);
   printVector("v_win_phi_sol", v_win_phi_sol);
   printVector("v_wall_phi_sol", v_wall_phi_sol);
+
+  // Total envelope solar heat gain (W).
   Vector v_phi_sol = sum(v_win_phi_sol, v_wall_phi_sol);
   printVector("v_phi_sol", v_phi_sol);
+
+  // Total envelope solar heat gain (MJ).
   v_E_sol = mult(v_phi_sol, megasecondsInMonth);
-  /*
-   theta_er=ones(size(1,9))*11;  % average difference between air temp and sky temp = 11K as per 11.4.6
-
-   v_wall_phi_r = v_wall_R_sc.*v_wall_U.*v_wall_A.*v_win_hr.*theta_er;
-
-   % compute the total solar heat gain for the opaque area
-   v_wall_phi_sol=zeros(12,1);
-   for I=1:12
-   temp=(v_wall_A_sol.*v_I_sol(I,:)-v_wall_phi_r.*n_v_env_form_factors);
-   v_wall_phi_sol(I)=sum(temp);
-   end
-
-   v_phi_sol=v_win_phi_sol+v_wall_phi_sol;  % total envelope solar heat gain in W
-   v_E_sol= v_phi_sol.* v_Msec_ina_mo(I); % total envelope heat gain in MJ
-   */
 }
+
+/** 
+ * Compute internal heat gains and losses.
+ */
 void SimModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ, double Q_illum_unocc, double Q_illum_tot_yr, double& phi_int_avg,
     double& phi_plug_avg, double& phi_illum_avg, double& phi_int_wke_nt, double& phi_int_wke_day, double& phi_int_wk_nt) const
 {
+  // Internal heat gains from people (W/m2).
   double phi_int_occ = pop.heatGainPerPerson() / pop.densityOccupied();
   double phi_int_unocc = pop.heatGainPerPerson() / pop.densityUnoccupied();
   phi_int_avg = frac_hrs_wk_day * phi_int_occ + (1 - frac_hrs_wk_day) * phi_int_unocc;
 
-  double phi_plug_occ = building.electricApplianceHeatGainOccupied() + building.gasApplianceHeatGainOccupied(); //%get the heat again in W/m2 from appliances during occupied times
-  double phi_plug_unocc = building.electricApplianceHeatGainUnoccupied() + building.gasApplianceHeatGainUnoccupied(); //%get the heat again in W/m2 from appliances during unoccupied times
-  phi_plug_avg = phi_plug_occ * frac_hrs_wk_day + phi_plug_unocc * (1 - frac_hrs_wk_day); //% get the average heat gain from appliances in W/m2
+  // Internal heat gain from appliances (W/m2).
+  double phi_plug_occ = building.electricApplianceHeatGainOccupied() + building.gasApplianceHeatGainOccupied();
+  double phi_plug_unocc = building.electricApplianceHeatGainUnoccupied() + building.gasApplianceHeatGainUnoccupied();
+  phi_plug_avg = phi_plug_occ * frac_hrs_wk_day + phi_plug_unocc * (1 - frac_hrs_wk_day);
 
-  double phi_illum_occ = Q_illum_occ / structure.floorArea() / hoursInYear / frac_hrs_wk_day * 1000; //% convert occ illum energy from kWh to W/m2
-  double phi_illum_unocc = Q_illum_unocc / structure.floorArea() / hoursInYear / (1 - frac_hrs_wk_day) * 1000; //% convert unocc illum engergy from kWh to W/m2
-  phi_illum_avg = Q_illum_tot_yr / structure.floorArea() / hoursInYear * 1000; //% % convert avg E_illum from kWh per year to average W/m2
+  // Internal heat gain from illumination (W/m2).
+  double phi_illum_occ = Q_illum_occ / structure.floorArea() / hoursInYear / frac_hrs_wk_day * 1000;
+  double phi_illum_unocc = Q_illum_unocc / structure.floorArea() / hoursInYear / (1 - frac_hrs_wk_day) * 1000;
+  phi_illum_avg = Q_illum_tot_yr / structure.floorArea() / hoursInYear * 1000;
 
-  /*
-   %% Compute heat gains and losses
 
-   % heat gain from occupants
-   %%% from Table G-9 of ISO 13790
-
-   % 
-   phi_int_occ=In.htgain_per_person/In.people_density_occ;  % get the heat gain in W/m2 from people during occupied times
-   phi_int_unocc=In.htgain_per_person/In.people_density_unocc;  % get the heat gain in W/m2 from people during unoccupied times
-   phi_int_avg=frac_hrs_wk_day*phi_int_occ +(1-frac_hrs_wk_day)*phi_int_unocc;  %get the average heat gain from people in W/m2
-
-   phi_plug_occ=In.elec_plug_dens_occ + In.gas_plug_dens_occ; %get the heat again in W/m2 from appliances during occupied times
-   phi_plug_unocc=In.elec_plug_dens_unocc + In.gas_plug_dens_unocc; %get the heat again in W/m2 from appliances during unoccupied times
-   phi_plug_avg=phi_plug_occ*frac_hrs_wk_day + phi_plug_unocc*(1-frac_hrs_wk_day); % get the average heat gain from appliances in W/m2
-
-   phi_illum_occ = Q_illum_occ/In.cond_flr_area/hrs_ina_yr/frac_hrs_wk_day*1000; % convert occ illum energy from kWh to W/m2
-   phi_illum_unocc = Q_illum_unocc/In.cond_flr_area/hrs_ina_yr/(1-frac_hrs_wk_day)*1000; % convert unocc illum engergy from kWh to W/m2
-   phi_illum_avg = Q_illum_tot_yr/In.cond_flr_area/hrs_ina_yr*1000; % % convert avg E_illum from kWh per year to average W/m2
-
-   %%% CHANGED
-   % modified code to read average people density during unoccupied times
-   % rathter than assuming it is 1/9 of occupied times.
-   %
-
-   % original spreadsheet computed the approximate internal heat gain for week nights, weekend days, and weekend nights
-   % assuming they scale as the occ. fractions.  These are used for finding temp and not for directly calculating energy 
-   % use total so approximations are more acceptable
-   % phi_int_wk_nt=(phi_int_occ+phi_plug_occ+phi_illum_occ)*occ_frac_wk_nt;
-   % phi_int_wke_day=(phi_int_occ+phi_plug_occ+phi_illum_occ)*occ_frac_wke_day;
-   % phi_int_wke_nt=(phi_int_occ+phi_plug_occ+phi_illum_occ)*occ_frac_wke_nt;
-
-   % the following is a more accuate internal heat gain for week nights,
-   % weekend days and weekend nights as it uses the unoccupied values rather
-   % than just scaling occupied versions with the occupancy fraction
-   % RTM 13-Nov-2012
-   */
+  // Original spreadsheet computed the approximate internal heat gain for week nights, weekend days, and weekend nights
+  // assuming they scale as the occ. fractions.  These are used for finding temp and not for directly calculating energy 
+  // use total so approximations are more acceptable.
+  //
+  // The following is a more accuate internal heat gain for week nights,
+  // weekend days and weekend nights as it uses the unoccupied values rather
+  // than just scaling occupied versions with the occupancy fraction
+  // RTM 13-Nov-2012
   phi_int_wk_nt = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
   phi_int_wke_day = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
   phi_int_wke_nt = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
-
-  /*
-   phi_int_wk_nt=(phi_int_unocc+phi_plug_unocc+phi_illum_unocc);
-   phi_int_wke_day=(phi_int_unocc+phi_plug_unocc+phi_illum_unocc);
-   phi_int_wke_nt=(phi_int_unocc+phi_plug_unocc+phi_illum_unocc);
-   */
-
 }
+
+/**
+ * Compute total internal heat gain in W.
+ */
 void SimModel::internalHeatGain(double phi_int_avg, double phi_plug_avg, double phi_illum_avg, double& phi_I_tot) const
 {
-  double phi_I_occ = phi_int_avg * structure.floorArea(); //%phi_I_occ  - total occupant internal heat gain per year
-  double phi_I_app = phi_plug_avg * structure.floorArea(); // %phi_I_app - total appliance internal heat gain per year
-  double phi_I_lt = phi_illum_avg * structure.floorArea(); //%phi_I_lg - total lighting internal heat gain per year
+  // Total occupant internal heat gain per year (W).
+  double phi_I_occ = phi_int_avg * structure.floorArea();
+
+  // Total appliance internal heat gain per year (W). 
+  double phi_I_app = phi_plug_avg * structure.floorArea();
+
+  // Total lighting internal heat gain per year (W).
+  double phi_I_lt = phi_illum_avg * structure.floorArea();
+
+  // Total internal heat gain (W).
   phi_I_tot = phi_I_occ + phi_I_app + phi_I_lt;
-
-  /*
-   %% Internal Heat Gain in MJ
-
-   phi_I_occ = phi_int_avg*In.cond_flr_area; %phi_I_occ  - total occupant internal heat gain per year
-   phi_I_app = phi_plug_avg*In.cond_flr_area; %phi_I_app - total appliance internal heat gain per year
-   phi_I_lt = phi_illum_avg*In.cond_flr_area; %phi_I_lg - total lighting internal heat gain per year
-   phi_I_tot = phi_I_occ + phi_I_app + phi_I_lt;
-   */
 }
+
+/**
+ * Compute unoccupied heat gain.
+ */
 void SimModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, double phi_int_wke_nt, const Vector& weekdayUnoccupiedMegaseconds,
     const Vector& weekendOccupiedMegaseconds, const Vector& weekendUnoccupiedMegaseconds, const Vector& frac_Pgh_wk_nt,
     const Vector& frac_Pgh_wke_day, const Vector& frac_Pgh_wke_nt, const Vector& v_E_sol, Vector& v_P_tot_wke_day, Vector& v_P_tot_wk_nt,
     Vector& v_P_tot_wke_nt) const
 {
+  // Internal heat gain for unoccupied times (MJ).
   Vector v_W_int_wk_nt = mult(weekdayUnoccupiedMegaseconds, phi_int_wk_nt * structure.floorArea());
   Vector v_W_int_wke_day = mult(weekendOccupiedMegaseconds, phi_int_wke_day * structure.floorArea());
   Vector v_W_int_wke_nt = mult(weekendUnoccupiedMegaseconds, phi_int_wke_nt * structure.floorArea());
   printVector("v_W_int_wk_nt", v_W_int_wk_nt);
   printVector("v_W_int_wke_day", v_W_int_wke_day);
   printVector("v_W_int_wke_nt", v_W_int_wke_nt);
+
+  // Solar heat gain for unoccupied times (MJ).
   Vector v_W_sol_wk_nt = mult(v_E_sol, frac_Pgh_wk_nt);
   Vector v_W_sol_wke_day = mult(v_E_sol, frac_Pgh_wke_day);
   Vector v_W_sol_wke_nt = mult(v_E_sol, frac_Pgh_wke_nt);
@@ -875,31 +740,23 @@ void SimModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, 
   printVector("v_W_sol_wke_day", v_W_sol_wke_day);
   printVector("v_W_sol_wke_nt", v_W_sol_wke_nt);
 
+  // Total heat gain for unoccupied times (MJ).
   v_P_tot_wk_nt = div(sum(v_W_int_wk_nt, v_W_sol_wk_nt), weekdayUnoccupiedMegaseconds);
   v_P_tot_wke_day = div(sum(v_W_int_wke_day, v_W_sol_wke_day), weekendOccupiedMegaseconds);
   v_P_tot_wke_nt = div(sum(v_W_int_wke_nt, v_W_sol_wke_nt), weekendUnoccupiedMegaseconds);
-  /*
-   %% Unoccupied time heat gains in MJ
-   v_W_int_wk_nt=In.cond_flr_area.*phi_int_wk_nt.*v_Msec_wk_nt;  %internal heat gain for "week" "night"
-   v_W_int_wke_day=In.cond_flr_area.*phi_int_wke_day.*v_Msec_wke_day; %internal heat gain "weekend" "day"
-   v_W_int_wke_nt=In.cond_flr_area.*phi_int_wke_nt.*v_Msec_wke_nt; %internal heat gain "weekend" "night"
-
-   v_W_sol_wk_nt = v_E_sol.*frac_Pgh_wk_nt;  %solar heat gain "week" "night" in MJ
-   v_W_sol_wke_day = v_E_sol.*frac_Pgh_wke_day; % solar heat gain "weekend" "day" in MJ
-   v_W_sol_wke_nt = v_E_sol.*frac_Pgh_wke_nt; % solar heat gain "weekend" "night" in MJ
-
-   v_P_tot_wk_nt = (v_W_int_wk_nt+v_W_sol_wk_nt)./v_Msec_wk_nt;  % total heat gain "week" "night" W/m2
-   v_P_tot_wke_day = (v_W_int_wke_day+v_W_sol_wke_day)./v_Msec_wke_day;% total heat gain "weekend" "day W/m2
-   v_P_tot_wke_nt = (v_W_int_wke_nt+v_W_sol_wke_nt)./v_Msec_wke_nt; % total heat gain "weekend" "night" W/m2
-
-
-   */
 }
+
+/*
+ * Calculate interior temp.
+ */
 void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_day, const Vector& v_P_tot_wk_nt, const Vector& v_P_tot_wke_nt,
     const Vector& v_Tdbt_nt, const Vector& v_Tdbt_day, double H_tr, double hoursUnoccupiedPerDay, double hoursOccupiedPerDay, double frac_hrs_wk_day, double frac_hrs_wk_nt,
     double frac_hrs_wke_tot, Vector& v_Th_avg, Vector& v_Tc_avg, double& tau) const
 {
-  //BEM Type
+  // Set the temp differential from the interior heating/cooling setpoint
+  // based on the BEM type. An advanced BEM has the effect of reducing the
+  // effective heating temp and raising the effective cooling temp during
+  // times of control (i.e. during occupancy).  
   double T_adj = 0;
   switch ((int) building.buildingEnergyManagement()) {
   case 1:
@@ -918,14 +775,19 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     std::cout << "T_adj: " << T_adj << std::endl;
   }
 
+  // Adjust the heating set points.
   double ht_tset_ctrl = heating.temperatureSetPointOccupied() - T_adj;
   double cl_tset_ctrl = cooling.temperatureSetPointOccupied() + T_adj;
 
+  // During unoccupied times, we use a setback temp and even if we have a BEM
+  // it has no effect.
   double ht_tset_unocc = heating.temperatureSetPointUnoccupied();
   double cl_tset_unocc = cooling.temperatureSetPointUnoccupied();
+
   Vector v_ht_tset_ctrl(12);
   Vector v_cl_tset_ctrl(12);
 
+  // Create vectors of the adjusted heating set points.
   for (uint i = 0; i < v_cl_tset_ctrl.size(); i++) {
     v_cl_tset_ctrl[i] = cl_tset_ctrl;
     v_ht_tset_ctrl[i] = ht_tset_ctrl;
@@ -936,92 +798,43 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     printVector("v_ht_tset_ctrl", v_ht_tset_ctrl);
   }
 
-  /*
-   %%  Interior Temp  (occ, weekday unocc, weekend day, weekend night)
+  // Interior heat capacity (J/k).
+  double Cm_int = structure.interiorHeatCapacity() * structure.floorArea();
 
-   % det the temp differential from the interior heating./cooling setpoint
-   % based on the BEM type.
-   % an advanced BEM has the effect of reducing the effective heating temp and
-   % raising the effective cooling temp during times of control (i.e. during
-   % occupancy).  
-   % 
-   switch In.BEM_type
-   case 1
-   T_adj=0;
-   case 2
-   T_adj=0.5;
-   case 3
-   T_adj=1;
-   end
-
-   ht_tset_ctrl = In.ht_tset_occ - T_adj;  % 
-   cl_tset_ctrl = In.cl_tset_occ + T_adj;
-
-   % during unoccupied times, we use a setback temp and even if we have a BEM
-   % it has no effect
-   ht_tset_unocc = In.ht_tset_unocc;
-   cl_tset_unocc = In.cl_tset_unocc;
-
-   v_ht_tset_ctrl = ones(12,1).*ht_tset_ctrl;  % create a column vector of the interior heating temp set point for each month
-   v_cl_tset_ctrl = ones(12,1).*cl_tset_ctrl;
-   */
-  double Cm_int = structure.interiorHeatCapacity() * structure.floorArea(); //% set the interior heat capacity
-
+  // Envelope heat capacity (J/k).
   double Cm_env = structure.wallHeatCapacity() * sum(v_wall_A);
+
+  // Total heat capacity (J/k).
   double Cm = Cm_int + Cm_env;
 
-  /*
-   % flags to signify if we have heating and controls turned on or off
-   % and cooling and controls turned off.  We might turn off if we are
-   % unoccupied for an extended period of time, say a school in summer
-   T_ht_ctrl_flag=1;  
-   T_cl_ctrl_flag=1;
-
-   %%% NOTE heat capacity description had an error on input sheet before.  It asked for
-   % envelope heat capacity but used floor area for Cm calc so this should ask
-   % for heat capacity of interior construction.
-   % We should really should separate this into envelope and interior terms
-   % and add them together
-   %  RTM 13-NOV-2012
-
-
-   % set the heat capacity given the  building interior heat capacity per unit
-   % area J/K/m2 from input spreadsheet
-   Cm_int=In.heat_capacity_int*In.cond_flr_area;  % set the interior heat capacity
-
-   %%% CHANGE
-   % add in the heat capacity of the wall to the heat capacity of interior
-   % based on floor area.   Assume same J/K/m2 for walls as interior for now
-   % do not add in window areas
-   Cm_env=In.heat_capacity_env.*(sum(v_wall_A));
-
-   %Cm_env=0;  % use this to match old spreadsheet Cm calc;
-   Cm=Cm_int+Cm_env;
-   */
+  // Total heat transfer coefficient.
   double H_tot = H_tr + ventilation.H_ve();
+
+  // Building time constant in hours as pwer ISO 13790 12.2.1.3 eq. 62.
   tau = Cm / H_tot / 3600.0;
-  /*
-   % H_ve is overall heat transfer coefficient by ventilation as per ISO 13790 9.3  
-   H_ve=0;  % not implemented, set to 0 for now (its small so a good approx anyhow)
-   H_tot=H_tr+H_ve;  %total overall heat transfer coefficient as per 12.2.1.3
 
-   tau=Cm./H_tot/3600;  % time constant of building in *hours* as per eqn 62 in 12.2.1.3 of 13790
+  // The following code computes the average weekend room temp using exponential rise and
+  // decays as we switch between day and night temp settings.  It assumes that
+  // the weekend is two days (we'll call them sat and sun)
+  // 
+  // we do this wierd breakdown breakdown because want to separate day with
+  // solar loading from night without.  We can then use the average temp
+  // in each time frame rather than the overall monthly average.  right now
+  // wk_nt stuff is the same as wke_nt, but wke_day is much different because
+  // the solar gain increases the heat gain considerably, even on the weekend
+  // when occupant, lighting, and plugload gains are small
 
-   % The following code computes the average weekend room temp using exponential rise and
-   % decays as we switch between day and night temp settings.  It assumes that
-   % the weekend is two days (we'll call them sat and sun)
-   %
-   % we do this wierd breakdown breakdown because want to separate day with
-   % solar loading from night without.  We can then use the average temp
-   % in each time frame rather than the overall monthly average.  right now
-   % wk_nt stuff is the same as wke_nt, but wke_day is much different because
-   % the solar gain increases the heat gain considerably, even on the weekend
-   % when occupant, lighting, and plugload gains are small
-   */
-
+  // Create a vector of lengths of the periods of times between possible temperature resets during
+  // the weekend.
   Vector v_ti(5);
   v_ti[0] = v_ti[2] = v_ti[4] = hoursUnoccupiedPerDay;
   v_ti[1] = v_ti[3] = hoursOccupiedPerDay;
+   
+  // Generate an effective delta T matrix from ratio of total interior gains to heat
+  // transfer coefficient for each time period.
+  // 
+  // This is a matrix where the columns are the vectors v_P_tot_wk_nt/H_tot, and so on
+  // this is for a week night, weekend day, weekend night, weekend day, weekend night sequence
   Matrix M_dT(v_P_tot_wk_nt.size(), 5);
   Matrix M_Te(v_Tdbt_nt.size(), 5);
 
@@ -1041,32 +854,6 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     printMatrix("M_Te", M_Te);
     printVector("v_ti", v_ti);
   }
-  /*
-   %%% NOTE 
-   % The following code is not a direct translation of the excel spreadsheet
-   % but makes use of both loops and matricies for clarity but computes the same results
-
-   % create a vector of lengths of the periods of times between possible temperature resets during
-   % the weekend
-   v_ti=[hrs_unocc_per_day, hrs_occ_per_day,  hrs_unocc_per_day, hrs_occ_per_day, hrs_unocc_per_day];
-
-   % generate an effective delta T matrix from ratio of total interior gains to heat
-   % transfer coefficient for each time period
-   % Note this is a matrix where the columns are the vectors v_P_tot_wk_nt/H_tot, and so on
-   % this is for a week night, weekend day, weekend night, weekend day,weekend night sequence
-   M_dT=[v_P_tot_wk_nt, v_P_tot_wke_day, v_P_tot_wke_nt, v_P_tot_wke_day, v_P_tot_wke_nt]./H_tot;
-   M_Te=[v_Tdbt_nt, v_Tdbt_day, v_Tdbt_nt, v_Tdbt_day, v_Tdbt_nt]; % create a matrix of the  average dry bulb temps
-
-   */
-
-  /*re-arrange the Else by just using the copy constructors
-   
-   else % if the HVAC heating controls are turned off there is no setback so temp is constant
-   v_Th_wk_day=v_ht_tset_ctrl;
-   v_Th_wk_nt=v_ht_tset_ctrl;
-   v_Th_wke_avg=v_ht_tset_ctrl;
-   end
-   */
 
   Vector v_Th_wke_avg(v_ht_tset_ctrl);
   Vector v_Th_wk_day(v_ht_tset_ctrl);
@@ -1078,11 +865,8 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     printVector("v_Th_wk_nt", v_Th_wk_nt);
   }
 
-  /*
-   % compute the change in temp from setback to another heating temp in unoccupied times 
-   if T_ht_ctrl_flag ==1  % if the HVAC heating controls are turned on.*/
-
-  if (heating.T_ht_ctrl_flag() == 1) { //if the HVAC heating controls are turned on.
+  // Compute the change in temp from setback to another heating temp in unoccupied times 
+  if (heating.T_ht_ctrl_flag() == 1) { // If the HVAC heating controls are turned on.
     Matrix M_Ta(12, 4);
     Vector v_Tstart(v_ht_tset_ctrl);
     for (uint i = 0; i < M_Ta.size2(); i++) {
@@ -1096,22 +880,13 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
       printVector("v_Tstart", v_Tstart);
     }
 
-    /*
-     % find the exponential Temp decay after any changes in heating temp setpoint and put
-     % in the matrix M_Ta with columns being the different time segments 
-     
-     M_Ta=zeros(12,4);
-     v_Tstart=v_ht_tset_ctrl;
-     for I=1:4
-     M_Ta(:,I)=(v_Tstart - M_Te(:,I) - M_dT(:,I)).*exp(-v_ti(I)./tau)+M_Te(:,I)+M_dT(:,I);
-     v_Tstart=M_Ta(:,I);
-     end
-     */
     if (DEBUG_ISO_MODEL_SIMULATION) {
         printVector("v_cl_tset_ctrl", v_cl_tset_ctrl);
         printVector("v_ht_tset_ctrl", v_ht_tset_ctrl);
     }
 
+    // Find the exponential Temp decay after any changes in heating temp setpoint and put
+    // in the matrix M_Ta with columns being the different time segments.
     Matrix M_Taa(12, 5);
     for (uint j = 0; j < M_Taa.size1(); j++) {
       M_Taa(j, 0) = v_ht_tset_ctrl[j];
@@ -1521,11 +1296,18 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
 
    */
 }
+
+/**
+ * Compute monthly heating and cooling demand.
+ */
 void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, const Vector& v_Hve_ht, const Vector& v_Tc_avg,
     const Vector& v_Hve_cl, double tau, double H_tr, double phi_I_tot, double frac_hrs_wk_day, Vector& v_Qfan_tot, Vector& v_Qneed_ht,
     Vector& v_Qneed_cl, double& Qneed_ht_yr, double& Qneed_cl_yr) const
 {
+  // Convert internal heat gains from W to MJ.
   Vector temp = mult(megasecondsInMonth, phi_I_tot, 12);
+
+  // Total internal + solar heat gains (MJ).
   Vector v_tot_mo_ht_gain = sum(temp, v_E_sol);
 
   double a_H = heating.a_H0() + tau / heating.tau_H0();
