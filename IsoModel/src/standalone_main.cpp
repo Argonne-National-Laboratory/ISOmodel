@@ -54,7 +54,7 @@ void runMonthlySimulation(const UserModel& umodel) {
 void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   // Run the hourly simulation (with results aggregated by month).
   openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.calculateHourly(aggregateByMonth);
+  ISOResults hourlyResults = hourly.simulate(aggregateByMonth);
 
   std::string monthOrHour = aggregateByMonth ? "month" : "hour";
   int numberOfResults = aggregateByMonth ? 12 : 8760;
@@ -90,18 +90,50 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   }
 }
 
+void compare(const UserModel& umodel, bool markdown = false) {
+  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  ISOResults hourlyResults = hourly.simulate(true);
+  
+  openstudio::isomodel::SimModel simModel = umodel.toSimModel();
+  ISOResults monthlyResults = simModel.simulate();
+
+  auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
+                                                "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
+
+  auto delim = markdown ? " | " : ", ";
+
+  for (auto endUse = 0; endUse != 13; ++endUse) {
+    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim << "Hourly " << endUseNames[endUse] << delim << "Difference\n";
+
+    if (markdown) {
+      std::cout << "---|---|---|---\n";
+    }
+
+    for (auto month = 0; month != 12; ++month) {
+      auto monthlyResult = monthlyResults.monthlyResults[month].getEndUse(endUse);
+      auto hourlyResult = hourlyResults.hourlyResults[month].getEndUse(endUse);
+      std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult << "\n";
+    }
+
+  std::cout << "\n";
+  }
+}
+
 int main(int argc, char* argv[])
 {
   namespace po = boost::program_options; 
   po::options_description desc("Options"); 
   desc.add_options()
     ("ismfilepath,i", po::value<std::string>()->required(), "Path to ism file.")
+    ("defaultsfilepath,d", "Path to defaults ism file.")
     ("monthly,m", "Run the monthly simulation (default).")
     ("hourlyByMonth,h", "Run the hourly simulation (results aggregated by month.")
-    ("hourlyByHour,H", "Run the hourly simulation (results for each hour).");
+    ("hourlyByHour,H", "Run the hourly simulation (results for each hour).")
+    ("compare,c", po::value<std::string>(), "Run the monthly and hourly simulations and compare the results. Use 'md' for markdown and 'csv' for csv.");
 
   po::positional_options_description positionalOptions; 
   positionalOptions.add("ismfilepath", 1); 
+  positionalOptions.add("defaultsfilepath", 2); 
 
   po::variables_map vm;
 
@@ -128,7 +160,14 @@ int main(int argc, char* argv[])
 
   // Load the .ism file.
   openstudio::isomodel::UserModel umodel;
-  umodel.load(vm["ismfilepath"].as<std::string>());
+
+  // If a default ism file was specified, load the usermodel with the defauls.
+  if (vm.count("defaultsfilepath")) {
+    umodel.load(vm["ismfilepath"].as<std::string>(), vm["defaultsfilepath"].as<std::string>());
+  } else {
+    // Load without defaults.
+    umodel.load(vm["ismfilepath"].as<std::string>());
+  }
 
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "User Model Loaded" << std::endl;
@@ -153,6 +192,16 @@ int main(int argc, char* argv[])
 
   bool simulationRan = false;
 
+  if (vm.count("compare")) {
+    if (vm["compare"].as<std::string>() == "md") {
+      compare(umodel, true);
+    } else if (vm["compare"].as<std::string>() == "csv") {
+      compare(umodel, false);
+    } else {
+      std::cout << "No output type given for compare. Please use 'md' or 'csv'.\n";
+    }
+    simulationRan = true;
+  }
   if (vm.count("monthly")) {
     runMonthlySimulation(umodel);
     simulationRan = true;

@@ -44,51 +44,48 @@ class SolarRadiation;
 class EpwData
 {
 protected:
-  void
-  parseHeader(std::string line);
-  void
-  parseData(std::string line, int row);
+  void parseHeader(std::string line);
+  void parseData(std::string line, int row);
   std::string m_location, m_stationid;
   int m_timezone;
   double m_latitude, m_longitude;
   std::vector<std::vector<double> > m_data;
+
 public:
   EpwData(void);
   ~EpwData(void);
-  std::string location()
-  {
-    return m_location;
-  }
-  std::string stationid()
-  {
-    return m_stationid;
-  }
-  int timezone()
-  {
-    return m_timezone;
-  }
-  double latitude()
-  {
-    return m_latitude;
-  }
-  double longitude()
-  {
-    return m_longitude;
-  }
-  std::vector<std::vector<double> > data()
-  {
-    return m_data;
-  }
 
   // loads data from an array, each block_size
   // number of values are the values for a column
   // (e.g. dry bulb temp, etc.)
-  void
-  loadData(int block_size, double* data);
-  void
-  loadData(std::string);
-  std::string
-  toISOData();
+  void loadData(int block_size, double* data);
+  void loadData(std::string);
+  std::string toISOData();
+
+  // Getters.
+  std::string location() {
+    return m_location;
+  }
+
+  std::string stationid() {
+    return m_stationid;
+  }
+
+  int timezone() {
+    return m_timezone;
+  }
+
+  double latitude() {
+    return m_latitude;
+  }
+
+  double longitude() {
+    return m_longitude;
+  }
+
+  std::vector<std::vector<double> > data() {
+    return m_data;
+  }
 
 };
 

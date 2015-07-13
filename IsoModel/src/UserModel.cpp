@@ -23,17 +23,6 @@ using namespace std;
 namespace openstudio {
 namespace isomodel {
 
-const std::string GAS = "gas";
-const std::string ELECTRIC = "electric";
-
-const std::string MECHANICAL = "mechanical";
-const std::string NATURAL = "natural";
-const std::string COMBINED = "combined";
-
-const std::string NONE = "none";
-const std::string SIMPLE = "simple";
-const std::string ADVANCED = "advanced";
-
 UserModel::UserModel() :
     _weather_cache(), _weather(new WeatherData()), _edata(new EpwData())
 {
@@ -43,166 +32,28 @@ UserModel::~UserModel()
 {
 }
 
+void UserModel::setCoreSimulationProperties(Simulation& sim) const {
+  sim.setPop(pop);
+  sim.setBuilding(building);
+  sim.setCooling(cooling);
+  sim.setHeating(heating);
+  sim.setLights(lights);
+  sim.setStructure(structure);
+  sim.setVentilation(ventilation);
+  sim.setLocation(location);
+  sim.setEpwData(_edata); // TODO: should this stay a shared pointer between the UserModel and the SimModel?
+  sim.setSimulationSettings(simSettings);
+  sim.setPhysicalQuantities(phys);
+}
+
 ISOHourly UserModel::toHourlyModel() const
 {
   ISOHourly sim = ISOHourly();
   if (!_valid) {
     return *((ISOHourly*) NULL);
   }
-  std::shared_ptr<Population> pop(new Population);
-  pop->setDaysStart(_buildingOccupancyFrom);
-  pop->setDaysEnd(_buildingOccupancyTo);
-  pop->setHoursEnd(_equivFullLoadOccupancyTo);
-  pop->setHoursStart(_equivFullLoadOccupancyFrom);
-  pop->setDensityOccupied(_peopleDensityOccupied);
-  pop->setDensityUnoccupied(_peopleDensityUnoccupied);
-  pop->setHeatGainPerPerson(_heatGainPerPerson);
-  sim.setPop(pop);
-
-  std::shared_ptr<Building> building(new Building);
-  building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
-  building->setElectricApplianceHeatGainUnoccupied(_elecPowerAppliancesUnoccupied);
-  building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
-  sim.setBuilding(building);
-
-  std::shared_ptr<Cooling> cooling(new Cooling);
-  cooling->setCOP(_coolingSystemCOP);
-  cooling->setHvacLossFactor(_hvacCoolingLossFactor);
-  cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
-  cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
-  cooling->setPumpControlReduction(_coolingPumpControl);
-  sim.setCooling(cooling);
-
-  std::shared_ptr<Heating> heating(new Heating);
-  heating->setEfficiency(_heatingSystemEfficiency);
-  heating->setHvacLossFactor(_hvacHeatingLossFactor);
-  heating->setHotcoldWasteFactor(_hvacWasteFactor);
-  heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
-  heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
-  heating->setPumpControlReduction(_heatingPumpControl);
-  sim.setHeating(heating);
-
-  std::shared_ptr<Lighting> lighting(new Lighting);
-  lighting->setExteriorEnergy(_exteriorLightingPower);
-  lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
-  lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
-  sim.setLights(lighting);
-
-  std::shared_ptr<Structure> structure(new Structure);
-  structure->setFloorArea(_floorArea);
-  structure->setBuildingHeight(_buildingHeight);
-  structure->setInfiltrationRate(_buildingAirLeakage);
-  structure->setInteriorHeatCapacity(_interiorHeatCapacity);
-  //directions in the order [S, SE, E, NE, N, NW, W, SW, roof/skylight]
-  Vector wallArea(9);
-  wallArea[0] = _wallAreaS;
-  wallArea[1] = _wallAreaSE;
-  wallArea[2] = _wallAreaE;
-  wallArea[3] = _wallAreaNE;
-  wallArea[4] = _wallAreaN;
-  wallArea[5] = _wallAreaNW;
-  wallArea[6] = _wallAreaW;
-  wallArea[7] = _wallAreaSW;
-  wallArea[8] = _roofArea;
-  structure->setWallArea(wallArea); //vector
-  structure->setWallHeatCapacity(_exteriorHeatCapacity); //??
-
-  Vector wallSolar(9);
-  wallSolar[0] = _wallSolarAbsorptionS;
-  wallSolar[1] = _wallSolarAbsorptionSE;
-  wallSolar[2] = _wallSolarAbsorptionE;
-  wallSolar[3] = _wallSolarAbsorptionNE;
-  wallSolar[4] = _wallSolarAbsorptionN;
-  wallSolar[5] = _wallSolarAbsorptionNW;
-  wallSolar[6] = _wallSolarAbsorptionW;
-  wallSolar[7] = _wallSolarAbsorptionSW;
-  wallSolar[8] = _roofSolarAbsorption;
-  structure->setWallSolarAbsorbtion(wallSolar); //vector
-
-  Vector wallTherm(9);
-  wallTherm[0] = _wallThermalEmissivityS;
-  wallTherm[1] = _wallThermalEmissivitySE;
-  wallTherm[2] = _wallThermalEmissivityE;
-  wallTherm[3] = _wallThermalEmissivityNE;
-  wallTherm[4] = _wallThermalEmissivityN;
-  wallTherm[5] = _wallThermalEmissivityNW;
-  wallTherm[6] = _wallThermalEmissivityW;
-  wallTherm[7] = _wallThermalEmissivitySW;
-  wallTherm[8] = _roofThermalEmissivity;
-  structure->setWallThermalEmissivity(wallTherm); //vector
-
-  Vector wallU(9);
-  wallU[0] = _wallUvalueS;
-  wallU[1] = _wallUvalueSE;
-  wallU[2] = _wallUvalueE;
-  wallU[3] = _wallUvalueNE;
-  wallU[4] = _wallUvalueN;
-  wallU[5] = _wallUvalueNW;
-  wallU[6] = _wallUvalueW;
-  wallU[7] = _wallUvalueSW;
-  wallU[8] = _roofUValue;
-  structure->setWallUniform(wallU); //vector
-
-  Vector windowArea(9);
-  windowArea[0] = _windowAreaS;
-  windowArea[1] = _windowAreaSE;
-  windowArea[2] = _windowAreaE;
-  windowArea[3] = _windowAreaNE;
-  windowArea[4] = _windowAreaN;
-  windowArea[5] = _windowAreaNW;
-  windowArea[6] = _windowAreaW;
-  windowArea[7] = _windowAreaSW;
-  windowArea[8] = _skylightArea;
-  structure->setWindowArea(windowArea); //vector
-
-  Vector winSHGC(9);
-  winSHGC[0] = _windowSHGCS;
-  winSHGC[1] = _windowSHGCSE;
-  winSHGC[2] = _windowSHGCE;
-  winSHGC[3] = _windowSHGCNE;
-  winSHGC[4] = _windowSHGCN;
-  winSHGC[5] = _windowSHGCNW;
-  winSHGC[6] = _windowSHGCW;
-  winSHGC[7] = _windowSHGCSW;
-  winSHGC[8] = _skylightSHGC;
-  structure->setWindowNormalIncidenceSolarEnergyTransmittance(winSHGC); //vector
-
-  Vector winSCF(9);
-  winSCF[0] = _windowSCFS;
-  winSCF[1] = _windowSCFSE;
-  winSCF[2] = _windowSCFE;
-  winSCF[3] = _windowSCFNE;
-  winSCF[4] = _windowSCFN;
-  winSCF[5] = _windowSCFNW;
-  winSCF[6] = _windowSCFW;
-  winSCF[7] = _windowSCFSW;
-  winSCF[8] = _windowSCFN;
-  structure->setWindowShadingCorrectionFactor(winSCF); //vector
-  structure->setWindowShadingDevice(_windowSDFN);
-
-  Vector winU(9);
-  winU[0] = _windowUvalueS;
-  winU[1] = _windowUvalueSE;
-  winU[2] = _windowUvalueE;
-  winU[3] = _windowUvalueNE;
-  winU[4] = _windowUvalueN;
-  winU[5] = _windowUvalueNW;
-  winU[6] = _windowUvalueW;
-  winU[7] = _windowUvalueSW;
-  winU[8] = _skylightUvalue;
-  structure->setWindowUniform(winU); //vector
-  sim.setStructure(structure);
-
-  std::shared_ptr<Ventilation> ventilation(new Ventilation);
-  ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
-  ventilation->setFanControlFactor(_fanFlowControlFactor);
-  ventilation->setFanPower(_specificFanPower);
-  ventilation->setHeatRecoveryEfficiency(_heatRecovery);
-  ventilation->setSupplyDifference(_supplyExhaustRate);
-  ventilation->setSupplyRate(_freshAirFlowRate);
-  sim.setVentilation(ventilation);
-  sim.setWeatherData(_edata);
-
+  
+  setCoreSimulationProperties(sim);
   return sim;
 }
 
@@ -216,176 +67,8 @@ SimModel UserModel::toSimModel() const
     return *((SimModel*) NULL);
   }
 
-  std::shared_ptr<Population> pop(new Population());
-  pop->setDaysStart(_buildingOccupancyFrom);
-  pop->setDaysEnd(_buildingOccupancyTo);
-  pop->setHoursEnd(_equivFullLoadOccupancyTo);
-  pop->setHoursStart(_equivFullLoadOccupancyFrom);
-  pop->setDensityOccupied(_peopleDensityOccupied);
-  pop->setDensityUnoccupied(_peopleDensityUnoccupied);
-  pop->setHeatGainPerPerson(_heatGainPerPerson);
-  sim.setPop(pop);
+  setCoreSimulationProperties(sim);
 
-  std::shared_ptr<Location> loc(new Location);
-  loc->setTerrain(_terrainClass);
-  loc->setWeatherData(_weather);
-  sim.setLocation(loc);
-
-  std::shared_ptr<Building> building(new Building);
-  building->setBuildingEnergyManagement(_bemType);
-  building->setConstantIllumination(_constantIlluminationControl);
-  building->setElectricApplianceHeatGainOccupied(_elecPowerAppliancesOccupied);
-  building->setElectricApplianceHeatGainUnoccupied(_elecPowerAppliancesUnoccupied);
-  building->setGasApplianceHeatGainOccupied(_gasPowerAppliancesOccupied);
-  building->setGasApplianceHeatGainUnoccupied(_gasPowerAppliancesUnoccupied);
-  building->setLightingOccupancySensor(_lightingOccupancySensorSystem);
-  sim.setBuilding(building);
-
-  std::shared_ptr<Cooling> cooling(new Cooling);
-  cooling->setCOP(_coolingSystemCOP);
-  cooling->setHvacLossFactor(_hvacCoolingLossFactor);
-  cooling->setPartialLoadValue(_coolingSystemIPLVToCOPRatio);
-  cooling->setPumpControlReduction(_coolingPumpControl);
-  cooling->setTemperatureSetPointOccupied(_coolingOccupiedSetpoint);
-  cooling->setTemperatureSetPointUnoccupied(_coolingUnoccupiedSetpoint);
-  sim.setCooling(cooling);
-
-  std::shared_ptr<Heating> heating(new Heating);
-  heating->setEfficiency(_heatingSystemEfficiency);
-  heating->setEnergyType(_heatingEnergyCarrier);
-  heating->setHotcoldWasteFactor(_hvacWasteFactor); // Used in hvac distribution efficiency.
-  heating->setHotWaterDemand(_dhwDemand);
-  heating->setHotWaterDistributionEfficiency(_dhwDistributionEfficiency);
-  heating->setHotWaterEnergyType(_dhwEnergyCarrier);
-  heating->setHotWaterSystemEfficiency(_dhwEfficiency);
-  heating->setHvacLossFactor(_hvacHeatingLossFactor);
-  heating->setPumpControlReduction(_heatingPumpControl);
-  heating->setTemperatureSetPointOccupied(_heatingOccupiedSetpoint);
-  heating->setTemperatureSetPointUnoccupied(_heatingUnoccupiedSetpoint);
-  sim.setHeating(heating);
-
-  std::shared_ptr<Lighting> lighting(new Lighting);
-  lighting->setDimmingFraction(_daylightSensorSystem);
-  lighting->setExteriorEnergy(_exteriorLightingPower);
-  lighting->setPowerDensityOccupied(_lightingPowerIntensityOccupied);
-  lighting->setPowerDensityUnoccupied(_lightingPowerIntensityUnoccupied);
-  sim.setLights(lighting);
-
-  std::shared_ptr<Structure> structure(new Structure);
-  structure->setFloorArea(_floorArea);
-  structure->setBuildingHeight(_buildingHeight);
-  structure->setInfiltrationRate(_buildingAirLeakage);
-  structure->setInteriorHeatCapacity(_interiorHeatCapacity);
-  //directions in the order [S, SE, E, NE, N, NW, W, SW, roof/skylight]
-  Vector wallArea(9);
-  wallArea[0] = _wallAreaS;
-  wallArea[1] = _wallAreaSE;
-  wallArea[2] = _wallAreaE;
-  wallArea[3] = _wallAreaNE;
-  wallArea[4] = _wallAreaN;
-  wallArea[5] = _wallAreaNW;
-  wallArea[6] = _wallAreaW;
-  wallArea[7] = _wallAreaSW;
-  wallArea[8] = _roofArea;
-  structure->setWallArea(wallArea); //vector
-  structure->setWallHeatCapacity(_exteriorHeatCapacity); //??
-
-  Vector wallSolar(9);
-  wallSolar[0] = _wallSolarAbsorptionS;
-  wallSolar[1] = _wallSolarAbsorptionSE;
-  wallSolar[2] = _wallSolarAbsorptionE;
-  wallSolar[3] = _wallSolarAbsorptionNE;
-  wallSolar[4] = _wallSolarAbsorptionN;
-  wallSolar[5] = _wallSolarAbsorptionNW;
-  wallSolar[6] = _wallSolarAbsorptionW;
-  wallSolar[7] = _wallSolarAbsorptionSW;
-  wallSolar[8] = _roofSolarAbsorption;
-  structure->setWallSolarAbsorbtion(wallSolar); //vector
-
-  Vector wallTherm(9);
-  wallTherm[0] = _wallThermalEmissivityS;
-  wallTherm[1] = _wallThermalEmissivitySE;
-  wallTherm[2] = _wallThermalEmissivityE;
-  wallTherm[3] = _wallThermalEmissivityNE;
-  wallTherm[4] = _wallThermalEmissivityN;
-  wallTherm[5] = _wallThermalEmissivityNW;
-  wallTherm[6] = _wallThermalEmissivityW;
-  wallTherm[7] = _wallThermalEmissivitySW;
-  wallTherm[8] = _roofThermalEmissivity;
-  structure->setWallThermalEmissivity(wallTherm); //vector
-
-  Vector wallU(9);
-  wallU[0] = _wallUvalueS;
-  wallU[1] = _wallUvalueSE;
-  wallU[2] = _wallUvalueE;
-  wallU[3] = _wallUvalueNE;
-  wallU[4] = _wallUvalueN;
-  wallU[5] = _wallUvalueNW;
-  wallU[6] = _wallUvalueW;
-  wallU[7] = _wallUvalueSW;
-  wallU[8] = _roofUValue;
-  structure->setWallUniform(wallU); //vector
-
-  Vector windowArea(9);
-  windowArea[0] = _windowAreaS;
-  windowArea[1] = _windowAreaSE;
-  windowArea[2] = _windowAreaE;
-  windowArea[3] = _windowAreaNE;
-  windowArea[4] = _windowAreaN;
-  windowArea[5] = _windowAreaNW;
-  windowArea[6] = _windowAreaW;
-  windowArea[7] = _windowAreaSW;
-  windowArea[8] = _skylightArea;
-  structure->setWindowArea(windowArea); //vector
-
-  Vector winSHGC(9);
-  winSHGC[0] = _windowSHGCS;
-  winSHGC[1] = _windowSHGCSE;
-  winSHGC[2] = _windowSHGCE;
-  winSHGC[3] = _windowSHGCNE;
-  winSHGC[4] = _windowSHGCN;
-  winSHGC[5] = _windowSHGCNW;
-  winSHGC[6] = _windowSHGCW;
-  winSHGC[7] = _windowSHGCSW;
-  winSHGC[8] = _skylightSHGC;
-  structure->setWindowNormalIncidenceSolarEnergyTransmittance(winSHGC); //vector
-
-  Vector winSCF(9);
-  winSCF[0] = _windowSCFS;
-  winSCF[1] = _windowSCFSE;
-  winSCF[2] = _windowSCFE;
-  winSCF[3] = _windowSCFNE;
-  winSCF[4] = _windowSCFN;
-  winSCF[5] = _windowSCFNW;
-  winSCF[6] = _windowSCFW;
-  winSCF[7] = _windowSCFSW;
-  winSCF[8] = _windowSCFN;
-  structure->setWindowShadingCorrectionFactor(winSCF); //vector
-  structure->setWindowShadingDevice(_windowSDFN);
-
-  Vector winU(9);
-  winU[0] = _windowUvalueS;
-  winU[1] = _windowUvalueSE;
-  winU[2] = _windowUvalueE;
-  winU[3] = _windowUvalueNE;
-  winU[4] = _windowUvalueN;
-  winU[5] = _windowUvalueNW;
-  winU[6] = _windowUvalueW;
-  winU[7] = _windowUvalueSW;
-  winU[8] = _skylightUvalue;
-  structure->setWindowUniform(winU); //vector
-  sim.setStructure(structure);
-
-  std::shared_ptr<Ventilation> ventilation(new Ventilation);
-  ventilation->setExhaustAirRecirculated(_exhaustAirRecirclation);
-  ventilation->setFanControlFactor(_fanFlowControlFactor);
-  ventilation->setFanPower(_specificFanPower);
-  ventilation->setHeatRecoveryEfficiency(_heatRecovery);
-  ventilation->setSupplyDifference(_supplyExhaustRate);
-  ventilation->setSupplyRate(_freshAirFlowRate);
-  ventilation->setType(_ventilationType);
-  ventilation->setWasteFactor(_hvacWasteFactor); //??
-  sim.setVentilation(ventilation);
   return sim;
 }
 //http://stackoverflow.com/questions/10051679/c-tokenize-string
@@ -413,314 +96,239 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
 
 void UserModel::initializeStructure(const Properties& buildingParams)
 {
-
-  std::vector<double> values;
-  buildingParams.getPropertyAsDoubleVector("wallArea", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for wallArea parameter. It must have 9.");
-  _wallAreaN = values[0];
-  _wallAreaNE = values[1];
-  _wallAreaE = values[2];
-  _wallAreaSE = values[3];
-  _wallAreaS = values[4];
-  _wallAreaSW = values[5];
-  _wallAreaW = values[6];
-  _wallAreaNW = values[7];
-  _roofArea = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("wallU", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for wallU parameter. It must have 9.");
-  _wallUvalueN = values[0];
-  _wallUvalueNE = values[1];
-  _wallUvalueE = values[2];
-  _wallUvalueSE = values[3];
-  _wallUvalueS = values[4];
-  _wallUvalueSW = values[5];
-  _wallUvalueW = values[6];
-  _wallUvalueNW = values[7];
-  _roofUValue = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("wallEmissivity", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for wallEmissivity parameter. It must have 9.");
-  _wallThermalEmissivityN = values[0];
-  _wallThermalEmissivityNE = values[1];
-  _wallThermalEmissivityE = values[2];
-  _wallThermalEmissivitySE = values[3];
-  _wallThermalEmissivityS = values[4];
-  _wallThermalEmissivitySW = values[5];
-  _wallThermalEmissivityW = values[6];
-  _wallThermalEmissivityNW = values[7];
-  _roofThermalEmissivity = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("wallAbsorption", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for wallAbsorption parameter. It must have 9.");
-  _wallSolarAbsorptionN = values[0];
-  _wallSolarAbsorptionNE = values[1];
-  _wallSolarAbsorptionE = values[2];
-  _wallSolarAbsorptionSE = values[3];
-  _wallSolarAbsorptionS = values[4];
-  _wallSolarAbsorptionSW = values[5];
-  _wallSolarAbsorptionW = values[6];
-  _wallSolarAbsorptionNW = values[7];
-  _roofSolarAbsorption = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("windowArea", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for windowArea parameter. It must have 9.");
-  _windowAreaN = values[0];
-  _windowAreaNE = values[1];
-  _windowAreaE = values[2];
-  _windowAreaSE = values[3];
-  _windowAreaS = values[4];
-  _windowAreaSW = values[5];
-  _windowAreaW = values[6];
-  _windowAreaNW = values[7];
-  _skylightArea = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("windowU", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for windowU parameter. It must have 9.");
-  _windowUvalueN = values[0];
-  _windowUvalueNE = values[1];
-  _windowUvalueE = values[2];
-  _windowUvalueSE = values[3];
-  _windowUvalueS = values[4];
-  _windowUvalueSW = values[5];
-  _windowUvalueW = values[6];
-  _windowUvalueNW = values[7];
-  _skylightUvalue = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("windowSHGC", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for windowSHGC parameter. It must have 9.");
-  _windowSHGCN = values[0];
-  _windowSHGCNE = values[1];
-  _windowSHGCE = values[2];
-  _windowSHGCSE = values[3];
-  _windowSHGCS = values[4];
-  _windowSHGCSW = values[5];
-  _windowSHGCW = values[6];
-  _windowSHGCNW = values[7];
-  _skylightSHGC = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("windowSCF", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for windowSCF parameter. It must have 9.");
-  _windowSCFN = values[0];
-  _windowSCFNE = values[1];
-  _windowSCFE = values[2];
-  _windowSCFSE = values[3];
-  _windowSCFS = values[4];
-  _windowSCFSW = values[5];
-  _windowSCFW = values[6];
-  _windowSCFNW = values[7];
-  _skylightSCF = values[8];
-
-  buildingParams.getPropertyAsDoubleVector("windowSDF", values);
-  if (values.size() != 9)
-    throw invalid_argument("Invalid number of values for windowSDF parameter. It must have 9.");
-  _windowSDFN = values[0];
-  _windowSDFNE = values[1];
-  _windowSDFE = values[2];
-  _windowSDFSE = values[3];
-  _windowSDFS = values[4];
-  _windowSDFSW = values[5];
-  _windowSDFW = values[6];
-  _windowSDFNW = values[7];
-  _skylightSDF = values[8];
+  initializeParameter(&UserModel::setWallArea, buildingParams, "wallArea", true);
+  initializeParameter(&UserModel::setWallU, buildingParams, "wallU", true);
+  initializeParameter(&UserModel::setWallThermalEmissivity, buildingParams, "wallEmissivity", true);
+  initializeParameter(&UserModel::setWallSolarAbsorption, buildingParams, "wallAbsorption", true);
+  initializeParameter(&UserModel::setWindowArea, buildingParams, "windowArea", true);
+  initializeParameter(&UserModel::setWindowU, buildingParams, "windowU", true);
+  initializeParameter(&UserModel::setWindowSHGC, buildingParams, "windowSHGC", true);
+  initializeParameter(&UserModel::setWindowSCF, buildingParams, "windowSCF", true);
+  initializeParameter(&UserModel::setWindowSDF, buildingParams, "windowSDF", true);
 }
 
 void UserModel::initializeParameters(const Properties& buildingParams)
 {
-  double attributeValue = buildingParams.getPropertyAsDouble("terrainclass");
-  setTerrainClass(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("buildingheight");
-  setBuildingHeight(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("floorarea");
-  setFloorArea(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydayfirst");
-  setBuildingOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancydaylast");
-  setBuildingOccupancyTo(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourfirst");
-  setEquivFullLoadOccupancyFrom(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("occupancyhourlast");
-  setEquivFullLoadOccupancyTo(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("peopledensityoccupied");
-  setPeopleDensityOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("peopledensityunoccupied");
-  setPeopleDensityUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityoccupied");
-  setLightingPowerIntensityOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingpowerdensityunoccupied");
-  setLightingPowerIntensityUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityoccupied");
-  setElecPowerAppliancesOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("electricappliancepowerdensityunoccupied");
-  setElecPowerAppliancesUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityoccupied");
-  setGasPowerAppliancesOccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("gasappliancepowerdensityunoccupied");
-  setGasPowerAppliancesUnoccupied(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exteriorlightingpower");
-  setExteriorLightingPower(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvacwastefactor");
-  setHvacWasteFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvacheatinglossfactor");
-  setHvacHeatingLossFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("hvaccoolinglossfactor");
-  setHvacCoolingLossFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("daylightsensordimmingfraction");
-  setDaylightSensorSystem(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("lightingoccupancysensordimmingfraction");
-  setLightingOccupancySensorSystem(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("constantilluminationcontrolmultiplier");	//constantilluminaitoncontrol
-  setConstantIlluminationControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemcop");
-  setCoolingSystemCOP(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsystemiplvtocopratio");
-  setCoolingSystemIPLVToCOPRatio(attributeValue);
+  initializeParameter(&UserModel::setTerrainClass, buildingParams, "terrainclass", true);
+  initializeParameter(&UserModel::setBuildingHeight, buildingParams, "buildingheight", true);
+  initializeParameter(&UserModel::setFloorArea, buildingParams, "floorarea", true);
+  initializeParameter(&UserModel::setBuildingOccupancyFrom, buildingParams, "occupancydayfirst", true);
+  initializeParameter(&UserModel::setBuildingOccupancyTo, buildingParams, "occupancydaylast", true);
+  initializeParameter(&UserModel::setEquivFullLoadOccupancyFrom, buildingParams, "occupancyhourfirst", true);
+  initializeParameter(&UserModel::setEquivFullLoadOccupancyTo, buildingParams, "occupancyhourlast", true);
+  initializeParameter(&UserModel::setPeopleDensityOccupied, buildingParams, "peopledensityoccupied", true);
+  initializeParameter(&UserModel::setPeopleDensityUnoccupied, buildingParams, "peopledensityunoccupied", true);
+  initializeParameter(&UserModel::setLightingPowerIntensityOccupied, buildingParams, "lightingpowerdensityoccupied", true);
+  initializeParameter(&UserModel::setLightingPowerIntensityUnoccupied, buildingParams, "lightingpowerdensityunoccupied", true);
+  initializeParameter(&UserModel::setElecPowerAppliancesOccupied, buildingParams, "electricappliancepowerdensityoccupied", true);
+  initializeParameter(&UserModel::setElecPowerAppliancesUnoccupied, buildingParams, "electricappliancepowerdensityunoccupied", true);
+  initializeParameter(&UserModel::setGasPowerAppliancesOccupied, buildingParams, "gasappliancepowerdensityoccupied", true);
+  initializeParameter(&UserModel::setGasPowerAppliancesUnoccupied, buildingParams, "gasappliancepowerdensityunoccupied", true);
+  initializeParameter(&UserModel::setExteriorLightingPower, buildingParams, "exteriorlightingpower", true);
+  initializeParameter(&UserModel::setHvacWasteFactor, buildingParams, "hvacwastefactor", true);
+  initializeParameter(&UserModel::setHvacHeatingLossFactor, buildingParams, "hvacheatinglossfactor", true);
+  initializeParameter(&UserModel::setHvacCoolingLossFactor, buildingParams, "hvaccoolinglossfactor", true);
+  initializeParameter(&UserModel::setDaylightSensorSystem, buildingParams, "daylightsensordimmingfraction", true);
+  initializeParameter(&UserModel::setLightingOccupancySensorSystem, buildingParams, "lightingoccupancysensordimmingfraction", true);
+  initializeParameter(&UserModel::setConstantIlluminationControl, buildingParams, "constantilluminationcontrolmultiplier", true);
+  initializeParameter(&UserModel::setCoolingSystemCOP, buildingParams, "coolingsystemcop", true);
+  initializeParameter(&UserModel::setCoolingSystemIPLVToCOPRatio, buildingParams, "coolingsystemiplvtocopratio", true);
 
-  std::string type = buildingParams.getProperty("heatingfueltype");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-  if (type == ELECTRIC)
-    attributeValue = 1.0;
-  else if (type == GAS)
-    attributeValue = 2.0;
-  else
-    throw invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
-  setHeatingEnergyCarrier(attributeValue);
+  initializeParameter(&UserModel::setHeatingSystemEfficiency, buildingParams, "heatingsystemefficiency", true);
 
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsystemefficiency");
-  setHeatingSystemEfficiency(attributeValue);
+  // Create the named function pointers to disambiguate which overload of setter we want.
+  // TODO: Switch the keyword based properties use enums throughout, rather than the current
+  // combination of strings and doubles. If the setter has a consistent interface and doesn't
+  // have to be overloaded, we don't have to do this disambiguation. BAA@2015-06-24
+  void(UserModel::*setHeatingEnergyCarrierWithString)(std::string) = &UserModel::setHeatingEnergyCarrier;
+  initializeParameter(setHeatingEnergyCarrierWithString, buildingParams, "heatingfueltype", true);
 
-  type = buildingParams.getProperty("ventilationtype");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-  if (type == MECHANICAL)
-    attributeValue = 1.0;
-  else if (type == COMBINED)
-    attributeValue = 2.0;
-  else if (type == NATURAL)
-    attributeValue = 3.0;
-  else
-    throw invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
-  setVentilationType(attributeValue);
+  void(UserModel::*setVentilationTypeWithString)(std::string) = &UserModel::setVentilationType;
+  initializeParameter(setVentilationTypeWithString, buildingParams, "ventilationtype", true);
 
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationintakerateoccupied");
-  setFreshAirFlowRate(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateOccupied");
-  setSupplyExhaustRate(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatrecovery");
-  setHeatRecovery(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exhaustairrecirculation");
-  setExhaustAirRecirclation(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("infiltrationrateoccupied");
-  // set both of these to infiltration. Prior version set only the
-  // buildingAirLeakage from the infiltration and the _infiltration var
-  // wasn't used. Its still not used, but does have a getter and setter
-  // so we set it
-  setBuildingAirLeakage(attributeValue);
-  setInfiltration(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwdemand");
-  setDhwDemand(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwsystemefficiency");
-  setDhwEfficiency(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("dhwdistributionefficiency");
-  setDhwDistributionEfficiency(attributeValue);
+  void(UserModel::*setDhwEnergyCarrierWithString)(std::string) = &UserModel::setDhwEnergyCarrier;
+  initializeParameter(setDhwEnergyCarrierWithString, buildingParams, "dhwfueltype", true);
 
-  type = buildingParams.getProperty("dhwfueltype");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-  if (type == ELECTRIC)
-    attributeValue = 1.0;
-  else if (type == GAS)
-    attributeValue = 2.0;
-  else
-    throw invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
-  setDhwEnergyCarrier(attributeValue);
+  void(UserModel::*setBemTypeWithString)(std::string) = &UserModel::setBemType;
+  initializeParameter(setBemTypeWithString, buildingParams, "bemtype", true);
 
-  type = buildingParams.getProperty("bemtype");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-  if (type == NONE)
-    attributeValue = 1.0;
-  else if (type == SIMPLE)
-    attributeValue = 2.0;
-  else if (type == ADVANCED)
-    attributeValue = 3.0;
-  else
-    throw invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
-  setBemType(attributeValue);
+  initializeParameter(&UserModel::setFreshAirFlowRate, buildingParams, "ventilationintakerateoccupied", true);
+  initializeParameter(&UserModel::setSupplyExhaustRate, buildingParams, "ventilationExhaustRateOccupied", true);
+  initializeParameter(&UserModel::setHeatRecovery, buildingParams, "heatrecovery", true);
+  initializeParameter(&UserModel::setExhaustAirRecirclation, buildingParams, "exhaustairrecirculation", true);
+  initializeParameter(&UserModel::setBuildingAirLeakage, buildingParams, "infiltrationrateoccupied", true);
+  initializeParameter(&UserModel::setDhwDemand, buildingParams, "dhwdemand", true);
+  initializeParameter(&UserModel::setDhwEfficiency, buildingParams, "dhwsystemefficiency", true);
+  initializeParameter(&UserModel::setDhwDistributionEfficiency, buildingParams, "dhwdistributionefficiency", true);
 
-  attributeValue = buildingParams.getPropertyAsDouble("interiorheatcapacity");
-  setInteriorHeatCapacity(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("exteriorheatcapacity");
-  setExteriorHeatCapacity(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingpumpcontrol");
-  setHeatingPumpControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingpumpcontrol");
-  setCoolingPumpControl(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatgainperperson");
-  setHeatGainPerPerson(attributeValue);
-  //specificFanPower
-  attributeValue = buildingParams.getPropertyAsDouble("specificfanpower");
-  setSpecificFanPower(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("fanflowcontrolfactor");
-  setFanFlowControlFactor(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointoccupied");
-  setCoolingOccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("coolingsetpointunoccupied");
-  setCoolingUnoccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointoccupied");
-  setHeatingOccupiedSetpoint(attributeValue);
-  attributeValue = buildingParams.getPropertyAsDouble("heatingsetpointunoccupied");
-  setHeatingUnoccupiedSetpoint(attributeValue);
+  initializeParameter(&UserModel::setInteriorHeatCapacity, buildingParams, "interiorheatcapacity", true);
+  initializeParameter(&UserModel::setExteriorHeatCapacity, buildingParams, "exteriorheatcapacity", true);
+  initializeParameter(&UserModel::setHeatingPumpControl, buildingParams, "heatingpumpcontrol", true);
+  initializeParameter(&UserModel::setCoolingPumpControl, buildingParams, "coolingpumpcontrol", true);
+  initializeParameter(&UserModel::setHeatGainPerPerson, buildingParams, "heatgainperperson", true);
+  initializeParameter(&UserModel::setSpecificFanPower, buildingParams, "specificfanpower", true);
+  initializeParameter(&UserModel::setFanFlowControlFactor, buildingParams, "fanflowcontrolfactor", true);
+  initializeParameter(&UserModel::setCoolingOccupiedSetpoint, buildingParams, "coolingsetpointoccupied", true);
+  initializeParameter(&UserModel::setCoolingUnoccupiedSetpoint, buildingParams, "coolingsetpointunoccupied", true);
+  initializeParameter(&UserModel::setHeatingOccupiedSetpoint, buildingParams, "heatingsetpointoccupied", true);
+  initializeParameter(&UserModel::setHeatingUnoccupiedSetpoint, buildingParams, "heatingsetpointunoccupied", true);
 
 #if (USE_NEW_BUILDING_PARAMS)
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationIntakeRateUnoccupied");
-  setVentilationIntakeRateUnoccupied(attributeValue);
+  initializeParameter(&UserModel::setVentilationIntakeRateUnoccupied, buildingParams, "ventilationIntakeRateUnoccupied", true);
+  initializeParameter(&UserModel::setVentilationExhaustRateUnoccupied, buildingParams, "ventilationExhaustRateUnoccupied", true);
+  initializeParameter(&UserModel::setInfiltrationRateUnoccupied, buildingParams, "infiltrationRateUnoccupied", true);
+  initializeParameter(&UserModel::setLightingPowerFixedOccupied, buildingParams, "lightingPowerFixedOccupied", true);
+  initializeParameter(&UserModel::setLightingPowerFixedUnoccupied, buildingParams, "lightingPowerFixedUnoccupied", true);
+  initializeParameter(&UserModel::setElectricAppliancePowerFixedOccupied, buildingParams, "electricAppliancePowerFixedOccupied", true);
+  initializeParameter(&UserModel::setElectricAppliancePowerFixedUnoccupied, buildingParams, "electricAppliancePowerFixedUnoccupied", true);
+  initializeParameter(&UserModel::setGasAppliancePowerFixedOccupied, buildingParams, "gasAppliancePowerFixedOccupied", true);
+  initializeParameter(&UserModel::setGasAppliancePowerFixedUnoccupied, buildingParams, "gasAppliancePowerFixedUnoccupied", true);
 
-  attributeValue = buildingParams.getPropertyAsDouble("ventilationExhaustRateUnoccupied");
-  setVentilationExhaustRateUnoccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("infiltrationRateUnoccupied");
-  setInfiltrationRateUnoccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedOccupied");
-  setLightingPowerFixedOccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("lightingPowerFixedUnoccupied");
-  setLightingPowerFixedUnoccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedOccupied");
-  setElectricAppliancePowerFixedOccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("electricAppliancePowerFixedUnoccupied");
-  setElectricAppliancePowerFixedUnoccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedOccupied");
-  setGasAppliancePowerFixedOccupied(attributeValue);
-
-  attributeValue = buildingParams.getPropertyAsDouble("gasAppliancePowerFixedUnoccupied");
-  setGasAppliancePowerFixedUnoccupied(attributeValue);
-
-  std::string scheduleFilePath = buildingParams.getProperty("schedulefilepath");
-  if (scheduleFilePath == "")
-    throw invalid_argument("scheduleFilePath building parameter is missing");
-  setScheduleFilePath(scheduleFilePath);
+  initializeParameter(&UserModel::setScheduleFilePath, buildingParams, "schedulefilepath", true);
 #endif
 
-  std::string weatherFilePath = buildingParams.getProperty("weatherfilepath");
-  if (weatherFilePath == "")
-    throw invalid_argument("weatherFilePath building parameter is missing");
+  initializeParameter(&UserModel::setWeatherFilePath, buildingParams, "weatherfilepath", true);
 
-  setWeatherFilePath(weatherFilePath);
+  // Optional properties with hard-coded default values:
+  initializeParameter(&UserModel::setExternalEquipment, buildingParams, "externalequipment", false);
+  initializeParameter(&UserModel::setForcedAirCooling, buildingParams, "forcedaircooling", false);
+  initializeParameter(&UserModel::setT_cl_ctrl_flag, buildingParams, "t_cl_ctrl_flag", false);
+  initializeParameter(&UserModel::setDT_supp_cl, buildingParams, "dt_supp_cl", false);
+  initializeParameter(&UserModel::setDC_YesNo, buildingParams, "dc_yesno", false);
+  initializeParameter(&UserModel::setEta_DC_network, buildingParams, "eta_dc_network", false);
+  initializeParameter(&UserModel::setEta_DC_COP, buildingParams, "eta_dc_cop", false);
+  initializeParameter(&UserModel::setEta_DC_frac_abs, buildingParams, "eta_dc_frac_abs", false);
+  initializeParameter(&UserModel::setEta_DC_COP_abs, buildingParams, "eta_dc_cop_abs", false);
+  initializeParameter(&UserModel::setFrac_DC_free, buildingParams, "frac_dc_free", false);
+  initializeParameter(&UserModel::setE_pumps_cl, buildingParams, "e_pumps_cl", false);
+  initializeParameter(&UserModel::setForcedAirHeating, buildingParams, "forcedairheating", false);
+  initializeParameter(&UserModel::setDT_supp_ht, buildingParams, "dt_supp_ht", false);
+  initializeParameter(&UserModel::setE_pumps_ht, buildingParams, "e_pumps_ht", false);
+  initializeParameter(&UserModel::setT_ht_ctrl_flag, buildingParams, "t_ht_ctrl_flag", false);
+  initializeParameter(&UserModel::setA_H0, buildingParams, "a_h0", false);
+  initializeParameter(&UserModel::setTau_H0, buildingParams, "tau_h0", false);
+  initializeParameter(&UserModel::setDH_YesNo, buildingParams, "dh_yesno", false);
+  initializeParameter(&UserModel::setEta_DH_network, buildingParams, "eta_dh_network", false);
+  initializeParameter(&UserModel::setEta_DH_sys, buildingParams, "eta_dh_sys", false);
+  initializeParameter(&UserModel::setFrac_DH_free, buildingParams, "frac_dh_free", false);
+  initializeParameter(&UserModel::setDhw_tset, buildingParams, "dhw_tset", false);
+  initializeParameter(&UserModel::setDhw_tsupply, buildingParams, "dhw_tsupply", false);
+  initializeParameter(&UserModel::setN_day_start, buildingParams, "n_day_start", false);
+  initializeParameter(&UserModel::setN_day_end, buildingParams, "n_day_end", false);
+  initializeParameter(&UserModel::setN_weeks, buildingParams, "n_weeks", false);
+  initializeParameter(&UserModel::setElecInternalGains, buildingParams, "elecinternalgains", false);
+  initializeParameter(&UserModel::setPermLightPowerDensity, buildingParams, "permlightpowerdensity", false);
+  initializeParameter(&UserModel::setPresenceSensorAd, buildingParams, "presencesensorad", false);
+  initializeParameter(&UserModel::setAutomaticAd, buildingParams, "automaticad", false);
+  initializeParameter(&UserModel::setPresenceAutoAd, buildingParams, "presenceautoad", false);
+  initializeParameter(&UserModel::setManualSwitchAd, buildingParams, "manualswitchad", false);
+  initializeParameter(&UserModel::setPresenceSensorLux, buildingParams, "presencesensorlux", false);
+  initializeParameter(&UserModel::setAutomaticLux, buildingParams, "automaticlux", false);
+  initializeParameter(&UserModel::setPresenceAutoLux, buildingParams, "presenceautolux", false);
+  initializeParameter(&UserModel::setManualSwitchLux, buildingParams, "manualswitchlux", false);
+  initializeParameter(&UserModel::setNaturallyLightedArea, buildingParams, "naturallylightedarea", false);
+  initializeParameter(&UserModel::setRhoCpAir, buildingParams, "rhocpair", false);
+  initializeParameter(&UserModel::setRhoCpWater, buildingParams, "rhocpwater", false);
+  initializeParameter(&UserModel::setPhiIntFractionToAirNode, buildingParams, "phiintfractiontoairnode", false);
+  initializeParameter(&UserModel::setPhiSolFractionToAirNode, buildingParams, "phisolfractiontoairnode", false);
+  initializeParameter(&UserModel::setHci, buildingParams, "hci", false);
+  initializeParameter(&UserModel::setHri, buildingParams, "hri", false);
+  initializeParameter(&UserModel::setR_se, buildingParams, "r_se", false);
+  initializeParameter(&UserModel::setIrradianceForMaxShadingUse, buildingParams, "irradianceformaxshadinguse", false);
+  initializeParameter(&UserModel::setShadingFactorAtMaxUse, buildingParams, "shadingfactoratmaxuse", false);
+  initializeParameter(&UserModel::setTotalAreaPerFloorArea, buildingParams, "totalareaperfloorarea", false);
+  initializeParameter(&UserModel::setWin_ff, buildingParams, "win_ff", false);
+  initializeParameter(&UserModel::setWin_F_W, buildingParams, "win_f_w", false);
+  initializeParameter(&UserModel::setR_sc_ext, buildingParams, "r_sc_ext", false);
+  initializeParameter(&UserModel::setVentPreheatDegC, buildingParams, "ventpreheatdegc", false);
+  initializeParameter(&UserModel::setN50, buildingParams, "n50", false);
+  initializeParameter(&UserModel::setHzone, buildingParams, "hzone", false);
+  initializeParameter(&UserModel::setP_exp, buildingParams, "p_exp", false);
+  initializeParameter(&UserModel::setZone_frac, buildingParams, "zone_frac", false);
+  initializeParameter(&UserModel::setStack_exp, buildingParams, "stack_exp", false);
+  initializeParameter(&UserModel::setStack_coeff, buildingParams, "stack_coeff", false);
+  initializeParameter(&UserModel::setWind_exp, buildingParams, "wind_exp", false);
+  initializeParameter(&UserModel::setWind_coeff, buildingParams, "wind_coeff", false);
+  initializeParameter(&UserModel::setDCp, buildingParams, "dcp", false);
+  initializeParameter(&UserModel::setVent_rate_flag, buildingParams, "vent_rate_flag", false);
+  initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
 }
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsDouble(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsInt(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getPropertyAsBool(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required) {
+  Vector vec;
+  if (props.getPropertyAsDoubleVector(propertyName, vec)) {
+    // TODO: Update the .ism format order to match the order used internall so we don't
+    // have to do this reordering. BAA@2015-06-24.
+    northToSouth(vec);
+    (this->*setProp)(vec);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required) {
+  if (auto prop = props.getProperty(propertyName)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+  } 
+}
+
+void UserModel::northToSouth(Vector& vec) {
+  // .ism file is N, NE, E, SE, S, SW, W, NW, Roof
+  // Structure is S, SE, E, NE, N, NW, W, SW, Roof
+  double temp;
+
+  // Swap 0 and 4 (N and S).
+  temp = vec[0];
+  vec[0] = vec[4];
+  vec[4] = temp;
+
+  // Swap 1 and 3 (NE and SE).
+  temp = vec[1];
+  vec[1] = vec[3];
+  vec[3] = temp;
+  
+  // Swap 5 and 7 (SW and NW).
+  temp = vec[5];
+  vec[5] = vec[7];
+  vec[7] = temp;
+};
 
 void UserModel::loadBuilding(std::string buildingFile)
 {
   Properties buildingParams(buildingFile);
+  initializeParameters(buildingParams);
+  initializeStructure(buildingParams);
+}
+
+void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
+{
+  Properties buildingParams(buildingFile, defaultsFile);
   initializeParameters(buildingParams);
   initializeStructure(buildingParams);
 }
@@ -776,7 +384,7 @@ void UserModel::loadWeather()
   if (boost::filesystem::exists(_weatherFilePath)) {
     weatherFilename = _weatherFilePath;
   } else {
-    weatherFilename = resolveFilename(this->dataFile, _weatherFilePath);
+    weatherFilename = resolveFilename(dataFile, _weatherFilePath);
     if (!boost::filesystem::exists(weatherFilename)) {
       std::cout << "Weather File Not Found: " << _weatherFilePath << std::endl;
       _valid = false;
@@ -785,6 +393,7 @@ void UserModel::loadWeather()
 
   _edata->loadData(weatherFilename);
   initializeSolar();
+  location.setWeatherData(_weather);
 }
 
 void UserModel::loadAndSetWeather()
@@ -819,6 +428,8 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     //std::cout << "in cache" << std::endl;
     _weather = iter->second;
   }
+
+  location.setWeatherData(_weather);
 
   _valid = true;
 }
@@ -891,7 +502,7 @@ void UserModel::initializeSolar()
 
 void UserModel::load(std::string buildingFile)
 {
-  this->dataFile = buildingFile;
+  dataFile = buildingFile;
   _valid = true;
   if (!boost::filesystem::exists(buildingFile)) {
     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
@@ -902,12 +513,44 @@ void UserModel::load(std::string buildingFile)
     std::cout << "Loading Building File: " << buildingFile << std::endl;
   loadBuilding(buildingFile);
   if (DEBUG_ISO_MODEL_SIMULATION)
-    std::cout << "Loading Weather File: " << this->weatherFilePath() << std::endl;
+    std::cout << "Loading Weather File: " << weatherFilePath() << std::endl;
   loadWeather();
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "Weather File Loaded" << std::endl;
 }
 
+void UserModel::load(std::string buildingFile, std::string defaultsFile)
+{
+  dataFile = buildingFile;
+  _valid = true;
+
+  // Check for the .ism file.
+  if (!boost::filesystem::exists(buildingFile)) {
+    std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    _valid = false;
+    return;
+  }
+
+  // Check for the defaults file.
+  if (!boost::filesystem::exists(defaultsFile)) {
+    std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
+    _valid = false;
+    return;
+  }
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Loading Building File: " << buildingFile << std::endl;
+
+  loadBuilding(buildingFile, defaultsFile);
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Loading Weather File: " << weatherFilePath() << std::endl;
+
+  loadWeather();
+
+  if (DEBUG_ISO_MODEL_SIMULATION)
+    std::cout << "Weather File Loaded" << std::endl;
+}
 } // isomodel
 } // openstudio
 

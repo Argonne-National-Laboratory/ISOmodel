@@ -16,48 +16,46 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
-#ifndef ISOMODEL_LOCATION_HPP
-#define ISOMODEL_LOCATION_HPP
-
-#include "WeatherData.hpp"
+#ifndef ISOMODEL_PHYSICALQUANTITIES_HPP 
+#define ISOMODEL_PHYSICALQUANTITIES_HPP
 
 namespace openstudio {
 namespace isomodel {
-
-class Location
+class PhysicalQuantities
 {
 public:
-  Location(void);
-  ~Location(void);
+  PhysicalQuantities(void);
+  ~PhysicalQuantities(void);
 
   /**
-  * Terrain class (urban/city = 0.8, suburban/some shielding = 0.9, country/open = 1.0).
+  * Specific heat of air in terms of volume (MJ/m3/K). Different parts of the simulation
+  * use different units of rhoCpAir. Multiply by 277.777778 to convert to watt-hr/m3/K.
+  * Multiply by 1000000.0 to covert to W/m3/K.
   */
-  double terrain() const {
-    return m_terrain;
+  double rhoCpAir() const {
+    return m_rhoCpAir;
   }
-  
-  void setTerrain(double value) {
-    m_terrain = value;
+
+  void setRhoCpAir(double rhoCpAir) {
+    m_rhoCpAir = rhoCpAir;
   }
 
   /**
-  * Pointer to weather data. Contains data extracted/computed from .epw file.
+  * Specific heat of water in terms of volume (MJ/m3/K).
   */
-  std::shared_ptr<WeatherData> weather() const {
-    return m_weather;
+  double rhoCpWater() const {
+    return m_rhoCpWater;
   }
 
-  void setWeatherData(std::shared_ptr<WeatherData> value) {
-    m_weather = value;
+  void setRhoCpWater(double rhoCpWater) {
+    m_rhoCpWater = rhoCpWater;
   }
 
 private:
-  double m_terrain;
-  std::shared_ptr<WeatherData> m_weather;
+  double m_rhoCpAir = 1.22521 * 0.001012;
+  double m_rhoCpWater = 4.1813; 
 };
 
 } // isomodel
 } // openstudio
-#endif // ISOMODEL_LOCATION_HPP
-
+#endif // ISOMODEL_PHYSICALQUANTITIES_HPP

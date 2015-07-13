@@ -5,7 +5,7 @@ namespace isomodel {
 
 EpwData::EpwData(void)
 {
-  this->m_data.resize(7);
+  m_data.resize(7);
 }
 
 EpwData::~EpwData(void)
@@ -21,23 +21,23 @@ void EpwData::parseHeader(std::string line)
     std::getline(linestream, s, ',');
     switch (i) {
     case 1:
-      this->m_location = s;
+      m_location = s;
       //cout << "\tLocation: " << s <<endl;
       break;
     case 5:
-      this->m_stationid = s;
+      m_stationid = s;
       //cout << "\tStation ID: " << s <<endl;
       break;
     case 6:
-      this->m_latitude = atof(s.c_str());
+      m_latitude = atof(s.c_str());
       //cout << "\tLatitude: " << s <<endl;
       break;
     case 7:
-      this->m_longitude = atof(s.c_str());
+      m_longitude = atof(s.c_str());
       //cout << "\tLongitude: " << s <<endl;
       break;
     case 8:
-      this->m_timezone = (int) atof(s.c_str());
+      m_timezone = (int) atof(s.c_str());
       //cout << "\tTimezone: " << s <<endl;
       break;
     default:
@@ -60,7 +60,7 @@ void EpwData::parseData(std::string line, int row)
     case 14:
     case 15:
     case 21:
-      this->m_data[col++][row] = (double) ::atof(s.c_str());
+      m_data[col++][row] = (double) ::atof(s.c_str());
       break;
     default:
       break;
@@ -117,9 +117,9 @@ std::string EpwData::toISOData()
 void EpwData::loadData(int block_size, double* data)
 {
   // first 3 doubles are latitude, longitude, tz
-  this->m_latitude = data[0];
-  this->m_longitude = data[1];
-  this->m_timezone = (int) data[2];
+  m_latitude = data[0];
+  m_longitude = data[1];
+  m_timezone = (int) data[2];
   // each block_size number of doubles is a column of data
   double* ptr = data + 3;
   for (int c = 0; c < 7; c++) {
@@ -147,9 +147,9 @@ void EpwData::loadData(std::string fn)
       i++;
       getline(myfile, line);
       if (i == 1) {
-        this->parseHeader(line);
+        parseHeader(line);
       } else if (i > 8) {
-        this->parseData(line, row++);
+        parseData(line, row++);
       }
     }
     myfile.close();

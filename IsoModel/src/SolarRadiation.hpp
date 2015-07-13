@@ -19,7 +19,7 @@
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
 #define ISOMODEL_SOLAR_RADIATION_HPP
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <vector>
 #include "TimeFrame.hpp"
@@ -36,15 +36,15 @@ class EpwData;
 class SolarRadiation
 {
 protected:
-  openstudio::isomodel::TimeFrame* frame;
-  openstudio::isomodel::EpwData* weatherData;
+  openstudio::isomodel::TimeFrame* m_frame;
+  openstudio::isomodel::EpwData* m_epwData;
 
   //inputs
   double m_surfaceTilt;
   double m_localMeridian; //LSM
   double m_longitude;
   double m_latitude; //latitude in radians
-  double m_groundReflectance;
+  double m_groundReflectance; // rho_g
 
   //outputs
   std::vector<std::vector<double> > m_eglobe; //total solar radiation from direct beam, ground reflect and diffuse
@@ -121,7 +121,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 12.
   */
   double calculateSolarAltitude(double solarDeclination, double solarHourAngles) {
-    return asin(cos(this->m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(this->m_latitude) * sin(solarDeclination));
+    return asin(cos(m_latitude) * cos(solarDeclination) * cos(solarHourAngles) + sin(m_latitude) * sin(solarDeclination));
   }
 
   /**
@@ -137,7 +137,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 15.
   */
   double calculateSolarAzimuthCos(double solarDeclination, double solarHourAngle, double solarAltitude) {
-    return (cos(solarHourAngle) * cos(solarDeclination) * sin(this->m_latitude) - sin(solarDeclination) * cos(this->m_latitude))
+    return (cos(solarHourAngle) * cos(solarDeclination) * sin(m_latitude) - sin(solarDeclination) * cos(m_latitude))
            / cos(solarAltitude);
   }
 

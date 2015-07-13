@@ -10,6 +10,9 @@
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
+
+#include "Vector.hpp"
 
 namespace openstudio {
 
@@ -62,6 +65,12 @@ public:
    * @param file the properties file path
    */
   Properties(const std::string& file);
+  
+  /**
+  * Creates a new Properties using the properties defined in the specified
+  * buildingFile and defaults from the specified defaultsFile
+  */
+  Properties(const std::string& buildingFile, const std::string& defaultFile);
 
   virtual ~Properties()
   {
@@ -92,10 +101,10 @@ public:
    *
    * @param key the property key
    *
-   * @return the value for that key, or an empty string
+   * @return the value for that key, or boost::none
    * if the property is not found.
    */
-  std::string getProperty(const std::string& key) const;
+  boost::optional<std::string> getProperty(const std::string& key) const;
 
   /**
    * Gets the property with the specified key as a double value
@@ -103,9 +112,29 @@ public:
    * @param key the property key
    *
    * @return the value for that key
-   * @throws std::invalid_argument if the specified property is not found or is not a double.
+   * @return boost::none if the specified property is not found or is not a double.
    */
-  double getPropertyAsDouble(const std::string& key) const;
+  boost::optional<double> getPropertyAsDouble(const std::string& key) const;
+
+  /**
+   * Gets the property with the specified key as an int value
+   *
+   * @param key the property key
+   *
+   * @return the value for that key
+   * @return boost::none if the specified property is not found or is not an int.
+   */
+  boost::optional<int> getPropertyAsInt(const std::string& key) const;
+
+  /**
+   * Gets the property with the specified key as a bool value
+   *
+   * @param key the property key
+   *
+   * @return the value for that key
+   * @return boost::none if the specified property is not found or is not a bool.
+   */
+  boost::optional<bool> getPropertyAsBool(const std::string& key) const;
 
   /**
    * Gets the property with the specified key as a vector of doubles. The
@@ -115,9 +144,10 @@ public:
    * @param key the property key
    *
    * @return the vector of doubles for that key
-   * @throws std::invalid_argument if the specified property is not found or is not a double.
+   * @return false if the specified property is not found or is not a double.
    */
-  void getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
+  bool getPropertyAsDoubleVector(const std::string& key, std::vector<double>& vec) const;
+  bool getPropertyAsDoubleVector(const std::string& key, Vector& vec) const;
 
   /**
    * Gets whether or not this Properties contains the specified key.
