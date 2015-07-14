@@ -887,6 +887,9 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
 
     // Find the exponential Temp decay after any changes in heating temp setpoint and put
     // in the matrix M_Ta with columns being the different time segments.
+    // The temp will only decay to the new lower setpoint, so find which is
+    // higher the setpoint or the decay and select that as the start point for
+    // the average integration to follow.
     Matrix M_Taa(12, 5);
     for (uint j = 0; j < M_Taa.size1(); j++) {
       M_Taa(j, 0) = v_ht_tset_ctrl[j];
@@ -906,19 +909,11 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
          printMatrix("M_Taa", M_Taa);
     }
 
-    /*
-     % the temp will only decay to the new lower setpoint, so find which is
-     % higher the setpoint or the decay and select that as the start point for
-     % the average integration to follow
-     M_Taa=zeros(12,5);
-     M_Taa(:,1)=v_ht_tset_ctrl;
-     for I=2:5 % loop wke day to wke nt to wke day to wke nt
-     M_Taa(:,I)=max(M_Ta(:,I-1),ht_tset_unocc);
-     %v_Tstart=M_Ta(:,I);
-     end
-     */
     Matrix M_Tb(12, 5);
 
+    // For each time period, find the average temp given the start and
+    // ending temp and assuming exponential decay of temps.
+    // Loop through wk nt to wke day to wke nt to wke day to wke nt.
     for (uint i = 0; i < M_Tb.size2(); i++) {
       for (uint j = 0; j < M_Tb.size1(); j++) {
         double v_T_avg = tau / v_ti(i) * (M_Taa(j, i) - M_Te(j, i) - M_dT(j, i)) * (1 - exp(-1 * v_ti(i) / tau)) + M_Te(j, i) + M_dT(j, i);
@@ -943,35 +938,13 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
       }
   }
 
-
-  /*
-   M_Tb=zeros(12,5);
-   % for each time period, find the average temp given the start and
-   % ending temp and assuming exponential decay of temps
-   %v_t_start=M_Taa(:,1);
-   for I=1:5 % loop through wk nt to wke day to wke nt to wke day to wke nt
-   v_T_avg=tau./v_ti(I).*(M_Taa(:,I) - M_Te(:,I) -M_dT(:,I)).*(1-exp(-v_ti(I)/tau)) + M_Te(:,I) +M_dT(:,I);       
-   M_Tb(:,I) = max(v_T_avg,ht_tset_unocc);
-   end
-   
-   v_Th_wke_avg=zeros(12,1);
-   for I=1:12 % for each month
-   v_Th_wke_avg(I)=mean(M_Tb(I,:));  % get the average for each month
-   end
-   v_Th_wk_day = v_ht_tset_ctrl;
-   v_Th_wk_nt=M_Tb(:,1);
-   */
-
+  // Default for if cooling is turned off.
   Vector v_Tc_wk_day(v_cl_tset_ctrl);
   Vector v_Tc_wk_nt(v_cl_tset_ctrl);
   Vector v_Tc_wke_avg(v_cl_tset_ctrl);
 
-  /*else  % if cooling controls are turned off, temp will be constant at the control set temp with no setback
-   v_Tc_wk_day=v_cl_tset_ctrl; 
-   v_Tc_wk_nt=v_cl_tset_ctrl;
-   v_Tc_wke_avg=v_cl_tset_ctrl;
-   end*/
-
+  // If cooling is on, find the temp decay after any changes in cooling temp setpoint.
+  // TODO: Consider pulling this giant if statement into its own function. -BAA@2015-07-14
   if (cooling.T_cl_ctrl_flag() == 1) {
     Matrix M_Tc(12, 4);
     Vector v_Tstart(v_cl_tset_ctrl);
@@ -980,16 +953,10 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
         v_Tstart(j) = M_Tc(j, i) = (v_Tstart(j) - M_Te(j, i) - M_dT(j, i)) * exp(-1 * v_ti(i) / tau) + M_Te(j, i) + M_dT(j, i);
       }
     }
-    /*    
-     if T_cl_ctrl_flag ==1  % if the HVAC cooling controls are on
-     % find the Temp decay after any changes in cooling temp setpoint
-     M_Tc=zeros(12,4);
-     v_Tstart=v_cl_tset_ctrl;
-     for I=1:4    
-     M_Tc(:,I)=(v_Tstart - M_Te(:,I) - M_dT(:,I)).*exp(-v_ti(I)/tau)+M_Te(:,I)+M_dT(:,I);
-     v_Tstart=M_Tc(:,I);
-     end
-     */
+
+    // Check to see if the decay temp is lower than the temp setpoint.  If so, the space will cool
+    // to that level. If the cooling setpoint is lower the cooling system will kick in and lower the 
+    // temp to the cold temp setpoint.
     Matrix M_Tcc(12, 5);
     for (uint j = 0; j < M_Tcc.size1(); j++) {
       M_Tcc(j, 0) = std::min(v_ht_tset_ctrl[j], cl_tset_unocc);
@@ -1002,18 +969,9 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
 
     if (DEBUG_ISO_MODEL_SIMULATION) {
             printMatrix("M_Tcc", M_Tcc);
-        }
-    /*
-     % Check to see if the decay temp is lower than the temp setpoint.  If so, the space will cool
-     % to that level.  If the cooling setpoint is lower the cooling system will kick in and lower the 
-     % temp to the cold temp setpoint 
-     M_Tcc=zeros(12,5);
-     M_Tcc(:,1)=min(v_cl_tset_ctrl,cl_tset_unocc);
-     for I=2:5
-     M_Tcc(:,I)=min(M_Tc(:,I-1),cl_tset_unocc);
-     end
-     */
+    }
 
+    // For each time period, find the average temp given the exponential decay.
     Matrix M_Td(12, 5);
 
     for (uint i = 0; i < M_Td.size2(); i++) {
@@ -1041,24 +999,6 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     for (uint j = 0; j < M_Td.size1(); j++) {
       v_Tc_wk_nt[j] = M_Td(j, 1);
     }
-    /*
-     % for each time period, find the average temp given the exponential
-     % decay
-     %v_t_start=M_Tcc(:,1);
-     M_Td=zeros(12,5);
-     for I=1:5
-     v_T_avg=tau./v_ti(I).*(M_Tcc(:,I) - M_Te(:,I) -M_dT(:,I)).*(1-exp(-v_ti(I)/tau)) + M_Te(:,I) +M_dT(:,I);       
-     M_Td(:,I) = min(v_T_avg,cl_tset_unocc);
-     end
-     
-     v_Tc_wke_avg=zeros(12,1);
-     for I=1:12
-     v_Tc_wke_avg(I)=mean(M_Td(I,:));  % get the average for each month
-     end
-     v_Tc_wk_day = v_cl_tset_ctrl;
-     v_Tc_wk_nt=M_Td(:,1); % T_i_unocc_weekday_night  
-     */
-
   }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1067,6 +1007,7 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
      printVector("v_Tc_wke_avg", v_Tc_wke_avg);
    }
 
+  // Find the average temp for the whole week from the fractions of each period.
   Vector v_Th_wk_avg = sum(sum(mult(v_Th_wk_day, frac_hrs_wk_day), mult(v_Th_wk_nt, frac_hrs_wk_nt)), mult(v_Th_wke_avg, frac_hrs_wke_tot));
   Vector v_Tc_wk_avg = sum(sum(mult(v_Tc_wk_day, frac_hrs_wk_day), mult(v_Tc_wk_nt, frac_hrs_wk_nt)), mult(v_Tc_wke_avg, frac_hrs_wke_tot));
 
@@ -1075,61 +1016,56 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
     printVector("v_Th_wk_avg", v_Th_wk_avg);
   }
 
-  //v_Th_avg(v_Th_wk_avg);
-  //v_Tc_avg(v_Tc_wk_avg);
+  // The final avg for monthly energy computations is the lesser of the avg
+  // computed above and the heating set control.
   for (uint i = 0; i < v_Tc_wk_avg.size(); i++) {
     v_Th_avg[i] = std::min(v_Th_wk_avg[i], ht_tset_ctrl);
     v_Tc_avg[i] = std::min(v_Tc_wk_avg[i], cl_tset_ctrl);
   }
-  /*
-
-   
-   %find the average temp for the whole week from the fractions of each period
-   v_Th_wk_avg = v_Th_wk_day*frac_hrs_wk_day+v_Th_wk_nt*frac_hrs_wk_nt+v_Th_wke_avg*frac_hrs_wke_tot; % T_i_average
-   v_Tc_wk_avg = v_Tc_wk_day*frac_hrs_wk_day+v_Tc_wk_nt*frac_hrs_wk_nt+v_Tc_wke_avg*frac_hrs_wke_tot; % T_i_average
-
-   % the final avg for monthly energy computations is the lesser of the avg
-   % computed above and the heating set control
-   v_Th_avg = min(v_Th_wk_avg,ht_tset_ctrl) ;% T_i_heat_average_cal
-   v_Tc_avg = max(v_Tc_wk_avg,cl_tset_ctrl); % T_i_cool_average_cal
-
-   */
-
 }
+
+/**
+ * Calculate required energy for mechanical ventilation based on source EN ISO 13789
+ * C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
+ */
 void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, double frac_hrs_wk_day, Vector& v_Hve_ht, Vector& v_Hve_cl) const
 {
+  // Ventilation Zone Height (m) with a minimum of 0.1 m.
   double vent_zone_height = std::max(0.1, structure.buildingHeight());
+
+  // Vent supply rate m3/h/m2 (input is in in L/s).
   double qv_supp = ventilation.supplyRate() / structure.floorArea() / 3.6;
+
+  // Vent exhaust rate m3/h/m2, negative indicates out of building.
   double qv_ext = -(qv_supp - ventilation.supplyDifference() / structure.floorArea() / 3.6);
+
+  // Combustion appliance ventilation rate - not implemented yet but will be impt for restaurants.
   double qv_comb = 0;
+
+  // Difference between air intake and air exhaust including combustion exhaust.
   double qv_diff = qv_supp + qv_ext + qv_comb;
+
   double vent_ht_recov = ventilation.heatRecoveryEfficiency();
+
   double vent_outdoor_frac = 1 - ventilation.exhaustAirRecirculated();
+
+  // Infilatration source EN 15242:2007 Sec 6.7 direct method
   double tot_env_A = sum(structure.wallArea()) + sum(structure.windowArea());
-  /*
 
-   %%  Ventilation
-   % required energy for mechanical ventilation based on  source EN ISO 13789
-   % C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2
+  // Infiltration data from:
+  // Tamura, (1976), Studies on exterior wall air tightness and air infiltration of tall buildings, ASHRAE Transactions, 82(1), 122-134.
+  // Orm (1998), AIVC TN44: Numerical data for air infiltration and natural ventilation calculations, Air Infiltration and Ventilation Centre.
+  // Emmerich, (2005), Investigation of the Impact of Commercial Building Envelope Airtightness on HVAC Energy Use.
 
-   vent_zone_height=max(0.1, In.stories*In.ftof);  % Ventilztion Zone Height (m) with a minimum of 0.1 m
-
-   qv_supp=In.vent_supply_rate./In.cond_flr_area./3.6;   %vent_supply_rate m3/h/m2 (input is in in L/s)
-   qv_ext=-(qv_supp-In.vent_supply_diff./In.cond_flr_area./3.6);   %vent exhaust rate m3/h/m2, negative indicates out of building
-
-   qv_comb = 0 ; % combustion appliance ventilation rate  - not implemented yet but will be impt for restaurants
-   qv_diff=qv_supp + qv_ext + qv_comb;  % difference between air intake and air exhaust including combustion exhaust
-
-   vent_ht_recov=In.vent_heat_recovery; %vent_heat_recovery_eff 
-   vent_outdoor_frac=1-In.vent_recirc_fraction; % fctrl_vent_recirculation
-
-   % infilatration source EN 15242:2007 Sec 6.7 direct method
-   tot_env_A=sum(In.wall_area)+sum(In.win_area);
-   */
+  // Infiltration rate in m3/h/m2 @ 75 Pa based on wall area.
   double v_Q75pa = structure.infiltrationRate();
-  double floorArea = structure.floorArea();
-  double v_Q4pa = v_Q75pa * tot_env_A / floorArea * (std::pow((4.0 / 75.0), ventilation.p_exp()));
+
+  // Convert infiltration to Q@4Pa in m3/h /m2 based on floor area. 
+  double v_Q4pa = v_Q75pa * tot_env_A / structure.floorArea() * (std::pow((4.0 / 75.0), ventilation.p_exp()));
+
+  // Effective stack height.
   double h_stack = ventilation.zone_frac() * vent_zone_height;
+
   Vector dbtDiff = dif(location.weather()->mdbt(), v_Th_avg);
   printVector("dbtDiff", dbtDiff);
   Vector dbtDiffAbs = abs(dbtDiff);
@@ -1141,7 +1077,10 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   Vector dbtMultQ4 = mult(dbtPowered, ventilation.stack_coeff() * v_Q4pa);
   printVector("dbtMultQ4", dbtMultQ4);
 
+  // Calculate the infiltration from stack effect pressure difference for heating from EN 15242: sec 6.7.1 (m3/h/m2).
   Vector v_qv_stack_ht = maximum(dbtMultQ4, 0.001); //%qv_stack_heating m3/h/m2
+
+  // Recalculate for cooling.
   dbtDiff = dif(location.weather()->mdbt(), v_Tc_avg);
   printVector("dbtDiff", dbtDiff);
   dbtDiffAbs = abs(dbtDiff);
@@ -1152,88 +1091,48 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("dbtPowered", dbtPowered);
   dbtMultQ4 = mult(dbtPowered, ventilation.stack_coeff() * v_Q4pa);
   printVector("dbtMultQ4", dbtMultQ4);
-  Vector v_qv_stack_cl = maximum(dbtMultQ4, 0.001); //%qv_stack_cooling
+
+  // Calculate the infiltration from stack effect pressure difference for cooling from EN 15242: sec 6.7.1 (m3/h/m2).
+  Vector v_qv_stack_cl = maximum(dbtMultQ4, 0.001);
   printVector("v_qv_stack_ht", v_qv_stack_ht);
   printVector("v_qv_stack_cl", v_qv_stack_cl);
 
-  /*
-   % infiltration data from
-   % Tamura, (1976), Studies on exterior wall air tightness and air infiltration of tall buildings, ASHRAE Transactions, 82(1), 122-134.
-   % Orm (1998), AIVC TN44: Numerical data for air infiltration and natural ventilation calculations, Air Infiltration and Ventilation Centre.
-   % Emmerich, (2005), Investigation of the Impact of Commercial Building Envelope Airtightness on HVAC Energy Use.
-   % create a different table for different building types
-   %n_highrise_inf_table=[4 6 10 15 20];  % infiltration table for high rise buildings as per Tamura, Orm and Emmerich
-   n_p_exp=0.65; % assumed flow exponent for infiltration pressure conversion
-   v_Q75pa=In.infilt_rate; % infiltration rate in m3/h/m2 @ 75 Pa based on wall area
-   v_Q4pa = v_Q75pa.*tot_env_A./In.cond_flr_area*( (4/75).^n_p_exp);  % convert infiltration to Q@4Pa in m3/h /m2 based on floor area
-
-   n_zone_frac = 0.7; %fraction that h_stack/zone height.  assume 0.7 as per en 15242
-
-   h_stack=n_zone_frac.*vent_zone_height;  % get the effective stack height for infiltration calcs
-   % calculate the infiltration from stack effect pressure difference from EN 15242: sec 6.7.1
-   n_stack_exp=0.667;  % reset the pressure exponent to 0.667 for this part of the calc
-   n_stack_coeff=0.0146;
-   v_qv_stack_ht=max(n_stack_coeff.*v_Q4pa*(h_stack.*abs(W.mdbt-v_Th_avg)).^n_stack_exp,0.001); %qv_stack_heating m3/h/m2
-   v_qv_stack_cl=max(n_stack_coeff.*v_Q4pa*(h_stack.*abs(W.mdbt-v_Tc_avg)).^n_stack_exp,0.001); %qv_stack_cooling
-   */
-
-  Vector v_qv_wind_ht = mult(
-      mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()), ventilation.wind_exp()), v_Q4pa),
-      ventilation.wind_coeff()); // % qv_wind_heating
-  Vector v_qv_wind_cl = mult(
-      mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()), ventilation.wind_exp()), v_Q4pa),
-      ventilation.wind_coeff()); // % qv_wind_cooling
-
+  Vector v_qv_wind_ht = mult(mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()),
+                             ventilation.wind_exp()), v_Q4pa), ventilation.wind_coeff());
+  Vector v_qv_wind_cl = mult(mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()),
+                             ventilation.wind_exp()), v_Q4pa), ventilation.wind_coeff());
   printVector("v_qv_wind_ht", v_qv_wind_ht);
   printVector("v_qv_wind_cl", v_qv_wind_cl);
 
-  double n_sw_coeff = 0.14;
   Vector v_qv_ht_max = maximum(v_qv_stack_ht, v_qv_wind_ht);
   Vector v_qv_cl_max = maximum(v_qv_stack_cl, v_qv_wind_cl);
   printVector("v_qv_ht_max", v_qv_ht_max);
   printVector("v_qv_cl_max", v_qv_cl_max);
 
-  Vector v_qv_sw_ht = sum(v_qv_ht_max, div(mult(mult(v_qv_stack_ht, v_qv_wind_ht), n_sw_coeff), v_Q4pa)); // %qv_sw_heat m3/h/m2
-  Vector v_qv_sw_cl = sum(v_qv_cl_max, div(mult(mult(v_qv_stack_cl, v_qv_wind_cl), n_sw_coeff), v_Q4pa)); // %qv_sw_cool m3/h/m2
-
+  double n_sw_coeff = 0.14;
+  Vector v_qv_sw_ht = sum(v_qv_ht_max, div(mult(mult(v_qv_stack_ht, v_qv_wind_ht), n_sw_coeff), v_Q4pa)); // m3/h/m2
+  Vector v_qv_sw_cl = sum(v_qv_cl_max, div(mult(mult(v_qv_stack_cl, v_qv_wind_cl), n_sw_coeff), v_Q4pa)); // m3/h/m2
   printVector("v_qv_sw_ht", v_qv_sw_ht);
   printVector("v_qv_sw_cl", v_qv_sw_cl);
 
-  Vector v_qv_inf_ht = sum(v_qv_sw_ht, std::max(0.0, -qv_diff)); // %q_inf_heat m3/h/m2
-  Vector v_qv_inf_cl = sum(v_qv_sw_cl, std::max(0.0, -qv_diff)); // %q_inf_cool m3/h/m2
+  Vector v_qv_inf_ht = sum(v_qv_sw_ht, std::max(0.0, -qv_diff)); // m3/h/m2
+  Vector v_qv_inf_cl = sum(v_qv_sw_cl, std::max(0.0, -qv_diff)); // m3/h/m2
   printVector("v_qv_inf_ht", v_qv_inf_ht);
   printVector("v_qv_inf_cl", v_qv_inf_cl);
 
-  /*
-   % calculate infiltration from wind
-   % note:  terrain_class [1 = open, 0.9 = country, 0.8 =urban]
-   n_wind_exp=0.667;
-   n_wind_coeff=0.0769;
-   n_dCp = 0.75; % conventional value for cp difference between windward and leeward sides for low rise buildings as per 15242
+  // TODO: Figure out what the comment below is refering to. I don't want to delete it just yet
+  // because connecting the code to the sources of the equations is important. BAA@2015-07-14.
+  //
+  // source EN ISO 13789 C.5  There they use Vdot instead of Q 
+  // Vdot = Vdot_f (1??_v) +Vdot_x
+  // Vdot_f is the design airflow rate due to mechanical ventilation;
+  // Vdot_x is the additional airflow rate with fans on, due to wind effects;
+  // ?_v is the global heat recovery efficiency, taking account of the differences between supply and extract
+  // airflow rates. Heat in air leaving the building through leakage cannot be recovered.
 
-   v_qv_wind_ht=n_wind_coeff.*v_Q4pa.*(n_dCp.*In.terrain_class.*W.mwind.^2).^n_wind_exp; % qv_wind_heating
-   v_qv_wind_cl=n_wind_coeff.*v_Q4pa.*(n_dCp.*In.terrain_class.*W.mwind.^2).^n_wind_exp; % qv_wind_cooling
-
-   n_sw_coeff=0.14;
-   v_qv_sw_ht = max(v_qv_stack_ht,v_qv_wind_ht)+n_sw_coeff.*v_qv_stack_ht.*v_qv_wind_ht./v_Q4pa; %qv_sw_heat m3/h/m2
-   v_qv_sw_cl = max(v_qv_stack_cl,v_qv_wind_cl)+n_sw_coeff.*v_qv_stack_cl.*v_qv_wind_cl./v_Q4pa; %qv_sw_cool m3/h/m2
-
-   v_qv_inf_ht = max(0,-qv_diff)+v_qv_sw_ht; %q_inf_heat m3/h/m2
-   v_qv_inf_cl = max(0,-qv_diff)+v_qv_sw_cl; %q_inf_cool m3/h/m2
-
-
-   % source EN ISO 13789 C.5  There they use Vdot instead of Q 
-   % Vdot = Vdot_f (1??_v) +Vdot_x
-   % Vdot_f is the design airflow rate due to mechanical ventilation;
-   % Vdot_x is the additional airflow rate with fans on, due to wind effects;
-   % ?_v is the global heat recovery efficiency, taking account of the differences between supply and extract
-   % airflow rates. Heat in air leaving the building through leakage cannot be recovered.
-
-   % set vent_rate_flag=0 if ventilation rate is constant, 1 if we assume vent off in unoccopied times or 
-   % 2 if we assume ventilation rate is dropped proportionally to population
-   %
-   % set to 1 to mimic the behavior of the original spreadsheet
-   */
+  // Set vent_rate_flag=0 if ventilation rate is constant, 1 if we assume vent off in unoccopied times or 
+  // 2 if we assume ventilation rate is dropped proportionally to population
+  // set to 1 to mimic the behavior of the original spreadsheet.
   double vent_op_frac;
   switch (ventilation.vent_rate_flag()) {
   case 0:
@@ -1246,55 +1145,22 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
     vent_op_frac = frac_hrs_wk_day + (1 - frac_hrs_wk_day) * pop.densityOccupied() / pop.densityUnoccupied();
     break;
   }
-  /*
-   vent_rate_flag=1; 
 
-   % set the operation fraction for the ventilation rate
-   if vent_rate_flag==0
-   vent_op_frac=1;
-   elseif vent_rate_flag==1
-   vent_op_frac=frac_hrs_wk_day;
-   else
-   vent_op_frac=frac_hrs_wk_day+(1-frac_hrs_wk_day)*occ_dens/unocc_dens;
-   end
-   */
   double initVal = ventilation.ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
-  Vector v_qv_mve_ht(12);
-  Vector v_qv_mve_cl(12);
-  for (uint i = 0; i < v_qv_mve_ht.size(); i++) {
-    v_qv_mve_cl[i] = v_qv_mve_ht[i] = initVal;
-  }
+  Vector v_qv_mve_ht(12, initVal);
+  Vector v_qv_mve_cl(12, initVal);
+
+  // Total air flow in m3/s when heating.
   Vector v_qve_ht = sum(v_qv_inf_ht, v_qv_mve_ht);
+  // Total air flow in m3/s when cooling.
   Vector v_qve_cl = sum(v_qv_inf_cl, v_qv_mve_cl);
   printVector("v_qve_ht", v_qve_ht);
   printVector("v_qve_cl", v_qve_cl);
 
+  // Hve heating (W/K/m2).
   v_Hve_ht = div(mult(v_qve_ht, phys.rhoCpAir()*1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+  // Hve cooling (W/K/m2).
   v_Hve_cl = div(mult(v_qve_cl, phys.rhoCpAir()*1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
-
-  /*
-   if In.vent_type==3
-   v_qv_mve_ht=zeros(12,1); %qv_me_heating for calc
-   else
-   v_qv_mve_ht=ones(12,1)*vent_op_frac*qv_supp*vent_outdoor_frac*(1-vent_ht_recov);
-   end
-   
-   %qv_f_cl=ones(12,1)*qv_supp*vent_outdoor_frac; %qv_me_cooling
-   if In.vent_type==3
-   v_qv_mve_cl=zeros(12,1); %qv_me_cooling for calc
-   else
-   v_qv_mve_cl=ones(12,1)*vent_op_frac*qv_supp*vent_outdoor_frac*(1-vent_ht_recov);
-   end
-
-   v_qve_ht = v_qv_inf_ht+v_qv_mve_ht; %total air flow in m3/s when heating
-   v_qve_cl = v_qv_inf_cl+v_qv_mve_cl; %total air flow in m3/s when cooling
-
-   n_rhoc_air = 1200;  % heat capacity of air per unit volume in J/(m3 K)
-   v_Hve_ht = n_rhoc_air*v_qve_ht/3600;  % Hve (W/K/m2)  heating
-   v_Hve_cl = n_rhoc_air*v_qve_cl/3600; % Hve (W/K/m2)  cooling
-
-
-   */
 }
 
 /**
@@ -1310,64 +1176,43 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   // Total internal + solar heat gains (MJ).
   Vector v_tot_mo_ht_gain = sum(temp, v_E_sol);
 
+  // Building heating dimensionless constant.
   double a_H = heating.a_H0() + tau / heating.tau_H0();
 
+  // Heat transfer (loss) by transmission, heating (MJ).
   Vector v_QT_ht = mult(mult(dif(v_Th_avg, location.weather()->mdbt()), megasecondsInMonth), H_tr);
+  // Heat transfer (loss) by ventilation, heating (MJ).
   Vector v_QV_ht = mult(mult(mult(v_Hve_ht, structure.floorArea()), dif(v_Th_avg, location.weather()->mdbt())), megasecondsInMonth);
+  // Total heat transfer (loss) (MJ). ISO 13790 7.2.1.3 eq. 7.
   Vector v_Qtot_ht = sum(v_QT_ht, v_QV_ht);
-  /*
-   %% Heating and Cooling Needs
 
-   %total monthly heat gains (MJ)
+  // Compute the ratio of heat gain to heat loss.
+  Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, DBL_MIN)); // Add DBL_MIN to avoid divide by zero.
 
-   v_tot_mo_ht_gain = phi_I_tot*v_Msec_ina_mo + v_E_sol;  % total_heat_gain = total internal + total solar in MJ/m2.
-
-   % compute the heating need including thermal mass effects
-   % NOTE: the building heat thermal time constant, tau, was calculated in the section
-   % on interior temperature 
-   a_H0=1; % a_H_0 = reference dimensionless parameter
-   tau_H0=15; % tau_H_0 = reference time constant
-   a_H = a_H0+tau/tau_H0;  %a_H_building heating dimensionless constant
-
-   v_QT_ht = H_tr.*(v_Th_avg-v_mdbt).*v_Msec_ina_mo;  %QT = transmission loss (MJ)
-   v_QV_ht = v_Hve_ht*In.cond_flr_area.*(v_Th_avg-v_mdbt).*v_Msec_ina_mo; % QV in MJ
-   v_Qtot_ht = v_QT_ht+v_QV_ht ; %QL_total total heat loss in MJ
-   */
-  Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, DBL_MIN));
+  // Heating utilization factor.
   Vector v_eta_g_H(12);
+
+  // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
   for (uint i = 0; i < v_eta_g_H.size(); i++) {
     v_eta_g_H[i] =
         v_gamma_H_ht(i) > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht(i) + DBL_MIN);
   }
+
+  // Total heating need (MJ).
   v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
   Qneed_ht_yr = sum(v_Qneed_ht);
 
-  /*
-   % compute the ratio of heat gain to heating loss, gamma_H
-   v_gamma_H_ht = v_tot_mo_ht_gain./(v_Qtot_ht+eps);  %gamma_H = QG/QL  - eps added to avoid divide by zero problem
+  // Heat transfer (loss) by transmission, cooling (MJ).
+  Vector v_QT_cl = mult(mult(dif(v_Tc_avg, location.weather()->mdbt()), H_tr), megasecondsInMonth);
+  // Heat transfer (loss) by ventilation, cooling (MJ).
+  Vector v_QV_cl = mult(mult(mult(v_Hve_cl, structure.floorArea()), dif(v_Tc_avg, location.weather()->mdbt())), megasecondsInMonth);
+  // Total heat transfer (loss), cooling (MJ). ISO 13790 7.2.1.3 eq. 7.
+  Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl);
 
-   % for each month, check the heat gain ratio and set the heating gain
-   % utilization factor, eta_g_H accordingly
-   v_eta_g_H=zeros(12,1);
-   for I=1:12
-   if v_gamma_H_ht(I)>0
-   v_eta_g_H(I) = (1-v_gamma_H_ht(I).^a_H)./(1-v_gamma_H_ht(I).^(a_H+1));  % eta_g_H heating gain utilization factor
-   else
-   v_eta_g_H(I) = 1./(v_gamma_H_ht(I)+eps);
-   end
-   end
-   v_Qneed_ht = v_Qtot_ht - v_eta_g_H.*v_tot_mo_ht_gain; %QNH = QL,H - eta_G_H.*Q_G_H
+  // Heat transfer (loss) to heat gain ratio, cooling.
+  Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, DBL_MIN));
 
-   Qneed_ht_yr = sum(v_Qneed_ht);
-   */
-
-  Vector v_QT_cl = mult(mult(dif(v_Tc_avg, location.weather()->mdbt()), H_tr), megasecondsInMonth); // % QT for cooling in MJ
-  Vector v_QV_cl = mult(mult(mult(v_Hve_cl, structure.floorArea()), dif(v_Tc_avg, location.weather()->mdbt())), megasecondsInMonth); // % QT for coolin in MJ
-  Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl); // % QL = QT + QV for cooling = total cooling heat loss in MJ
-
-  Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, DBL_MIN)); //  %gamma_C = heat loss ratio Qloss/Qgain 
-
-  //% compute the cooling gain utilization factor eta_g_cl
+  // Compute the cooling gain utilization factor eta_g_cl
   Vector v_eta_g_CL(12);
   for (uint i = 0; i < v_eta_g_CL.size(); i++) {
     if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1379,73 +1224,47 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
     v_eta_g_CL[i] = v_gamma_H_cl(i) > 0.0 ? (1.0 - std::pow(v_gamma_H_cl[i], a_H)) / (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0))) : 1.0;
   }
 
-  v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl)); // % QNC = Q_G_C - eta*Q_L_C = total cooling need
+  // Total cooling need (MJ).
+  v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl));
   Qneed_cl_yr = sum(v_Qneed_cl);
-  /*
-   % n_a_C0 = 1; %a_C_0 building cooling reference constant
-   % n_tau_C0 = 15;%tau_C_0 building cooling reference time constant
-   % C366 = n_a_C0+tau/n_tau_C0; % a_C = building cooling constant
 
-   v_QT_cl = H_tr*(v_Tc_avg - v_mdbt).*v_Msec_ina_mo; % QT for cooling in MJ
-   v_QV_cl = v_Hve_cl*In.cond_flr_area.*(v_Tc_avg - v_mdbt).*v_Msec_ina_mo; % QT for coolin in MJ
-   v_Qtot_cl = v_QT_cl+v_QV_cl; % QL = QT + QV for cooling = total cooling heat loss in MJ
+  // Hot air supply temperature (C).
+  double T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
+  // Cool air supply temperature (C).
+  double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
-   v_gamma_H_cl = v_Qtot_cl./(v_tot_mo_ht_gain+eps);  %gamma_C = heat loss ratio Qloss/Qgain 
-
-   % compute the cooling gain utilization factor eta_g_cl
-   v_eta_g_CL=zeros(12,1);
-   for I=1:12 % for each month
-   if v_gamma_H_cl(I)>0
-   v_eta_g_CL(I) = (1-v_gamma_H_cl(I).^a_H)./(1-v_gamma_H_cl(I).^(a_H+1));  % eta_g_H cooling gain utilization factor
-   else
-   v_eta_g_CL(I) = 1;
-   end
-   end
-
-   v_Qneed_cl = v_tot_mo_ht_gain - v_eta_g_CL.*v_Qtot_cl; % QNC = Q_G_C - eta*Q_L_C = total cooling need
-   Qneed_cl_yr=sum(v_Qneed_cl);
-   */
-  double T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht(); //%hot air supply temp  - assume supply air is 7C hotter than room
-  double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl(); //%cool air supply temp - assume 7C lower than room
-  /*
-   %% Fan Energy
-
-   n_dT_supp_ht=7;  % set heating temp diff between supply air and room air
-   n_dT_supp_cl=7; %set cooling temp diff between supply air and room air
-   T_sup_ht = In.ht_tset_occ+n_dT_supp_ht;  %hot air supply temp  - assume supply air is 7C hotter than room
-   T_sup_cl = In.cl_tset_occ-n_dT_supp_cl;  %cool air supply temp - assume 7C lower than room
-
-   n_rhoC_a = 1.22521.*0.001012; % rho*Cp for air (MJ/m3/K)
-   */
-
+  // Volume of air moved for heating (m3).
   Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), phys.rhoCpAir()), DBL_MIN));
+  // Volume of air moved for cooling (m3).
   Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), phys.rhoCpAir()), DBL_MIN));
-  ventilation.fanPower();
-  ventilation.fanControlFactor();
-  structure.floorArea();
+
   printVector("v_Vair_ht", v_Vair_ht);
   printVector("v_Vair_cl", v_Vair_cl);
 
-  Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation.supplyRate() * frac_hrs_wk_day * 1000000.0, 12), 1000)); //% compute air flow in m3, multiply by 1000000 to convert megaseconds to seconds.
+  // Total air flow (m3).
+  // Multiply by 1000000 to convert megaseconds to seconds.
+  // Divide by 1000 to convert liters to m3.
+  Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation.supplyRate() * frac_hrs_wk_day * 1000000.0, 12), 1000));
   printVector("v_Vair_tot", v_Vair_tot);
-  Vector fanPower = mult(v_Vair_tot, ventilation.fanPower() * ventilation.fanControlFactor());
-  printVector("fanPower", fanPower);
+
+  // Fan power (MJ)
+  // ventilation.fanPower is in W/L/s is also J/L which is also kJ/m3. Divide by 1000 for MJ/m3 to get fanEnergy in MJ.
+  Vector fanEnergy = mult(v_Vair_tot, ventilation.fanPower() * ventilation.fanControlFactor() / 1000.0);
+  printVector("fanEnergy", fanEnergy);
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "ventilation.fanPower() = " << ventilation.fanPower() << std::endl;
     std::cout << "ventilation.fanControlFactor() = " << ventilation.fanControlFactor() << std::endl;
     std::cout << "structure.floorArea() = " << structure.floorArea() << std::endl;
   }
 
-  v_Qfan_tot = div(div(fanPower, structure.floorArea()), 3600); //% compute fan energy in kWh/m2
-
-  /*
-   v_Vair_ht = v_Qneed_ht./(n_rhoC_a.*(T_sup_ht -v_Th_avg)+eps);  %compute volume of air moved for heating
-   v_Vair_cl = v_Qneed_cl./(n_rhoC_a.*(v_Tc_avg - T_sup_cl)+eps); % compute volume of air moved for cooling
-
-   v_Vair_tot=max((v_Vair_ht+v_Vair_cl),In.vent_supply_rate.*frac_hrs_wk_day.*v_Msec_ina_mo./1000); % compute air flow in m3
-   v_Qfan_tot = v_Vair_tot.*In.fan_specific_power.*In.fan_flow_ctrl_factor./In.cond_flr_area./3600;  % compute fan energy in kWh/m2
-   */
+  // Calculate fan EUI (kWh/m2).
+  v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), 3.6); //% compute fan energy in kWh/m2
 }
+
+/**
+ * HVAC systems calculations.
+ */
 void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Qelec_ht, Vector& v_Qgas_ht,
     Vector& v_Qcl_elec_tot, Vector& v_Qcl_gas_tot) const
 {
@@ -1464,52 +1283,40 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
    n_eta_DC_COP_abs = 1;  % COP of DC absorption chillers
    n_frac_DC_free = 0;  % fraction of free heat source to absorption DC chillers (0 to 1)
    */
+
+  // From EN 15243-2007 Annex E.
+  // HVAC system info table from EN 15243:2007 Table E1.
+  // The integrated energy efficiency ratio (IEER) is the effective average COP for the system.
   double IEER = cooling.cop() * cooling.partialLoadValue();
+
+  // Copy over the HVAC loss/waste factors into local variables with names
+  // that match the equations better
   double f_waste = heating.hotcoldWasteFactor();
   double a_ht_loss = heating.hvacLossFactor();
   double a_cl_loss = cooling.hvacLossFactor();
 
-  /*  %% HVAC System  
-   %
-   % From EN 15243-2007 Annex E.
-   % HVAC system info table from EN 15243:2007 Table E1.  columns are
-
-   % SEER = COP *mPLV  or maybe more properly , IEER = COP * IPLV
-   IEER = In.COP*In.PLV ; % compute IEER the effective average COP for the cooling system
-
-   % copy over the HVAC loss/waste factors into local variables with names
-   % that match the equations better
-   f_waste=In.hotcold_waste_factor;
-   a_ht_loss=In.heat_loss_factor;
-   a_cl_loss=In.cool_loss_factor;
-
-   */
+  // Fraction of yearly heating demand with regard to total heating + cooling demand.
   double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), 0.1);
+  // Fraction of yearly cooling demand.
   double f_dem_cl = std::max((1.0 - f_dem_ht), 0.1);
-  double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht); //% overall distribution efficiency for heating
-  double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl); //%overall distrubtion efficiency for cooling
 
+  // Overall distribution efficiency for heating.
+  double eta_dist_ht = 1.0 / (1.0 + a_ht_loss + f_waste / f_dem_ht);
+  // Overall distrubtion efficiency for cooling.
+  double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
+
+  // Losses from HVAC distributuion, heating.
   Vector v_Qloss_ht_dist = div(mult(v_Qneed_ht, (1 - eta_dist_ht)), eta_dist_ht);
+  // Losses from HVAC distributuion, cooling.
   Vector v_Qloss_cl_dist = div(mult(v_Qneed_cl, (1 - eta_dist_cl)), eta_dist_cl);
   printVector("v_Qloss_ht_dist", v_Qloss_ht_dist);
   printVector("v_Qloss_cl_dist", v_Qloss_cl_dist);
-  /*
-   f_dem_ht=max(Qneed_ht_yr/(Qneed_cl_yr+Qneed_ht_yr),0.1); %fraction of yearly heating demand with regard to total heating + cooling demand
-   f_dem_cl=max((1-f_dem_ht),0.1); %fraction of yearly cooling demand
-   eta_dist_ht  =1.0/(1.0+a_ht_loss+f_waste/f_dem_ht); % overall distribution efficiency for heating
-   eta_dist_cl = 1.0/(1.0+a_cl_loss+f_waste/f_dem_cl); %overall distrubtion efficiency for cooling
 
-   v_Qloss_ht_dist=v_Qneed_ht*(1-eta_dist_ht)/eta_dist_ht;  %losses from HVAC heat distribution
-   v_Qloss_cl_dist = v_Qneed_cl*(1-eta_dist_cl)/eta_dist_cl;  %losses from HVAC cooling distribution
-   */
-  Vector v_Qht_sys(12);
-  Vector v_Qht_DH(12);
-  Vector v_Qcl_sys(12);
-  Vector v_Qcool_DC(12);
-  zero(v_Qht_sys);
-  zero(v_Qht_DH);
-  zero(v_Qcl_sys);
-  zero(v_Qcool_DC);
+  Vector v_Qht_sys(12, 0.0);
+  Vector v_Qht_DH(12, 0.0);
+  Vector v_Qcl_sys(12, 0.0);
+  Vector v_Qcool_DC(12, 0.0);
+
   if (heating.DH_YesNo() == 1) {
     v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
   } else {
