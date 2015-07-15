@@ -85,11 +85,6 @@ private:
 
   std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
-  /** Returns the fan schedule. */
-  virtual double fanSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
-    return fixedFanSchedule[(int) hourOfDay][(int) scheduleOffset];
-  }
-
   /** Returns the ventilation schedule. */
   virtual double ventilationSchedule(int hourOfYear, int hourOfDay, int scheduleOffset) {
     return fixedVentilationSchedule[(int) hourOfDay][(int) scheduleOffset];
@@ -204,7 +199,6 @@ private:
   double hWindow[9];
 
   double fixedVentilationSchedule[24][7];
-  double fixedFanSchedule[24][7];
   double fixedExteriorEquipmentSchedule[24][7];
   double fixedInteriorEquipmentSchedule[24][7];
   double fixedExteriorLightingSchedule[24][7];

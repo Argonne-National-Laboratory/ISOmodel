@@ -40,7 +40,6 @@ ISOResults ISOHourly::simulate(bool aggregateByMonth)
   printMatrix("Heating Setpoint", (double*) fixedActualHeatingSetpoint, 24, 7);
   printMatrix("Exterior Equipment", (double*) fixedExteriorEquipmentSchedule, 24, 7);
   printMatrix("Exterior Lighting", (double*) fixedExteriorLightingSchedule, 24, 7);
-  printMatrix("Fan", (double*) fixedFanSchedule, 24, 7);
   printMatrix("Interior Equipment", (double*) fixedInteriorEquipmentSchedule, 24, 7);
   printMatrix("Interior Lighting", (double*) fixedInteriorLightingSchedule, 24, 7);
   printMatrix("Ventilation", (double*) fixedVentilationSchedule, 24, 7);
@@ -214,29 +213,20 @@ void ISOHourly::calculateHour(int hourOfYear,
 
   // Extract schedules to a function so that we can populate them based on
   // timeslice instead of fixed schedules.
-  auto fanEnabled = fanSchedule(hourOfYear, hourOfDay, scheduleOffset); //ExcelFunctions.OFFSET(CZ90,hourOfDay-1,E156-1)
   // Convert ventilation from L/s to m^3/h and divide by floor area.
-  // ExcelFunctions.OFFSET(AB90,hourOfDay-1,E156-1)
   auto ventExhaustM3phpm2 = ventilationSchedule(hourOfYear, hourOfDay, scheduleOffset) * 3.6 / structure.floorArea(); 
-  //ExcelFunctions.OFFSET(BV90,hourOfDay-1,E156-1)
-  auto externalEquipmentEnabled = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);
-  // ExcelFunctions.OFFSET(AK90,hourOfDay-1,E156-1)
-  auto internalEquipmentEnabled = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto externalEquipmentPower = exteriorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto interiorEquipmentPowerDensity = interiorEquipmentSchedule(hourOfYear, hourOfDay, scheduleOffset); 
   auto exteriorLightingEnabled = exteriorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset); 
-  //ExcelFunctions.OFFSET(BL90,hourOfDay-1,E156-1)
-  auto internalLightingEnabled = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset);
+  auto interiorLightingPowerDensity = interiorLightingSchedule(hourOfYear, hourOfDay, scheduleOffset);
   auto actualHeatingSetpoint = heatingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
   auto actualCoolingSetpoint = coolingSetpointSchedule(hourOfYear, hourOfDay, scheduleOffset);
 
-  results.externalEquipmentEnergyWperm2 = externalEquipmentEnabled * building.externalEquipment() / structure.floorArea();
+  results.externalEquipmentEnergyWperm2 = externalEquipmentPower / structure.floorArea();
 
   // \Phi_{int,A}, ISO 13790 10.4.2.
   // Monthly name: phi_plug_occ and phi_plug_unocc.
-  if (internalEquipmentEnabled == 0.0) {
-    results.phi_plug = building.electricApplianceHeatGainUnoccupied();
-  } else {
-    results.phi_plug = internalEquipmentEnabled * building.electricApplianceHeatGainOccupied();
-  }
+  results.phi_plug = interiorEquipmentPowerDensity;
 
   std::vector<double> lightingContribution;
   for (auto i = 0; i != 9; ++i) {
@@ -252,17 +242,11 @@ void ISOHourly::calculateHour(int hourOfYear,
   // Heat produced by lighting.
   // \Phi_{int,L}, ISO 13790 10.4.3. 
   // Monthly name: phi_illum_occ, phi_illum_unocc
-  auto phi_illum = electricForTotalLightArea * lights.powerDensityOccupied() * internalLightingEnabled * lights.elecInternalGains();
+  auto phi_illum = electricForTotalLightArea * interiorLightingPowerDensity * lights.elecInternalGains();
 
   // TODO: lights.permLightPowerDensity() is unused.
 
-  // If the internal lighting is 0.0, use the unoccupied lighting power density, otherwise use the occupied
-  // power density multiplied by the factor in internalLightingEnabled (currently hardcoded to 1.0).
-  if (internalLightingEnabled == 0.0) {
-    results.Q_illum_tot = electricForTotalLightArea * lights.powerDensityUnoccupied();
-  } else {
-    results.Q_illum_tot = electricForTotalLightArea * lights.powerDensityOccupied() * internalLightingEnabled;
-  }
+  results.Q_illum_tot = electricForTotalLightArea * interiorLightingPowerDensity;
 
   // \Phi_{int}, ISO 13790 10.2.2 eq. 35.
   // Monthly name: phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt.
@@ -356,13 +340,11 @@ void ISOHourly::calculateHour(int hourOfYear,
   auto T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht(); //%hot air supply temp  - assume supply air is 7C hotter than room
   auto T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl(); //%cool air supply temp - assume 7C lower than room
 
-  auto ventFanPower = ventExhaustM3phpm2 * fanEnabled;
-
   // XXX In the unlikely event that (T_sup_ht - TMT1) * n_rhoC_a was equal to -DBL_MIN, would this divide by zero? - BAA@2015-02-18.
   auto Vair_ht = heating.forcedAirHeating() ? results.Qneed_ht / (((T_sup_ht - tiHeatCool) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
   auto Vair_cl = cooling.forcedAirCooling() ? results.Qneed_cl / (((tiHeatCool - T_sup_cl) * phys.rhoCpAir()*277.777778) + DBL_MIN) : 0.0;
 
-  auto Vair_tot = std::max((Vair_ht + Vair_cl), ventFanPower);
+  auto Vair_tot = std::max((Vair_ht + Vair_cl), ventExhaustM3phpm2);
 
   // Calculate fan energy in W/m2. Air volumes in m3/h/m2, fan power in W/(L/s). Convert with (m^3 / 1000 L) * (3600 s / h)
   results.Qfan_tot = Vair_tot * ventilation.fanPower() * 1000.0 / 3600.0;
@@ -537,16 +519,21 @@ void ISOHourly::populateSchedules()
     for (auto d = 0; d < 7; ++d) {
       doccupied = (d >= dayStart && d <= dayEnd);
       popoccupied = hoccupied && doccupied;
+
       fixedVentilationSchedule[h][d] = hoccupied ? ventilation.supplyRate() : 0.0;
-      fixedFanSchedule[h][d] = hoccupied ? 1 : 0.0;
-      fixedExteriorEquipmentSchedule[h][d] = hoccupied ? 0.3 : 0.12;
-      // TODO: using 1.0 and 0.0 to bring this in line with monthly results, but this sort of defeats the
-      // purpose of generating these schedules. Once we implement hourly schedules we can address this.
-      // BAA@2015-07-01
-      fixedInteriorEquipmentSchedule[h][d] = popoccupied ? 1.0 : 0.0;
+
+      // TODO: Add externalEquipment occ and unocc. BAA@2015-07-15.
+      fixedExteriorEquipmentSchedule[h][d] = building.externalEquipment();
+
+      fixedInteriorEquipmentSchedule[h][d] = popoccupied ? building.electricApplianceHeatGainOccupied() : building.electricApplianceHeatGainUnoccupied();
+
+      // TODO: Determine if the exterior lights should be on or not here. BAA@2015-07-15.
       fixedExteriorLightingSchedule[h][d] = 1; // in calculateHour, the lights are only turned on when the sun is down.
-      fixedInteriorLightingSchedule[h][d] = popoccupied ? 1.0 : 0.0;
+
+      fixedInteriorLightingSchedule[h][d] = popoccupied ? lights.powerDensityOccupied() : lights.powerDensityUnoccupied();
+
       fixedActualHeatingSetpoint[h][d] = popoccupied ? heating.temperatureSetPointOccupied() : heating.temperatureSetPointUnoccupied();
+
       fixedActualCoolingSetpoint[h][d] = popoccupied ? cooling.temperatureSetPointOccupied() : cooling.temperatureSetPointUnoccupied();
     }
   }

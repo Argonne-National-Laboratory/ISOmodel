@@ -550,6 +550,21 @@ TEST(IsoModelTests, OptionalPropertiesOverrideTests) {
  12, 0, 0.030399, 2.88034, 0.257822, 7.02313, 0.766787, 2.24457, 0, 0, 39.9145, 0, 0, 0
  *
  */
+
+std::vector<std::string> endUseNames = {"ElecHeat",
+                                        "ElecCool",
+                                        "ElecIntLights",
+                                        "ElecExtLights",
+                                        "ElecFans",
+                                        "ElecPump",
+                                        "ElecEquipInt",
+                                        "ElecEquipExt",
+                                        "ElectDHW",
+                                        "GasHeat",
+                                        "GasCool",
+                                        "GasEquip",
+                                        "GasDHW"};
+
 TEST(IsoModelTests, SimModelTests)
 {
   // the expected values are the results of running the "prior to updated parameter names
@@ -596,7 +611,7 @@ TEST(IsoModelTests, SimModelTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001) << "i = " << i << ", j = " << j << std::endl;
+      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << std::endl;
     }
   }
 }
@@ -648,7 +663,7 @@ TEST(IsoModelTests, ISOHourlyTests)
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001) << "i = " << i << ", j = " << j << std::endl;
+      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << std::endl;
     }
   }
 }
