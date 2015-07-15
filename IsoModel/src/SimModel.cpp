@@ -1078,7 +1078,7 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
   printVector("dbtMultQ4", dbtMultQ4);
 
   // Calculate the infiltration from stack effect pressure difference for heating from EN 15242: sec 6.7.1 (m3/h/m2).
-  Vector v_qv_stack_ht = maximum(dbtMultQ4, 0.001); //%qv_stack_heating m3/h/m2
+  Vector v_qv_stack_ht = maximum(dbtMultQ4, 0.001);
 
   // Recalculate for cooling.
   dbtDiff = dif(location.weather()->mdbt(), v_Tc_avg);
@@ -1259,7 +1259,7 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
   }
 
   // Calculate fan EUI (kWh/m2).
-  v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), 3.6); //% compute fan energy in kWh/m2
+  v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), 3.6);
 }
 
 /**
@@ -1268,6 +1268,9 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
 void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Qelec_ht, Vector& v_Qgas_ht,
     Vector& v_Qcl_elec_tot, Vector& v_Qcl_gas_tot) const
 {
+  // TODO: Implement (or remove) all the district heating/cooling stuff that is currently commented out. BAA@2015-07-15.
+ 
+  // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
   /*
    %% District H/C info
 
@@ -1332,6 +1335,8 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   printVector("v_Qht_DH", v_Qht_DH);
   printVector("v_Qcl_sys", v_Qcl_sys);
   printVector("v_Qcool_DC", v_Qcool_DC);
+  
+  // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
   /*
    if DH_YesNo==1
    v_Qht_sys = zeros(12,1);  % if we have district heating our heating energy needs from our system are zero
@@ -1376,6 +1381,7 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
   printVector("v_Qelec_ht", v_Qelec_ht);
   printVector("v_Qgas_ht", v_Qgas_ht);
 
+  // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
   /*
    v_Qcl_DC_elec = v_Qcool_DC * (1-n_eta_DC_frac_abs) / (n_eta_DC_COP*n_eta_DC_network);  % Energy used for cooling by district electric chillers
    v_Qcl_DC_abs =  v_Qcool_DC * (1-n_frac_DC_free) / n_eta_DC_COP_abs; %Energy used for cooling by district absorption chillers
@@ -1393,137 +1399,96 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
    end
    
    */
-
 }
+
+/**
+ * Calculate energy for pumps used in the heating/cooling systems.
+ * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
+ */
 void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Q_pump_tot) const
 {
+  // TODO: The current implementation is wrong. It either needs to be revised to be more like the hourly implementation where the pump energy
+  // is multiplied by the amount of time the pumps are actually on or heating.E_pumps()/cooling.E_pumps() needs to be expressed in terms of the
+  // heating/cooling delivered so that the pump energy can be determined by multiplying it by the heating/cooling delivered. Both methods
+  // have challenges, which is why they are not yet implements. Until then, consider the monthly pump values unreliable. BAA@2015-07-15.
 
-  /*
-   %% Pump Energy
-   
-   %%% NOTE original GIT spreadsheet had this hardwired
-   %Q_pumps_yr = 8;  %  set pump energy density 8 MJ/m2/yr
-   %  
-   %
-   %  new GIT model following EPA NR 2007 6.9.7.1 and 6.9.7.2
-   % European Performance Assessment - Non Residential
-   
-   */
+  // Total annual pump energy for heating systems if the pumps are running continuously.
+  // NOTE: This assumption (that the annual pump energy is equal to the energy of the pumps running continuosly) is the source of the
+  // problems in the pump results. BAA@2015-07-15.
   double Q_pumps_yr_ht = sum(mult(megasecondsInMonth, heating.E_pumps(), 12));
+  // Total annual pump energy for cooling systems if the pumps are running continuously.
   double Q_pumps_yr_cl = sum(mult(megasecondsInMonth, cooling.E_pumps(), 12));
 
+  // Fraction of time the system is in heating mode each month.
   Vector v_frac_ht_mode = div(v_Qneed_ht, sum(v_Qneed_ht, v_Qneed_cl));
+  // Total heating energy fraction.
   double frac_ht_total = sum(v_frac_ht_mode);
+  // Total yearly pump energy.
   double Q_pumps_ht = Q_pumps_yr_ht * heating.pumpControlReduction() * structure.floorArea();
+  // Distribute the total annual pump energy between the 12 months proportional to the distribution of the heating
   Vector v_Q_pumps_ht = div(mult(v_frac_ht_mode, Q_pumps_ht), frac_ht_total);
 
-  /*
-   n_E_pumps = 0.25;  % specific power of systems pumps + control systems in W/m2
-   v_Q_pumps=n_E_pumps*v_Msec_ina_mo;  % energy per month for pumps + control if running continuously in MJ/m2/mo
-   
-   Q_pumps_yr=sum(v_Q_pumps);% total annual energy for pumps+ctrl if running continuously MJ/m2/yr
-
-
-   v_frac_ht_mode = v_Qneed_ht./(v_Qneed_ht+v_Qneed_cl);  %fraction of time system is in in heating mode each month
-   frac_ht_total=sum(v_frac_ht_mode);  % total heating pump energy fraction
-   Q_pumps_ht=Q_pumps_yr*In.pump_heat_ctrl_factor*In.cond_flr_area; % total heating pump energy;
-   v_Q_pumps_ht = Q_pumps_ht*v_frac_ht_mode/frac_ht_total;  % break down total according to fractional operation and monthly fraction
-   
-   %v_frac_pump_ht = v_Qneed_ht./(v_Qneed_ht+v_Qneed_cl);  %heating pump operation fraction for each month.
-   %v_Q_pump_mo=Q_pumps_yr*In.pump_heat_ctrl_factor*In.cond_flr_area.*v_frac_ht_mode;
-   
-   */
+  // Fraction of time the system is in cooling mode each month.
   Vector v_frac_cl_mode = div(v_Qneed_cl, sum(v_Qneed_ht, v_Qneed_cl));
+  // Total cooling energy fraction.
   double frac_cl_total = sum(v_frac_cl_mode);
+  // Total yearly pump energy.
   double Q_pumps_cl = Q_pumps_yr_cl * cooling.pumpControlReduction() * structure.floorArea();
+  // Distribute the total annual pump energy between the 12 months proportional to the distribution of the cooling.
   Vector v_Q_pumps_cl = div(mult(v_frac_cl_mode, Q_pumps_cl), frac_cl_total);
 
-  /*
-   v_frac_cl_mode = v_Qneed_cl./(v_Qneed_ht+v_Qneed_cl);% fraction of time system is in cooling mode
-   frac_cl_total=sum(v_frac_cl_mode); % total cooling pump energy fraction
-   Q_pumps_cl=Q_pumps_yr*In.pump_cool_ctrl_factor*In.cond_flr_area; % total cooling pump energy fraction
-   v_Q_pumps_cl = Q_pumps_cl*v_frac_cl_mode/frac_cl_total; % break down total into monthly fractional parts
-   
-   %v_frac_pump_cl = v_Qneed_cl./(v_Qneed_ht+v_Qneed_cl);% cooling pump operation factor
-
-   */
+  // Total pump operational factor.
   Vector v_frac_tot = div(sum(v_Qneed_ht, v_Qneed_cl), Qneed_ht_yr + Qneed_cl_yr);
   double frac_total = sum(v_frac_tot);
   double Q_pumps_tot = Q_pumps_ht + Q_pumps_cl;
 
   if (Q_pumps_ht == 0 || Q_pumps_cl == 0) {
+    // If there is just heating or just cooling, use the individual heating or cooling pump energy vector.
     v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
   } else {
+    // Otherwise, distribut the combined pump energy proportional to the combined heating/cooling load.
     v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot), frac_total);
   }
-
-  /*
-   v_frac_tot = (v_Qneed_ht+v_Qneed_cl)/(Qneed_ht_yr+Qneed_cl_yr); % total pump operational factor
-   frac_total = sum(v_frac_tot);
-   Q_pumps_tot = Q_pumps_ht + Q_pumps_cl;
-   
-   if (Q_pumps_ht==0 || Q_pumps_cl==0)
-   v_Q_pump_tot = v_Q_pumps_ht+v_Q_pumps_cl;
-   else
-   v_Q_pump_tot = Q_pumps_tot*v_frac_tot/frac_total;
-   end
-
-   %Q_pump_tot_yr=sum(v_Q_pump_tot);
-
-   */
-
 }
+
+/**
+ * Energy Generation
+ * NOT INCLUDED YET
+ */
 void SimModel::energyGeneration() const
 {
-  /*
-   %% Energy Generation
-   
-   %%% NOT INCLUDED YET
-   */
-
 }
+
+/**
+ * Calculate domestic hot water (DHW).
+ * References: NEN 2916 12.2
+ */
 void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
 {
+  // Energy from solar energy hot water collectors - not included yet
   Vector v_Q_dhw_solar(12);
-  zero(v_Q_dhw_solar); //Q from solar energy hot water collectors - not included yet
+  zero(v_Q_dhw_solar);
+
+  // Total annual energy demand required for heating DHW (MJ/yr).
   double Q_dhw_yr = heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * phys.rhoCpWater();
 
-  /*%% DHW and Solar Water Heating
-   %
-   % Qdhw= ((Qdem;DWH/?sys;DHW) - Qses;DHW)/?gen;DHW
-   % Source: NEN 2916 12.2  
-   
-   n_dhw_tset = 60; % water temperature set point (C)
-   n_dhw_tsupply = 20; % water initial temp (C)
-   n_CP_h20=4.18;  % specific heat of water in MJ/m3/K
-
-   %solar hot water heating contribution
-   %D738 =0; % solar collector surface area
-   v_Q_dhw_solar =zeros(12,1);  % Q from solar energy hot water collectors - not included yet
-
-
-   Q_dhw_yr = In.DHW_demand*(n_dhw_tset-n_dhw_tsupply).*n_CP_h20; % total annual energy required for heating DHW MJ/yr
-   
-   % n_dhw_dist_eff_table=[1 0.8 0.6]; % all taps < 3m from gen = 1, taps> 3m = 0.8, circulation or unknown =0.6
-   % %eta_dhw_dist = n_dhw_dist_eff_table(In.DHW_dist_sys_type); % set the distribution efficiency from table
-   % 
-   % eta_dhw_dist = In.DHW_dist_eff; % DHW distribtuion efficiency
-   % eta_dhw_sys = In.DHW_sys_eff; % DHW system efficiency
-
-
-   */
   Vector v_MonthlyDemand = mult(daysInMonth, Q_dhw_yr, 12);
   Vector v_frac_MonthlyDemand_yr = div(v_MonthlyDemand, daysInYear);
   Vector v_Qe_demand = div(v_frac_MonthlyDemand_yr, heating.hotWaterDistributionEfficiency());
+
+  // Monthly DHW energy demand including distribution efficiency.
   Vector v_Q_dhw_demand = div(v_Qe_demand, kWh2MJ);
+  // Total monthly supply need is (demand - solar)/system efficiency.
   Vector v_Q_dhw_need = maximum(div(dif(v_Q_dhw_demand, v_Q_dhw_solar), heating.hotWaterSystemEfficiency()), 0);
-  Vector Z(v_Q_dhw_need.size());
+
+  // Vector of zeroes for fuel type that is unused.
+  Vector Z(v_Q_dhw_need.size(), 0.0);
+
   printVector("v_MonthlyDemand", v_MonthlyDemand);
   printVector("v_frac_MonthlyDemand_yr", v_frac_MonthlyDemand_yr);
   printVector("v_Qe_demand", v_Qe_demand);
   printVector("v_Q_dhw_demand", v_Q_dhw_demand);
   printVector("v_Q_dhw_need", v_Q_dhw_need);
-  zero(Z);
   printVector("Z", Z);
 
   if (heating.hotWaterEnergyType() == 1) {
@@ -1535,20 +1500,6 @@ void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
   }
   printVector("v_Q_dhw_gas", v_Q_dhw_gas);
   printVector("v_Q_dhw_elec", v_Q_dhw_elec);
-
-  /*
-   v_Q_dhw_demand = Q_dhw_yr.*v_days_ina_mo./days_ina_year./In.DHW_dist_eff/kWh2MJ; % monthly DHW energy demand including distribution inefficiency
-   v_Q_dhw_need = max((v_Q_dhw_demand-v_Q_dhw_solar)./In.DHW_sys_eff,0); % total monthly supply need is (demand - solar)/system efficiency
-
-   Z=zeros(size(v_Q_dhw_need));
-   if(In.DHW_energy_type)==1
-   v_Q_dhw_elec = v_Q_dhw_need;
-   v_Q_dhw_gas = Z;
-   else
-   v_Q_dhw_gas = v_Q_dhw_need;
-   v_Q_dhw_elec = Z;
-   end
-   */
 }
 
 ISOResults SimModel::simulate() const
@@ -1763,33 +1714,30 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
 {
   ISOResults allResults;
 
+  // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15
+
+  // Average electric plug loads (W/m2).
   double E_plug_elec = building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day
       + building.electricApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
+  // Average gas plug loads (W/m2).
   double E_plug_gas = building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day
       + building.gasApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
 
+  // Electric plug load (kWh/m2).
   Vector v_Q_plug_elec = div(mult(hoursInMonth, E_plug_elec, 12), 1000.0);
+  // Gas plug load (kWh/m2).
   Vector v_Q_plug_gas = div(mult(hoursInMonth, E_plug_gas, 12), 1000.0);
   printVector("v_Q_plug_elec", v_Q_plug_elec);
   printVector("v_Q_plug_gas", v_Q_plug_gas);
 
-  /*
-   %% Plugload 
-
-   E_plug_elec =( In.elec_plug_dens_occ*frac_hrs_wk_day + In.elec_plug_dens_unocc*(1-frac_hrs_wk_day)); % average electric plugloads in W/m2
-   E_plug_gas = (In.gas_plug_dens_occ*frac_hrs_wk_day + In.gas_plug_dens_unocc*(1-frac_hrs_wk_day)); % averaged gas plugloads in W/m2
-
-   v_Q_plug_elec = E_plug_elec*v_hrs_ina_mo/1000; % Electric plugload kWh/m2
-   v_Q_plug_gas = E_plug_gas*v_hrs_ina_mo/1000; % gas plugload kWh/m2
-
-   */
-  Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()), kWh2MJ); //% Total monthly electric usage for heating
-  Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()), kWh2MJ); //% Total monthly electric usage for cooling
-  Vector Eelec_int_lt = div(v_Q_illum_tot, structure.floorArea()); //% Total monthly electric usage density for interior lighting
-  Vector Eelec_ext_lt = div(v_Q_illum_ext_tot, structure.floorArea()); //% Total monthly electric usage for exterior lights
-  Vector Eelec_fan = v_Qfan_tot; //%Total monthly elec usage for fans
-  Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()), kWh2MJ); //% Total monthly elec usage for pumps
-  Vector Eelec_plug = v_Q_plug_elec; //% Total monthly elec usage for elec plugloads
+  // Electric loads (kWh/m2).
+  Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()), kWh2MJ); // Total monthly electric usage for heating.
+  Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()), kWh2MJ); // Total monthly electric usage for cooling.
+  Vector Eelec_int_lt = div(v_Q_illum_tot, structure.floorArea()); // Total monthly electric usage density for interior lighting.
+  Vector Eelec_ext_lt = div(v_Q_illum_ext_tot, structure.floorArea()); // Total monthly electric usage for exterior lights.
+  Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
+  Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()), kWh2MJ); // Total monthly elec usage for pumps.
+  Vector Eelec_plug = v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
   Vector Eelec_dhw = div(v_Q_dhw_elec, structure.floorArea());
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1799,24 +1747,13 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
       printVector("Eelec_pump", Eelec_pump);
       std::cout << "floorArea: " << structure.floorArea() << std::endl;
     }
-  /*
-   %% Generating output table
 
-   Eelec_ht = v_Qelec_ht./In.cond_flr_area./kWh2MJ; % Total monthly electric usage for heating
-   Eelec_cl = v_Qcl_elec_tot./In.cond_flr_area./kWh2MJ; % Total monthly electric usage for cooling
-   Eelec_int_lt = v_Q_illum_tot./In.cond_flr_area; % Total monthly electric usage density for interior lighting
-   Eelec_ext_lt = v_Q_illum_ext_tot./In.cond_flr_area; % Total monthly electric usage for exterior lights
-   Eelec_fan = v_Qfan_tot; %Total monthly elec usage for fans
-   Eelec_pump = v_Q_pump_tot./In.cond_flr_area./kWh2MJ; % Total monthly elec usage for pumps
-   Eelec_plug = v_Q_plug_elec; % Total monthly elec usage for elec plugloads
-   Eelec_dhw  = v_Q_dhw_elec/In.cond_flr_area;
+  // Gas loads (kWh/m2).
+  Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()), kWh2MJ); // Total monthly gas usage for heating.
+  Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()), kWh2MJ); // Total monthly gas usage for cooling.
+  Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
+  Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
 
-   */
-
-  Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()), kWh2MJ); //% total monthly gas usage for heating
-  Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()), kWh2MJ); //% total monthly gas usage for cooling
-  Vector Egas_plug = v_Q_plug_gas; //% total monthly gas plugloads
-  Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea()); //% total monthly dhw gas plugloads
   EndUses results[12];
   for (int i = 0; i < 12; i++) {
 
@@ -1855,46 +1792,25 @@ ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_
   }
   return allResults;
 
-  /*
-   %Etotal_elec=Eelec_ht + Eelec_cl+Eelec_int_lt+Eelec_ext_lt+Eelec_fan+Eelec_pump+Eelec_plug;
+  // TODO: Why is this here? It is after the function returns... BAA@2015-07-15.
 
-   Egas_ht = v_Qgas_ht./In.cond_flr_area./kWh2MJ; % total monthly gas usage for heating
-   Egas_cl = v_Qcl_gas_tot./In.cond_flr_area./kWh2MJ; % total monthly gas usage for cooling
-   Egas_plug = v_Q_plug_gas; % total monthly gas plugloads
-   Egas_dhw = v_Q_dhw_gas./In.cond_flr_area; % total monthly dhw gas plugloads
-
-   Z=zeros(size(Eelec_ht));
-
-   */
+  // Calculate the annual totals.
   Vector Etot_ht = sum(Eelec_ht, Egas_ht);
   Vector Etot_cl = sum(Eelec_cl, Egas_cl);
-  Vector Etot_int_lt = Eelec_int_lt; //% Total monthly electric usage density for interior lighting
-  Vector Etot_ext_lt = Eelec_ext_lt; //% Total monthly electric usage for exterior lights
-  Vector Etot_fan = Eelec_fan; //%Total monthly elec usage for fans
-  Vector Etot_pump = Eelec_pump; //% Total monthly elec usage for pumps
-  Vector Etot_plug = sum(v_Q_plug_elec, v_Q_plug_gas); //% Total monthly elec usage for elec plugloads
+  Vector Etot_int_lt = Eelec_int_lt; // Total monthly electric usage density for interior lighting
+  Vector Etot_ext_lt = Eelec_ext_lt; // Total monthly electric usage for exterior lights
+  Vector Etot_fan = Eelec_fan; // Total monthly elec usage for fans
+  Vector Etot_pump = Eelec_pump; // Total monthly elec usage for pumps
+  Vector Etot_plug = sum(v_Q_plug_elec, v_Q_plug_gas); // Total monthly elec usage for elec plugloads
   Vector Etot_dhw = sum(v_Q_dhw_elec, v_Q_plug_elec);
-  /*
-   Ebldg.elec=[Eelec_ht,Eelec_cl,Eelec_int_lt,Eelec_ext_lt,Eelec_fan,Eelec_pump,Eelec_plug,Eelec_dhw];
-   Ebldg.gas=[Egas_ht,Egas_cl,Z,Z,Z,Z,Egas_plug,Egas_dhw];
-   Ebldg.total=Ebldg.elec+Ebldg.gas;
-   Ebldg.cols={'Heat','Cool','Int Lt','Ext Lt','Fans','Pump','Plug','DHW'};
-   Ebldg.rows=['Jan';'Feb';'Mar';'Apr';'May';'Jun';'Jul';'Aug';'Sep';'Oct';'Nov';'Dec'];
 
-
-   */
+  // Find the total annual energy use.
   double yrSum = 0;
   Vector monthly(Etot_ht.size());
   for (uint i = 0; i < Etot_ht.size(); i++) {
     monthly[i] = Etot_ht[i] + Etot_cl[i] + Etot_int_lt[i] + Etot_ext_lt[i] + Etot_fan[i] + Etot_pump[i] + Etot_plug[i] + Etot_dhw[i];
     yrSum += monthly[i];
   }
-
-  /*
-   % Find the totals for each month by summing across the columns
-   Ebldg.mon=sum(Ebldg.total,2);  % sum normally works down columns but by putting in the ,2 we sum across rows instead
-   Ebldg.yr=sum(Ebldg.mon);
-   */
 }
 } // isomodel
 } // openstudio
