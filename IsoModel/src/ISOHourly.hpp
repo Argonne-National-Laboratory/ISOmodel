@@ -41,27 +41,33 @@ public:
   ISOHourly();
   virtual ~ISOHourly();
 
-  /** Calculates the building's hourly EUI using the "simple hourly method"
+  /** 
+   * Calculates the building's hourly EUI using the "simple hourly method"
    * described in ISO 13790:2008. The hourly calculations largely correspond to
    * those described by the simple hourly method in ISO 13790 Annex C. A key
    * difference is that this implementation describes everything in terms of
-   * EUI (i.e., per area). */
+   * EUI (i.e., per area).
+   */
   ISOResults simulate(bool aggregateByMonth = false);
 
 private:
-  /** Populates the ventilation, fan, exterior equipment, interior equipment,
+  /**
+   * Populates the ventilation, fan, exterior equipment, interior equipment,
    * exterior lighting, interior lighting, heating setpoint, and cooling
-   * setpoint schedules. */
+   * setpoint schedules.
+   */
   void populateSchedules();
 
   void initialize();
 
-  /** Calculates the energy use for one hour and sets the state for the next
+  /**
+   * Calculates the energy use for one hour and sets the state for the next
    * hour. The hourly calculations largely correspond to those described by the
    * simple hourly method in ISO 13790 Annex C. A key difference is that this
    * implementation describes everything in terms of EUI (i.e., per area). Any
    * discrepency in units where this code uses "units per area" while the
-   * standard just uses "units" is likely due to this difference. */
+   * standard just uses "units" is likely due to this difference.
+   */
   void calculateHour(int hourOfYear,
                      int month,
                      int dayOfWeek,
