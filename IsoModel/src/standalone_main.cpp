@@ -103,16 +103,22 @@ void compare(const UserModel& umodel, bool markdown = false) {
   auto delim = markdown ? " | " : ", ";
 
   for (auto endUse = 0; endUse != 13; ++endUse) {
-    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim << "Hourly " << endUseNames[endUse] << delim << "Difference\n";
+    if (markdown) std::cout << "| ";
+    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim << "Hourly " << endUseNames[endUse] << delim << "Difference";
+    if (markdown) std::cout << " |";
+    std::cout << "\n";
 
     if (markdown) {
-      std::cout << "---|---|---|---\n";
+      std::cout << "|---|---|---|---|\n";
     }
 
     for (auto month = 0; month != 12; ++month) {
       auto monthlyResult = monthlyResults.monthlyResults[month].getEndUse(endUse);
       auto hourlyResult = hourlyResults.hourlyResults[month].getEndUse(endUse);
-      std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult << "\n";
+      if (markdown) std::cout << "| ";
+      std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult;
+      if (markdown) std::cout << " |";
+      std::cout << "\n";
     }
 
   std::cout << "\n";
