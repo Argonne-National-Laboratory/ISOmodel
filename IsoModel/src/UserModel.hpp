@@ -56,66 +56,6 @@ struct LatLon {
 
 class ISOMODEL_API UserModel
 {
-private:
-
-  void setCoreSimulationProperties(Simulation& sim) const;
-
-  std::string resolveFilename(std::string baseFile, std::string relativeFile);
-  void initializeStructure(const Properties& buildingParams);
-
-  std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
-
-  std::shared_ptr<WeatherData> _weather;
-  std::shared_ptr<EpwData> _edata;
-
-  Population pop;
-  Location location;
-  Lighting lights;
-  Building building;
-  Structure structure;
-  Heating heating;
-  Cooling cooling;
-  Ventilation ventilation;
-  // EpwData epwData; // XXX: Currently a shared_ptr already.
-  PhysicalQuantities phys;
-  SimulationSettings simSettings;
-
-  bool _valid;
-
-  std::string _weatherFilePath, _scheduleFilePath;
-  std::string dataFile;
-
-  void initializeParameters(const Properties& props);
-  
-  /**
-   * Sets an .ism property in the usermodel to a value gotten from a Properties object.
-   * Takes a pointer to the appropriate UserModel setter function, the Properties object,
-   * the name of the property, and a boolean indicating if the property is required or
-   * if it has a hardcoded fallback default. The overloads attempt to get the property by name
-   * as the appropriate type from the Properties object depending on the argument type
-   * needed by the setter function. If the call to initializeParameter has required=true then
-   * it throws invalid_argument if it gets boost::none when calling props.getPropertyAs..., if it
-   * is optional (required=false), then it does nothing if it gets boost::none (the UserModel
-   * setter is not called).
-   */
-  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required);
-
-  /**
-   * .ism file is N, NE, E, SE, S, SW, W, NW, Roof.
-   * Structure is S, SE, E, NE, N, NW, W, SW, Roof.
-   * This reorders a vector from the .ism format to the Structure format.
-   */
-  void northToSouth(Vector& vec);
-
-  void loadBuilding(std::string buildingFile);
-  void loadBuilding(std::string buildingFile, std::string defaultsFile);
-  int weatherState(std::string header);
-  void initializeSolar();
-
 public:
   /**
    * Loads the specified weather data from disk.
@@ -2258,6 +2198,66 @@ public:
   void setH_ve(double H_ve) {
     ventilation.setH_ve(H_ve);
   }
+
+private:
+
+  void setCoreSimulationProperties(Simulation& sim) const;
+
+  std::string resolveFilename(std::string baseFile, std::string relativeFile);
+  void initializeStructure(const Properties& buildingParams);
+
+  std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
+
+  std::shared_ptr<WeatherData> _weather;
+  std::shared_ptr<EpwData> _edata;
+
+  Population pop;
+  Location location;
+  Lighting lights;
+  Building building;
+  Structure structure;
+  Heating heating;
+  Cooling cooling;
+  Ventilation ventilation;
+  // EpwData epwData; // XXX: Currently a shared_ptr already.
+  PhysicalQuantities phys;
+  SimulationSettings simSettings;
+
+  bool _valid;
+
+  std::string _weatherFilePath, _scheduleFilePath;
+  std::string dataFile;
+
+  void initializeParameters(const Properties& props);
+  
+  /**
+   * Sets an .ism property in the usermodel to a value gotten from a Properties object.
+   * Takes a pointer to the appropriate UserModel setter function, the Properties object,
+   * the name of the property, and a boolean indicating if the property is required or
+   * if it has a hardcoded fallback default. The overloads attempt to get the property by name
+   * as the appropriate type from the Properties object depending on the argument type
+   * needed by the setter function. If the call to initializeParameter has required=true then
+   * it throws invalid_argument if it gets boost::none when calling props.getPropertyAs..., if it
+   * is optional (required=false), then it does nothing if it gets boost::none (the UserModel
+   * setter is not called).
+   */
+  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required);
+
+  /**
+   * .ism file is N, NE, E, SE, S, SW, W, NW, Roof.
+   * Structure is S, SE, E, NE, N, NW, W, SW, Roof.
+   * This reorders a vector from the .ism format to the Structure format.
+   */
+  void northToSouth(Vector& vec);
+
+  void loadBuilding(std::string buildingFile);
+  void loadBuilding(std::string buildingFile, std::string defaultsFile);
+  int weatherState(std::string header);
+  void initializeSolar();
 
 };
 

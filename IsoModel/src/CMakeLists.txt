@@ -5,13 +5,13 @@ cmake_minimum_required(VERSION 3.0)
 
 set(${target_name}_test
   Test/ISOModel_GTest.cpp
-  Test/TestEnvironment.h
-  Test/UserModelTest.cpp
-  Test/TimeFrameTest.cpp
-  Test/SolarRadiationTest.cpp
-  Test/SimModelTest.cpp
-  Test/PropertiesTest.cpp
-  Test/ISOHourlyTest.cpp
+  Test/TestEnvironment.hpp
+  Test/UserModel_GTest.cpp
+  Test/TimeFrame_GTest.cpp
+  Test/SolarRadiation_GTest.cpp
+  Test/SimModel_GTest.cpp
+  Test/Properties_GTest.cpp
+  Test/ISOHourly_GTest.cpp
 )
 
 set(${target_name}_benchmark

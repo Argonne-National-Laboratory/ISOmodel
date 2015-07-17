@@ -6,7 +6,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.h"
+#include "TestEnvironment.hpp"
 
 #include "../Properties.hpp"
 
