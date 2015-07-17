@@ -5,6 +5,9 @@
 [Bb]in/
 [Oo]bj/
 
+# Doxygen output folder
+[Dd]oc/
+
 # Mac temporary files
 .DS_Store
 
