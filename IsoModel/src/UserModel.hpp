@@ -22,8 +22,8 @@
 
 #include "ISOModelAPI.hpp"
 #include "EpwData.hpp"
-#include "SimModel.hpp"
-#include "ISOHourly.hpp"
+#include "MonthlyModel.hpp"
+#include "HourlyModel.hpp"
 #include "Properties.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -33,7 +33,7 @@ namespace openstudio {
 
 namespace isomodel {
 
-class SimModel;
+class MonthlyModel;
 class WeatherData;
 
 const std::string GAS = "gas";
@@ -87,11 +87,11 @@ public:
   virtual ~UserModel();
 
   /**
-   * Generates a SimModel from the specified parameters of the 
+   * Generates a MonthlyModel from the specified parameters of the 
    * UserModel
    */
-  SimModel toSimModel() const;
-  ISOHourly toHourlyModel() const;
+  MonthlyModel toMonthlyModel() const;
+  HourlyModel toHourlyModel() const;
 
   const std::shared_ptr<WeatherData> weatherData()
   {
@@ -109,7 +109,7 @@ public:
    * valid will be false
    * userModel.load(<filename>)
    * if(userModel.valid()){
-   *     userModel.toSimModel().simulate();
+   *     userModel.toMonthlyModel().simulate();
    * }
    */
   bool valid() const  {

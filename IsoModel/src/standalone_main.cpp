@@ -6,7 +6,7 @@
  */
 
 #include "UserModel.hpp"
-#include "SimModel.hpp"
+#include "MonthlyModel.hpp"
 #include <iostream>
 #include <iomanip>
 
@@ -17,8 +17,8 @@ using namespace openstudio;
 
 void runMonthlySimulation(const UserModel& umodel) {
   // Run the monthly simulation.
-  openstudio::isomodel::SimModel simModel = umodel.toSimModel();
-  ISOResults results = simModel.simulate();
+  openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
+  ISOResults results = monthlyModel.simulate();
 
   std::cout << "Monthly Results:" << std::endl;
   std::cout
@@ -53,7 +53,7 @@ void runMonthlySimulation(const UserModel& umodel) {
 
 void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   // Run the hourly simulation (with results aggregated by month).
-  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
   ISOResults hourlyResults = hourly.simulate(aggregateByMonth);
 
   std::string monthOrHour = aggregateByMonth ? "month" : "hour";
@@ -91,11 +91,11 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
 }
 
 void compare(const UserModel& umodel, bool markdown = false) {
-  openstudio::isomodel::ISOHourly hourly = umodel.toHourlyModel();
+  openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
   ISOResults hourlyResults = hourly.simulate(true);
   
-  openstudio::isomodel::SimModel simModel = umodel.toSimModel();
-  ISOResults monthlyResults = simModel.simulate();
+  openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
+  ISOResults monthlyResults = monthlyModel.simulate();
 
   auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
                                                 "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };

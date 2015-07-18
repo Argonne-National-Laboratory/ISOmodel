@@ -41,30 +41,30 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
   sim.setStructure(structure);
   sim.setVentilation(ventilation);
   sim.setLocation(location);
-  sim.setEpwData(_edata); // TODO: should this stay a shared pointer between the UserModel and the SimModel?
+  sim.setEpwData(_edata); // TODO: should this stay a shared pointer between the UserModel and the MonthlyModel?
   sim.setSimulationSettings(simSettings);
   sim.setPhysicalQuantities(phys);
 }
 
-ISOHourly UserModel::toHourlyModel() const
+HourlyModel UserModel::toHourlyModel() const
 {
-  ISOHourly sim = ISOHourly();
+  HourlyModel sim = HourlyModel();
   if (!_valid) {
-    return *((ISOHourly*) NULL);
+    return *((HourlyModel*) NULL);
   }
   
   setCoreSimulationProperties(sim);
   return sim;
 }
 
-SimModel UserModel::toSimModel() const
+MonthlyModel UserModel::toMonthlyModel() const
 {
 
-  SimModel sim;
+  MonthlyModel sim;
 
   if (!valid()) {
     std::cout << "Invalid" << std::endl;
-    return *((SimModel*) NULL);
+    return *((MonthlyModel*) NULL);
   }
 
   setCoreSimulationProperties(sim);

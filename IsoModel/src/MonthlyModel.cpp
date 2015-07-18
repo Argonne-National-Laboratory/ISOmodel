@@ -16,7 +16,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
-#include "SimModel.hpp"
+#include "MonthlyModel.hpp"
 //to run main
 #include "UserModel.hpp"
 
@@ -288,11 +288,11 @@ const double kWh2MJ = 3.6f;
 
 // TODO: All member variables initialized in the constructor should eventually be initialized
 // by the .ism file or a default initialization of some sort.
-SimModel::SimModel() {}
-SimModel::~SimModel() {}
+MonthlyModel::MonthlyModel() {}
+MonthlyModel::~MonthlyModel() {}
 
 //Solver functions
-void SimModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
+void MonthlyModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
     Vector& weekendUnoccupiedMegaseconds, Vector& clockHourOccupied, Vector& clockHourUnoccupied, double& frac_hrs_wk_day,
     double& hoursUnoccupiedPerDay, double& hoursOccupiedPerDay, double& frac_hrs_wk_nt, double& frac_hrs_wke_tot) const
 {
@@ -346,7 +346,7 @@ void SimModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& 
  * Breaks down the solar radiation and temperature data into day, night, 
  * weekday and weekend vectors, as appropriate.
  */
-void SimModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds, const Vector& weekdayUnoccupiedMegaseconds,
+void MonthlyModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds, const Vector& weekdayUnoccupiedMegaseconds,
     const Vector& weekendOccupiedMegaseconds, const Vector& weekendUnoccupiedMegaseconds, const Vector& clockHourOccupied,
     const Vector& clockHourUnoccupied, Vector& v_hrs_sun_down_mo, Vector& frac_Pgh_wk_nt, Vector& frac_Pgh_wke_day, Vector& frac_Pgh_wke_nt,
     Vector& v_Tdbt_nt, Vector& v_Tdbt_Day) const
@@ -432,7 +432,7 @@ void SimModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds,
 /**
  * Compute lighting energy use as per prEN 15193:2006.
  */
-void SimModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illum_occ, double& Q_illum_unocc, double& Q_illum_tot_yr,
+void MonthlyModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illum_occ, double& Q_illum_unocc, double& Q_illum_tot_yr,
     Vector& v_Q_illum_tot, Vector& v_Q_illum_ext_tot) const
 {
   double lpd_occ = lights.powerDensityOccupied();
@@ -477,7 +477,7 @@ void SimModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_illu
 /**
  * Compute envelope parameters as per ISO 13790 8.3.
  */
-void SimModel::envelopCalculations(Vector& v_win_A, Vector& v_wall_emiss, Vector& v_wall_alpha_sc, Vector& v_wall_U, Vector& v_wall_A,
+void MonthlyModel::envelopCalculations(Vector& v_win_A, Vector& v_wall_emiss, Vector& v_wall_alpha_sc, Vector& v_wall_U, Vector& v_wall_A,
     double& H_tr) const
 {
   // TODO: Copying the various structure values to new variables (e.g. v_wall_A) is not necessary. BAA@2015-07-13.
@@ -510,7 +510,7 @@ void SimModel::envelopCalculations(Vector& v_win_A, Vector& v_wall_emiss, Vector
 /*
  * Compute window solar gain per ISO 13790 11.3.
  */
-void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss, const Vector& v_wall_alpha_sc, const Vector& v_wall_U,
+void MonthlyModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss, const Vector& v_wall_alpha_sc, const Vector& v_wall_U,
     const Vector& v_wall_A, Vector& v_wall_A_sol, Vector& v_win_hr, Vector& v_wall_R_sc, Vector& v_win_A_sol) const
 {
   // TODO: The solar heat gain could be improved
@@ -574,7 +574,7 @@ void SimModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_emiss
 /**
  * Calculate solar heat gain. ISO 13790 11.3.2.
  */
-void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_sc, const Vector& v_wall_U, const Vector& v_wall_A,
+void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_sc, const Vector& v_wall_U, const Vector& v_wall_A,
     const Vector& v_win_hr, const Vector& v_wall_A_sol, Vector& v_E_sol) const
 {
   // EN ISO 13790 11.3.2 eq. 43.
@@ -666,7 +666,7 @@ void SimModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall_R_s
 /** 
  * Compute internal heat gains and losses.
  */
-void SimModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ, double Q_illum_unocc, double Q_illum_tot_yr, double& phi_int_avg,
+void MonthlyModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ, double Q_illum_unocc, double Q_illum_tot_yr, double& phi_int_avg,
     double& phi_plug_avg, double& phi_illum_avg, double& phi_int_wke_nt, double& phi_int_wke_day, double& phi_int_wk_nt) const
 {
   // Internal heat gains from people (W/m2).
@@ -701,7 +701,7 @@ void SimModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ, do
 /**
  * Compute total internal heat gain in W.
  */
-void SimModel::internalHeatGain(double phi_int_avg, double phi_plug_avg, double phi_illum_avg, double& phi_I_tot) const
+void MonthlyModel::internalHeatGain(double phi_int_avg, double phi_plug_avg, double phi_illum_avg, double& phi_I_tot) const
 {
   // Total occupant internal heat gain per year (W).
   double phi_I_occ = phi_int_avg * structure.floorArea();
@@ -719,7 +719,7 @@ void SimModel::internalHeatGain(double phi_int_avg, double phi_plug_avg, double 
 /**
  * Compute unoccupied heat gain.
  */
-void SimModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, double phi_int_wke_nt, const Vector& weekdayUnoccupiedMegaseconds,
+void MonthlyModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, double phi_int_wke_nt, const Vector& weekdayUnoccupiedMegaseconds,
     const Vector& weekendOccupiedMegaseconds, const Vector& weekendUnoccupiedMegaseconds, const Vector& frac_Pgh_wk_nt,
     const Vector& frac_Pgh_wke_day, const Vector& frac_Pgh_wke_nt, const Vector& v_E_sol, Vector& v_P_tot_wke_day, Vector& v_P_tot_wk_nt,
     Vector& v_P_tot_wke_nt) const
@@ -749,7 +749,7 @@ void SimModel::unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day, 
 /*
  * Calculate interior temp.
  */
-void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_day, const Vector& v_P_tot_wk_nt, const Vector& v_P_tot_wke_nt,
+void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_day, const Vector& v_P_tot_wk_nt, const Vector& v_P_tot_wke_nt,
     const Vector& v_Tdbt_nt, const Vector& v_Tdbt_day, double H_tr, double hoursUnoccupiedPerDay, double hoursOccupiedPerDay, double frac_hrs_wk_day, double frac_hrs_wk_nt,
     double frac_hrs_wke_tot, Vector& v_Th_avg, Vector& v_Tc_avg, double& tau) const
 {
@@ -1028,7 +1028,7 @@ void SimModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wke_da
  * Calculate required energy for mechanical ventilation based on source EN ISO 13789
  * C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
  */
-void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, double frac_hrs_wk_day, Vector& v_Hve_ht, Vector& v_Hve_cl) const
+void MonthlyModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, double frac_hrs_wk_day, Vector& v_Hve_ht, Vector& v_Hve_cl) const
 {
   // Ventilation Zone Height (m) with a minimum of 0.1 m.
   double vent_zone_height = std::max(0.1, structure.buildingHeight());
@@ -1166,7 +1166,7 @@ void SimModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, d
 /**
  * Compute monthly heating and cooling demand.
  */
-void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, const Vector& v_Hve_ht, const Vector& v_Tc_avg,
+void MonthlyModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, const Vector& v_Hve_ht, const Vector& v_Tc_avg,
     const Vector& v_Hve_cl, double tau, double H_tr, double phi_I_tot, double frac_hrs_wk_day, Vector& v_Qfan_tot, Vector& v_Qneed_ht,
     Vector& v_Qneed_cl, double& Qneed_ht_yr, double& Qneed_cl_yr) const
 {
@@ -1265,7 +1265,7 @@ void SimModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_avg, 
 /**
  * HVAC systems calculations.
  */
-void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Qelec_ht, Vector& v_Qgas_ht,
+void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Qelec_ht, Vector& v_Qgas_ht,
     Vector& v_Qcl_elec_tot, Vector& v_Qcl_gas_tot) const
 {
   // TODO: Implement (or remove) all the district heating/cooling stuff that is currently commented out. BAA@2015-07-15.
@@ -1405,7 +1405,7 @@ void SimModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
  * Calculate energy for pumps used in the heating/cooling systems.
  * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
  */
-void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Q_pump_tot) const
+void MonthlyModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Qneed_ht_yr, double Qneed_cl_yr, Vector& v_Q_pump_tot) const
 {
   // TODO: The current implementation is wrong. It either needs to be revised to be more like the hourly implementation where the pump energy
   // is multiplied by the amount of time the pumps are actually on or heating.E_pumps()/cooling.E_pumps() needs to be expressed in terms of the
@@ -1455,7 +1455,7 @@ void SimModel::pump(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, double Q
  * Energy Generation
  * NOT INCLUDED YET
  */
-void SimModel::energyGeneration() const
+void MonthlyModel::energyGeneration() const
 {
 }
 
@@ -1463,7 +1463,7 @@ void SimModel::energyGeneration() const
  * Calculate domestic hot water (DHW).
  * References: NEN 2916 12.2
  */
-void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
+void MonthlyModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
 {
   // Energy from solar energy hot water collectors - not included yet
   Vector v_Q_dhw_solar(12);
@@ -1502,7 +1502,7 @@ void SimModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
   printVector("v_Q_dhw_elec", v_Q_dhw_elec);
 }
 
-ISOResults SimModel::simulate() const
+ISOResults MonthlyModel::simulate() const
 {
   Vector weekdayOccupiedMegaseconds(12);
   Vector weekdayUnoccupiedMegaseconds(12);
@@ -1546,7 +1546,7 @@ ISOResults SimModel::simulate() const
 
   frac_hrs_wk_day = hoursUnoccupiedPerDay = hoursOccupiedPerDay = frac_hrs_wk_nt = frac_hrs_wke_tot = 1;
 
-  //openstudio::isomodel::loadDefaults(simModel);
+  //openstudio::isomodel::loadDefaults(monthlyModel);
 
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << std::endl << "scheduleAndOccupancy: " << std::endl;
@@ -1708,7 +1708,7 @@ ISOResults SimModel::simulate() const
   return outputGeneration(v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot, v_Q_illum_ext_tot, v_Qfan_tot, v_Q_pump_tot, v_Q_dhw_elec, v_Qgas_ht,
       v_Qcl_gas_tot, v_Q_dhw_gas, frac_hrs_wk_day);
 }
-ISOResults SimModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot,
+ISOResults MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot,
     const Vector& v_Q_illum_ext_tot, const Vector& v_Qfan_tot, const Vector& v_Q_pump_tot, const Vector& v_Q_dhw_elec, const Vector& v_Qgas_ht,
     const Vector& v_Qcl_gas_tot, const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const
 {

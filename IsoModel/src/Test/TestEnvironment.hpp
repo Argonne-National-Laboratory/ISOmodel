@@ -17,6 +17,6 @@ using namespace openstudio::isomodel;
 // Fix this by figuring out how to replace this functionality using GTest environment variables or something along
 // those lines. BAA@2015-07-16.
 extern std::string test_data_path; // Defined in ISOModelGTest.cpp
-extern std::vector<std::string> endUseNames; // Defined in SimModelTest.cpp
+extern std::vector<std::string> endUseNames; // Defined in MonthlyModelTest.cpp
 
 #endif // ISOMODEL_TESTENVIRONMENT_H

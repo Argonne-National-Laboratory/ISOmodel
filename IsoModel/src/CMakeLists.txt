@@ -9,9 +9,9 @@ set(${target_name}_test
   Test/UserModel_GTest.cpp
   Test/TimeFrame_GTest.cpp
   Test/SolarRadiation_GTest.cpp
-  Test/SimModel_GTest.cpp
+  Test/MonthlyModel_GTest.cpp
   Test/Properties_GTest.cpp
-  Test/ISOHourly_GTest.cpp
+  Test/HourlyModel_GTest.cpp
 )
 
 set(${target_name}_benchmark
@@ -32,13 +32,13 @@ set(${target_name}_src
   EpwData.hpp
   ForwardTranslator.hpp
   Heating.hpp
-  ISOHourly.hpp
+  HourlyModel.hpp
   ISOModelAPI.hpp
   Lighting.hpp
   Location.hpp
   PhysicalQuantities.hpp
   Population.hpp
-  SimModel.hpp
+  MonthlyModel.hpp
   Simulation.hpp
   SimulationSettings.hpp
   SolarRadiation.hpp
@@ -56,12 +56,12 @@ set(${target_name}_src
   EpwData.cpp
   ForwardTranslator.cpp
   Heating.cpp
-  ISOHourly.cpp
+  HourlyModel.cpp
   Lighting.cpp
   Location.cpp
   PhysicalQuantities.cpp
   Population.cpp
-  SimModel.cpp
+  MonthlyModel.cpp
   Simulation.cpp
   SimulationSettings.cpp
   SolarRadiation.cpp

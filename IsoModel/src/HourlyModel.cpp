@@ -1,5 +1,5 @@
 /*
- * ISOHourly.cpp
+ * HourlyModel.cpp
  *
  *  Created on: Apr 28, 2014
  *      Author: craig
@@ -13,8 +13,8 @@
 // the spreadsheet on which this is based will be retained (e.g.,
 // SingleBldg.L50).
 
-#include "ISOHourly.hpp"
-#include "SimModel.hpp"
+#include "HourlyModel.hpp"
+#include "MonthlyModel.hpp"
 
 #include <numeric>
 #include <algorithm>
@@ -28,11 +28,11 @@ namespace openstudio {
 namespace isomodel {
 
 //TODO This initializer list should be removed and these attributes included in the ism file. -BAA@2014-12-14
-// There are a bunch more similar constants that are initialized in ISOHourly::initialize().
-ISOHourly::ISOHourly() {}
-ISOHourly::~ISOHourly() {}
+// There are a bunch more similar constants that are initialized in HourlyModel::initialize().
+HourlyModel::HourlyModel() {}
+HourlyModel::~HourlyModel() {}
 
-ISOResults ISOHourly::simulate(bool aggregateByMonth)
+ISOResults HourlyModel::simulate(bool aggregateByMonth)
 {
   populateSchedules();
 
@@ -195,7 +195,7 @@ ISOResults ISOHourly::simulate(bool aggregateByMonth)
   return allResults;
 }
 
-void ISOHourly::calculateHour(int hourOfYear,
+void HourlyModel::calculateHour(int hourOfYear,
                               int month,
                               int dayOfWeek,
                               int hourOfDay,
@@ -392,7 +392,7 @@ void ISOHourly::calculateHour(int hourOfYear,
 }
 
 
-void ISOHourly::initialize()
+void HourlyModel::initialize()
 {
 
   // TODO BAA@2014-12-22: This is still pretty rough and needs ought to be confirmed to be working correctly.
@@ -506,7 +506,7 @@ void ISOHourly::initialize()
   windImpactSupplyRatio = std::max(0.00001, ventilation.fanControlFactor()); //TODO ventSupplyExhaustRatio = SingleBuilding.P40 ?
 }
 
-void ISOHourly::populateSchedules()
+void HourlyModel::populateSchedules()
 {
   auto dayStart = (int) pop.daysStart();
   auto dayEnd = (int) pop.daysEnd();
@@ -539,7 +539,7 @@ void ISOHourly::populateSchedules()
   }
 }
 
-void ISOHourly::structureCalculations(double SHGC,
+void HourlyModel::structureCalculations(double SHGC,
                            double wallAreaM2,
                            double windowAreaM2,
                            double wallUValue,
@@ -578,7 +578,7 @@ void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned i
   }
 }
 
-std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourlyData)
+std::vector<double> HourlyModel::sumHoursByMonth(const std::vector<double>& hourlyData)
 {
   std::vector<double> monthlyData(12);
   std::vector<int> monthsInHours = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
@@ -592,15 +592,15 @@ std::vector<double> ISOHourly::sumHoursByMonth(const std::vector<double>& hourly
   return monthlyData;
 }
 
-const int ISOHourly::SOUTH = 0;
-const int ISOHourly::SOUTHEAST = 1;
-const int ISOHourly::EAST = 2;
-const int ISOHourly::NORTHEAST = 3;
-const int ISOHourly::NORTH = 4;
-const int ISOHourly::NORTHWEST = 5;
-const int ISOHourly::WEST = 6;
-const int ISOHourly::SOUTHWEST = 7;
-const int ISOHourly::ROOF = 8;
+const int HourlyModel::SOUTH = 0;
+const int HourlyModel::SOUTHEAST = 1;
+const int HourlyModel::EAST = 2;
+const int HourlyModel::NORTHEAST = 3;
+const int HourlyModel::NORTH = 4;
+const int HourlyModel::NORTHWEST = 5;
+const int HourlyModel::WEST = 6;
+const int HourlyModel::SOUTHWEST = 7;
+const int HourlyModel::ROOF = 8;
 
 }
 }

@@ -13,7 +13,7 @@
 
 using namespace openstudio::isomodel;
 
-TEST(IsoModelTests, ISOHourlyTests)
+TEST(IsoModelTests, HourlyModelTests)
 {
   // The expected values are the results of running the "prior to updated parameter names
   // and parsing" version and copying the results as they were printed out to stdout.
@@ -39,7 +39,7 @@ TEST(IsoModelTests, ISOHourlyTests)
 
   openstudio::isomodel::UserModel userModel;
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
-  ISOHourly hourlyModel = userModel.toHourlyModel();
+  HourlyModel hourlyModel = userModel.toHourlyModel();
   ISOResults results = hourlyModel.simulate(true); // aggregateByMonth = true
 
   for (int i = 0; i < 12; ++i) {

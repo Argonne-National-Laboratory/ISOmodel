@@ -1,5 +1,5 @@
 /*
- * ISOHourly.h
+ * HourlyModel.h
  *
  *  Created on: Apr 28, 2014
  *      Author: craig
@@ -11,7 +11,7 @@
 #include "Simulation.hpp"
 
 #include "TimeFrame.hpp"
-#include "SimModel.hpp"
+#include "MonthlyModel.hpp"
 
 #include <memory>
 #include <map>
@@ -35,11 +35,11 @@ struct HourResults
   T Q_dhw;
 };
 
-class ISOHourly : public Simulation
+class HourlyModel : public Simulation
 {
 public:
-  ISOHourly();
-  virtual ~ISOHourly();
+  HourlyModel();
+  virtual ~HourlyModel();
 
   /** 
    * Calculates the building's hourly EUI using the "simple hourly method"

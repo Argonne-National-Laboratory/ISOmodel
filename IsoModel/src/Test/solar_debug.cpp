@@ -6,7 +6,7 @@
  */
 
 #include "../UserModel.hpp"
-#include "../SimModel.hpp"
+#include "../MonthlyModel.hpp"
 #include <iostream>
 
 #include <boost/program_options.hpp>

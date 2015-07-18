@@ -27,7 +27,7 @@ std::vector<std::string> endUseNames = {"ElecHeat",
                                         "GasEquip",
                                         "GasDHW"};
 
-TEST(IsoModelTests, SimModelTests)
+TEST(IsoModelTests, MonthlyModelTests)
 {
   // the expected values are the results of running the "prior to updated parameter names
   // and parsing" version and copying the results as they were printed out to stdout.
@@ -53,8 +53,8 @@ TEST(IsoModelTests, SimModelTests)
 
   openstudio::isomodel::UserModel userModel;
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
-  SimModel simModel = userModel.toSimModel();
-  ISOResults results = simModel.simulate();
+  MonthlyModel monthlyModel = userModel.toMonthlyModel();
+  ISOResults results = monthlyModel.simulate();
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {

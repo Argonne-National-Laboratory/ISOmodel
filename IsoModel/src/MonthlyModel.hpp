@@ -81,11 +81,11 @@ struct ISOMODEL_API ISOResults
   std::vector<EndUses> hourlyResults;
 };
 
-class ISOMODEL_API SimModel : public Simulation
+class ISOMODEL_API MonthlyModel : public Simulation
 {
 public:
-  SimModel();
-  virtual ~SimModel();
+  MonthlyModel();
+  virtual ~MonthlyModel();
 
   /*
    *  Runs the ISO Model cacluations for the given set of input parameters.
@@ -147,7 +147,7 @@ private:
       const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const;
 
 #ifdef _OPENSTUDIOS
-  REGISTER_LOGGER("openstudio.isomodel.SimModel");
+  REGISTER_LOGGER("openstudio.isomodel.MonthlyModel");
 #endif
 };
 } // isomodel

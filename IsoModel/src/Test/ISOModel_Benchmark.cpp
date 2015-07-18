@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 
     UserModel userModel;
     userModel.load("../test_data/SmallOffice_v2.ism");
-    auto simModel = userModel.toSimModel();
-    auto monthlyResults = simModel.simulate();
+    auto monthlyModel = userModel.toMonthlyModel();
+    auto monthlyResults = monthlyModel.simulate();
 
     std::cout << "Finished simulation" << std::endl;
 
@@ -26,8 +26,8 @@ int main(int argc, char** argv)
     std::cout << "loading test data from: " << test_data_path << std::endl;
     userModel.load(test_data_path + "/SmallOffice_v2.ism");
 
-    std::cout << "Creating SimModel" << std::endl;
-    SimModel simModel = userModel.toSimModel();
+    std::cout << "Creating MonthlyModel" << std::endl;
+    MonthlyModel monthlyModel = userModel.toMonthlyModel();
 
     // Number of iterations to run for each benchmark.
     int iterations = 10000;
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     ISOResults monthlyResults;
     auto monthStart = std::chrono::steady_clock::now();
     for (int i = 0; i != iterations; ++i){
-      monthlyResults = simModel.simulate();
+      monthlyResults = monthlyModel.simulate();
     }
     auto monthEnd = std::chrono::steady_clock::now();
 
@@ -74,8 +74,8 @@ int main(int argc, char** argv)
       userModel.setWindowAreaNW(0.0);
       userModel.setSkylightArea(0.0);
 
-      auto simModel = userModel.toSimModel();
-      auto monthlyResults = simModel.simulate();
+      auto monthlyModel = userModel.toMonthlyModel();
+      auto monthlyResults = monthlyModel.simulate();
     }
     monthEnd = std::chrono::steady_clock::now();
 
