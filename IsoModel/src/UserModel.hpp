@@ -67,14 +67,13 @@ public:
 
   /**
    * Loads the weather from the specified array of doubles.
-   *
    */
   void loadWeather(int block_size, double* weather_data);
 
   void loadAndSetWeather();
 
   /**
-   * Loads an ISO model from the specified .ISO file
+   * Loads an ISO model from the specified .ism file
    */
   void load(std::string buildingFile);
 
@@ -87,10 +86,13 @@ public:
   virtual ~UserModel();
 
   /**
-   * Generates a MonthlyModel from the specified parameters of the 
-   * UserModel
+   * Generates a MonthlyModel from the properties of the UserModel.
    */
   MonthlyModel toMonthlyModel() const;
+  
+  /**
+   * Generates a MonthlyModel from the properties of the UserModel.
+   */
   HourlyModel toHourlyModel() const;
 
   const std::shared_ptr<WeatherData> weatherData()

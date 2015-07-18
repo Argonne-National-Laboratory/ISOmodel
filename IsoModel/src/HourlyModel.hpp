@@ -38,6 +38,9 @@ struct HourResults
 class HourlyModel : public Simulation
 {
 public:
+  /**
+   * Creates an empty HourlyModel. Generally, the HourlyModel should be created using the UserModel::toHourlyModel() method.
+   */
   HourlyModel();
   virtual ~HourlyModel();
 
@@ -46,7 +49,9 @@ public:
    * described in ISO 13790:2008. The hourly calculations largely correspond to
    * those described by the simple hourly method in ISO 13790 Annex C. A key
    * difference is that this implementation describes everything in terms of
-   * EUI (i.e., per area).
+   * EUI (i.e., per area) throughout the calculations. The end results are the
+   * same, but it's important to know that the intermediate results are generally
+   * in terms of EUI if you need them for any reason.
    */
   ISOResults simulate(bool aggregateByMonth = false);
 

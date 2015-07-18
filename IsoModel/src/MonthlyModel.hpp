@@ -84,12 +84,15 @@ struct ISOMODEL_API ISOResults
 class ISOMODEL_API MonthlyModel : public Simulation
 {
 public:
+  /**
+   * Creates an empty MonthlyModel. Generally, the MonthlyModel should be created using the UserModel::toMonthlyModel() method.
+   */
   MonthlyModel();
   virtual ~MonthlyModel();
 
-  /*
-   *  Runs the ISO Model cacluations for the given set of input parameters.
-   *  returns ISOResults which is a vector of EndUses, one EndUses per month of the year
+  /**
+   * Runs the ISO Model cacluations using the ISO 13790 monthly method for the given set of input parameters.
+   * returns ISOResults which is a vector of EndUses, one EndUses per month of the year
    */
   ISOResults simulate() const;
 

@@ -7,6 +7,14 @@ This is the README for the isomodel (monthly and hourly) building energy model p
 
 See IsoModel/COMPILING.txt for details on how to compile the code.
 
+#### Compiling the docs ####
+
+The documentation uses doxygen, which can be downloaded from
+<http://www.stack.nl/~dimitri/doxygen/download.html>. The doxygen settings are
+stored in the Doxyfile in the root of the repo. The docs can by compiled by
+running doxygen in the root directory. This will create a directory called
+"doc" which will have the docs in it.
+
 Monthly vs Hourly
 -----------------
 
