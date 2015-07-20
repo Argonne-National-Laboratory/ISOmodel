@@ -167,8 +167,6 @@ public:
       throw std::invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
   }
 
-  // Structure.
-
   /// Gets a Building property.
   double buildingAirLeakage() const
   {
@@ -303,10 +301,6 @@ public:
     building.setGasApplianceHeatGainUnoccupied(val);
   }
 
-  // ------------------------ //
-  // Cooling getters/setters. //
-  // ------------------------ //
-
   /// Gets a Building property.
   double lightingOccupancySensorSystem() const
   {
@@ -408,11 +402,6 @@ public:
   void setE_pumps_cl(double E_pumps) {
     cooling.setE_pumps(E_pumps);
   }
-
-  // Heating.
-  /**
-  *
-  */
 
   /// Gets a Cooling property.
   double eta_DC_COP_abs() const {
@@ -606,8 +595,6 @@ public:
     else
       throw std::invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
   }
-
-  // Building.
 
   /// Gets a Heating property.
   double dT_supp_ht() const {
@@ -1004,8 +991,6 @@ public:
     location.setTerrain(val);
   }
 
-  // Structure.
-
   /// Gets a PhysicalQuantities property.
   double rhoCpAir() const {
     return phys.rhoCpAir();
@@ -1025,11 +1010,6 @@ public:
   void setRhoCpWater(double rhoCpWater) {
     phys.setRhoCpWater(rhoCpWater);
   }
-
-  // Simulation Settings.
-  /**
-  *
-  */
 
   /// Sets a Population property.
   void setBuildingOccupancyFrom(double val)
@@ -1135,11 +1115,6 @@ public:
     simSettings.setHri(hri);
   }
 
-  // Structure.
-  /**
-  *
-  */
-
   /// Gets a SimulationSettings property.
   double phiIntFractionToAirNode() const {
     return simSettings.phiIntFractionToAirNode();
@@ -1165,8 +1140,6 @@ public:
   {
     structure.setInfiltrationRate(val);
   }
-
-  // Heating.
 
   /// Sets a Structure property.
   void setBuildingHeight(double val)
@@ -1210,8 +1183,6 @@ public:
     structure.setInteriorHeatCapacity(val);
   }
 
-  // Ventilation.
-
   /// Gets a Structure property.
   double irradianceForMaxShadingUse() const {
     return structure.irradianceForMaxShadingUse();
@@ -1248,8 +1219,6 @@ public:
     return structure.wallArea()[8];
   }
 
-  // Window area.
-
   /// Sets a Structure property.
   void setRoofArea(double val)
   {
@@ -1275,16 +1244,12 @@ public:
   {
     return structure.wallThermalEmissivity()[8];
   }
-  
-  // Window U values.
 
   /// Sets a Structure property.
   void setRoofThermalEmissivity(double val)
   {
     structure.setWallThermalEmissivity(8, val);
   }
-
-  // Window shading correction factor.
 
   /// Gets a Structure property.
   double roofUValue() const
@@ -2388,8 +2353,6 @@ public:
     ventilation.setFanControlFactor(val);
   }
 
-  // Structure.
-
   /// Gets a Ventilation property.
   double freshAirFlowRate() const
   {
@@ -2537,14 +2500,6 @@ public:
   void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
     ventilation.setVentilationIntakeRateUnoccupied(ventilationIntakeRateUnoccupied);
   }
-
-
-  // Getters and setters for default properties.
-
-  // Building
-  /**
-  *
-  */
 
   /// Gets a Ventilation property.
   double ventilationType() const
