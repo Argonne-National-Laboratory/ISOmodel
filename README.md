@@ -3,35 +3,91 @@ README
 
 This is the README for the isomodel (monthly and hourly) building energy model project. 
 
-### How do I get set up? ###
+How do I get set up?
+--------------------
+
+### Compiling ###
 
 See IsoModel/COMPILING.txt for details on how to compile the code.
 
-#### Compiling the docs ####
+### Compiling the docs ###
 
-The documentation uses doxygen, which can be downloaded from
-<http://www.stack.nl/~dimitri/doxygen/download.html>. The doxygen settings are
-stored in the Doxyfile in the root of the repo. The docs can by compiled by
-running doxygen in the root directory. This will create a directory called
-"doc" which will have the docs in it.
+The documentation uses doxygen, which can be downloaded from <http://www.stack.nl/~dimitri/doxygen/download.html>. The doxygen settings are stored in the Doxyfile in the root of the repo. The docs can by compiled by running doxygen in the root directory. This will create a directory called "doc" which will have the docs in it.
+
+Usage
+-----
+
+### Standalone ISOModel ###
+
+The standalone ISOModel executable is run from the command line.
+
+#### Options ####
+
+| Option shortname | Option longname    | Arg    | Description                                                                                              |
+|------------------|--------------------|--------|----------------------------------------------------------------------------------------------------------|
+| -i               | --ismfilepath      | path   | Path to ism file.                                                                                        |
+| -d               | --defaultsfilepath | path   | Path to defaults ism file.                                                                               |
+| -m               | --monthly          |        | Run the monthly simulation (default).                                                                    |
+| -h               | --hourlyByMonth    |        | Run the hourly simulation (results aggregated by month.                                                  |
+| -H               | --hourlyByHour     |        | Run the hourly simulation (results for each hour).                                                       |
+| -c               | --compare          | format | Run the monthly and hourly simulations and compare the results. Use 'md' for markdown and 'csv' for csv. |
+
+The ```-i [ --ismfilepath ] arg``` option is the only required argument it is also a positional argument, so the flag can be omitted. If the monthly vs hourly flag is not specified, the default is to run the monthly simulation. The results from the hourly simulation can either be aggregated by month with ```-h [ --hourlyByMonth ]``` or returned hour by hour with ```-H [ --hourlyByHour ]```. For easy comparison of the hourly and monthly results organized by the different types of energy demand, use the ```-c [ --compare ] arg``` option, specifying either ```md``` or ```csv``` as the desired output format for the comparison tables. 
+
+When combining two .ism files with the ```-d``` option (a main .ism file and a defaults .ism file), any properties in both will use the value of the main .ism file, overriding the value in the default .ism file. The defaults file option is also positional, so if two paths to .ism files are given, the first is the main .ism file and the second is the defaults .ism file. 
+
+#### Examples ####
+
+Note: these examples are on a Windows machine and are using PowerShell. Adjust the direction of your slashes and the location of your files accordingly!
+
+Running the monthly model:
+
+```
+.\IsoModel\obj\Debug\isomodel_standalone.exe .\IsoModel\test_data\SmallOffice_v2.ism -m
+```
+
+Running the hourly model with results aggregated by month:
+
+```
+.\IsoModel\obj\Debug\isomodel_standalone.exe .\IsoModel\test_data\SmallOffice_v2.ism -h
+```
+
+Running the hourly model, with hour-by-hour results, outputing to a csv file.
+
+```
+.\IsoModel\obj\Debug\isomodel_standalone.exe .\IsoModel\test_data\SmallOffice_v2.ism -H > results.csv
+```
+
+Running both the monthly model and the hourly model, with a defaults .ism file:
+
+```
+.\IsoModel\obj\Debug\isomodel_standalone.exe .\IsoModel\test_data\SmallOffice_v2.ism .\IsoModel\test_data\defaults_test_defaults.ism -hm
+```
+
+Running the hourly vs monthly comparision and outputting the results as a csv.
+
+```
+.\IsoModel\obj\Debug\isomodel_standalone.exe .\IsoModel\test_data\SmallOffice_v2.ism -c csv > monthly_vs_hourly.csv
+```
+
+### Running the tests ###
+
+Running the tests is similar to running the standalone executable, but rather than providing the path to a .ism file, you provode a path to the testing directory:
+
+```
+.\IsoModel\obj\Debug\isomodel_unit_tests.exe .\IsoModel\test_data
+```
 
 Monthly vs Hourly
 -----------------
 
-Notes on the current differences between the monthly and hourly simulations. In
-general, the monthly simulation is considered to be "correct" and the goal is
-to bring the hourly simulation in line with its results, but this is not always
-the case. The goal is for the monthly and hourly simulations to produce
-relatively consistent results, except in cases where the hourly model is better
-able to express the property being studied (e.g., hourly occupancy schedules,
-thermal mass, etc.).
+Notes on the current differences between the monthly and hourly simulations. In general, the monthly simulation is considered to be "correct" and the goal is to bring the hourly simulation in line with its results, but this is not always the case. The goal is for the monthly and hourly simulations to produce relatively consistent results, except in cases where the hourly model is better able to express the property being studied (e.g., hourly occupancy schedules, thermal mass, etc.).
 
 Monthly vs hourly values updated 2015-07-16 with IsoModel/test\_data/SmallOffice\_v2.ism
 
 ### ElecHeat ###
 
-**Untested** - Electric heating is untested, but presumably consistent because its values
-shouldn't differ from gas heating.
+**Untested** - Electric heating is untested, but presumably consistent because its values shouldn't differ from gas heating.
 
 | Month | Monthly ElecHeat      | Hourly ElecHeat      | Difference    |
 |-------|-----------------------|----------------------|---------------|
@@ -69,8 +125,7 @@ shouldn't differ from gas heating.
 
 ### ElecIntLights ###
 
-**Consistent** - After commit #3124f63, monthly and hourly interior lighting results are
-consistent.
+**Consistent** - After commit #3124f63, monthly and hourly interior lighting results are consistent.
 
 | Month | Monthly ElecIntLights | Hourly ElecIntLights | Difference |
 |-------|-----------------------|----------------------|------------|
@@ -127,8 +182,7 @@ consistent.
 
 ### ElecPump ###
 
-**Inconsistent** - Issue #43. Pump results are not consistent. Both fan and pump values differ the most in
-the winter. Their is potentially an error in the monthly pump values.
+**Inconsistent** - Issue #43. Pump results are not consistent. Both fan and pump values differ the most in the winter. Their is potentially an error in the monthly pump values.
 
 | Month | Monthly ElecPump | Hourly ElecPump | Difference |
 |-------|------------------|-----------------|------------|
@@ -223,8 +277,7 @@ the winter. Their is potentially an error in the monthly pump values.
 
 ### GasCool ###
 
-**Untested** - Gas cooling is untested, but presumably equally consistant to electric cooling,
-as the fuel source shouldn't change the calculations.
+**Untested** - Gas cooling is untested, but presumably equally consistant to electric cooling, as the fuel source shouldn't change the calculations.
 
 | Month | Monthly GasCool       | Hourly GasCool       | Difference    |
 |-------|-----------------------|----------------------|---------------|
