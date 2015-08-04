@@ -27,50 +27,50 @@ set(${target_name}_solar_debug
 )
 
 set(${target_name}_src
+  Building.cpp
   Building.hpp
+  Cooling.cpp
   Cooling.hpp
+  EndUses.hpp
+  EpwData.cpp
   EpwData.hpp
+  ForwardTranslator.cpp
   ForwardTranslator.hpp
+  Heating.cpp
   Heating.hpp
+  HourlyModel.cpp
   HourlyModel.hpp
   ISOModelAPI.hpp
-  Lighting.hpp
-  Location.hpp
-  PhysicalQuantities.hpp
-  Population.hpp
-  MonthlyModel.hpp
-  Simulation.hpp
-  SimulationSettings.hpp
-  SolarRadiation.hpp
-  Structure.hpp
-  TimeFrame.hpp
-  UserModel.hpp
-  Ventilation.hpp
-  WeatherData.hpp
-  EndUses.hpp
-  Matrix.hpp
-  Vector.hpp
-  Properties.hpp
-  Building.cpp
-  Cooling.cpp
-  EpwData.cpp
-  ForwardTranslator.cpp
-  Heating.cpp
-  HourlyModel.cpp
   Lighting.cpp
+  Lighting.hpp
   Location.cpp
-  PhysicalQuantities.cpp
-  Population.cpp
+  Location.hpp
+  Matrix.hpp
   MonthlyModel.cpp
-  Simulation.cpp
-  SimulationSettings.cpp
-  SolarRadiation.cpp
-  Structure.cpp
-  TimeFrame.cpp
-  UserModel.cpp
-  Ventilation.cpp
-  WeatherData.cpp
+  MonthlyModel.hpp
+  PhysicalQuantities.cpp
+  PhysicalQuantities.hpp
+  Population.cpp
+  Population.hpp
   Properties.cpp
+  Properties.hpp
+  Simulation.cpp
+  Simulation.hpp
+  SimulationSettings.cpp
+  SimulationSettings.hpp
+  SolarRadiation.cpp
+  SolarRadiation.hpp
+  Structure.cpp
+  Structure.hpp
+  TimeFrame.cpp
+  TimeFrame.hpp
+  UserModel.cpp
+  UserModel.hpp
+  Vector.hpp
+  Ventilation.cpp
+  Ventilation.hpp
+  WeatherData.cpp
+  WeatherData.hpp
 )
 
 
