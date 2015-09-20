@@ -17,8 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
 
-// TODO: ifdef _OPENSTUDIOS doesn't seem to be working anymore. BAA@2015-08-05.
-// #ifdef _OPENSTUDIOS
+#ifndef ISOMODEL_STANDALONE
 #include "ForwardTranslator.hpp"
 #include "UserModel.hpp"
 
@@ -72,4 +71,4 @@ namespace openstudio {
 
   } // isomodel
 } // openstudio
-// #endif
+#endif

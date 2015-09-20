@@ -19,7 +19,9 @@
 
 #include "ISOModelFixture.hpp"
 
+#ifndef ISOMODEL_STANDALONE
 #include <resources.hxx>
+#endif
 
 void ISOModelFixture::SetUp() {
   endUseNames = {"ElecHeat",
@@ -37,7 +39,7 @@ void ISOModelFixture::SetUp() {
                  "GasDHW"};
 
 #ifdef ISOMODEL_STANDALONE
-  // Set up stuff for standalone.
+  test_data_path = "test_data";
 #else
   test_data_path = resourcesPath().string() + "/isomodel";
 
@@ -62,14 +64,19 @@ void ISOModelFixture::SetUp() {
 void ISOModelFixture::TearDown() {}
 
 void ISOModelFixture::SetUpTestCase() {
+#ifndef ISOMODEL_STANDALONE
   // set up logging
   openstudio::Logger::instance().standardOutLogger().disable();
   logFile = std::shared_ptr<openstudio::FileLogSink>(new openstudio::FileLogSink(openstudio::toPath("./ISOModelFixture.log")));
-  
+#endif  
 }
 
 void ISOModelFixture::TearDownTestCase() {
+#ifndef ISOMODEL_STANDALONE
   logFile->disable();
+#endif
 }
 
+#ifndef ISOMODEL_STANDALONE
 std::shared_ptr<openstudio::FileLogSink> ISOModelFixture::logFile;
+#endif

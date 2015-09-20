@@ -18,7 +18,7 @@ using namespace openstudio;
 void runMonthlySimulation(const UserModel& umodel) {
   // Run the monthly simulation.
   openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
-  ISOResults results = monthlyModel.simulate();
+  auto monthlyResults = monthlyModel.simulate();
 
   std::cout << "Monthly Results:" << std::endl;
   std::cout
@@ -28,23 +28,23 @@ void runMonthlySimulation(const UserModel& umodel) {
   for (int i = 0; i < 12; i++) {
     std::cout << i + 1;
 #ifdef _OPENSTUDIOS
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << results.monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << monthlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
     for (int j = 0; j < 13; j++) {
-      std::cout << ", " <<  std::setprecision(10) << results.monthlyResults[i].getEndUse(j);
+      std::cout << ", " <<  std::setprecision(10) << monthlyResults[i].getEndUse(j);
     }
 #endif
     std::cout << std::endl;
@@ -54,7 +54,7 @@ void runMonthlySimulation(const UserModel& umodel) {
 void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   // Run the hourly simulation (with results aggregated by month).
   openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.simulate(aggregateByMonth);
+  auto hourlyResults = hourly.simulate(aggregateByMonth);
 
   std::string monthOrHour = aggregateByMonth ? "month" : "hour";
   int numberOfResults = aggregateByMonth ? 12 : 8760;
@@ -67,23 +67,23 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
   for (int i = 0; i < numberOfResults; i++) {
     std::cout << i + 1;
 #ifdef _OPENSTUDIOS
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    std::cout << ", " << hourlyResults[i].getEndUse(EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #else
     for (int j = 0; j < 13; j++) {
-      std::cout << ", " << hourlyResults.hourlyResults[i].getEndUse(j);
+      std::cout << ", " << hourlyResults[i].getEndUse(j);
     }
 #endif
     std::cout << std::endl;
@@ -92,10 +92,10 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
 
 void compare(const UserModel& umodel, bool markdown = false) {
   openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
-  ISOResults hourlyResults = hourly.simulate(true);
+  auto hourlyResults = hourly.simulate(true);
   
   openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
-  ISOResults monthlyResults = monthlyModel.simulate();
+  auto monthlyResults = monthlyModel.simulate();
 
   auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
                                                 "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
@@ -113,8 +113,8 @@ void compare(const UserModel& umodel, bool markdown = false) {
     }
 
     for (auto month = 0; month != 12; ++month) {
-      auto monthlyResult = monthlyResults.monthlyResults[month].getEndUse(endUse);
-      auto hourlyResult = hourlyResults.hourlyResults[month].getEndUse(endUse);
+      auto monthlyResult = monthlyResults[month].getEndUse(endUse);
+      auto hourlyResult = hourlyResults[month].getEndUse(endUse);
       if (markdown) std::cout << "| ";
       std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult;
       if (markdown) std::cout << " |";

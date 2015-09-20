@@ -22,12 +22,15 @@
 
 #include <gtest/gtest.h>
 
+#ifdef ISOMODEL_STANDALONE
+#include "../EndUses.hpp"
+#else
 #include "../../utilities/core/Logger.hpp"
 #include "../../utilities/core/FileLogSink.hpp"
 #include "../../utilities/core/Path.hpp"
-
 #include "../utilities/data/EndUses.hpp"
 #include "../utilities/data/DataEnums.hpp"
+#endif
 
 #include <utility>
 #include <vector>
@@ -49,10 +52,13 @@ protected:
 
   std::vector<std::string> endUseNames;
   std::string test_data_path;
+
+#ifndef ISOMODEL_STANDALONE
   std::vector<std::pair<openstudio::EndUseFuelType, openstudio::EndUseCategoryType>> isoResultsEndUseTypes;
 
   static std::shared_ptr<openstudio::FileLogSink> logFile;
   REGISTER_LOGGER("IsoModel");
+#endif
 };
 
 #endif // ISOMODEL_TEST_ISOMODELFIXTURE_HPP

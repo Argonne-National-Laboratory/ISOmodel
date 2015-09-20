@@ -4,14 +4,15 @@ set(target_name isomodel)
 cmake_minimum_required(VERSION 3.0)
 
 set(${target_name}_test
+  Test/HourlyModel_GTest.cpp
+  Test/ISOModelFixture.cpp
+  Test/ISOModelFixture.hpp
   Test/ISOModel_GTest.cpp
-  Test/TestEnvironment.hpp
-  Test/UserModel_GTest.cpp
-  Test/TimeFrame_GTest.cpp
-  Test/SolarRadiation_GTest.cpp
   Test/MonthlyModel_GTest.cpp
   Test/Properties_GTest.cpp
-  Test/HourlyModel_GTest.cpp
+  Test/SolarRadiation_GTest.cpp
+  Test/TimeFrame_GTest.cpp
+  Test/UserModel_GTest.cpp
 )
 
 set(${target_name}_benchmark
@@ -102,6 +103,7 @@ set(benchmark_depends
   ${Boost_LIBRARIES}
 )
 
+add_definitions(-DISOMODEL_STANDALONE)
 
 set (exec_name isomodel_standalone)
 add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
@@ -123,6 +125,12 @@ set_property(
   TARGET isomodel_unit_tests 
   PROPERTY COMPILE_DEFINITIONS USE_NEW_BUILDING_PARAMS
 )
+
+add_custom_command(TARGET isomodel_unit_tests
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                     ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:isomodel_unit_tests>/test_data
+                   )
 
 
 add_library(${library_name} SHARED ${${target_name}_src})

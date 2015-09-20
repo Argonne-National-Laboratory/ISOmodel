@@ -2,6 +2,8 @@
 #define ISOMODEL_ENDUSES_HPP
 
 #include <vector>
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 class ISOMODEL_API EndUses
 {
