@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_COOLING_HPP
 #define ISOMODEL_COOLING_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class Cooling
+class ISOMODEL_API Cooling
 {
 public:
   Cooling(void);

@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_BUILDING_HPP
 #define ISOMODEL_BUILDING_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class Building
+class ISOMODEL_API Building
 {
 public:
   Building(void);

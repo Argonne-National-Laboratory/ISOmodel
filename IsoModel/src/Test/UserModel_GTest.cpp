@@ -6,14 +6,15 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
 
-TEST(IsoModelTests, InitializationTests)
+TEST_F(ISOModelFixture, UserModelInitializationTests)
 {
   UserModel userModel;
   userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
@@ -158,21 +159,21 @@ TEST(IsoModelTests, InitializationTests)
 
   EXPECT_STREQ("./ORD.epw", userModel.weatherFilePath().c_str());
 
-  EXPECT_DOUBLE_EQ(0.1, userModel.ventilationIntakeRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.2, userModel.ventilationExhaustRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.3, userModel.infiltrationRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.4, userModel.lightingPowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.5, userModel.lightingPowerFixedUnoccupied());
-  EXPECT_DOUBLE_EQ(0.6, userModel.electricAppliancePowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.7, userModel.electricAppliancePowerFixedUnoccupied());
-  EXPECT_DOUBLE_EQ(0.8, userModel.gasAppliancePowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.9, userModel.gasAppliancePowerFixedUnoccupied());
+  // Properties that haven't been implemented yet.
+  // EXPECT_DOUBLE_EQ(0.1, userModel.ventilationIntakeRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.2, userModel.ventilationExhaustRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.3, userModel.infiltrationRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.4, userModel.lightingPowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.5, userModel.lightingPowerFixedUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.6, userModel.electricAppliancePowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.7, userModel.electricAppliancePowerFixedUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.8, userModel.gasAppliancePowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.9, userModel.gasAppliancePowerFixedUnoccupied());
 
-  EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
+  // EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
 
-TEST(IsoModelTests, DefaultsTests)
-{
+TEST_F(ISOModelFixture, UserModelDefaultsTests) {
   UserModel userModel;
   userModel.load(test_data_path + "/defaults_test_building.ism", test_data_path + "/defaults_test_defaults.ism");
 
@@ -320,20 +321,21 @@ TEST(IsoModelTests, DefaultsTests)
 
   EXPECT_STREQ("./ORD.epw", userModel.weatherFilePath().c_str());
 
-  EXPECT_DOUBLE_EQ(0.1, userModel.ventilationIntakeRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.2, userModel.ventilationExhaustRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.3, userModel.infiltrationRateUnoccupied());
-  EXPECT_DOUBLE_EQ(0.4, userModel.lightingPowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.5, userModel.lightingPowerFixedUnoccupied());
-  EXPECT_DOUBLE_EQ(0.6, userModel.electricAppliancePowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.7, userModel.electricAppliancePowerFixedUnoccupied());
-  EXPECT_DOUBLE_EQ(0.8, userModel.gasAppliancePowerFixedOccupied());
-  EXPECT_DOUBLE_EQ(0.9, userModel.gasAppliancePowerFixedUnoccupied());
+  // Properties that haven't been implemented yet.
+  // EXPECT_DOUBLE_EQ(0.1, userModel.ventilationIntakeRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.2, userModel.ventilationExhaustRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.3, userModel.infiltrationRateUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.4, userModel.lightingPowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.5, userModel.lightingPowerFixedUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.6, userModel.electricAppliancePowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.7, userModel.electricAppliancePowerFixedUnoccupied());
+  // EXPECT_DOUBLE_EQ(0.8, userModel.gasAppliancePowerFixedOccupied());
+  // EXPECT_DOUBLE_EQ(0.9, userModel.gasAppliancePowerFixedUnoccupied());
 
-  EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
+  // EXPECT_STREQ("./schedule.txt", userModel.scheduleFilePath().c_str());
 }
 
-TEST(IsoModelTests, OptionalPropertiesDefaultsTests) {
+TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
   UserModel userModel;
   userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
 
@@ -405,7 +407,7 @@ TEST(IsoModelTests, OptionalPropertiesDefaultsTests) {
   EXPECT_DOUBLE_EQ(0.0, userModel.H_ve());
 }
 
-TEST(IsoModelTests, OptionalPropertiesOverrideTests) {
+TEST_F(ISOModelFixture, UserModelOptionalPropertiesOverrideTests) {
   UserModel userModel;
   userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism", test_data_path + "/optional_defaults_override.ism");
 

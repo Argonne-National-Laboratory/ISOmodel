@@ -19,11 +19,17 @@
 #ifndef ISOMODEL_STRUCTURE_HPP
 #define ISOMODEL_STRUCTURE_HPP
 
+#include "ISOModelAPI.hpp"
+
+#ifdef ISOMODEL_STANDALONE
 #include "Vector.hpp"
+#else
+#include "../utilities/data/Vector.hpp"
+#endif
 
 namespace openstudio {
 namespace isomodel {
-class Structure
+class ISOMODEL_API Structure
 {
 public:
   Structure(void);

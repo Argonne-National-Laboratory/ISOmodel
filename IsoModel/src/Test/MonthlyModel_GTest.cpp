@@ -6,28 +6,15 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
 
-std::vector<std::string> endUseNames = {"ElecHeat",
-                                        "ElecCool",
-                                        "ElecIntLights",
-                                        "ElecExtLights",
-                                        "ElecFans",
-                                        "ElecPump",
-                                        "ElecEquipInt",
-                                        "ElecEquipExt",
-                                        "ElectDHW",
-                                        "GasHeat",
-                                        "GasCool",
-                                        "GasEquip",
-                                        "GasDHW"};
-
-TEST(IsoModelTests, MonthlyModelTests)
+TEST_F(ISOModelFixture, MonthlyModelTests)
 {
   // the expected values are the results of running the "prior to updated parameter names
   // and parsing" version and copying the results as they were printed out to stdout.
@@ -52,13 +39,20 @@ TEST(IsoModelTests, MonthlyModelTests)
   };
 
   openstudio::isomodel::UserModel userModel;
+  std::cout << "test_data_path in monthly test = " << test_data_path << "\n";
+  std::cout << "first enduse name in monthly test = " << endUseNames[0] << "\n";
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
-  MonthlyModel monthlyModel = userModel.toMonthlyModel();
-  ISOResults results = monthlyModel.simulate();
+  auto monthlyModel = userModel.toMonthlyModel();
+  auto results = monthlyModel.simulate();
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.monthlyResults[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << std::endl;
+#ifdef ISOMODEL_STANDALONE
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
+#else 
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(isoResultsEndUseTypes[j].first, isoResultsEndUseTypes[j].second), 0.001)
+        << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
+#endif
     }
   }
 }

@@ -19,6 +19,8 @@
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
 #define ISOMODEL_SOLAR_RADIATION_HPP
 
+#include "ISOModelAPI.hpp"
+
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -33,7 +35,7 @@ const int MONTHS = 12;
 const int HOURS = 24;
 
 class EpwData;
-class SolarRadiation
+class ISOMODEL_API SolarRadiation
 {
 protected:
   openstudio::isomodel::TimeFrame* m_frame;

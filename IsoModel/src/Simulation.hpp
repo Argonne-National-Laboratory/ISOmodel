@@ -1,6 +1,8 @@
 #ifndef ISOMODEL_SIMULATION_HPP
 #define ISOMODEL_SIMULATION_HPP
 
+#include "ISOModelAPI.hpp"
+
 #include "Population.hpp"
 #include "Location.hpp"
 #include "Lighting.hpp"
@@ -16,7 +18,7 @@
 namespace openstudio {
 namespace isomodel {
 
-class Simulation
+class ISOMODEL_API Simulation
 {
 public:
   virtual ~Simulation() {}

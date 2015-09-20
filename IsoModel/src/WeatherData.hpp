@@ -21,8 +21,13 @@
 
 #include "ISOModelAPI.hpp"
 
+#ifdef ISOMODEL_STANDALONE
 #include "Vector.hpp"
 #include "Matrix.hpp"
+#else
+#include "../utilities/data/Vector.hpp"
+#include "../utilities/data/Matrix.hpp"
+#endif
 
 #include <memory>
 

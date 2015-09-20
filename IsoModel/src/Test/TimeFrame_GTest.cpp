@@ -6,14 +6,15 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
 
-TEST(TimeFrameTests, MonthLengthTest) {
+TEST_F(ISOModelFixture, TimeFrameMonthLengthTest) {
   openstudio::isomodel::TimeFrame frame;
   std::vector<int> monthLengths = {
     31, // January
@@ -35,7 +36,7 @@ TEST(TimeFrameTests, MonthLengthTest) {
   }
 }
 
-TEST(TimeFrameTests, HourTests) {
+TEST_F(ISOModelFixture, TimeFrameHourTests) {
   openstudio::isomodel::TimeFrame frame;
   EXPECT_EQ(0, frame.Hour[0]);
   EXPECT_EQ(23, frame.Hour[23]);
@@ -43,7 +44,7 @@ TEST(TimeFrameTests, HourTests) {
   EXPECT_EQ(23, frame.Hour[8759]);
 }
 
-TEST(TimeFrameTests, DayOfMonthTests) {
+TEST_F(ISOModelFixture, TimeFrameDayOfMonthTests) {
   openstudio::isomodel::TimeFrame frame;
   EXPECT_EQ(1, frame.DayOfMonth[0]);
   EXPECT_EQ(1, frame.DayOfMonth[23]);
@@ -51,7 +52,7 @@ TEST(TimeFrameTests, DayOfMonthTests) {
   EXPECT_EQ(31, frame.DayOfMonth[8759]);
 }
 
-TEST(TimeFrameTests, DayOfWeekTests) {
+TEST_F(ISOModelFixture, TimeFrameDayOfWeekTests) {
   openstudio::isomodel::TimeFrame frame;
   EXPECT_EQ(0, frame.DayOfWeek[0]);
   EXPECT_EQ(0, frame.DayOfWeek[23]);
@@ -60,7 +61,7 @@ TEST(TimeFrameTests, DayOfWeekTests) {
   EXPECT_EQ(0, frame.DayOfWeek[168]);
 }
 
-TEST(TimeFrameTests, MonthTests) {
+TEST_F(ISOModelFixture, TimeFrameMonthTests) {
   openstudio::isomodel::TimeFrame frame;
   EXPECT_EQ(1, frame.Month[0]);
   EXPECT_EQ(1, frame.Month[743]);
@@ -68,7 +69,7 @@ TEST(TimeFrameTests, MonthTests) {
   EXPECT_EQ(12, frame.Month[8759]);
 }
 
-TEST(TimeFrameTests, YTDTests) {
+TEST_F(ISOModelFixture, TimeFrameTYDTests) {
   openstudio::isomodel::TimeFrame frame;
   EXPECT_EQ(0, frame.YTD[0]);
   EXPECT_EQ(30, frame.YTD[743]);

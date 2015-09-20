@@ -6,7 +6,8 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 
@@ -22,7 +23,7 @@ using namespace openstudio::isomodel;
  wallU = 2.1, 234.3, 12.3
  */
 
-TEST(PropertiesTests, KeyValueTests)
+TEST_F(ISOModelFixture, PropsKeyValueTests)
 {
   Properties props(test_data_path + "/test_properties.props");
   ASSERT_EQ(5, props.size());
@@ -49,7 +50,7 @@ TEST(PropertiesTests, KeyValueTests)
   ASSERT_EQ(12.3, vec[2]);
 }
 
-TEST(PropertiesTests, MissingValueTests) {
+TEST_F(ISOModelFixture, PropsMissingValueTests) {
   Properties props(test_data_path + "/test_properties.props");
   
   // Test methods that return boost::optional:

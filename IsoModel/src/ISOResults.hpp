@@ -1,5 +1,5 @@
 /**********************************************************************
- *  Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ *  Copyright (c) 2008-2015, Alliance for Sustainable Energy.
  *  All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
@@ -16,45 +16,25 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
-#ifndef ISOMODEL_TIMEFRAME_HPP
-#define ISOMODEL_TIMEFRAME_HPP
+
+#ifndef ISOMODEL_ISORESULTS_HPP
+#define ISOMODEL_ISORESULTS_HPP
 
 #include "ISOModelAPI.hpp"
+#include <vector>
+
+#ifdef ISOMODEL_STANDALONE
+#include "EndUses.hpp"
+#else
+#include "../utilities/data/EndUses.hpp"
+#endif
 
 namespace openstudio {
 namespace isomodel {
-#define TIMESLICES 8760
 
-/**
-* Simple data structure that allows conversion from the hour of the year 
-* to a variety of useful times (day of week, month, etc.).
-*/
-class ISOMODEL_API TimeFrame
-{
-protected:
+/// Sums the energy use from the results of an ISOModel simulation across all timesteps and EndUses.
+ISOMODEL_API double totalEnergyUse(const std::vector<EndUses>&);
 
-public:
-  /// Returns the number of days in the month.
-  int monthLength(int month);
-
-  /// Returns the day of the year (0-364).
-  int YTD[TIMESLICES];
-
-  /// Returns the hour of the day (0-23).
-  int Hour[TIMESLICES];
-
-  /// Returns the day of the month (1-monthLength)
-  int DayOfMonth[TIMESLICES]; // XXX: This does not appear to ever be used. BAA@2015-05-04
-
-  /// Returns the day of the week (0-6).
-  int DayOfWeek[TIMESLICES];
-
-  /// Returns the month (1-12).
-  int Month[TIMESLICES];
-
-  TimeFrame(void);
-  ~TimeFrame(void);
-};
 }
 }
-#endif
+#endif // ISOMODEL_SIMMODEL_HPP

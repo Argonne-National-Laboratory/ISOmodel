@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_VENTILATION_HPP
 #define ISOMODEL_VENTILATION_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class Ventilation
+class ISOMODEL_API Ventilation
 {
 public:
   Ventilation(void);

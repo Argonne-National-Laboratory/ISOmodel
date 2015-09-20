@@ -6,7 +6,8 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 #include "../UserModel.hpp"
@@ -35,7 +36,7 @@ using namespace openstudio::isomodel;
 // cos(azimuth): 0.9999439766762598
 // Azimuth: -0.010585258319975917 rad
 
-TEST(SolarTests, SunPositionAndRadiationTests) {
+TEST_F(ISOModelFixture, SunPositionAndRadiationTests) {
   openstudio::isomodel::UserModel userModel;
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
   userModel.loadWeather();

@@ -19,6 +19,8 @@
 #ifndef ISOMODEL_EPW_DATA_HPP
 #define ISOMODEL_EPW_DATA_HPP
 
+#include "ISOModelAPI.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -41,7 +43,7 @@ const int WSPD = 6;
 
 class SolarRadiation;
 
-class EpwData
+class ISOMODEL_API EpwData
 {
 protected:
   void parseHeader(std::string line);

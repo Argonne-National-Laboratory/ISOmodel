@@ -60,6 +60,7 @@ bool Properties::getPropertyAsDoubleVector(const std::string& key, std::vector<d
       }
     }
     catch (std::invalid_argument& ex) {
+      (void)ex; // Void cast to eliminate compiler warning about unused variables... seems hacky - BAA@2015-08-04.
       return false; // Cannot be converted to a double.
     }
     return true;
@@ -90,6 +91,7 @@ bool Properties::getPropertyAsDoubleVector(const std::string& key, Vector& vec) 
       }
     }
     catch (std::invalid_argument& ex) {
+      (void)ex; // Void cast to eliminate compiler warning about unused variables... seems hacky - BAA@2015-08-04.
       return false; // Cannot be converted to a double.
     }
     return true;
@@ -105,6 +107,7 @@ boost::optional<double> Properties::getPropertyAsDouble(const std::string& key) 
     try {
       return std::stod(*val);
     } catch (std::invalid_argument& ex) {
+      (void)ex; // Void cast to eliminate compiler warning about unused variables... seems hacky - BAA@2015-08-04.
       return boost::none; // Cannot be converted to a double.
     }
   }
@@ -119,6 +122,7 @@ boost::optional<int> Properties::getPropertyAsInt(const std::string& key) const
     try {
       return std::stoi(*val);
     } catch (std::invalid_argument& ex) {
+      (void)ex; // Void cast to eliminate compiler warning about unused variables... seems hacky - BAA@2015-08-04.
       return boost::none; // Cannot be converted to a int.
     }
   }

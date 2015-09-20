@@ -47,7 +47,7 @@ const std::string NONE = "none";
 const std::string SIMPLE = "simple";
 const std::string ADVANCED = "advanced";
 
-struct LatLon {
+struct ISOMODEL_API LatLon {
 
   double lat, lon;
   bool operator<(const LatLon& rhs) const;

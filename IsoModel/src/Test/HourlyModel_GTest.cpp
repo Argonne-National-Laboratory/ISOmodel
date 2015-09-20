@@ -6,14 +6,16 @@
  */
 
 #include "gtest/gtest.h"
-#include "TestEnvironment.hpp"
+
+#include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
 #include "../UserModel.hpp"
+#include "../ISOResults.hpp"
 
 using namespace openstudio::isomodel;
 
-TEST(IsoModelTests, HourlyModelTests)
+TEST_F(ISOModelFixture, HourlyModelTests)
 {
   // The expected values are the results of running the "prior to updated parameter names
   // and parsing" version and copying the results as they were printed out to stdout.
@@ -40,11 +42,16 @@ TEST(IsoModelTests, HourlyModelTests)
   openstudio::isomodel::UserModel userModel;
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
   HourlyModel hourlyModel = userModel.toHourlyModel();
-  ISOResults results = hourlyModel.simulate(true); // aggregateByMonth = true
+  auto results = hourlyModel.simulate(true); // aggregateByMonth = true
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results.hourlyResults[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << std::endl;
+#ifdef ISOMODEL_STANDALONE
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), 0.001) << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
+#else 
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(isoResultsEndUseTypes[j].first, isoResultsEndUseTypes[j].second), 0.001)
+        << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
+#endif
     }
   }
 }

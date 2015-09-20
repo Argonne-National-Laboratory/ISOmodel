@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_PHYSICALQUANTITIES_HPP 
 #define ISOMODEL_PHYSICALQUANTITIES_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class PhysicalQuantities
+class ISOMODEL_API PhysicalQuantities
 {
 public:
   PhysicalQuantities(void);

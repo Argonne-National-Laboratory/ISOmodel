@@ -19,11 +19,13 @@
 #ifndef ISOMODEL_POPULATION_HPP
 #define ISOMODEL_POPULATION_HPP
 
+#include "ISOModelAPI.hpp"
+
 #include <string>
 
 namespace openstudio {
 namespace isomodel {
-class Population
+class ISOMODEL_API Population
 {
 public:
   Population(void);

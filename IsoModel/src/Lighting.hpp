@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_LIGHTING_HPP
 #define ISOMODEL_LIGHTING_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class Lighting
+class ISOMODEL_API Lighting
 {
 public:
   Lighting(void);

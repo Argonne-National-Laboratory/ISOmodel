@@ -1,5 +1,5 @@
 /**********************************************************************
- *  Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ *  Copyright (c) 2008-2015, Alliance for Sustainable Energy.
  *  All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
@@ -17,20 +17,26 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **********************************************************************/
 
-#ifndef ISOMODEL_SIMMODEL_HPP
-#define ISOMODEL_SIMMODEL_HPP
+#ifndef ISOMODEL_MONTHLYMODEL_HPP
+#define ISOMODEL_MONTHLYMODEL_HPP
 
 #include "ISOModelAPI.hpp"
-#ifdef _OPENSTUDIO
-#include <utilities/core/Logger.hpp>
-#endif
-#include <memory>
+#include "ISOResults.hpp"
 
-#include "Simulation.hpp"
-
+#ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
 #include "Vector.hpp"
 #include "Matrix.hpp"
+#else
+#include "../utilities/core/Logger.hpp"
+#include "../utilities/data/EndUses.hpp"
+#include "../utilities/data/Vector.hpp"
+#include "../utilities/data/Matrix.hpp"
+#endif
+
+#include <memory>
+
+#include "Simulation.hpp"
 
 namespace openstudio {
 
@@ -46,11 +52,10 @@ namespace isomodel {
 
 //flag to turn on debug printing of many intermediate variables to stdout
 #define DEBUG_ISO_MODEL_SIMULATION false
-typedef unsigned int uint;
 
 ISOMODEL_API void printVector(const char* vecName, Vector vec);
 ISOMODEL_API void printMatrix(const char* matName, Matrix mat);
-void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2);
+ISOMODEL_API void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2);
 
 ISOMODEL_API Vector mult(const double* v1, const double s1, int size);
 ISOMODEL_API Vector mult(const Vector& v1, const double s1);
@@ -75,12 +80,6 @@ ISOMODEL_API double minimum(const Vector& v1);
 ISOMODEL_API Vector abs(const Vector& v1);
 ISOMODEL_API Vector pow(const Vector& v1, const double xp);
 
-struct ISOMODEL_API ISOResults
-{
-  std::vector<EndUses> monthlyResults;
-  std::vector<EndUses> hourlyResults;
-};
-
 class ISOMODEL_API MonthlyModel : public Simulation
 {
 public:
@@ -92,9 +91,9 @@ public:
 
   /**
    * Runs the ISO Model cacluations using the ISO 13790 monthly method for the given set of input parameters.
-   * returns ISOResults which is a vector of EndUses, one EndUses per month of the year
+   * returns a vector of EndUses, one EndUses per month of the year
    */
-  ISOResults simulate() const;
+  std::vector<EndUses> simulate() const;
 
 private:
   // Simulation functions.
@@ -145,7 +144,7 @@ private:
 
   void heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const;
 
-  ISOResults outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot, const Vector& v_Q_illum_ext_tot,
+  std::vector<EndUses> outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot, const Vector& v_Q_illum_ext_tot,
       const Vector& v_Qfan_tot, const Vector& v_Q_pump_tot, const Vector& v_Q_dhw_elec, const Vector& v_Qgas_ht, const Vector& v_Qcl_gas_tot,
       const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const;
 
@@ -156,4 +155,4 @@ private:
 } // isomodel
 } // openstudio
 
-#endif // ISOMODEL_SIMMODEL_HPP
+#endif // ISOMODEL_MONTHLYMODEL_HPP

@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_SIMULATIONSETTINGS_HPP 
 #define ISOMODEL_SIMULATIONSETTINGS_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class SimulationSettings
+class ISOMODEL_API SimulationSettings
 {
 public:
   SimulationSettings(void);

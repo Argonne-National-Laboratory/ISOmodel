@@ -19,9 +19,11 @@
 #ifndef ISOMODEL_HEATING_HPP
 #define ISOMODEL_HEATING_HPP
 
+#include "ISOModelAPI.hpp"
+
 namespace openstudio {
 namespace isomodel {
-class Heating
+class ISOMODEL_API Heating
 {
 public:
   Heating(void);

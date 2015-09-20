@@ -2,6 +2,8 @@
 #ifndef PROPERTIES_H_
 #define PROPERTIES_H_
 
+#include "ISOModelAPI.hpp"
+
 #include <fstream>
 
 #include <iostream>
@@ -12,7 +14,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
+#ifdef ISOMODEL_STANDALONE
 #include "Vector.hpp"
+#else
+#include "../utilities/data/Vector.hpp"
+#endif
 
 namespace openstudio {
 
@@ -23,7 +29,7 @@ namespace isomodel {
  * iterator to return the keys
  */
 
-struct KeyGetter: public std::unary_function<std::map<std::string, std::string>::value_type, std::string>
+struct ISOMODEL_API KeyGetter: public std::unary_function<std::map<std::string, std::string>::value_type, std::string>
 {
   std::string operator()(const std::map<std::string, std::string>::value_type& value) const;
 };
@@ -38,7 +44,7 @@ struct KeyGetter: public std::unary_function<std::map<std::string, std::string>:
  *
  * Key are case insensitive and stored in lower case.
  */
-class Properties
+class ISOMODEL_API Properties
 {
 
 private:

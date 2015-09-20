@@ -102,7 +102,7 @@ Vector mult(const double* v1, const double s1, int size)
 Vector mult(const Vector& v1, const double s1)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vp[i] = v1[i] * s1;
   }
   return vp;
@@ -111,7 +111,7 @@ Vector mult(const Vector& v1, const double s1)
 Vector mult(const Vector& v1, const double* v2)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vp[i] = v1[i] * v2[i];
   }
   return vp;
@@ -120,7 +120,7 @@ Vector mult(const Vector& v1, const double* v2)
 Vector mult(const Vector& v1, const Vector& v2)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vp[i] = v1[i] * v2[i];
   }
   return vp;
@@ -129,7 +129,7 @@ Vector mult(const Vector& v1, const Vector& v2)
 Vector div(const Vector& v1, const double s1)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     if (s1 == 0)
       vp[i] = DBL_MAX;
     else
@@ -140,7 +140,7 @@ Vector div(const Vector& v1, const double s1)
 Vector div(const double s1, const Vector& v1)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     if (v1[i] == 0)
       vp[i] = DBL_MAX;
     else
@@ -152,7 +152,7 @@ Vector div(const double s1, const Vector& v1)
 Vector div(const Vector& v1, const Vector& v2)
 {
   Vector vp = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     if (v2[i] == 0)
       vp[i] = DBL_MAX;
     else
@@ -163,7 +163,7 @@ Vector div(const Vector& v1, const Vector& v2)
 Vector sum(const Vector& v1, const Vector& v2)
 {
   Vector vs = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vs[i] = v1[i] + v2[i];
   }
   return vs;
@@ -171,7 +171,7 @@ Vector sum(const Vector& v1, const Vector& v2)
 double sum(const Vector& v1)
 {
   double s = 0;
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     s += v1[i];
   }
   return s;
@@ -179,7 +179,7 @@ double sum(const Vector& v1)
 Vector sum(const Vector& v1, const double v2)
 {
   Vector vs = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vs[i] = v1[i] + v2;
   }
   return vs;
@@ -187,7 +187,7 @@ Vector sum(const Vector& v1, const double v2)
 Vector dif(const Vector& v1, const Vector& v2)
 {
   Vector vd = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vd[i] = v1[i] - v2[i];
   }
   return vd;
@@ -195,7 +195,7 @@ Vector dif(const Vector& v1, const Vector& v2)
 Vector dif(const Vector& v1, const double v2)
 {
   Vector vd = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vd[i] = v1[i] - v2;
   }
   return vd;
@@ -203,7 +203,7 @@ Vector dif(const Vector& v1, const double v2)
 Vector dif(const double v1, const Vector& v2)
 {
   Vector vd = Vector(v2.size());
-  for (uint i = 0; i < v2.size(); i++) {
+  for (unsigned int i = 0; i < v2.size(); i++) {
     vd[i] = v1 - v2[i];
   }
   return vd;
@@ -211,7 +211,7 @@ Vector dif(const double v1, const Vector& v2)
 double maximum(const Vector& v1)
 {
   double max = -DBL_MAX;
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     if (v1[i] > max)
       max = v1[i];
   }
@@ -220,7 +220,7 @@ double maximum(const Vector& v1)
 Vector maximum(const Vector& v1, const Vector& v2)
 {
   Vector vx = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vx[i] = std::max(v1[i], v2[i]);
   }
   return vx;
@@ -228,7 +228,7 @@ Vector maximum(const Vector& v1, const Vector& v2)
 Vector maximum(const Vector& v1, double val)
 {
   Vector vx = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vx[i] = std::max(v1[i], val);
   }
   return vx;
@@ -236,7 +236,7 @@ Vector maximum(const Vector& v1, double val)
 double minimum(const Vector& v1)
 {
   double min = DBL_MAX;
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     if (v1[i] < min)
       min = v1[i];
   }
@@ -245,7 +245,7 @@ double minimum(const Vector& v1)
 Vector minimum(const Vector& v1, double val)
 {
   Vector vn = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     vn[i] = std::min(v1[i], val);
   }
   return vn;
@@ -253,7 +253,7 @@ Vector minimum(const Vector& v1, double val)
 Vector abs(const Vector& v1)
 {
   Vector va = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     va[i] = fabs(v1[i]);
   }
   return va;
@@ -261,7 +261,7 @@ Vector abs(const Vector& v1)
 Vector pow(const Vector& v1, const double xp)
 {
   Vector va = Vector(v1.size());
-  for (uint i = 0; i < v1.size(); i++) {
+  for (unsigned int i = 0; i < v1.size(); i++) {
     va[i] = std::pow(v1[i], xp);
   }
   return va;
@@ -424,7 +424,7 @@ void MonthlyModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseco
   }
 
   // Nighttime hours per month.
-  for (uint i = 0; i < v_frac_hrs_sun_down.size(); i++) {
+  for (unsigned int i = 0; i < v_frac_hrs_sun_down.size(); i++) {
     v_hrs_sun_down_mo[i] = v_frac_hrs_sun_down[i] * hoursInMonth[i];
   }
 }
@@ -600,8 +600,8 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
 
   // Combine vertical surface radiation (mosolar) and horizontal radiation (mEgh) into one matrix (W/m2).
   Matrix m_I_sol(12, 9); // 12 months, 8 directions + 1 roof.
-  for (uint r = 0; r < m_I_sol.size1(); r++) {
-    for (uint c = 0; c < m_I_sol.size2() - 1; c++) {
+  for (unsigned int r = 0; r < m_I_sol.size1(); r++) {
+    for (unsigned int c = 0; c < m_I_sol.size2() - 1; c++) {
       m_I_sol(r, c) = location.weather()->msolar()(r, c);
     }
     m_I_sol(r, m_I_sol.size2() - 1) = location.weather()->mEgh()[r];
@@ -611,8 +611,8 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
   // Compute the total solar heat gain for the glazing area.
   Vector v_win_phi_sol(12);
   Vector temp(9);
-  for (uint i = 0; i < v_win_phi_sol.size(); i++) {
-    for (uint j = 0; j < temp.size(); j++) {
+  for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
+    for (unsigned int j = 0; j < temp.size(); j++) {
       temp[j] = structure.windowShadingCorrectionFactor()[j] * v_win_SCF_frac[j] * v_win_A_sol[j] * m_I_sol(i, j);
     }
     v_win_phi_sol[i] = sum(temp);
@@ -628,7 +628,7 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
   // determined in accordance with 11.4.6, expressed in degrees centigrade.
 
   Vector theta_er(9);
-  for (uint i = 0; i < theta_er.size(); i++) {
+  for (unsigned int i = 0; i < theta_er.size(); i++) {
     // Average difference between air temperature and sky temperature.
     // ISO 13790 11.4.6 says take \Theta_er=9k in sub polar zones, 13 K in tropical or 11 K in intermediate
     // TODO: Does the .epw file contain the sky temperature? If not, use the weather file's lat/lon to 
@@ -644,8 +644,8 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
   Vector v_wall_phi_sol(12);
   
   // Compute the total solar heat gain for the opaque area.
-  for (uint i = 0; i < v_win_phi_sol.size(); i++) {
-    for (uint j = 0; j < temp.size(); j++) {
+  for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
+    for (unsigned int j = 0; j < temp.size(); j++) {
       temp[j] = v_wall_A_sol[j] * m_I_sol(i, j) - v_wall_phi_r[j] * n_v_env_form_factors[j];
     }
     v_wall_phi_sol[i] = sum(temp);
@@ -788,7 +788,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   Vector v_cl_tset_ctrl(12);
 
   // Create vectors of the adjusted heating set points.
-  for (uint i = 0; i < v_cl_tset_ctrl.size(); i++) {
+  for (unsigned int i = 0; i < v_cl_tset_ctrl.size(); i++) {
     v_cl_tset_ctrl[i] = cl_tset_ctrl;
     v_ht_tset_ctrl[i] = ht_tset_ctrl;
   }
@@ -838,13 +838,13 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   Matrix M_dT(v_P_tot_wk_nt.size(), 5);
   Matrix M_Te(v_Tdbt_nt.size(), 5);
 
-  for (uint i = 0; i < v_P_tot_wk_nt.size(); ++i) {
+  for (unsigned int i = 0; i < v_P_tot_wk_nt.size(); ++i) {
     M_dT(i, 0) = v_P_tot_wk_nt[i] / H_tot;
     M_dT(i, 1) = M_dT(i, 3) = v_P_tot_wke_day[i] / H_tot;
     M_dT(i, 2) = M_dT(i, 4) = v_P_tot_wke_nt[i] / H_tot;
   }
 
-  for (uint i = 0; i < v_Tdbt_nt.size(); ++i) {
+  for (unsigned int i = 0; i < v_Tdbt_nt.size(); ++i) {
       M_Te(i, 0) = M_Te(i, 2) = M_Te(i, 4) = v_Tdbt_nt[i];
       M_Te(i, 1) = M_Te(i, 3) = v_Tdbt_day[i];
   }
@@ -869,8 +869,8 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   if (heating.T_ht_ctrl_flag() == 1) { // If the HVAC heating controls are turned on.
     Matrix M_Ta(12, 4);
     Vector v_Tstart(v_ht_tset_ctrl);
-    for (uint i = 0; i < M_Ta.size2(); i++) {
-      for (uint j = 0; j < M_Ta.size1(); j++) {
+    for (unsigned int i = 0; i < M_Ta.size2(); i++) {
+      for (unsigned int j = 0; j < M_Ta.size1(); j++) {
         v_Tstart(j) = M_Ta(j, i) = (v_Tstart(j) - M_Te(j, i) - M_dT(j, i)) * exp(-1 * v_ti(i) / tau) + M_Te(j, i) + M_dT(j, i);
       }
     }
@@ -891,7 +891,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     // higher the setpoint or the decay and select that as the start point for
     // the average integration to follow.
     Matrix M_Taa(12, 5);
-    for (uint j = 0; j < M_Taa.size1(); j++) {
+    for (unsigned int j = 0; j < M_Taa.size1(); j++) {
       M_Taa(j, 0) = v_ht_tset_ctrl[j];
     }
 
@@ -899,8 +899,8 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
       printMatrix("M_Taa", M_Taa);
     }
 
-    for (uint i = 1; i < M_Taa.size2(); i++) {
-      for (uint j = 0; j < M_Taa.size1(); j++) {
+    for (unsigned int i = 1; i < M_Taa.size2(); i++) {
+      for (unsigned int j = 0; j < M_Taa.size1(); j++) {
         M_Taa(j, i) = std::max(M_Ta(j, i - 1), ht_tset_unocc);
       }
     }
@@ -914,20 +914,20 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     // For each time period, find the average temp given the start and
     // ending temp and assuming exponential decay of temps.
     // Loop through wk nt to wke day to wke nt to wke day to wke nt.
-    for (uint i = 0; i < M_Tb.size2(); i++) {
-      for (uint j = 0; j < M_Tb.size1(); j++) {
+    for (unsigned int i = 0; i < M_Tb.size2(); i++) {
+      for (unsigned int j = 0; j < M_Tb.size1(); j++) {
         double v_T_avg = tau / v_ti(i) * (M_Taa(j, i) - M_Te(j, i) - M_dT(j, i)) * (1 - exp(-1 * v_ti(i) / tau)) + M_Te(j, i) + M_dT(j, i);
         M_Tb(j, i) = std::max(v_T_avg, ht_tset_unocc);
       }
     }
-    for (uint i = 0; i < v_Th_wke_avg.size(); i++) {
+    for (unsigned int i = 0; i < v_Th_wke_avg.size(); i++) {
       double sum = 0;
-      for (uint j = 0; j < M_Tb.size2(); j++) {
+      for (unsigned int j = 0; j < M_Tb.size2(); j++) {
         sum += M_Tb(i, j);
       }
       v_Th_wke_avg[i] = sum / M_Tb.size2();
     }
-    for (uint j = 0; j < M_Tb.size1(); j++) {
+    for (unsigned int j = 0; j < M_Tb.size1(); j++) {
       v_Th_wk_nt[j] = M_Tb(j, 1);
     }
 
@@ -948,8 +948,8 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   if (cooling.T_cl_ctrl_flag() == 1) {
     Matrix M_Tc(12, 4);
     Vector v_Tstart(v_cl_tset_ctrl);
-    for (uint i = 0; i < M_Tc.size2(); i++) {
-      for (uint j = 0; j < M_Tc.size1(); j++) {
+    for (unsigned int i = 0; i < M_Tc.size2(); i++) {
+      for (unsigned int j = 0; j < M_Tc.size1(); j++) {
         v_Tstart(j) = M_Tc(j, i) = (v_Tstart(j) - M_Te(j, i) - M_dT(j, i)) * exp(-1 * v_ti(i) / tau) + M_Te(j, i) + M_dT(j, i);
       }
     }
@@ -958,11 +958,11 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     // to that level. If the cooling setpoint is lower the cooling system will kick in and lower the 
     // temp to the cold temp setpoint.
     Matrix M_Tcc(12, 5);
-    for (uint j = 0; j < M_Tcc.size1(); j++) {
+    for (unsigned int j = 0; j < M_Tcc.size1(); j++) {
       M_Tcc(j, 0) = std::min(v_ht_tset_ctrl[j], cl_tset_unocc);
     }
-    for (uint i = 1; i < M_Tcc.size2(); i++) {
-      for (uint j = 0; j < M_Tcc.size1(); j++) {
+    for (unsigned int i = 1; i < M_Tcc.size2(); i++) {
+      for (unsigned int j = 0; j < M_Tcc.size1(); j++) {
         M_Tcc(j, i) = std::max(M_Tc(j, i - 1), cl_tset_unocc);
       }
     }
@@ -974,8 +974,8 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     // For each time period, find the average temp given the exponential decay.
     Matrix M_Td(12, 5);
 
-    for (uint i = 0; i < M_Td.size2(); i++) {
-      for (uint j = 0; j < M_Td.size1(); j++) {
+    for (unsigned int i = 0; i < M_Td.size2(); i++) {
+      for (unsigned int j = 0; j < M_Td.size1(); j++) {
         double v_T_avg = tau / v_ti(i) * (M_Tcc(j, i) - M_Te(j, i) - M_dT(j, i)) * (1 - exp(-1 * v_ti(i) / tau)) + M_Te(j, i) + M_dT(j, i);
         if (DEBUG_ISO_MODEL_SIMULATION) {
           std::cout << "v_T_avg = " << v_T_avg << std::endl;
@@ -989,14 +989,14 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
         printMatrix("M_Td", M_Td);
     }
 
-    for (uint i = 0; i < v_Th_wke_avg.size(); i++) {
+    for (unsigned int i = 0; i < v_Th_wke_avg.size(); i++) {
       double sum = 0;
-      for (uint j = 0; j < M_Td.size2(); j++) {
+      for (unsigned int j = 0; j < M_Td.size2(); j++) {
         sum += M_Td(i, j);
       }
       v_Tc_wke_avg[i] = sum / M_Td.size2();
     }
-    for (uint j = 0; j < M_Td.size1(); j++) {
+    for (unsigned int j = 0; j < M_Td.size1(); j++) {
       v_Tc_wk_nt[j] = M_Td(j, 1);
     }
   }
@@ -1018,7 +1018,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
 
   // The final avg for monthly energy computations is the lesser of the avg
   // computed above and the heating set control.
-  for (uint i = 0; i < v_Tc_wk_avg.size(); i++) {
+  for (unsigned int i = 0; i < v_Tc_wk_avg.size(); i++) {
     v_Th_avg[i] = std::min(v_Th_wk_avg[i], ht_tset_ctrl);
     v_Tc_avg[i] = std::min(v_Tc_wk_avg[i], cl_tset_ctrl);
   }
@@ -1193,7 +1193,7 @@ void MonthlyModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_a
   Vector v_eta_g_H(12);
 
   // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
-  for (uint i = 0; i < v_eta_g_H.size(); i++) {
+  for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
     v_eta_g_H[i] =
         v_gamma_H_ht(i) > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht(i) + DBL_MIN);
   }
@@ -1214,7 +1214,7 @@ void MonthlyModel::heatingAndCooling(const Vector& v_E_sol, const Vector& v_Th_a
 
   // Compute the cooling gain utilization factor eta_g_cl
   Vector v_eta_g_CL(12);
-  for (uint i = 0; i < v_eta_g_CL.size(); i++) {
+  for (unsigned int i = 0; i < v_eta_g_CL.size(); i++) {
     if (DEBUG_ISO_MODEL_SIMULATION) {
       double numer = (1.0 - std::pow(v_gamma_H_cl[i], a_H));
       double denom = (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0)));
@@ -1502,7 +1502,7 @@ void MonthlyModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
   printVector("v_Q_dhw_elec", v_Q_dhw_elec);
 }
 
-ISOResults MonthlyModel::simulate() const
+std::vector<EndUses> MonthlyModel::simulate() const
 {
   Vector weekdayOccupiedMegaseconds(12);
   Vector weekdayUnoccupiedMegaseconds(12);
@@ -1708,11 +1708,11 @@ ISOResults MonthlyModel::simulate() const
   return outputGeneration(v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot, v_Q_illum_ext_tot, v_Qfan_tot, v_Q_pump_tot, v_Q_dhw_elec, v_Qgas_ht,
       v_Qcl_gas_tot, v_Q_dhw_gas, frac_hrs_wk_day);
 }
-ISOResults MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot,
+std::vector<EndUses> MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector& v_Qcl_elec_tot, const Vector& v_Q_illum_tot,
     const Vector& v_Q_illum_ext_tot, const Vector& v_Qfan_tot, const Vector& v_Q_pump_tot, const Vector& v_Q_dhw_elec, const Vector& v_Qgas_ht,
     const Vector& v_Qcl_gas_tot, const Vector& v_Q_dhw_gas, double frac_hrs_wk_day) const
 {
-  ISOResults allResults;
+  std::vector<EndUses> allResults;
 
   // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15
 
@@ -1757,22 +1757,7 @@ ISOResults MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector
   EndUses results[12];
   for (int i = 0; i < 12; i++) {
 
-#ifdef _OPENSTUDIOS
-    results[i].addEndUse(Eelec_ht[i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    results[i].addEndUse(Eelec_cl[i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    results[i].addEndUse(Eelec_int_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    results[i].addEndUse(Eelec_ext_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    results[i].addEndUse(Eelec_fan[i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    results[i].addEndUse(Eelec_pump[i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    results[i].addEndUse(Eelec_plug[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    results[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    results[i].addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
-
-    results[i].addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    results[i].addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    results[i].addEndUse(Egas_plug[i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    results[i].addEndUse(Egas_dhw[i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
-#else
+#ifdef ISOMODEL_STANDALONE
     int euse = 0;
     results[i].addEndUse(euse++, Eelec_ht[i]);
     results[i].addEndUse(euse++, Eelec_cl[i]);
@@ -1787,8 +1772,23 @@ ISOResults MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector
     results[i].addEndUse(euse++, Egas_cl[i]);
     results[i].addEndUse(euse++, Egas_plug[i]);
     results[i].addEndUse(euse++, Egas_dhw[i]);
+#else
+    results[i].addEndUse(Eelec_ht[i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+    results[i].addEndUse(Eelec_cl[i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+    results[i].addEndUse(Eelec_int_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+    results[i].addEndUse(Eelec_ext_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+    results[i].addEndUse(Eelec_fan[i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+    results[i].addEndUse(Eelec_pump[i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+    results[i].addEndUse(Eelec_plug[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+    results[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+    results[i].addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+
+    results[i].addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    results[i].addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    results[i].addEndUse(Egas_plug[i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+    results[i].addEndUse(Egas_dhw[i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
 #endif
-    allResults.monthlyResults.push_back(results[i]);
+    allResults.push_back(results[i]);
   }
   return allResults;
 
@@ -1807,7 +1807,7 @@ ISOResults MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, const Vector
   // Find the total annual energy use.
   double yrSum = 0;
   Vector monthly(Etot_ht.size());
-  for (uint i = 0; i < Etot_ht.size(); i++) {
+  for (unsigned int i = 0; i < Etot_ht.size(); i++) {
     monthly[i] = Etot_ht[i] + Etot_cl[i] + Etot_int_lt[i] + Etot_ext_lt[i] + Etot_fan[i] + Etot_pump[i] + Etot_plug[i] + Etot_dhw[i];
     yrSum += monthly[i];
   }
