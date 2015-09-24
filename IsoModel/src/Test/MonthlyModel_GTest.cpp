@@ -39,8 +39,6 @@ TEST_F(ISOModelFixture, MonthlyModelTests)
   };
 
   openstudio::isomodel::UserModel userModel;
-  std::cout << "test_data_path in monthly test = " << test_data_path << "\n";
-  std::cout << "first enduse name in monthly test = " << endUseNames[0] << "\n";
   userModel.load(test_data_path + "/SmallOffice_v2.ism");
   auto monthlyModel = userModel.toMonthlyModel();
   auto results = monthlyModel.simulate();

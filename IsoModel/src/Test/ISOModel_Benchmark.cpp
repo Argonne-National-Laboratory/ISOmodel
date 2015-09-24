@@ -35,10 +35,9 @@ int main(int argc, char** argv)
     // Benchmark the monthly simulation.
     std::cout << "Benchmark: Running Monthly Simulation. Timing just the simulation. Iterations = " << iterations << std::endl;
 
-    ISOResults monthlyResults;
     auto monthStart = std::chrono::steady_clock::now();
     for (int i = 0; i != iterations; ++i){
-      monthlyResults = monthlyModel.simulate();
+      auto monthlyResults = monthlyModel.simulate();
     }
     auto monthEnd = std::chrono::steady_clock::now();
 

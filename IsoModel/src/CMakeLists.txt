@@ -35,8 +35,6 @@ set(${target_name}_src
   EndUses.hpp
   EpwData.cpp
   EpwData.hpp
-  ForwardTranslator.cpp
-  ForwardTranslator.hpp
   Heating.cpp
   Heating.hpp
   HourlyModel.cpp
