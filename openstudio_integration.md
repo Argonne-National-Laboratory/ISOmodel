@@ -1,6 +1,42 @@
 # OpenStudio integration
 
+## Conditional compilation
+
+Conditional compilation for standalone and OpenStudio specific code is controlled by the `ISOMODEL_STANDALONE` preprocessor definition which is set in the standalone CMakeLists.txt with this command: `add_definitions(-DISOMODEL_STANDALONE)`. Here some examples of wrapping standalone and OpenStudio specific code:
+
+```
+#ifdef ISOMODEL_STANDALONE
+// Standalone specific code.
+#endif
+```
+
+```
+#ifdef ISOMODEL_STANDALONE
+// Standalone specific code.
+#else
+// OpenStudio specific code.
+#endif
+```
+
+```
+#ifndef ISOMODEL_STANDALONE
+// OpenStudio specific code.
+#endif
+```
+
 ## Source files
+
+### Standalone source locations
+
+- Source: IsoModel/src
+- Tests: IsoModel/src/Test
+- Test data: IsoModel/test\_data
+
+### OpenStudio source location
+
+- Source: openstudiocore/src/isomodel
+- Tests: openstudiocore/src/isomodel/Test
+- Test data: openstudiocore/resources/isomodel
 
 ### Shared source files
 
