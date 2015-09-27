@@ -2,15 +2,21 @@
 
 ## Conditional compilation
 
-Conditional compilation for standalone and OpenStudio specific code is controlled by the `ISOMODEL_STANDALONE` preprocessor definition which is set in the standalone CMakeLists.txt with this command: `add_definitions(-DISOMODEL_STANDALONE)`. Here some examples of wrapping standalone and OpenStudio specific code:
+Conditional compilation for standalone and OpenStudio specific code is controlled by the `ISOMODEL_STANDALONE` preprocessor definition which is set in the standalone CMakeLists.txt with this command: `add_definitions(-DISOMODEL_STANDALONE)`.
+
+Here are some examples of wrapping standalone and OpenStudio specific code:
 
 ```
+#!c++
+
 #ifdef ISOMODEL_STANDALONE
 // Standalone specific code.
 #endif
 ```
 
 ```
+#!c++
+
 #ifdef ISOMODEL_STANDALONE
 // Standalone specific code.
 #else
@@ -19,6 +25,8 @@ Conditional compilation for standalone and OpenStudio specific code is controlle
 ```
 
 ```
+#!c++
+
 #ifndef ISOMODEL_STANDALONE
 // OpenStudio specific code.
 #endif
