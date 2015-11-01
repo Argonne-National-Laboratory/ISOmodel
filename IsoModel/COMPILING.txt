@@ -113,10 +113,10 @@ dynamic runtime library that the isomodel_unit_test executables links with (LNK2
 Linking up all the 64-bit libraries with CMake
 ----------------------------------------------
 
-In case it is helpful for anyone struggling to get everything working in 64-bit on windows, these two cmake commands both work on Brendan's machine on 2015-01-10.
+In case it is helpful for anyone struggling to get everything working in 64-bit on windows, these two cmake commands both work on Brendan's machine on 2015-11-01. Run these commands from your build directory. You may have to edit the path to your source directory, depending on where you put your build directory.
 
-cmake -DCMAKE_BUILD_TYPE=Release ../src -G "NMake Makefiles" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
+cmake -DCMAKE_BUILD_TYPE=Release ..IsoModel/src -G "NMake Makefiles" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
 
 or
 
-cmake -DCMAKE_BUILD_TYPE=Release ../src -G "Visual Studio 12 2013 Win64" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
+cmake -DCMAKE_BUILD_TYPE=Release ../IsoModel/src -G "Visual Studio 12 2013 Win64" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
