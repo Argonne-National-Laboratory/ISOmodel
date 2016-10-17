@@ -1,10 +1,29 @@
-README
-======
+# ISOmodel: The Argonne Reduced Order Building Energy Model based on ISO 13790
+The Argonne ISOmodel is a C++ implementation of a reduced order building energy model based on ISO 13790 and associated standards.
+This is a conversion of a MATLAB code written by Ralph T. Muehleisen of Argonne National Laboratory that was loosly based on spreadsheets 
+developed by graduate students at Georgia Institute of Technology.
+
+This particular code is the basis for the ISOmodel found within in NREL's OpenStudio, however compiler options are available to generate
+a standalone executable.
+
+
+
+# README
+
 
 This is the README for the isomodel (monthly and hourly) building energy model project. 
 
-How do I get set up?
---------------------
+## How do I get set up?
+
+
+
+### Dependencies ###
+ISOmodel has the following dependencies
+Boost >1.55
+gtest >1.7   for unit tests
+
+For further details on the setting up the development environment, please see the compiling.txt file
+
 
 ### Compiling ###
 

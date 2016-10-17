@@ -21,3 +21,6 @@ Session.vim
 
 # ipython notebook
 **/.ipynb_checkpoints/
+
+# rubymine project files
+.idea/
