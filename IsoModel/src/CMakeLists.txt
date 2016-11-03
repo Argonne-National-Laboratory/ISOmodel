@@ -75,8 +75,6 @@ set(${target_name}_src
 
 set (library_name isomodel)
 
-# OR CMAKE_SYSTEM_NAME STREQUAL "Linux"
-
 if(MSVC)
   set(Boost_USE_STATIC_LIBS ON)
 else()
@@ -86,6 +84,9 @@ else()
   FIND_PACKAGE ( Threads REQUIRED )
 endif()
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(CMAKE_SKIP_RPATH true)
+endif()
 
 find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem program_options)
 include_directories(${Boost_INCLUDE_DIR})
