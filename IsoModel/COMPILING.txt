@@ -1,7 +1,8 @@
-The isomodel code uses CMake for compilation. Note that CMake creates a makefile,
-you will still need to run make.
+The isomodel code uses CMake for compilation. 
 
-OSX:
+OSX / Linux:
+
+Note that CMake creates a makefile, you will still need to run make.
 
 - Install CMake
 	To get cmake to install aliases in /usr/bin, you can run from terminal with:
