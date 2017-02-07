@@ -93,12 +93,12 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
 void compare(const UserModel& umodel, bool markdown = false) {
   openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
   auto hourlyResults = hourly.simulate(true);
-  
+
   openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
   auto monthlyResults = monthlyModel.simulate();
 
-  auto endUseNames = std::vector<std::string> { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
-                                                "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
+  std::string endUseNames [] = { "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump",
+                                 "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
 
   auto delim = markdown ? " | " : ", ";
 
@@ -127,8 +127,8 @@ void compare(const UserModel& umodel, bool markdown = false) {
 
 int main(int argc, char* argv[])
 {
-  namespace po = boost::program_options; 
-  po::options_description desc("Options"); 
+  namespace po = boost::program_options;
+  po::options_description desc("Options");
   desc.add_options()
     ("ismfilepath,i", po::value<std::string>()->required(), "Path to ism file.")
     ("defaultsfilepath,d", "Path to defaults ism file.")
@@ -137,28 +137,28 @@ int main(int argc, char* argv[])
     ("hourlyByHour,H", "Run the hourly simulation (results for each hour).")
     ("compare,c", po::value<std::string>(), "Run the monthly and hourly simulations and compare the results. Use 'md' for markdown and 'csv' for csv.");
 
-  po::positional_options_description positionalOptions; 
-  positionalOptions.add("ismfilepath", 1); 
-  positionalOptions.add("defaultsfilepath", 2); 
+  po::positional_options_description positionalOptions;
+  positionalOptions.add("ismfilepath", 1);
+  positionalOptions.add("defaultsfilepath", 2);
 
   po::variables_map vm;
 
   try {
-    po::store(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions).run(), vm); // Throws on error. 
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions).run(), vm); // Throws on error.
     po::notify(vm); // Throws if required options are mising.
   }
-  catch(boost::program_options::required_option& e) 
-  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+  catch(boost::program_options::required_option& e)
+  {
+    std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
     std::cerr << desc << std::endl;
-    return 1; 
-  } 
-  catch(boost::program_options::error& e) 
-  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    return 1;
+  }
+  catch(boost::program_options::error& e)
+  {
+    std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
     std::cerr << desc << std::endl;
-    return 1; 
-  } 
+    return 1;
+  }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Loading User Model..." << std::endl;
@@ -229,5 +229,3 @@ int main(int argc, char* argv[])
   }
 
 }
-
-
