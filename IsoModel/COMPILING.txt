@@ -1,4 +1,5 @@
-The isomodel code uses CMake for compilation. 
+The isomodel code uses CMake for compilation. Note that CMake creates a makefile,
+you will still need to run make.
 
 OSX:
 
@@ -20,6 +21,18 @@ create separate directories for those.
  * X should be the root location of gtest. For example if its in /Users/nick/src/gtest-1.7.0/
  then -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/. CMake will look in that directory for both 
  the gtest and gtest_main library and the headers.
+4. Run "make", from the command line (e.g)
+
+iMac:Release nick$ cd /Users/nick/Documents/repos/ISOmodel/IsoModel/Release
+iMac:Release nick$ make
+[  1%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Building.cpp.o
+[  2%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Cooling.cpp.o
+[  3%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/EpwData.cpp.o
+[  4%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Heating.cpp.o
+[  5%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/HourlyModel.cpp.o
+[  6%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Lighting.cpp.o
+...
+
 
 If Boost is in some standard place 
 such as /usr/local/include etc. then it should be found. If not you can specify where to find 
