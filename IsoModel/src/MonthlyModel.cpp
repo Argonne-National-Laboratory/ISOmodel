@@ -343,7 +343,7 @@ void MonthlyModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vect
 }
 
 /**
- * Breaks down the solar radiation and temperature data into day, night, 
+ * Breaks down the solar radiation and temperature data into day, night,
  * weekday and weekend vectors, as appropriate.
  */
 void MonthlyModel::solarRadiationBreakdown(const Vector& weekdayOccupiedMegaseconds, const Vector& weekdayUnoccupiedMegaseconds,
@@ -557,8 +557,8 @@ void MonthlyModel::windowSolarGain(const Vector& v_win_A, const Vector& v_wall_e
   // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for unshaded roof
   double n_v_env_form_factors[] =
   { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
- 
-  // Vertical wall external convective surface heat resistances. 
+
+  // Vertical wall external convective surface heat resistances.
   v_wall_R_sc = Vector(vsize);
   for (int i = 0; i < vsize; i++) {
     v_wall_R_sc[i] = structure.R_sc_ext();
@@ -579,7 +579,7 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
 {
   // EN ISO 13790 11.3.2 eq. 43.
   // \Phi_sol,k = F_sh,ob,k * A_sol,k * I_sol,k - F_r,k * \Phi_r,k
-  
+
   // \Phi_sol,k = solar heat flow gains through building element k
   // F_sh,ob,k = shading reduction factor for external obstacles calculated via 11.4.4
   // A_sol,k = effective collecting area of surface calculated via 11.3.3 (glazing ) 11.3.4 (opaque)
@@ -631,7 +631,7 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
   for (unsigned int i = 0; i < theta_er.size(); i++) {
     // Average difference between air temperature and sky temperature.
     // ISO 13790 11.4.6 says take \Theta_er=9k in sub polar zones, 13 K in tropical or 11 K in intermediate
-    // TODO: Does the .epw file contain the sky temperature? If not, use the weather file's lat/lon to 
+    // TODO: Does the .epw file contain the sky temperature? If not, use the weather file's lat/lon to
     // determine which default value to use for theta_er. BAA@2015-07-13.
     theta_er[i] = 11.0;
   }
@@ -642,7 +642,7 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
 
   // Total solar heat gain for opaque area.
   Vector v_wall_phi_sol(12);
-  
+
   // Compute the total solar heat gain for the opaque area.
   for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
     for (unsigned int j = 0; j < temp.size(); j++) {
@@ -663,7 +663,7 @@ void MonthlyModel::solarHeatGain(const Vector& v_win_A_sol, const Vector& v_wall
   v_E_sol = mult(v_phi_sol, megasecondsInMonth);
 }
 
-/** 
+/**
  * Compute internal heat gains and losses.
  */
 void MonthlyModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ, double Q_illum_unocc, double Q_illum_tot_yr, double& phi_int_avg,
@@ -686,7 +686,7 @@ void MonthlyModel::heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ
 
 
   // Original spreadsheet computed the approximate internal heat gain for week nights, weekend days, and weekend nights
-  // assuming they scale as the occ. fractions.  These are used for finding temp and not for directly calculating energy 
+  // assuming they scale as the occ. fractions.  These are used for finding temp and not for directly calculating energy
   // use total so approximations are more acceptable.
   //
   // The following is a more accuate internal heat gain for week nights,
@@ -706,7 +706,7 @@ void MonthlyModel::internalHeatGain(double phi_int_avg, double phi_plug_avg, dou
   // Total occupant internal heat gain per year (W).
   double phi_I_occ = phi_int_avg * structure.floorArea();
 
-  // Total appliance internal heat gain per year (W). 
+  // Total appliance internal heat gain per year (W).
   double phi_I_app = phi_plug_avg * structure.floorArea();
 
   // Total lighting internal heat gain per year (W).
@@ -756,7 +756,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   // Set the temp differential from the interior heating/cooling setpoint
   // based on the BEM type. An advanced BEM has the effect of reducing the
   // effective heating temp and raising the effective cooling temp during
-  // times of control (i.e. during occupancy).  
+  // times of control (i.e. during occupancy).
   double T_adj = 0;
   switch ((int) building.buildingEnergyManagement()) {
   case 1:
@@ -816,7 +816,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   // The following code computes the average weekend room temp using exponential rise and
   // decays as we switch between day and night temp settings.  It assumes that
   // the weekend is two days (we'll call them sat and sun)
-  // 
+  //
   // we do this wierd breakdown breakdown because want to separate day with
   // solar loading from night without.  We can then use the average temp
   // in each time frame rather than the overall monthly average.  right now
@@ -829,10 +829,10 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
   Vector v_ti(5);
   v_ti[0] = v_ti[2] = v_ti[4] = hoursUnoccupiedPerDay;
   v_ti[1] = v_ti[3] = hoursOccupiedPerDay;
-   
+
   // Generate an effective delta T matrix from ratio of total interior gains to heat
   // transfer coefficient for each time period.
-  // 
+  //
   // This is a matrix where the columns are the vectors v_P_tot_wk_nt/H_tot, and so on
   // this is for a week night, weekend day, weekend night, weekend day, weekend night sequence
   Matrix M_dT(v_P_tot_wk_nt.size(), 5);
@@ -865,7 +865,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     printVector("v_Th_wk_nt", v_Th_wk_nt);
   }
 
-  // Compute the change in temp from setback to another heating temp in unoccupied times 
+  // Compute the change in temp from setback to another heating temp in unoccupied times
   if (heating.T_ht_ctrl_flag() == 1) { // If the HVAC heating controls are turned on.
     Matrix M_Ta(12, 4);
     Vector v_Tstart(v_ht_tset_ctrl);
@@ -955,7 +955,7 @@ void MonthlyModel::interiorTemp(const Vector& v_wall_A, const Vector& v_P_tot_wk
     }
 
     // Check to see if the decay temp is lower than the temp setpoint.  If so, the space will cool
-    // to that level. If the cooling setpoint is lower the cooling system will kick in and lower the 
+    // to that level. If the cooling setpoint is lower the cooling system will kick in and lower the
     // temp to the cold temp setpoint.
     Matrix M_Tcc(12, 5);
     for (unsigned int j = 0; j < M_Tcc.size1(); j++) {
@@ -1060,8 +1060,9 @@ void MonthlyModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_av
   // Infiltration rate in m3/h/m2 @ 75 Pa based on wall area.
   double v_Q75pa = structure.infiltrationRate();
 
-  // Convert infiltration to Q@4Pa in m3/h /m2 based on floor area. 
-  double v_Q4pa = v_Q75pa * tot_env_A / structure.floorArea() * (std::pow((4.0 / 75.0), ventilation.p_exp()));
+  // Convert infiltration to Q@4Pa in m3/h /m2 based on floor area.
+  // double v_Q4pa = v_Q75pa * tot_env_A / structure.floorArea() * (std::pow((4.0 / 75.0), ventilation.p_exp()));
+  double v_Q4pa = v_Q75pa;
 
   // Effective stack height.
   double h_stack = ventilation.zone_frac() * vent_zone_height;
@@ -1123,14 +1124,14 @@ void MonthlyModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_av
   // TODO: Figure out what the comment below is refering to. I don't want to delete it just yet
   // because connecting the code to the sources of the equations is important. BAA@2015-07-14.
   //
-  // source EN ISO 13789 C.5  There they use Vdot instead of Q 
+  // source EN ISO 13789 C.5  There they use Vdot instead of Q
   // Vdot = Vdot_f (1??_v) +Vdot_x
   // Vdot_f is the design airflow rate due to mechanical ventilation;
   // Vdot_x is the additional airflow rate with fans on, due to wind effects;
   // ?_v is the global heat recovery efficiency, taking account of the differences between supply and extract
   // airflow rates. Heat in air leaving the building through leakage cannot be recovered.
 
-  // Set vent_rate_flag=0 if ventilation rate is constant, 1 if we assume vent off in unoccopied times or 
+  // Set vent_rate_flag=0 if ventilation rate is constant, 1 if we assume vent off in unoccopied times or
   // 2 if we assume ventilation rate is dropped proportionally to population
   // set to 1 to mimic the behavior of the original spreadsheet.
   double vent_op_frac;
@@ -1269,7 +1270,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
     Vector& v_Qcl_elec_tot, Vector& v_Qcl_gas_tot) const
 {
   // TODO: Implement (or remove) all the district heating/cooling stuff that is currently commented out. BAA@2015-07-15.
- 
+
   // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
   /*
    %% District H/C info
@@ -1280,7 +1281,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
    n_frac_DH_free = 0.000; % fraction of free heat source to DH (0 to 1)
 
    DC_YesNo = 0;  % building connected to DC (0=no, 1=yes)
-   n_eta_DC_network = 0.9;  % efficiency of DC network. 
+   n_eta_DC_network = 0.9;  % efficiency of DC network.
    n_eta_DC_COP = 5.5;  % COP of DC elec Chillers
    n_eta_DC_frac_abs = 0;  % fraction of DC chillers that are absorption
    n_eta_DC_COP_abs = 1;  % COP of DC absorption chillers
@@ -1335,7 +1336,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
   printVector("v_Qht_DH", v_Qht_DH);
   printVector("v_Qcl_sys", v_Qcl_sys);
   printVector("v_Qcool_DC", v_Qcool_DC);
-  
+
   // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
   /*
    if DH_YesNo==1
@@ -1350,7 +1351,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
    v_Qcl_sys = zeros(12,1);  % if we have district cooling our cooling energy needs from our system are zero
    v_Qcool_DC = v_Qloss_cl_dist+v_Qneed_cl;  % if we have DC the cooling needs are the dist losses + the cooling needs themselves
    else
-   v_Qcl_sys =(v_Qloss_cl_dist+v_Qneed_cl)/(IEER+eps);  % if no DC compute our total system cooling energy needs including losses 
+   v_Qcl_sys =(v_Qloss_cl_dist+v_Qneed_cl)/(IEER+eps);  % if no DC compute our total system cooling energy needs including losses
    v_Qcool_DC=zeros(12,1); % if no DC, DC cooling needs are zero
    end
 
@@ -1385,7 +1386,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
   /*
    v_Qcl_DC_elec = v_Qcool_DC * (1-n_eta_DC_frac_abs) / (n_eta_DC_COP*n_eta_DC_network);  % Energy used for cooling by district electric chillers
    v_Qcl_DC_abs =  v_Qcool_DC * (1-n_frac_DC_free) / n_eta_DC_COP_abs; %Energy used for cooling by district absorption chillers
-   
+
    v_Qht_DH_total = v_Qht_DH * (1 - n_frac_DH_free) / (n_eta_DH_sys * n_eta_DH_network);
    v_Qcl_elec_tot = v_Qcl_sys + v_Qcl_DC_elec; %total electric cooling energy (MJ)
    v_Qcl_gas_tot = v_Qcl_DC_abs; % total gas cooliing energy
@@ -1397,7 +1398,7 @@ void MonthlyModel::hvac(const Vector& v_Qneed_ht, const Vector& v_Qneed_cl, doub
    v_Qelec_ht = zeros(12,1);  % if we get here, fuel was gas to total electric heating energy is 0
    v_Qgas_ht=v_Qht_sys+v_Qht_DH_total;  % total gas heating energy is building + any DH
    end
-   
+
    */
 }
 
@@ -1814,4 +1815,3 @@ std::vector<EndUses> MonthlyModel::outputGeneration(const Vector& v_Qelec_ht, co
 }
 } // isomodel
 } // openstudio
-
