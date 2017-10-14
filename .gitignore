@@ -5,6 +5,10 @@
 [Bb]in/
 [Oo]bj/
 
+# Visual Studio build directories
+.vs/
+
+
 # Doxygen output folder
 [Dd]oc/
 

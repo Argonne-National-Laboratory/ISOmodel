@@ -141,4 +141,5 @@ target_link_libraries(${library_name} ${${target_name}_depends})
 
 if (MSVC)
  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
+
 endif()
