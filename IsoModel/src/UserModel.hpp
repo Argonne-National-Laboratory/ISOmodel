@@ -2173,7 +2173,7 @@ public:
   }
 
   /// Sets a Ventilation property. Property name in .ism file: "vent_rate_flag". Property is optional (has a default).
-  void setVent_rate_flag(double vent_rate_flag) {
+  void setVent_rate_flag(int vent_rate_flag) {
     ventilation.setVent_rate_flag(vent_rate_flag);
   }
 

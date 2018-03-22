@@ -189,7 +189,7 @@ public:
    */
   int size() const
   {
-    return map.size();
+    return static_cast<int>(map.size());
   }
 
 };

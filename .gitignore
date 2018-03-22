@@ -4,6 +4,7 @@
 [Bb]uild/
 [Bb]in/
 [Oo]bj/
+msvc/
 
 # Doxygen output folder
 [Dd]oc/
