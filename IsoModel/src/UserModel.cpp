@@ -52,7 +52,7 @@ HourlyModel UserModel::toHourlyModel() const
   if (!_valid) {
     return *((HourlyModel*) NULL);
   }
-  
+
   setCoreSimulationProperties(sim);
   return sim;
 }
@@ -259,7 +259,7 @@ void UserModel::initializeParameter(void(UserModel::*setProp)(double), const Pro
     (this->*setProp)(*prop);
   } else if (required) {
     throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
-  } 
+  }
 }
 
 void UserModel::initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required) {
@@ -267,7 +267,7 @@ void UserModel::initializeParameter(void(UserModel::*setProp)(int), const Proper
     (this->*setProp)(*prop);
   } else if (required) {
     throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
-  } 
+  }
 }
 
 void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required) {
@@ -275,7 +275,7 @@ void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const Prope
     (this->*setProp)(*prop);
   } else if (required) {
     throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
-  } 
+  }
 }
 
 void UserModel::initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required) {
@@ -287,7 +287,7 @@ void UserModel::initializeParameter(void(UserModel::*setProp)(const Vector&), co
     (this->*setProp)(vec);
   } else if (required) {
     throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
-  } 
+  }
 }
 
 void UserModel::initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required) {
@@ -295,7 +295,7 @@ void UserModel::initializeParameter(void(UserModel::*setProp)(std::string), cons
     (this->*setProp)(*prop);
   } else if (required) {
     throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
-  } 
+  }
 }
 
 void UserModel::northToSouth(Vector& vec) {
@@ -312,7 +312,7 @@ void UserModel::northToSouth(Vector& vec) {
   temp = vec[1];
   vec[1] = vec[3];
   vec[3] = temp;
-  
+
   // Swap 5 and 7 (SW and NW).
   temp = vec[5];
   vec[5] = vec[7];
@@ -483,7 +483,7 @@ void UserModel::initializeSolar()
       case 5:    //mdbt = [12 x 1] mean monthly dry bulb temp (C)
         _mdbt[row] = atof(linesplit[1].c_str());
         break;
-      case 6:    //mwind = [12 x 1] mean monthly wind speed; (m/s) 
+      case 6:    //mwind = [12 x 1] mean monthly wind speed; (m/s)
         _mwind[row] = atof(linesplit[1].c_str());
         break;
       default:
@@ -517,6 +517,28 @@ void UserModel::load(std::string buildingFile)
   loadWeather();
   if (DEBUG_ISO_MODEL_SIMULATION)
     std::cout << "Weather File Loaded" << std::endl;
+}
+
+void UserModel::loadJustBuilding(std::string buildingFile){
+      dataFile = buildingFile;
+      _valid = true;
+      if(!boost::filesystem::exists(buildingFile)){
+            std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+            _valid = false;
+            return;
+      }
+      loadBuilding(buildingFile);
+}
+void UserModel::loadJustWeather(std::string buildingFile){
+      dataFile = buildingFile;
+      _valid = true;
+      if(!boost::filesystem::exists(buildingFile)){
+            std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+            _valid = false;
+            return;
+      }
+      loadWeather();
+
 }
 
 void UserModel::load(std::string buildingFile, std::string defaultsFile)
@@ -553,4 +575,3 @@ void UserModel::load(std::string buildingFile, std::string defaultsFile)
 }
 } // isomodel
 } // openstudio
-

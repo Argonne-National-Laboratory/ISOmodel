@@ -64,7 +64,8 @@ public:
    * Loads an ISO model from the specified .ism file
    */
   void load(std::string buildingFile);
-
+  void UserModel::loadJustBuilding(std::string buildingFile);
+  void UserModel::loadJustWeather(std::string buildingFile);
   /**
   * Loads an ISO model file from the specified .ism file and defaults properties from the specified .ism.
   */
@@ -89,7 +90,7 @@ public:
    * Generates a MonthlyModel from the properties of the UserModel.
    */
   MonthlyModel toMonthlyModel() const;
-  
+
   /**
    * Generates an HourlyModel from the properties of the UserModel.
    */
@@ -2285,7 +2286,6 @@ private:
   std::string dataFile;
 
   void initializeParameters(const Properties& props);
-  
   /**
    * Sets an .ism property in the usermodel to a value gotten from a Properties object.
    * Takes a pointer to the appropriate UserModel setter function, the Properties object,
