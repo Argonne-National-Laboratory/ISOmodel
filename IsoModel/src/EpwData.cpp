@@ -1,4 +1,6 @@
 #include "EpwData.hpp"
+#include <vector>
+#include <iostream>
 
 namespace openstudio {
 namespace isomodel {
@@ -47,25 +49,40 @@ void EpwData::parseHeader(std::string line)
 }
 void EpwData::parseData(std::string line, int row)
 {
-  std::stringstream linestream(line);
-  std::string s;
-  int col = 0;
-  for (int i = 0; i < 22; i++) {
-    std::getline(linestream, s, ',');
-    switch (i) {
-    case 6:
-    case 7:
-    case 8:
-    case 13:
-    case 14:
-    case 15:
-    case 21:
-      m_data[col++][row] = (double) ::atof(s.c_str());
-      break;
-    default:
-      break;
-    }
-  }
+      //std::string s;
+      char * cstr = new char[line.length() + 1];
+      strcpy(cstr, line.c_str());
+      char * word; //34 commas
+      int col = 0;
+      for(int i = 0; i < 22; i++){
+            if(i == 0){
+                  word = strtok(cstr, ",");
+            }
+            else{
+                  word = strtok(NULL, ",");
+            }
+            switch(i){
+                  case 6:
+                  case 7:
+                  case 8:
+                  case 13:
+                  case 14:
+                  case 15:
+                  case 21:
+                  {
+                        double x = strtod(word, NULL);
+                        m_data[col++][row] = x;
+                        //m_data[col++][row] = (double) (*word);
+                        //std::string s(word);
+                        //m_data[col++][row] = (double) ::atof(s.c_str());
+
+                  }
+                        break;
+                  default:
+                        break;
+            }
+      }
+      //free(cstr);
 }
 std::string EpwData::toISOData()
 {
@@ -134,26 +151,45 @@ void EpwData::loadData(int block_size, double* data)
 
 void EpwData::loadData(std::string fn)
 {
-  std::string line;
-  std::ifstream myfile(fn.c_str());
-  int i = 0;
-  int row = 0;
+      int i = 0;
+      int row = 0;
+      std::string line = "";
+      char * buffer;
+      std::vector <std::string> data;
 
-  for (int c = 0; c < 7; c++) {
-    m_data[c].resize(8760);
-  }
-  if (myfile.is_open()) {
-    while (myfile.good() && row < 8760) {
-      i++;
-      getline(myfile, line);
-      if (i == 1) {
-        parseHeader(line);
-      } else if (i > 8) {
-        parseData(line, row++);
+      FILE * inputfile = fopen(fn.c_str(), "r");
+
+      fseek(inputfile, 0, SEEK_END);
+      int buffersize = ftell(inputfile);
+      rewind(inputfile);
+
+      buffer = new char[buffersize];
+      size_t readcounter = fread(buffer, sizeof(char), buffersize, inputfile);
+      int count = 0;
+      char * memcounter = buffer;
+      while(count < readcounter){
+            line.push_back(*memcounter);
+            if(*memcounter == 13 || *memcounter == 10 || *memcounter == '\n'){
+                  data.push_back(line);
+                  line.clear();
+            }
+            *memcounter++; count++;
       }
-    }
-    myfile.close();
-  }
+      for (int c = 0; c < 7; c++){
+            m_data[c].resize(8760);
+      }
+      while(row < 8760 && i < data.size()){
+            line = data[i];
+            i++;
+            if(i == 1){
+                  parseHeader(line);
+            }
+            else if(i > 8){
+                  parseData(line, row++);
+            }
+      }
+      free(buffer);
+      fclose(inputfile);
 }
 }
 }

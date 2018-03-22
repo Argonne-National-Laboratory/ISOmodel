@@ -2286,6 +2286,7 @@ private:
   std::string dataFile;
 
   void initializeParameters(const Properties& props);
+
   /**
    * Sets an .ism property in the usermodel to a value gotten from a Properties object.
    * Takes a pointer to the appropriate UserModel setter function, the Properties object,
