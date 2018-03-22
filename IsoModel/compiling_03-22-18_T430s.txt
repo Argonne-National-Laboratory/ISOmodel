@@ -18,6 +18,8 @@ ZERO_CHECK
 isomodel
 isomodel_standalone
 
+isomodel_unit_tests does not build - it looks like there are gtest probelsm
+
 
 
 Using nmake
