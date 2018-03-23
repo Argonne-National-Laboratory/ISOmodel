@@ -51,11 +51,14 @@ void EpwData::parseData(std::string line, int row)
 {
       //std::string s;
       char * cstr = new char[line.length() + 1];
+
+	  // use strcpy instead of safer strcpy_r or strcpy_s to allow compile on either windows or unix
       strcpy(cstr, line.c_str());
       char * word; //34 commas
       int col = 0;
       for(int i = 0; i < 22; i++){
             if(i == 0){
+					// use strtok instead of safer strtok_r or strtok_s to allow compile on either windows or unix
                   word = strtok(cstr, ",");
             }
             else{
