@@ -296,7 +296,7 @@ void MonthlyModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vect
     Vector& weekendUnoccupiedMegaseconds, Vector& clockHourOccupied, Vector& clockHourUnoccupied, double& frac_hrs_wk_day,
     double& hoursUnoccupiedPerDay, double& hoursOccupiedPerDay, double& frac_hrs_wk_nt, double& frac_hrs_wke_tot) const
 {
-  hoursOccupiedPerDay = pop.hoursEnd() - pop.hoursStart() + 1;
+  hoursOccupiedPerDay = pop.hoursEnd() - pop.hoursStart();
   if (hoursOccupiedPerDay < 0) {
     hoursOccupiedPerDay += 24;
   }
@@ -451,12 +451,19 @@ void MonthlyModel::lightingEnergyUse(const Vector& v_hrs_sun_down_mo, double& Q_
   // average sunup and sundown times.
 
   // Lighting operational hours during the daytime.
-  double t_lt_D = (std::min(lights.n_day_end(), pop.hoursEnd()) - std::max(pop.hoursStart(), lights.n_day_start()) + 1)
-      * (pop.daysEnd() - pop.daysStart() + 1) * lights.n_weeks();
+  double hoursOccupied = std::min(lights.n_day_end(), pop.hoursEnd()) - std::max(pop.hoursStart(), lights.n_day_start());
+  if (hoursOccupied < 0) {
+    hoursOccupied += 24;
+  }
+  double daysOccupied = pop.daysEnd() - pop.daysStart() + 1;
+  if (daysOccupied < 0) {
+    daysOccupied += 7;
+  }
+  double t_lt_D = hoursOccupied * daysOccupied * lights.n_weeks();
 
   // Lighting operational hours during the nighttime.
-  double t_lt_N = (std::max(lights.n_day_start() - pop.hoursStart(), 0.0) + std::max(pop.hoursEnd() - lights.n_day_end(), 0.0))
-      * (pop.daysEnd() - pop.daysStart() + 1) * lights.n_weeks();
+  hoursOccupied = std::max(lights.n_day_start() - pop.hoursStart(), 0.0) + std::max(pop.hoursEnd() - lights.n_day_end(), 0.0);
+  double t_lt_N = hoursOccupied * daysOccupied * lights.n_weeks();
 
   // Unoccupied hours.
   double t_unocc = hoursInYear - t_lt_D - t_lt_N;
