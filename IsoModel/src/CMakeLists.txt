@@ -1,7 +1,9 @@
 project(isomodel_project)
 set(target_name isomodel)
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14.0)
+
+include("${PROJECT_SOURCE_DIR}/ConanInstall.cmake")
 
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
@@ -72,38 +74,23 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
-
 set (library_name isomodel)
-
-if(MSVC)
-  set(Boost_USE_STATIC_LIBS ON)
-else()
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COMPILE_FLAGS} -pthread)
-  # required for googletest
-  FIND_PACKAGE ( Threads REQUIRED )
-endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(CMAKE_SKIP_RPATH true)
 endif()
 
-find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem program_options)
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIB_DIR})
-
 set(${target_name}_depends
-  ${Boost_LIBRARIES}
-)
-
-find_package(GTest REQUIRED)
-set(unit_test_depends
-  ${GTEST_LIBRARIES}
-  ${Boost_LIBRARIES}
+  CONAN_PKG::boost
 )
 
 set(benchmark_depends
-  ${Boost_LIBRARIES}
+  CONAN_PKG::boost
+)
+
+set(unit_test_depends
+  CONAN_PKG::boost
+  CONAN_PKG::gtest
 )
 
 add_definitions(-DISOMODEL_STANDALONE)
