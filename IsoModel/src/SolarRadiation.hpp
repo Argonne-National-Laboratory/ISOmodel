@@ -188,7 +188,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 26.
   */
   double calculateTotalDirectBeamIrradiance(double directBeamIrradiance, double angleOfIncidence) {
-    return directBeamIrradiance * std::max(cos(angleOfIncidence), 0.0);
+    return directBeamIrradiance * std::max<double>(cos(angleOfIncidence), 0.0);
   }
 
   /**
@@ -196,7 +196,7 @@ public:
   * ASHRAE2013 Fundamentals, Ch. 14, eq. 28.
   */
   double calculateDiffuseAngleOfIncidenceFactor(double angleOfIncidence) {
-    return std::max(0.45, 0.55 + 0.437 * cos(angleOfIncidence) + 0.313 * std::pow(cos(angleOfIncidence), 2.0));
+    return std::max<double>(0.45, 0.55 + 0.437 * cos(angleOfIncidence) + 0.313 * std::pow(cos(angleOfIncidence), 2.0));
   }
 
   /**
