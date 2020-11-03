@@ -178,6 +178,8 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
       )
     endif()
 
+    set_target_properties(${swig_target} PROPERTIES OUTPUT_NAME ${LOWER_NAME})
+    set_target_properties(${swig_target} PROPERTIES PREFIX "")
     if(APPLE)
       set_target_properties(${swig_target} PROPERTIES SUFFIX ".bundle" )
     else()

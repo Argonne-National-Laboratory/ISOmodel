@@ -35,6 +35,49 @@
 #ifdef inline
 #undef inline
 #endif
+
+#ifdef accept
+#undef accept
+#endif
+#ifdef close
+#undef close
+#endif
+#ifdef times
+#undef times
+#endif
+#ifdef Sleep
+#undef Sleep
+#endif
+#ifdef sleep
+#undef sleep
+#endif
+#ifdef bind
+#undef bind
+#endif
+#ifdef rename
+#undef rename
+#endif
+#ifdef connect
+#undef connect
+#endif
+#ifdef shutdown
+#undef shutdown
+#endif
+#ifdef mkdir
+#undef mkdir
+#endif
+#ifdef select
+#undef select
+#endif
+#ifdef ALLOC
+#undef ALLOC
+#endif
+#ifdef _
+#undef _
+#endif
+#ifdef StringValue
+#undef StringValue
+#endif
 %}
 
 #endif
