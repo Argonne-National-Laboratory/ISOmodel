@@ -1,7 +1,56 @@
 project(isomodel_project)
 set(target_name isomodel)
 
-cmake_minimum_required(VERSION 3.1)
+option(BUILD_RUBY_BINDINGS "Build Ruby bindings" ON)
+option(BUILD_PYTHON_BINDINGS "Build Ruby bindings" OFF)
+option(BUILD_CSHARP_BINDINGS "Build C# bindings" OFF)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
+
+cmake_minimum_required(VERSION 3.14.0)
+
+# Set a default build type if none was specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
+
+include("${PROJECT_SOURCE_DIR}/ConanInstall.cmake")
+include("${PROJECT_SOURCE_DIR}/FetchRubyMinGW.cmake")
+include("${PROJECT_SOURCE_DIR}/ProjectMacros.cmake")
+
+FetchRubyMinGW()
+
+# A macro to find a conan related value especially when using multi-config builds (MSVC)
+# But it also works with single-config builds
+macro(FindValue ValueName)
+  set(LocalVar "")
+  set(LocalVar $<$<CONFIG:Debug>:${${ValueName}_DEBUG}>$<$<CONFIG:Release>:${${ValueName}_RELEASE}>$<$<CONFIG:RelWithDebInfo>:${${ValueName}_RELWITHDEBINFO}>$<$<CONFIG:MinSizeRel>:${${ValueName}_MINSIZEREL}>
+  )
+#  list(JOIN LocalVar "" LocalVar)
+  string(STRIP ${LocalVar} LocalVar)
+  set(CURRENT_${ValueName} $<IF:$<BOOL:${LocalVar}>,${LocalVar},${${ValueName}}>)
+  # For debug purposes
+   message(STATUS "Found '${ValueName}' as '${CURRENT_${ValueName}}'")
+endmacro()
+
+# So instead, we use a generator expression to find the right value. At least it makes sense, and should be robust.
+FindValue(CONAN_SWIG_ROOT)
+
+set(SWIG_EXECUTABLE "${CURRENT_CONAN_SWIG_ROOT}/bin/swig")
+
+# The conan-provided binary has a built-in swiglib (`swig -swiglib`) that points to the build box on which it was built, which is problematic for us.
+set(SWIG_LIB "${CURRENT_CONAN_SWIG_ROOT}/bin/swiglib")
+
+if(BUILD_RUBY_BINDINGS)
+  get_target_property(RUBY_INCLUDE_DIRS CONAN_PKG::openstudio_ruby INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
@@ -72,38 +121,23 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
-
 set (library_name isomodel)
-
-if(MSVC)
-  set(Boost_USE_STATIC_LIBS ON)
-else()
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COMPILE_FLAGS} -pthread)
-  # required for googletest
-  FIND_PACKAGE ( Threads REQUIRED )
-endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(CMAKE_SKIP_RPATH true)
 endif()
 
-find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem program_options)
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIB_DIR})
-
 set(${target_name}_depends
-  ${Boost_LIBRARIES}
-)
-
-find_package(GTest REQUIRED)
-set(unit_test_depends
-  ${GTEST_LIBRARIES}
-  ${Boost_LIBRARIES}
+  CONAN_PKG::boost
 )
 
 set(benchmark_depends
-  ${Boost_LIBRARIES}
+  CONAN_PKG::boost
+)
+
+set(unit_test_depends
+  CONAN_PKG::boost
+  CONAN_PKG::gtest
 )
 
 add_definitions(-DISOMODEL_STANDALONE)
@@ -136,9 +170,11 @@ add_custom_command(TARGET isomodel_unit_tests
                    )
 
 
-add_library(${library_name} SHARED ${${target_name}_src})
+add_library(${library_name} STATIC ${${target_name}_src})
 target_link_libraries(${library_name} ${${target_name}_depends})
 
 if (MSVC)
- target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
+  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
 endif()
+
+MAKE_SWIG_TARGET(IsoModel isomodel "${CMAKE_CURRENT_SOURCE_DIR}/IsoModel.i" "${CMAKE_CURRENT_SOURCE_DIR}/IsoModel.i" ${library_name} "")

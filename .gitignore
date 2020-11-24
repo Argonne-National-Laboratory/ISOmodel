@@ -1,10 +1,10 @@
 # Build results
-[Dd]ebug/
-[Rr]elease/
-[Bb]uild/
-[Bb]in/
-[Oo]bj/
-msvc/
+[Dd]ebug*/
+[Rr]elease*/
+[Bb]uild*/
+[Bb]in*/
+[Oo]bj*/
+msvc*/
 
 # Doxygen output folder
 [Dd]oc/
