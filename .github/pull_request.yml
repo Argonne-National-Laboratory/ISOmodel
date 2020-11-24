@@ -40,6 +40,10 @@ jobs:
       with:
         python-version: '3.8.x'
 
+    - uses: actions/setup-ruby@v1
+      with:
+        ruby-version: '2.5'
+
     - name: Install conan
       run: |
           python --version
