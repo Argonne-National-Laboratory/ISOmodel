@@ -177,4 +177,4 @@ if (MSVC)
   target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
 endif()
 
-MAKE_SWIG_TARGET(IsoModel isomodel "${CMAKE_CURRENT_SOURCE_DIR}/IsoModel.i" "${CMAKE_CURRENT_SOURCE_DIR}/IsoModel.i" ${library_name} "")
+MAKE_SWIG_TARGET(IsoModel isomodel "${CMAKE_CURRENT_SOURCE_DIR}/ISOModel.i" "${CMAKE_CURRENT_SOURCE_DIR}/ISOModel.i" ${library_name} "")

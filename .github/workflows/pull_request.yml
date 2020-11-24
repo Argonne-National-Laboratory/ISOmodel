@@ -9,17 +9,14 @@ env:
 
 jobs:
   build:
-    # runs-on: ubuntu-18.04
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure }}
     strategy:
       # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-10.15]
+        os: [ubuntu-20.04] #, windows-2019, macos-10.15]
         include:
         - os: ubuntu-20.04
-          allow_failure: true
           PLATFORM_NAME: Linux
           CPACK_BINARY_DEB: ON
           CPACK_BINARY_IFW: OFF
@@ -35,6 +32,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}
 
     - uses: actions/setup-python@v2
       with:
@@ -43,6 +43,13 @@ jobs:
     - uses: actions/setup-ruby@v1
       with:
         ruby-version: '2.5'
+
+    - name: Install system libraries
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt update
+          sudo apt install -y cmake g++
+        fi;
 
     - name: Install conan
       run: |
@@ -66,14 +73,15 @@ jobs:
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      working-directory: ./build
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       # NOTE: If you re-enable 'Download the OpenStudio installer' step, then pass `openstudio_DIR=$openstudio_DIR cmake [etc]`
       run: |
-        ls
-        ls ../IsoModel/src
+        mkdir -p build
+        cd build
+        echo $(pwd)
+        cmake --version
         cmake -DBUILD_RUBY_BINDINGS=$BUILD_RUBY_BINDINGS -DBUILD_PYTHON_BINDINGS=$BUILD_PYTHON_BINDINGS -DBUILD_CSHARP_BINDINGS=$DBUILD_CSHARP_BINDINGS ../IsoModel/src
 
     - name: Build

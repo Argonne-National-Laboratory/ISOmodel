@@ -1,6 +1,6 @@
 # ISOmodel: The Argonne Reduced Order Building Energy Model based on ISO 13790
 The Argonne ISOmodel is a C++ implementation of a reduced order building energy model based on ISO 13790 and associated standards.
-This is a conversion of a MATLAB code written by Ralph T. Muehleisen of Argonne National Laboratory that was loosly based on spreadsheets 
+This is a conversion of a MATLAB code written by Ralph T. Muehleisen of Argonne National Laboratory that was loosly based on spreadsheets
 developed by graduate students at Georgia Institute of Technology.
 
 This particular code is the basis for the ISOmodel found within in NREL's OpenStudio, however compiler options are available to generate
@@ -11,11 +11,11 @@ a standalone executable.
 # README
 
 
-This is the README for the isomodel (monthly and hourly) building energy model project. 
+This is the README for the isomodel (monthly and hourly) building energy model project.
 
 ## How do I get set up?
 
-
+TBD
 
 ### Dependencies ###
 ISOmodel has the following dependencies
@@ -51,9 +51,9 @@ The standalone ISOModel executable is run from the command line.
 | -H               | --hourlyByHour     |        | Run the hourly simulation (results for each hour).                                                       |
 | -c               | --compare          | format | Run the monthly and hourly simulations and compare the results. Use 'md' for markdown and 'csv' for csv. |
 
-The ```-i [ --ismfilepath ] arg``` option is the only required argument it is also a positional argument, so the flag can be omitted. If the monthly vs hourly flag is not specified, the default is to run the monthly simulation. The results from the hourly simulation can either be aggregated by month with ```-h [ --hourlyByMonth ]``` or returned hour by hour with ```-H [ --hourlyByHour ]```. For easy comparison of the hourly and monthly results organized by the different types of energy demand, use the ```-c [ --compare ] arg``` option, specifying either ```md``` or ```csv``` as the desired output format for the comparison tables. 
+The ```-i [ --ismfilepath ] arg``` option is the only required argument it is also a positional argument, so the flag can be omitted. If the monthly vs hourly flag is not specified, the default is to run the monthly simulation. The results from the hourly simulation can either be aggregated by month with ```-h [ --hourlyByMonth ]``` or returned hour by hour with ```-H [ --hourlyByHour ]```. For easy comparison of the hourly and monthly results organized by the different types of energy demand, use the ```-c [ --compare ] arg``` option, specifying either ```md``` or ```csv``` as the desired output format for the comparison tables.
 
-When combining two .ism files with the ```-d``` option (a main .ism file and a defaults .ism file), any properties in both will use the value of the main .ism file, overriding the value in the default .ism file. The defaults file option is also positional, so if two paths to .ism files are given, the first is the main .ism file and the second is the defaults .ism file. 
+When combining two .ism files with the ```-d``` option (a main .ism file and a defaults .ism file), any properties in both will use the value of the main .ism file, overriding the value in the default .ism file. The defaults file option is also positional, so if two paths to .ism files are given, the first is the main .ism file and the second is the defaults .ism file.
 
 #### Examples ####
 
