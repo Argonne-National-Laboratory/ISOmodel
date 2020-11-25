@@ -96,7 +96,6 @@
   #include "Heating.hpp"
   #include "HourlyModel.hpp"
   #include "ISOModelAPI.hpp"
-  #include "ISOResults.hpp"
   #include "Lighting.hpp"
   #include "Location.hpp"
   #include "Matrix.hpp"
@@ -117,6 +116,48 @@
   using namespace openstudio::isomodel;
 %}
 
+%include "Simulation.hpp"
+
+%ignore std::vector<openstudio::EndUses>::vector(size_type);
+%ignore std::vector<openstudio::EndUses>::resize(size_type);
+%template(EndUsesVector) std::vector<openstudio::EndUses>;
+
+// from standalone_main.cpp
+%constant int ElecHeat = 0;
+%constant int ElecCool = 1;
+%constant int ElecIntLights = 2;
+%constant int ElecExtLights = 3;
+%constant int ElecFans = 4;
+%constant int ElecPump = 5;
+%constant int ElecEquipInt = 6;
+%constant int ElecEquipExt = 7;
+%constant int ElectDHW = 8;
+%constant int GasHeat = 9;
+%constant int GasCool = 10;
+%constant int GasEquip = 11;
+%constant int GasDHW = 12;
+
+%include "Building.hpp"
+%include "Cooling.hpp"
+%include "EndUses.hpp"
+%include "EpwData.hpp"
+%include "Heating.hpp"
+%include "HourlyModel.hpp"
+%include "ISOResults.hpp"
+%include "Lighting.hpp"
+%include "Location.hpp"
+%include "Matrix.hpp"
+%include "MonthlyModel.hpp"
+%include "PhysicalQuantities.hpp"
+%include "Population.hpp"
+%include "Properties.hpp"
+%include "SimulationSettings.hpp"
+%include "SolarRadiation.hpp"
+%include "TimeFrame.hpp"
 %include "UserModel.hpp"
+%include "Vector.hpp"
+%include "Ventilation.hpp"
+%include "WeatherData.hpp"
+
 
 #endif //ISOMODEL_I

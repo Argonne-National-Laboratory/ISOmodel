@@ -15,7 +15,7 @@ public:
   inline void addEndUse(int use, double value) {
     data[use] = value;
   }
-  inline double getEndUse(int use) {
+  inline double getEndUse(int use) const {
     return data[use];
   }
 };

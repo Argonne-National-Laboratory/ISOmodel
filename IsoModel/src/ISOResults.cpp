@@ -22,9 +22,16 @@
 namespace openstudio {
 namespace isomodel {
 
-// TODO: make a version of this for the standalone isomodel. BAA@2015-08-17.
 double totalEnergyUse(const std::vector<EndUses>& results) {
   auto total = 0.0;
+
+#ifdef ISOMODEL_STANDALONE
+  for (const auto& result : results) {
+    for (int i = 0; i < 12; i++) {
+       total += result.getEndUse(i);
+    }
+  }
+#else
   const auto fuelTypes = EndUses::fuelTypes();
   const auto categories = EndUses::categories();
 
@@ -35,6 +42,7 @@ double totalEnergyUse(const std::vector<EndUses>& results) {
       }
     }
   }
+#endif
 
   return total;
 }

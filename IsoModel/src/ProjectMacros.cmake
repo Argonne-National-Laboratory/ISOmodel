@@ -31,7 +31,6 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
   endforeach()
 
   set(Prereq_Dirs
-      "${QT_LIBRARY_DIR}" # QT-Separation-Move
       "${PROJECT_BINARY_DIR}/Products/"
       "${PROJECT_BINARY_DIR}/Products/Release"
       "${PROJECT_BINARY_DIR}/Products/Debug"
@@ -220,9 +219,10 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
     target_include_directories(${swig_target} PRIVATE ${RUBY_INCLUDE_DIRS})
     add_dependencies(${swig_target} ${PARENT_TARGET})
 
-    # QT-Separation-Move
-    target_include_directories(${swig_target} PUBLIC ${QT_INCLUDES})
-    target_compile_definitions(${swig_target} PUBLIC ${QT_DEFS})
+    add_custom_command(TARGET ${swig_target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:${swig_target}>/test_data
+    )
 
     execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy \"\${resolved_item_var}\" \"\${CMAKE_INSTALL_PREFIX}/Ruby/openstudio/\")
 
@@ -750,12 +750,6 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
             endforeach()
           endif()
         endforeach()
-        if(APPLE)
-          # QT-Separation-Move
-          file(COPY \"${QT_LIBRARY_DIR}/QtGui.framework/Resources/qt_menu.nib\"
-            DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${V8_TYPE}/openstudio/Resources/\"
-          )
-        endif()
       ")
     else()
       install(TARGETS ${swig_target} DESTINATION "lib/openstudio-${OpenStudio_VERSION}/${V8_TYPE}")
