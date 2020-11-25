@@ -1,0 +1,3 @@
+require 'isomodel'
+
+IsoModel::UserModel

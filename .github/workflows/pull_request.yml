@@ -98,4 +98,4 @@ jobs:
       run: |
           Xvfb :99 &
           export DISPLAY=:99
-          ctest -j -T test --no-compress-output -C $BUILD_TYPE || true
+          ctest -j -T test --no-compress-output -C $BUILD_TYPE
