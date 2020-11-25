@@ -1,16 +1,34 @@
 project(isomodel_project)
-set(target_name isomodel)
+
+cmake_minimum_required(VERSION 3.14.0)
 
 option(BUILD_RUBY_BINDINGS "Build Ruby bindings" ON)
-option(BUILD_PYTHON_BINDINGS "Build Ruby bindings" OFF)
+option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
 option(BUILD_CSHARP_BINDINGS "Build C# bindings" OFF)
+
+set(CPACK_BINARY_DEB OFF)
+set(CPACK_BINARY_FREEBSD OFF)
+set(CPACK_BINARY_IFW OFF)
+set(CPACK_BINARY_NSIS OFF)
+set(CPACK_BINARY_RPM OFF)
+set(CPACK_BINARY_STGZ OFF)
+set(CPACK_BINARY_TBZ2 OFF)
+set(CPACK_BINARY_TGZ OFF)
+set(CPACK_BINARY_TXZ OFF)
+set(CPACK_BINARY_TZ OFF)
+set(CPACK_BINARY_ZIP ON)
+set(CPACK_SOURCE_RPM OFF)
+set(CPACK_SOURCE_TBZ2 OFF)
+set(CPACK_SOURCE_TGZ OFF)
+set(CPACK_SOURCE_TXZ OFF)
+set(CPACK_SOURCE_TZ OFF)
+set(CPACK_SOURCE_ZIP OFF)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/Products")
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
-
-cmake_minimum_required(VERSION 3.14.0)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -22,23 +40,14 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 include("${PROJECT_SOURCE_DIR}/ConanInstall.cmake")
-include("${PROJECT_SOURCE_DIR}/FetchRubyMinGW.cmake")
 include("${PROJECT_SOURCE_DIR}/ProjectMacros.cmake")
 
-FetchRubyMinGW()
+enable_testing()
+include(CTest)
+#find_package(GTest REQUIRED)
+include(GoogleTest)
 
-# A macro to find a conan related value especially when using multi-config builds (MSVC)
-# But it also works with single-config builds
-macro(FindValue ValueName)
-  set(LocalVar "")
-  set(LocalVar $<$<CONFIG:Debug>:${${ValueName}_DEBUG}>$<$<CONFIG:Release>:${${ValueName}_RELEASE}>$<$<CONFIG:RelWithDebInfo>:${${ValueName}_RELWITHDEBINFO}>$<$<CONFIG:MinSizeRel>:${${ValueName}_MINSIZEREL}>
-  )
-#  list(JOIN LocalVar "" LocalVar)
-  string(STRIP ${LocalVar} LocalVar)
-  set(CURRENT_${ValueName} $<IF:$<BOOL:${LocalVar}>,${LocalVar},${${ValueName}}>)
-  # For debug purposes
-   message(STATUS "Found '${ValueName}' as '${CURRENT_${ValueName}}'")
-endmacro()
+include(CPack)
 
 # So instead, we use a generator expression to find the right value. At least it makes sense, and should be robust.
 FindValue(CONAN_SWIG_ROOT)
@@ -48,35 +57,15 @@ set(SWIG_EXECUTABLE "${CURRENT_CONAN_SWIG_ROOT}/bin/swig")
 # The conan-provided binary has a built-in swiglib (`swig -swiglib`) that points to the build box on which it was built, which is problematic for us.
 set(SWIG_LIB "${CURRENT_CONAN_SWIG_ROOT}/bin/swiglib")
 
-if(BUILD_RUBY_BINDINGS)
-  get_target_property(RUBY_INCLUDE_DIRS CONAN_PKG::openstudio_ruby INTERFACE_INCLUDE_DIRECTORIES)
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(CMAKE_SKIP_RPATH true)
 endif()
 
-set(${target_name}_test
-  Test/HourlyModel_GTest.cpp
-  Test/ISOModelFixture.cpp
-  Test/ISOModelFixture.hpp
-  Test/ISOModel_GTest.cpp
-  Test/MonthlyModel_GTest.cpp
-  Test/Properties_GTest.cpp
-  Test/SolarRadiation_GTest.cpp
-  Test/TimeFrame_GTest.cpp
-  Test/UserModel_GTest.cpp
-)
-
-set(${target_name}_benchmark
-  Test/ISOModel_Benchmark.cpp
-)
-
-set(${target_name}_standalone
+set(standalone_src
   standalone_main.cpp
 )
 
-set(${target_name}_solar_debug
-  Test/solar_debug.cpp
-)
-
-set(${target_name}_src
+set(isomodel_lib_src
   Building.cpp
   Building.hpp
   Cooling.cpp
@@ -89,6 +78,8 @@ set(${target_name}_src
   HourlyModel.cpp
   HourlyModel.hpp
   ISOModelAPI.hpp
+  ISOResults.cpp
+  ISOResults.hpp
   Lighting.cpp
   Lighting.hpp
   Location.cpp
@@ -121,60 +112,49 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
-set (library_name isomodel)
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(CMAKE_SKIP_RPATH true)
-endif()
-
-set(${target_name}_depends
-  CONAN_PKG::boost
-)
-
-set(benchmark_depends
-  CONAN_PKG::boost
-)
-
-set(unit_test_depends
-  CONAN_PKG::boost
-  CONAN_PKG::gtest
-)
-
-add_definitions(-DISOMODEL_STANDALONE)
-
-set (exec_name isomodel_standalone)
-add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
-target_link_libraries(${exec_name} ${${target_name}_depends})
-
-add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
-target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
-target_link_libraries(isomodel_unit_tests ${unit_test_depends} ${CMAKE_THREAD_LIBS_INIT})
-
-add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
-target_link_libraries(isomodel_benchmark ${benchmark_depends})
-
-add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
-target_link_libraries(solar_debug ${${target_name}_depends})
-
-# define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
-# this allows use to test parsing the as yet unused parameters
-set_property(
-  TARGET isomodel_unit_tests
-  PROPERTY COMPILE_DEFINITIONS USE_NEW_BUILDING_PARAMS
-)
-
-add_custom_command(TARGET isomodel_unit_tests
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory
-                     ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:isomodel_unit_tests>/test_data
-                   )
-
-
-add_library(${library_name} STATIC ${${target_name}_src})
-target_link_libraries(${library_name} ${${target_name}_depends})
+add_library(isomodel_lib STATIC ${isomodel_lib_src})
+target_link_libraries(isomodel_lib CONAN_PKG::boost)
+target_compile_options(isomodel_lib PUBLIC "-DISOMODEL_STANDALONE")
 
 if (MSVC)
-  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
+  target_compile_options(isomodel_lib PRIVATE "-Dopenstudio_isomodel_EXPORTS")
 endif()
 
-MAKE_SWIG_TARGET(IsoModel isomodel "${CMAKE_CURRENT_SOURCE_DIR}/ISOModel.i" "${CMAKE_CURRENT_SOURCE_DIR}/ISOModel.i" ${library_name} "")
+set (exec_name isomodel_standalone)
+add_executable(isomodel_standalone ${standalone_src})
+target_link_libraries(isomodel_standalone isomodel_lib)
+
+install(TARGETS isomodel_standalone
+  DESTINATION bin
+)
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/../test_data
+  DESTINATION data
+)
+
+if (BUILD_RUBY_BINDINGS)
+  include("${PROJECT_SOURCE_DIR}/FetchRubyMinGW.cmake")
+  FetchRubyMinGW()
+  get_target_property(RUBY_INCLUDE_DIRS CONAN_PKG::openstudio_ruby INTERFACE_INCLUDE_DIRECTORIES)
+endif()
+
+if (BUILD_PYTHON_BINDINGS)
+  find_package(Python3 3.8 COMPONENTS Interpreter Development REQUIRED)
+  message("Python3_INCLUDE_DIRS = ${Python3_INCLUDE_DIRS}")
+  include_directories(SYSTEM ${Python3_INCLUDE_DIRS})
+  message("Python3_LIBRARY_DIRS = ${Python3_LIBRARY_DIRS}")
+  link_directories(${Python3_LIBRARY_DIRS})
+  message("Python3_EXECUTABLE = ${Python3_EXECUTABLE}")
+endif()
+
+MAKE_SWIG_TARGET(isomodel isomodel "${PROJECT_SOURCE_DIR}/ISOModel.i" "${PROJECT_SOURCE_DIR}/ISOModel.i" isomodel_lib "")
+
+add_subdirectory(Test)
+
+if (BUILD_RUBY_BINDINGS)
+  add_subdirectory(Ruby)
+endif()
+
+if (BUILD_PYTHON_BINDINGS)
+  add_subdirectory(Python)
+endif()

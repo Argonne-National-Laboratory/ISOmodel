@@ -31,7 +31,6 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
   endforeach()
 
   set(Prereq_Dirs
-      "${QT_LIBRARY_DIR}" # QT-Separation-Move
       "${PROJECT_BINARY_DIR}/Products/"
       "${PROJECT_BINARY_DIR}/Products/Release"
       "${PROJECT_BINARY_DIR}/Products/Debug"
@@ -220,9 +219,10 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
     target_include_directories(${swig_target} PRIVATE ${RUBY_INCLUDE_DIRS})
     add_dependencies(${swig_target} ${PARENT_TARGET})
 
-    # QT-Separation-Move
-    target_include_directories(${swig_target} PUBLIC ${QT_INCLUDES})
-    target_compile_definitions(${swig_target} PUBLIC ${QT_DEFS})
+    add_custom_command(TARGET ${swig_target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:${swig_target}>/test_data
+    )
 
     execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy \"\${resolved_item_var}\" \"\${CMAKE_INSTALL_PREFIX}/Ruby/openstudio/\")
 
@@ -268,19 +268,7 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
 
 
     # Add the -py3 flag if the version used is Python 3
-    set(SWIG_PYTHON_3_FLAG "")
-    if (Python_VERSION_MAJOR)
-      if (Python_VERSION_MAJOR EQUAL 3)
-        set(SWIG_PYTHON_3_FLAG -py3)
-        message(STATUS "${MODULE} - Building SWIG Bindings for Python 3")
-      else()
-        message(STATUS "${MODULE} - Building SWIG Bindings for Python 2")
-      endif()
-    else()
-      # Python2 has been EOL since January 1, 2020
-      set(SWIG_PYTHON_3_FLAG -py3)
-      message(STATUS "${MODULE} - Couldnt determine version of Python - Building SWIG Bindings for Python 3")
-    endif()
+    set(SWIG_PYTHON_3_FLAG "-py3")
 
     add_custom_command(
       OUTPUT "${SWIG_WRAPPER_FULL_PATH}"
@@ -331,6 +319,16 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
     target_link_libraries(${swig_target} ${PARENT_TARGET} ${PYTHON_Libraries})
 
     add_dependencies(${swig_target} ${PARENT_TARGET})
+
+    add_custom_command(TARGET ${swig_target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:${swig_target}>/test_data
+    )
+
+    add_custom_command(TARGET ${swig_target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/python_wrapper/generated_sources/isomodel.py $<TARGET_FILE_DIR:${swig_target}>/isomodel.py
+    )
 
     # add this target to a "global" variable so python tests can require these
     list(APPEND ALL_PYTHON_BINDINGS "${swig_target}")
@@ -750,12 +748,6 @@ macro(MAKE_SWIG_TARGET NAME SIMPLENAME KEY_I_FILE I_FILES PARENT_TARGET PARENT_S
             endforeach()
           endif()
         endforeach()
-        if(APPLE)
-          # QT-Separation-Move
-          file(COPY \"${QT_LIBRARY_DIR}/QtGui.framework/Resources/qt_menu.nib\"
-            DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${V8_TYPE}/openstudio/Resources/\"
-          )
-        endif()
       ")
     else()
       install(TARGETS ${swig_target} DESTINATION "lib/openstudio-${OpenStudio_VERSION}/${V8_TYPE}")
