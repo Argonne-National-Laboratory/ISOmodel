@@ -1,6 +1,10 @@
-project(isomodel_project)
 
 cmake_minimum_required(VERSION 3.14.0)
+
+# must set CMP0025 before calling project
+cmake_policy(SET CMP0025 NEW)
+
+project(isomodel_project)
 
 option(BUILD_RUBY_BINDINGS "Build Ruby bindings" ON)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
