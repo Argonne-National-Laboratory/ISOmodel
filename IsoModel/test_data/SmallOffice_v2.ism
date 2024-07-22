@@ -12,7 +12,7 @@ occupancyDayFirst = 1
 occupancyDayLast = 5
 occupancyHourFirst = 8
 occupancyHourLast = 17
-# LPD, EPD, GPD all in W/m2, ext light power in W, an heat gain is W/person
+# LPD, EPD, GPD all in W/m2, ext light power in W, and heat gain is W/person
 lightingPowerDensityOccupied = 6.33869983780207
 lightingPowerDensityUnoccupied = 2.58639212251571
 electricAppliancePowerDensityOccupied = 4.83103336902162
