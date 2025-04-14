@@ -1,8 +1,6 @@
 The isomodel code uses CMake for compilation. 
 
-OSX / Linux:
-
-Note that CMake creates a makefile, you will still need to run make.
+OSX:
 
 - Install CMake
 	To get cmake to install aliases in /usr/bin, you can run from terminal with:
@@ -22,18 +20,6 @@ create separate directories for those.
  * X should be the root location of gtest. For example if its in /Users/nick/src/gtest-1.7.0/
  then -DGTEST_ROOT=/Users/nick/src/gtest-1.7.0/. CMake will look in that directory for both 
  the gtest and gtest_main library and the headers.
-4. Run "make", from the command line (e.g)
-
-iMac:Release nick$ cd /Users/nick/Documents/repos/ISOmodel/IsoModel/Release
-iMac:Release nick$ make
-[  1%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Building.cpp.o
-[  2%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Cooling.cpp.o
-[  3%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/EpwData.cpp.o
-[  4%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Heating.cpp.o
-[  5%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/HourlyModel.cpp.o
-[  6%] Building CXX object CMakeFiles/isomodel_unit_tests.dir/Lighting.cpp.o
-...
-
 
 If Boost is in some standard place 
 such as /usr/local/include etc. then it should be found. If not you can specify where to find 
@@ -105,32 +91,13 @@ The instructions below were copied from: https://code.google.com/p/googletest/wi
 
 NOTE: in order to make cmake happy, I had to move the Debug and Release directories from msvc\x64 into msvc\gtest or msvc\gtest-md (depending on which one I had just compiled) so that the directory structure looked exactly the same as if I had done the standard 32-bit compile. This allows FindGTest to automatically figure out whether it should be using gtest or gtest-md. In order to keep both a x86 and x64 version of gtest while still leaving the directories msvc/gtest and msvc/gtest-md with their default names, I made two copies of the root gtest folder, and put one in "Program Files" and compiled it 64-bit and put the other in "Program Files (x86)" and compiled it 32-bit. It's a little clunky, but it seems to work. - Brendan
 
-I (Nick) got a 64 bit gtest to compile with CMake using the "VS2013 x64 Cross Tools Command Prompt" as the terminal and the following.
-
-1. In wherever gtest is installed, mkdir Release
-2. cd Release
-3. cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
-4. If I just did an nmake now, I would get a static library that also compiles in the static MS c/c++ runtime library.
-When that gtest.lib is then linked into the isomodel_unit_test, the static MS runtime library conflicts with the
-dynamic runtime library that the isomodel_unit_test executables links with (LNK2005 error). The solution is to
-
-	a. "cmake-gui" to start the CMake gui.
-	b. browse source to your gtest directory
-	c. browse build to the Release directory.
-	d. The CMake configuration cache should show up in the GUI. Scroll down and check gtest_force_shared_crt.
-	e. Click configure, then generate
-	f. nmake in the terminal to create static gtests libs that will use the dynamic ms crt.
-
-5. Copy the two .lib files from Release to ..\lib if that's where the isomodel expects to find them.
-
-
 Linking up all the 64-bit libraries with CMake
 ----------------------------------------------
 
-In case it is helpful for anyone struggling to get everything working in 64-bit on windows, these two cmake commands both work on Brendan's machine on 2015-11-01. Run these commands from your build directory. You may have to edit the path to your source directory, depending on where you put your build directory.
+In case it is helpful for anyone struggling to get everything working in 64-bit on windows, these two cmake commands both work on Brendan's machine on 2015-01-10.
 
-cmake -DCMAKE_BUILD_TYPE=Release ..IsoModel/src -G "NMake Makefiles" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
+cmake -DCMAKE_BUILD_TYPE=Release ../src -G "NMake Makefiles" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
 
 or
 
-cmake -DCMAKE_BUILD_TYPE=Release ../IsoModel/src -G "Visual Studio 12 2013 Win64" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
+cmake -DCMAKE_BUILD_TYPE=Release ../src -G "Visual Studio 12 2013 Win64" -DBoost_LIBRARY_DIR="C:/Program Files/boost/boost_1_57_0/stage/x64/lib" -DBoost_INCLUDE_DIR="C:/Program Files/boost/boost_1_57_0" -DGTEST_ROOT="C:/Program Files/gtest-1.7.0"
