@@ -1,7 +1,8 @@
 project(isomodel_project)
 set(target_name isomodel)
 
-cmake_minimum_required(VERSION 3.1)
+# cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
