@@ -1,7 +1,10 @@
 project(isomodel_project)
 set(target_name isomodel)
+set(CMAKE_CXX_STANDARD 20)
 
-cmake_minimum_required(VERSION 3.1)
+set(Boost_NO_WARN_NEW_VERSIONS 1)
+
+cmake_minimum_required(VERSION 3.10)
 
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
