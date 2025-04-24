@@ -1,0 +1,43 @@
+The isomodel code uses CMake for compilation. 
+
+Instructions for installing and compiling within WSL (Tested with WSL based on Ubuntu 24.04 LTS)
+
+- Install gcc and gdb and related accessories
+sudo apt install build-essential
+sudo apt install cmake  
+sudo apt install gdb
+
+ - install and compile Google Test compile and install libraries
+
+cd ~\git\googletest
+~\git\googletest: mkdir build
+~\git\googletest: cd build
+~\git\googletest\build: cmake .. -DBUILD_GMOCK=OFF
+
+now we install the google test libraries to the "standard" place so they are easily found
+
+~\git\googletest\build: sudo make install
+
+this will install stuff to /usr/local/incluge/gtest  and /usr/local/lib
+
+- Install Boost Libraries
+
+sudo apt install libboost-all-dev
+
+This installs precompiled versions of the latest stable boost libraries and installs them in locations found by cmake without needing long command lines.
+
+- Download the latest version of the isomodel from github
+
+cd ~/git
+git clone https://github.com/Argonne-National-Laboratory/ISOmodel.git
+
+mkdir bin
+cd bin
+make ../src
+
+This should run cmake and find both Boost and Gtest without having to give them on the command line.
+
+Now you should be able to just run make and compile everything 
+
+make
+
