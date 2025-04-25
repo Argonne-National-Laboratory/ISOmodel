@@ -26,3 +26,11 @@ Session.vim
 # rubymine project files
 .idea/
 /.vs
+IsoModel/CMakeCache.txt
+IsoModel/CMakeFiles/4.0.1/CMakeSystem.cmake
+IsoModel/CMakeCache.txt
+IsoModel/CMakeFiles/cmake.check_cache
+IsoModel/CMakeCache.txt
+IsoModel/CMakeFiles/CMakeConfigureLog.yaml
+IsoModel/src/.vs/slnx.sqlite
+IsoModel/CMakeCache.txt
