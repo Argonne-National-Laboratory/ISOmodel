@@ -94,7 +94,7 @@ std::vector<std::string> inline stringSplit(const std::string &source, char deli
   return results;
 }
 
-void UserModel::initializeStructure(const Properties& buildingParams)
+void UserModel::initializeStructure(const YAML::Node& buildingParams)
 {
   initializeParameter(&UserModel::setWallArea, buildingParams, "wallArea", true);
   initializeParameter(&UserModel::setWallU, buildingParams, "wallU", true);
@@ -107,7 +107,7 @@ void UserModel::initializeStructure(const Properties& buildingParams)
   initializeParameter(&UserModel::setWindowSDF, buildingParams, "windowSDF", true);
 }
 
-void UserModel::initializeParameters(const Properties& buildingParams)
+void UserModel::initializeParameters(const YAML::Node& buildingParams)
 {
   initializeParameter(&UserModel::setTerrainClass, buildingParams, "terrainclass", true);
   initializeParameter(&UserModel::setBuildingHeight, buildingParams, "buildingheight", true);
@@ -254,47 +254,86 @@ void UserModel::initializeParameters(const Properties& buildingParams)
   initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
 }
 
-void UserModel::initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required) {
-  if (auto prop = props.getPropertyAsDouble(propertyName)) {
+template <typename T>
+boost::optional<T> getParameter(const YAML::Node& params,
+                                const std::string& paramName) {
+  
+  if (params[paramName]) {
+    try {
+      return params[paramName].as<T>();
+    } catch (YAML::TypedBadConversion<T>& ex) {
+      return boost::none;
+    }
+  }
+  return boost::none;
+}
+
+bool getParameterAsVector(const YAML::Node& params,
+                          const std::string& paramName, Vector& vec) {
+  if (params[paramName]) {
+    vec.clear();
+    auto param = params[paramName];
+    size_t n = std::distance(param.begin(), param.end());
+    if (vec.size() != n) {
+      vec.resize(n);
+    }
+    // Assign via iterators won't work as they aren't typed to double
+    try {
+      size_t index = 0;
+      for (const auto& v : param) {
+        vec[index] = v.as<double>();
+        ++index;
+      }
+      return true;
+    } catch (YAML::TypedBadConversion<double>& ex) {
+      return false;
+    }
+  }
+  return false;  
+}
+
+
+void UserModel::initializeParameter(void(UserModel::*setProp)(double), const YAML::Node& params, std::string paramName, bool required) {
+  if (auto prop = getParameter<double>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
-    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
   } 
 }
 
-void UserModel::initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required) {
-  if (auto prop = props.getPropertyAsInt(propertyName)) {
+void UserModel::initializeParameter(void(UserModel::*setProp)(int), const YAML::Node& params, std::string paramName, bool required) {
+  if (auto prop = getParameter<int>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
-    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
   } 
 }
 
-void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required) {
-  if (auto prop = props.getPropertyAsBool(propertyName)) {
+void UserModel::initializeParameter(void(UserModel::*setProp)(bool), const YAML::Node& params, std::string paramName, bool required) {
+  if (auto prop = getParameter<bool>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
-    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
   } 
 }
 
-void UserModel::initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required) {
+void UserModel::initializeParameter(void(UserModel::*setProp)(const Vector&), const YAML::Node& params, std::string paramName, bool required) {
   Vector vec;
-  if (props.getPropertyAsDoubleVector(propertyName, vec)) {
+  if (getParameterAsVector(params, paramName, vec)) {
     // TODO: Update the .ism format order to match the order used internall so we don't
     // have to do this reordering. BAA@2015-06-24.
     northToSouth(vec);
     (this->*setProp)(vec);
   } else if (required) {
-    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
   } 
 }
 
-void UserModel::initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required) {
-  if (auto prop = props.getProperty(propertyName)) {
+void UserModel::initializeParameter(void(UserModel::*setProp)(std::string), const YAML::Node& params, std::string paramName, bool required) {
+  if (auto prop = getParameter<std::string>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
-    throw std::invalid_argument("Required property " + propertyName + " missing in .ism file.");
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
   } 
 }
 
@@ -321,16 +360,24 @@ void UserModel::northToSouth(Vector& vec) {
 
 void UserModel::loadBuilding(std::string buildingFile)
 {
-  Properties buildingParams(buildingFile);
+  YAML::Node tmp = YAML::LoadFile(buildingFile);
+  YAML::Node buildingParams = YAML::Load("{}");
+  // add lower case keys to node
+  for (auto iter : tmp) {
+    std::string key = iter.first.as<std::string>();
+    buildingParams[key] = iter.second;
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+    buildingParams[key] = iter.second;
+  }
   initializeParameters(buildingParams);
   initializeStructure(buildingParams);
 }
 
 void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 {
-  Properties buildingParams(buildingFile, defaultsFile);
-  initializeParameters(buildingParams);
-  initializeStructure(buildingParams);
+  // Properties buildingParams(buildingFile, defaultsFile);
+  // initializeParameters(buildingParams);
+  // initializeStructure(buildingParams);
 }
 
 int UserModel::weatherState(std::string header)

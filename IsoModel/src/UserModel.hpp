@@ -29,6 +29,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
+#include "yaml-cpp/yaml.h"
+
 namespace openstudio {
 
 namespace isomodel {
@@ -2260,7 +2262,7 @@ private:
   void setCoreSimulationProperties(Simulation& sim) const;
 
   std::string resolveFilename(std::string baseFile, std::string relativeFile);
-  void initializeStructure(const Properties& buildingParams);
+  void initializeStructure(const YAML::Node& params);
 
   std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
 
@@ -2284,7 +2286,7 @@ private:
   std::string _weatherFilePath, _scheduleFilePath;
   std::string dataFile;
 
-  void initializeParameters(const Properties& props);
+  void initializeParameters(const YAML::Node& params);
   
   /**
    * Sets an .ism property in the usermodel to a value gotten from a Properties object.
@@ -2297,11 +2299,11 @@ private:
    * is optional (required=false), then it does nothing if it gets boost::none (the UserModel
    * setter is not called).
    */
-  void initializeParameter(void(UserModel::*setProp)(double), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(int), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(bool), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(const Vector&), const Properties& props, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::*setProp)(std::string), const Properties& props, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(double), const YAML::Node& buildingParams, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(int), const YAML::Node& buildingParams, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(bool), const YAML::Node& buildingParams, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(const Vector&), const YAML::Node& buildingParams, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::*setProp)(std::string), const YAML::Node& buildingParams, std::string propertyName, bool required);
 
   /**
    * .ism file is N, NE, E, SE, S, SW, W, NW, Roof.

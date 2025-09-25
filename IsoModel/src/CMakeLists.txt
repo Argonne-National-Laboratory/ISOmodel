@@ -1,10 +1,14 @@
+cmake_minimum_required(VERSION 3.20)
+include(FetchContent)
+
 project(isomodel_project)
 set(target_name isomodel)
-set(CMAKE_CXX_STANDARD 20)
+set(CXX_STANDARD 20
+target_compile_features(${target_name} PUBLIC cxx_std_20))
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
-cmake_minimum_required(VERSION 3.10)
+
 
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
@@ -75,13 +79,20 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG 0.8.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
 
 set (library_name isomodel)
 
 if(MSVC)
   set(Boost_USE_STATIC_LIBS ON)
 else()
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COMPILE_FLAGS} -pthread)
   # required for googletest
   FIND_PACKAGE ( Threads REQUIRED )
@@ -114,16 +125,20 @@ add_definitions(-DISOMODEL_STANDALONE)
 set (exec_name isomodel_standalone)
 add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
 target_link_libraries(${exec_name} ${${target_name}_depends})
+target_link_libraries(${exec_name} yaml-cpp::yaml-cpp)
 
 add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
 target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
 target_link_libraries(isomodel_unit_tests ${unit_test_depends} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(isomodel_unit_tests yaml-cpp::yaml-cpp)
 
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
 target_link_libraries(isomodel_benchmark ${benchmark_depends})
+target_link_libraries(isomodel_benchmark yaml-cpp::yaml-cpp)
 
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
 target_link_libraries(solar_debug ${${target_name}_depends})
+target_link_libraries(solar_debug yaml-cpp::yaml-cpp)
 
 # define USE_NEW_BUILDING_PARAMS if we are compiling the unit test target
 # this allows use to test parsing the as yet unused parameters
@@ -141,6 +156,8 @@ add_custom_command(TARGET isomodel_unit_tests
 
 add_library(${library_name} SHARED ${${target_name}_src})
 target_link_libraries(${library_name} ${${target_name}_depends})
+target_link_libraries(${library_name}  yaml-cpp::yaml-cpp)
+
 
 if (MSVC)
  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
