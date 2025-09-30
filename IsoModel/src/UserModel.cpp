@@ -257,10 +257,11 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
 template <typename T>
 boost::optional<T> getParameter(const YAML::Node& params,
                                 const std::string& paramName) {
-  
-  if (params[paramName]) {
+  std::string pn(paramName);
+  std::transform(paramName.begin(), paramName.end(), pn.begin(), ::tolower);
+  if (params[pn]) {
     try {
-      return params[paramName].as<T>();
+      return params[pn].as<T>();
     } catch (YAML::TypedBadConversion<T>& ex) {
       return boost::none;
     }
@@ -270,9 +271,12 @@ boost::optional<T> getParameter(const YAML::Node& params,
 
 bool getParameterAsVector(const YAML::Node& params,
                           const std::string& paramName, Vector& vec) {
-  if (params[paramName]) {
+
+  std::string pn(paramName);
+  std::transform(paramName.begin(), paramName.end(), pn.begin(), ::tolower);
+  if (params[pn]) {
     vec.clear();
-    auto param = params[paramName];
+    auto param = params[pn];
     size_t n = std::distance(param.begin(), param.end());
     if (vec.size() != n) {
       vec.resize(n);
@@ -362,12 +366,15 @@ void UserModel::loadBuilding(std::string buildingFile)
 {
   YAML::Node tmp = YAML::LoadFile(buildingFile);
   YAML::Node buildingParams = YAML::Load("{}");
-  // add lower case keys to node
+
   for (auto iter : tmp) {
     std::string key = iter.first.as<std::string>();
-    buildingParams[key] = iter.second;
     std::transform(key.begin(), key.end(), key.begin(), ::tolower);
     buildingParams[key] = iter.second;
+  }
+  size_t n_param = std::distance(buildingParams.begin(), buildingParams.end());
+  if (n_param == 0) {
+    throw std::invalid_argument("No parameters found in building file " + buildingFile + ". Is this a YAML format file?");
   }
   initializeParameters(buildingParams);
   initializeStructure(buildingParams);
@@ -375,9 +382,32 @@ void UserModel::loadBuilding(std::string buildingFile)
 
 void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 {
-  // Properties buildingParams(buildingFile, defaultsFile);
-  // initializeParameters(buildingParams);
-  // initializeStructure(buildingParams);
+  YAML::Node bf = YAML::LoadFile(buildingFile);
+  size_t n_param = std::distance(bf.begin(), bf.end());
+  if (n_param == 0) {
+    throw std::invalid_argument("No parameters found in building file " + buildingFile + ". Is this a YAML format file?");
+  }
+  YAML::Node df = YAML::Load(defaultsFile);
+  n_param = std::distance(df.begin(), df.end());
+  if (n_param == 0) {
+    throw std::invalid_argument("No parameters found in building file " + defaultsFile + ". Is this a YAML format file?");
+  }
+
+  YAML::Node buildingParams = YAML::Load("{}");
+  for (auto iter : df) {
+    std::string key = iter.first.as<std::string>();
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+    buildingParams[key] = iter.second;
+  }
+
+  for (auto iter : bf) {
+    std::string key = iter.first.as<std::string>();
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+    buildingParams[key] = iter.second;
+  }
+
+  initializeParameters(buildingParams);
+  initializeStructure(buildingParams);
 }
 
 int UserModel::weatherState(std::string header)

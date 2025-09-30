@@ -8,8 +8,6 @@
 #include "gtest/gtest.h"
 
 #include "ISOModelFixture.hpp"
-
-#include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
@@ -39,7 +37,7 @@ TEST_F(ISOModelFixture, MonthlyModelTests)
   };
 
   openstudio::isomodel::UserModel userModel;
-  userModel.load(test_data_path + "/SmallOffice_v2.ism");
+  userModel.load(test_data_path + "/SmallOffice_v2_ism.yaml");
   auto monthlyModel = userModel.toMonthlyModel();
   auto results = monthlyModel.simulate();
 
