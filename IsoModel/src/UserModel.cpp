@@ -387,7 +387,8 @@ void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
   if (n_param == 0) {
     throw std::invalid_argument("No parameters found in building file " + buildingFile + ". Is this a YAML format file?");
   }
-  YAML::Node df = YAML::Load(defaultsFile);
+
+  YAML::Node df = YAML::LoadFile(defaultsFile);
   n_param = std::distance(df.begin(), df.end());
   if (n_param == 0) {
     throw std::invalid_argument("No parameters found in building file " + defaultsFile + ". Is this a YAML format file?");

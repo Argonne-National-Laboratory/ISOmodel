@@ -38,7 +38,7 @@ using namespace openstudio::isomodel;
 
 TEST_F(ISOModelFixture, SunPositionAndRadiationTests) {
   openstudio::isomodel::UserModel userModel;
-  userModel.load(test_data_path + "/SmallOffice_v2.ism");
+  userModel.load(test_data_path + "/SmallOffice_v2_ism.yaml");
   userModel.loadWeather();
 
   TimeFrame frame;

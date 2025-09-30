@@ -17,7 +17,7 @@ using namespace openstudio::isomodel;
 TEST_F(ISOModelFixture, UserModelInitializationTests)
 {
   UserModel userModel;
-  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml");
 
   EXPECT_DOUBLE_EQ(0.366569597990189, userModel.terrainClass());
   EXPECT_DOUBLE_EQ(0.13797878192703, userModel.floorArea());
@@ -175,7 +175,7 @@ TEST_F(ISOModelFixture, UserModelInitializationTests)
 
 TEST_F(ISOModelFixture, UserModelDefaultsTests) {
   UserModel userModel;
-  userModel.load(test_data_path + "/defaults_test_building.ism", test_data_path + "/defaults_test_defaults.ism");
+  userModel.load(test_data_path + "/defaults_test_building_ism.yaml", test_data_path + "/defaults_test_defaults_ism.yaml");
 
   // The building and the defaults files both set the terrainClass.
   // The building file should take precedence.
@@ -337,7 +337,7 @@ TEST_F(ISOModelFixture, UserModelDefaultsTests) {
 
 TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
   UserModel userModel;
-  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml");
 
   // Expect to find the default values hardcoded into the various Building, Cooling, etc. classes.
   EXPECT_DOUBLE_EQ(0.0, userModel.externalEquipment());
@@ -409,7 +409,7 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
 
 TEST_F(ISOModelFixture, UserModelOptionalPropertiesOverrideTests) {
   UserModel userModel;
-  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2.ism", test_data_path + "/optional_defaults_override.ism");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml", test_data_path + "/optional_defaults_override_ism.yaml");
 
   // Expect to find the value set in optional_defaults_override.ism.
   EXPECT_DOUBLE_EQ(1.0, userModel.externalEquipment());

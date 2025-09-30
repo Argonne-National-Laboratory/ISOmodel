@@ -40,7 +40,7 @@ TEST_F(ISOModelFixture, HourlyModelTests)
   };
 
   openstudio::isomodel::UserModel userModel;
-  userModel.load(test_data_path + "/SmallOffice_v2.ism");
+  userModel.load(test_data_path + "/SmallOffice_v2_ism.yaml");
   HourlyModel hourlyModel = userModel.toHourlyModel();
   auto results = hourlyModel.simulate(true); // aggregateByMonth = true
 
