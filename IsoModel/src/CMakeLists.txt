@@ -84,6 +84,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
   GIT_TAG 0.8.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
 )
+# Check whether yaml-cpp has already been fetched
+FetchContent_GetProperties(yaml-cpp)
+if(NOT yaml-cpp_POPULATED)
+  message(STATUS "Downloading and Compiling yaml-cpp")
+endif()
+# Fetch and add to the build (no extra message if already populated)
+FetchContent_MakeAvailable(yaml-cpp)
+
+
 FetchContent_MakeAvailable(yaml-cpp)
 
 
