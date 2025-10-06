@@ -1,4 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
+
+# # Set policy to ignore warning about FindBoost module
+# if(POLICY CMP0167)
+  # cmake_policy(SET CMP0167 OLD)
+# endif()
+
+# # Set policy to allow FetchContent_Populate
+# if(POLICY CMP0169)
+  # cmake_policy(SET CMP0169 OLD)
+# endif()
+
 include(FetchContent)
 
 project(isomodel_project)
@@ -79,21 +90,73 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
+
+
 FetchContent_Declare(
   yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-  GIT_TAG 0.8.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+  GIT_TAG 0.8.0
 )
-# Check whether yaml-cpp has already been fetched
+
+
+# Fetch the content without building
 FetchContent_GetProperties(yaml-cpp)
 if(NOT yaml-cpp_POPULATED)
-  message(STATUS "Downloading and Compiling yaml-cpp")
+  FetchContent_Populate(yaml-cpp)
+  
+  message("Downloading and compiling yaml-cpp")
+  # Now modify the CMakeLists.txt
+  file(READ "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" YAML_CPP_CMAKE_CONTENT)
+  string(REPLACE "cmake_minimum_required(VERSION 3.4)" 
+                 "cmake_minimum_required(VERSION 3.20)" 
+                 YAML_CPP_CMAKE_CONTENT "${YAML_CPP_CMAKE_CONTENT}")
+  file(WRITE "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" "${YAML_CPP_CMAKE_CONTENT}")
+  
+  # Add the subdirectory
+  add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
+else()
+  # If already populated, just make it available
+  FetchContent_MakeAvailable(yaml-cpp)
 endif()
-# Fetch and add to the build (no extra message if already populated)
-FetchContent_MakeAvailable(yaml-cpp)
 
 
-FetchContent_MakeAvailable(yaml-cpp)
+
+# FetchContent_Declare(
+  # yaml-cpp
+  # GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  # GIT_TAG 0.8.0  # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+# )
+
+# # Check whether yaml-cpp has already been fetched
+# FetchContent_GetProperties(yaml-cpp)
+# if(NOT yaml-cpp_POPULATED)
+  # message(STATUS "Downloading and Compiling yaml-cpp")
+  
+  # # Fetch the content
+  # FetchContent_Populate(yaml-cpp)
+  
+  # # Read the CMakeLists.txt file
+  # file(READ "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" YAML_CPP_CMAKE_CONTENT)
+  
+  # # Replace the cmake_minimum_required version
+  # string(REPLACE "cmake_minimum_required(VERSION 3.4)" 
+                 # "cmake_minimum_required(VERSION 3.20)" 
+                 # YAML_CPP_CMAKE_CONTENT "${YAML_CPP_CMAKE_CONTENT}")
+  
+  # # Write the modified content back
+  # file(WRITE "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" "${YAML_CPP_CMAKE_CONTENT}")
+  
+  # # Now add the subdirectory
+  # add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
+# else()
+  # # If already populated, just make it available
+  # FetchContent_MakeAvailable(yaml-cpp)
+# endif()
+
+# Remove the duplicate FetchContent_MakeAvailable call
+# FetchContent_MakeAvailable(yaml-cpp)
+
+
 
 
 set (library_name isomodel)
