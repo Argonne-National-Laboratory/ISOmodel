@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 
 # Set policy to ignore warning about FindBoost module
 if(POLICY CMP0167)
