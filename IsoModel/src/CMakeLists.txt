@@ -90,13 +90,24 @@ set(${target_name}_src
 
 
 
+# Fetch GoogleTest
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0  # or whatever version you prefer
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# Make GoogleTest available
+FetchContent_MakeAvailable(googletest)
+
 FetchContent_Declare(
   yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
   GIT_TAG 0.8.0
 )
-
-
 # Fetch the content without building
 FetchContent_GetProperties(yaml-cpp)
 if(NOT yaml-cpp_POPULATED)
@@ -117,6 +128,12 @@ else()
   FetchContent_MakeAvailable(yaml-cpp)
 endif()
 
+
+
+
+
+
+
 set (library_name isomodel)
 
 if(MSVC)
@@ -124,8 +141,9 @@ if(MSVC)
 else()
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COMPILE_FLAGS} -pthread)
-  # required for googletest
-  FIND_PACKAGE ( Threads REQUIRED )
+  # # required for googletest
+  # FIND_PACKAGE ( Threads REQUIRED )
+  # Threads are already found by GoogleTest
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -140,32 +158,49 @@ set(${target_name}_depends
   ${Boost_LIBRARIES}
 )
 
-find_package(GTest REQUIRED)
-set(unit_test_depends
-  ${GTEST_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+# find_package(GTest REQUIRED)
+# set(unit_test_depends
+  # ${GTEST_LIBRARIES}
+  # ${Boost_LIBRARIES}
+# )
 
-set(benchmark_depends
-  ${Boost_LIBRARIES}
-)
+# set(benchmark_depends
+  # ${Boost_LIBRARIES}
+# )
+
+# Remove the find_package(GTest REQUIRED) line since we're using FetchContent
+# set(unit_test_depends ${GTEST_LIBRARIES} ${Boost_LIBRARIES})
+set(unit_test_depends GTest::gtest GTest::gtest_main ${Boost_LIBRARIES})
+set(benchmark_depends ${Boost_LIBRARIES})
+
 
 add_definitions(-DISOMODEL_STANDALONE)
 
+# Standalone executable
 set (exec_name isomodel_standalone)
 add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
 target_link_libraries(${exec_name} ${${target_name}_depends})
 target_link_libraries(${exec_name} yaml-cpp::yaml-cpp)
 
+# Unit tests executable
+# add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
+# target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
+# target_link_libraries(isomodel_unit_tests ${unit_test_depends} ${CMAKE_THREAD_LIBS_INIT})
+# target_link_libraries(isomodel_unit_tests yaml-cpp::yaml-cpp)
+
 add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
-target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
-target_link_libraries(isomodel_unit_tests ${unit_test_depends} ${CMAKE_THREAD_LIBS_INIT})
+# Remove the manual include directories for GTest
+# target_include_directories(isomodel_unit_tests PUBLIC ${GTEST_INCLUDE_DIRS})
+target_link_libraries(isomodel_unit_tests ${unit_test_depends})
 target_link_libraries(isomodel_unit_tests yaml-cpp::yaml-cpp)
 
+
+# Benchmark executable
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
 target_link_libraries(isomodel_benchmark ${benchmark_depends})
 target_link_libraries(isomodel_benchmark yaml-cpp::yaml-cpp)
 
+# Solar debug executable
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
 target_link_libraries(solar_debug ${${target_name}_depends})
 target_link_libraries(solar_debug yaml-cpp::yaml-cpp)
