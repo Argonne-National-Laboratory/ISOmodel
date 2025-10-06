@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-# # Set policy to ignore warning about FindBoost module
-# if(POLICY CMP0167)
-  # cmake_policy(SET CMP0167 OLD)
-# endif()
+# Set policy to ignore warning about FindBoost module
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
 
-# # Set policy to allow FetchContent_Populate
-# if(POLICY CMP0169)
-  # cmake_policy(SET CMP0169 OLD)
-# endif()
+# Set policy to allow FetchContent_Populate
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+endif()
 
 include(FetchContent)
 
