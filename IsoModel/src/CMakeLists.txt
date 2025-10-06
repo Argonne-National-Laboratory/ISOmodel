@@ -19,8 +19,6 @@ target_compile_features(${target_name} PUBLIC cxx_std_20))
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
-
-
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
   Test/ISOModelFixture.cpp
@@ -118,46 +116,6 @@ else()
   # If already populated, just make it available
   FetchContent_MakeAvailable(yaml-cpp)
 endif()
-
-
-
-# FetchContent_Declare(
-  # yaml-cpp
-  # GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-  # GIT_TAG 0.8.0  # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
-# )
-
-# # Check whether yaml-cpp has already been fetched
-# FetchContent_GetProperties(yaml-cpp)
-# if(NOT yaml-cpp_POPULATED)
-  # message(STATUS "Downloading and Compiling yaml-cpp")
-  
-  # # Fetch the content
-  # FetchContent_Populate(yaml-cpp)
-  
-  # # Read the CMakeLists.txt file
-  # file(READ "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" YAML_CPP_CMAKE_CONTENT)
-  
-  # # Replace the cmake_minimum_required version
-  # string(REPLACE "cmake_minimum_required(VERSION 3.4)" 
-                 # "cmake_minimum_required(VERSION 3.20)" 
-                 # YAML_CPP_CMAKE_CONTENT "${YAML_CPP_CMAKE_CONTENT}")
-  
-  # # Write the modified content back
-  # file(WRITE "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" "${YAML_CPP_CMAKE_CONTENT}")
-  
-  # # Now add the subdirectory
-  # add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
-# else()
-  # # If already populated, just make it available
-  # FetchContent_MakeAvailable(yaml-cpp)
-# endif()
-
-# Remove the duplicate FetchContent_MakeAvailable call
-# FetchContent_MakeAvailable(yaml-cpp)
-
-
-
 
 set (library_name isomodel)
 
