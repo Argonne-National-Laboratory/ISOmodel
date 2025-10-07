@@ -24,7 +24,7 @@
 #include "EpwData.hpp"
 #include "MonthlyModel.hpp"
 #include "HourlyModel.hpp"
-#include "Properties.hpp"
+// #include "Properties.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>

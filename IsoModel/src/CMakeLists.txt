@@ -25,7 +25,7 @@ set(${target_name}_test
   Test/ISOModelFixture.hpp
   Test/ISOModel_GTest.cpp
   Test/MonthlyModel_GTest.cpp
-  Test/Properties_GTest.cpp
+  # Test/Properties_GTest.cpp
   Test/SolarRadiation_GTest.cpp
   Test/TimeFrame_GTest.cpp
   Test/UserModel_GTest.cpp
@@ -67,8 +67,8 @@ set(${target_name}_src
   PhysicalQuantities.hpp
   Population.cpp
   Population.hpp
-  Properties.cpp
-  Properties.hpp
+  # Properties.cpp
+  # Properties.hpp
   Simulation.cpp
   Simulation.hpp
   SimulationSettings.cpp

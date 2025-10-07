@@ -9,7 +9,6 @@
 
 #include "ISOModelFixture.hpp"
 
-#include "../Properties.hpp"
 #include "../UserModel.hpp"
 #include "../ISOResults.hpp"
 

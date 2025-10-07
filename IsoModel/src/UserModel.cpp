@@ -18,6 +18,7 @@
  **********************************************************************/
 
 #include "UserModel.hpp"
+#include <boost/optional.hpp>
 
 using namespace std;
 namespace openstudio {

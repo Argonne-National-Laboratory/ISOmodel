@@ -8,8 +8,6 @@
 #include "gtest/gtest.h"
 
 #include "ISOModelFixture.hpp"
-
-#include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;

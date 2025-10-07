@@ -7,7 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include "../Properties.hpp"
 #include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
