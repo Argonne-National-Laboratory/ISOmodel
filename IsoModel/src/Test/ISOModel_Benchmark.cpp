@@ -18,6 +18,7 @@ int main(int argc, char** argv)
     std::cout << "Finished simulation" << std::endl;
 
   } else {
+
     std::string test_data_path = argv[argc - 1];
 
     // Set up the hourly and monthly models.
@@ -29,28 +30,37 @@ int main(int argc, char** argv)
     std::cout << "Creating MonthlyModel" << std::endl;
     MonthlyModel monthlyModel = userModel.toMonthlyModel();
 
+    std::cout << "Creating HourlyModel" << std::endl;
+    HourlyModel hourlyModel = userModel.toHourlyModel();
 
 
     // Number of iterations to run for each benchmark.
-    int iterations = 10000;
+    int iterations = 100;
 
     // Benchmark the monthly simulation.
-    std::cout << "Benchmark: Running Monthly Simulation. Timing just the simulation. Iterations = " << iterations << std::endl;
+    std::cout << "Benchmark: Running Monthly and Hourly Simulation. Timing just the simulation. Iterations = " << iterations << std::endl;
 
     auto monthStart = std::chrono::steady_clock::now();
-    for (int i = 0; i != iterations; ++i){
+    for (int i = 0; i <= iterations; ++i){
       auto monthlyResults = monthlyModel.simulate();
     }
     auto monthEnd = std::chrono::steady_clock::now();
-
     auto monthDiff = monthEnd - monthStart;
     double monthlyTime = std::chrono::duration<double, std::micro>(monthDiff).count() / iterations;
     std::cout << "Monthly simulation ran in " << monthlyTime << " us, average over " << iterations << " loops." << std::endl;
 
-    std::cout << "Benchmark: Updating .ism properties with UserModel setters, creating simmodel, running monthly simulation.\n";
+    auto hourStart = std::chrono::steady_clock::now();
+    for (int i = 0; i <= iterations; ++i) {
+        auto hourlyResults = hourlyModel.simulate(true); // aggregateByMonth = true
+    }
+    auto hourEnd = std::chrono::steady_clock::now();
+    auto hourDiff = hourEnd - hourStart;
+    double hourlyTime = std::chrono::duration<double, std::micro>(hourDiff).count() / iterations;
+    std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over " << iterations << " loops." << std::endl;
 
+        std::cout << "Benchmark: Updating .ism properties with UserModel setters, creating simmodel, running monthly simulation.\n";
     monthStart = std::chrono::steady_clock::now();
-    for (int i = 0; i != iterations; ++i){
+    for (int i = 0; i <= iterations; ++i){
       // Set the floor, wall and window areas, as if one was doing an orientation
       // optimization study.
       userModel.setFloorArea(511.16);
