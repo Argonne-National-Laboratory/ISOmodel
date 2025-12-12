@@ -37,7 +37,7 @@ TEST_F(ISOModelFixture, MonthlyModelTests)
   };
 
   openstudio::isomodel::UserModel userModel;
-  userModel.load(test_data_path + "/SmallOffice_v2_ism.yaml");
+  userModel.load(test_data_path + "/test_bldg.yaml");
   auto monthlyModel = userModel.toMonthlyModel();
   auto results = monthlyModel.simulate();
 

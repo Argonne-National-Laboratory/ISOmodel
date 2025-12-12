@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     std::cout << "Running with default directory." << std::endl;
 
     UserModel userModel;
-    userModel.load("../test_data/SmallOffice_v2.ism");
+    userModel.load("../test_data/test_bldg.yaml");
     auto monthlyModel = userModel.toMonthlyModel();
     auto monthlyResults = monthlyModel.simulate();
 
@@ -24,10 +24,12 @@ int main(int argc, char** argv)
     UserModel userModel;
 
     std::cout << "loading test data from: " << test_data_path << std::endl;
-    userModel.load(test_data_path + "/SmallOffice_v2.ism");
+    userModel.load(test_data_path + "/test_bldg.yaml");
 
     std::cout << "Creating MonthlyModel" << std::endl;
     MonthlyModel monthlyModel = userModel.toMonthlyModel();
+
+
 
     // Number of iterations to run for each benchmark.
     int iterations = 10000;
