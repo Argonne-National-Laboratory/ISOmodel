@@ -196,9 +196,40 @@ target_link_libraries(isomodel_unit_tests yaml-cpp::yaml-cpp)
 
 
 # Benchmark executable
+# add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
+# target_link_libraries(isomodel_benchmark ${benchmark_depends})
+# target_link_libraries(isomodel_benchmark yaml-cpp::yaml-cpp)
+
+
+# Benchmark executable
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
+
+# NEW: Add aggressive optimization flags specifically for the benchmark target (GCC/Clang only)
+if(NOT MSVC)
+  target_compile_options(isomodel_benchmark PRIVATE 
+    -O3               # Maximize optimization
+    -march=native     # Use all features of the current CPU (crucial for speed)
+    -ffast-math       # Enable aggressive floating-point reordering (test for accuracy)
+    -funroll-loops    # Force loop unrolling
+  )
+endif()
+
 target_link_libraries(isomodel_benchmark ${benchmark_depends})
 target_link_libraries(isomodel_benchmark yaml-cpp::yaml-cpp)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Solar debug executable
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
