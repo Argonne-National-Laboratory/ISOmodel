@@ -1,20 +1,7 @@
 /*
  * HourlyModel.hpp
  *
- * Optimized Refactor
- * Changes:
- * - Replaced std::pow(x, 0.667) with inline cube root approximation.
- * - Added direct pointers/references for result storage to avoid struct copies.
- * - Removed std::map for results; used struct of vectors (SoA layout).
- * - Precomputed constants (invFloorArea, rhoCpAir, etc.)
- */
-/*
- * HourlyModel.hpp
- *
- * Optimized Refactor
- * Changes:
- * - Removed the declaration for calculateHour(), as it is now inlined in HourlyModel.cpp.
- * - fastPow23 helper is kept here as a global inline utility.
+ * Full restored version including all support methods and precomputed members.
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -51,21 +38,21 @@ namespace openstudio {
             HourlyModel();
             virtual ~HourlyModel();
 
+            // Main entry point for the simulation
             std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
         private:
+            // Support methods for pre-simulation setup
             void populateSchedules();
             void initialize();
 
             // Structure calculations helper
             void structureCalculations(double SHGC, double wallAreaM2, double windowAreaM2,
-                                       double wallUValue, double windowUValue,
-                                       double wallSolarAbsorption, double solarFactorWith,
-                                       double solarFactorWithout, int direction);
+                double wallUValue, double windowUValue,
+                double wallSolarAbsorption, double solarFactorWith,
+                double solarFactorWithout, int direction);
 
-            // calculateHour() declaration REMOVED
-
-            // Pre-computed constants for speed
+            // Pre-computed constants for loop performance
             double invFloorArea;
             double rhoCpAir_277;
             double windImpactSupplyRatio;
@@ -82,8 +69,8 @@ namespace openstudio {
             double prs, prsInterior, prsSolar;
             double prm, prmInterior, prmSolar;
             double H_ms, hOpaqueWperkm2, hem;
-            
-            // Cached Arrays
+
+            // Cached Arrays for physical properties
             double nlams[9];
             double nla[9];
             double sams[9];
@@ -97,7 +84,7 @@ namespace openstudio {
             double solarRatio[9];
             double solarShadeRatioReduction[9];
 
-            // Schedule Arrays [24][7]
+            // Schedule Arrays [24][7] used for O(1) hourly lookup
             double fixedVentilationSchedule[24][7];
             double fixedExteriorEquipmentSchedule[24][7];
             double fixedInteriorEquipmentSchedule[24][7];
@@ -108,7 +95,7 @@ namespace openstudio {
 
             // Helpers from original code
             std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
-            
+
             // Virtuals from Simulation.hpp
             virtual double ventilationSchedule(int, int, int) { return 0; }
             virtual double exteriorEquipmentSchedule(int, int, int) { return 0; }
@@ -120,4 +107,4 @@ namespace openstudio {
         };
     }
 }
-#endif /* ISOMODEL_HOURLYMODEL_HPP */
+#endif
