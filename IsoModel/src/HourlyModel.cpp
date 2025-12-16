@@ -1,7 +1,7 @@
 /*
  * HourlyModel.cpp
  *
- * Restored version with fixed fuel mapping for ISOMODEL_STANDALONE.
+ * Refactored version with modular simulation steps and complete fuel mapping.
  */
 
 #include "HourlyModel.hpp"
@@ -29,125 +29,133 @@ namespace openstudio {
             double tiHeatCool = 20.0;
 
             const auto& data = epwData->data();
-            const std::vector<double>& wind = data[WSPD];
-            const std::vector<double>& temp = data[DBT];
-            const std::vector<double>& egh = data[EGH];
+            const std::vector<double>& wind = data[WSPD], & temp = data[DBT], & egh = data[EGH];
 
             SolarRadiation pos(&frame, epwData.get());
             pos.Calculate();
             const auto& eglobe = pos.eglobe();
-
-            std::vector<double> flatVent(8760), flatExtEq(8760), flatIntEq(8760),
-                flatExtLt(8760), flatIntLt(8760), flatHeatSP(8760), flatCoolSP(8760);
-
-            for (int i = 0; i < 8760; ++i) {
-                int h = frame.Hour[i];
-                int d = frame.DayOfWeek[i];
-                flatVent[i] = fixedVentilationSchedule[h][d];
-                flatExtEq[i] = fixedExteriorEquipmentSchedule[h][d];
-                flatIntEq[i] = fixedInteriorEquipmentSchedule[h][d];
-                flatExtLt[i] = fixedExteriorLightingSchedule[h][d];
-                flatIntLt[i] = fixedInteriorLightingSchedule[h][d];
-                flatHeatSP[i] = fixedActualHeatingSetpoint[h][d];
-                flatCoolSP[i] = fixedActualCoolingSetpoint[h][d];
-            }
 
             size_t numHours = 8760;
             std::vector<double> r_Qneed_ht(numHours), r_Qneed_cl(numHours), r_Q_illum_tot(numHours),
                 r_Q_illum_ext_tot(numHours), r_Qfan_tot(numHours), r_Qpump_tot(numHours),
                 r_phi_plug(numHours), r_ext_equip(numHours), r_Q_dhw(numHours, 0.0);
 
-            const double iFA = invFloorArea;
-            const double maxIrrad = structure.irradianceForMaxShadingUse();
-            const double invAreaNat = (areaNaturallyLightedRatio > 0) ? (53.0 / areaNaturallyLightedRatio) : 0.0;
-            const double elightNaturalSafe = elightNatural + DBL_MIN;
-
-            for (int i = 0; i < numHours; ++i) {
-                double windMps = wind[i];
+            for (int i = 0; i < (int)numHours; ++i) {
+                int h = frame.Hour[i], d = frame.DayOfWeek[i];
                 double temperature = temp[i];
-                double schedVent = flatVent[i];
-                double schedExtEquip = flatExtEq[i];
-                double schedIntEquip = flatIntEq[i];
-                double schedIntLight = flatIntLt[i];
-                double schedHeatSP = flatHeatSP[i];
-                double schedCoolSP = flatCoolSP[i];
 
-                r_ext_equip[i] = schedExtEquip * iFA;
-                r_phi_plug[i] = schedIntEquip;
+                r_ext_equip[i] = fixedExteriorEquipmentSchedule[h][d] * invFloorArea;
+                r_phi_plug[i] = fixedInteriorEquipmentSchedule[h][d];
 
-                double lightingLevel = 0.0;
-                double qSolarHeatGain = 0.0;
-                const std::vector<double>& curSolar = eglobe[i];
+                // 1. Gains calculation (Solar and Internal)
+                double phii, phi_int, qSolarGain;
+                calculateGains(i, eglobe[i], egh[i], fixedInteriorLightingSchedule[h][d], r_phi_plug[i],
+                    phi_int, phii, r_Q_illum_tot[i], qSolarGain);
 
-                for (int k = 0; k < 9; ++k) {
-                    double sr = (k < 8) ? curSolar[k] : egh[i];
-                    double srCl = std::min(sr, maxIrrad);
-                    lightingLevel += invAreaNat * sr * (naturalLightRatio[k] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[k] * srCl);
-                    qSolarHeatGain += sr * (solarRatio[k] + solarShadeRatioReduction[k] * shadingUsePerWPerM2 * srCl);
-                }
+                // 2. Airflow and Ventilation physics
+                double ventExh = fixedVentilationSchedule[h][d] * 3.6 * invFloorArea;
+                double tEnt, hei, h1;
+                calculateAirFlows(wind[i], temperature, tiHeatCool, ventExh, tEnt, hei, h1);
 
-                double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / elightNaturalSafe));
-                r_Q_illum_tot[i] = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * schedIntLight;
-                double phi_int = r_phi_plug[i] + (r_Q_illum_tot[i] * lights.elecInternalGains());
-                double phii = simSettings.phiSolFractionToAirNode() * qSolarHeatGain + simSettings.phiIntFractionToAirNode() * phi_int;
-
-                double ventExh = schedVent * 3.6 * iFA;
-                double qSup = ventExh * windImpactSupplyRatio;
-                double exhSup = -(qSup - ventExh);
-                double tSupp = std::max(ventilation.ventPreheatDegC(), (1.0 - ventilation.heatRecoveryEfficiency()) * temperature + ventilation.heatRecoveryEfficiency() * 20.0);
-
-                double qWind = 0.0769 * q4Pa * fastPow23(ventilation.dCp() * windMps * windMps);
-                double absDT = std::max(std::fabs(temperature - tiHeatCool), 1e-5);
-                double qStack = 0.0146 * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
-                double qSW = qStack + qWind + 1E-15;
-                double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
-
-                double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + qSup;
-                double tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + tSupp * qSup) / (qEnt + 1e-15);
-
-                double hei = 0.34 * qEnt;
-                double h1 = 1.0 / (1.0 / (hei + 1e-15) + 1.0 / H_tris);
-                double h2 = h1 + hwindowWperkm2;
-                double h3 = 1.0 / (1.0 / h2 + 1.0 / H_ms);
-                double h3_hem = 0.5 * (h3 + hem);
-
-                double phisPhi0 = prsSolar * qSolarHeatGain + prsInterior * phi_int;
-                double phimPhi0 = prmSolar * qSolarHeatGain + prmInterior * phi_int;
-                double mid = phisPhi0 + hwindowWperkm2 * temperature + h1 * tEnt;
-                double h3_h2 = h3 / h2;
-                double t_phi = (h3_h2 * h1) / (hei + 1e-15);
-
-                auto solveTi = [&](double pInput) {
-                    double phim = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * pInput;
-                    double tmt1 = (TMT1 * (Cm / 3.6 - h3_hem) + phim) / (Cm / 3.6 + h3_hem);
-                    double ts = (H_ms * (0.5 * (TMT1 + tmt1)) + mid + h1 * pInput / (hei + 1e-15)) / (H_ms + hwindowWperkm2 + h1);
-                    return (H_tris * ts + hei * tEnt + pInput) / (H_tris + hei);
-                    };
-
-                double ti_0 = solveTi(phii);
-                double ti_10 = solveTi(phii + 10.0);
-                double denom = (ti_10 - ti_0) + 1e-15;
-                double phiHC = std::max(0.0, 10.0 * (schedHeatSP - ti_0) / denom) + std::min(0.0, 10.0 * (schedCoolSP - ti_0) / denom);
+                // 3. Solve RC Network (ISO 13790)
+                double phiHC = solveThermalBalance(temperature, tEnt, phii, phi_int, qSolarGain, hei, h1,
+                    fixedActualHeatingSetpoint[h][d], fixedActualCoolingSetpoint[h][d],
+                    TMT1, tiHeatCool);
 
                 r_Qneed_ht[i] = std::max(0.0, phiHC);
                 r_Qneed_cl[i] = std::max(0.0, -phiHC);
 
-                double phimFinal = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * (phii + phiHC);
-                double tmt1_new = (TMT1 * (Cm / 3.6 - h3_hem) + phimFinal) / (Cm / 3.6 + h3_hem);
-                double ts_final = (H_ms * (0.5 * (TMT1 + tmt1_new)) + mid + h1 * (phii + phiHC) / (hei + 1e-15)) / (H_ms + hwindowWperkm2 + h1);
+                // 4. Auxiliary Systems (Fans and Pumps)
+                double Vair = std::max({ ventExh,
+                    r_Qneed_ht[i] / (((heating.temperatureSetPointOccupied() + heating.dT_supp_ht()) - tiHeatCool) * rhoCpAir_277 + DBL_MIN),
+                    r_Qneed_cl[i] / ((tiHeatCool - (cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl())) * rhoCpAir_277 + DBL_MIN) });
 
-                TMT1 = tmt1_new;
-                tiHeatCool = (H_tris * ts_final + hei * tEnt + phii + phiHC) / (H_tris + hei);
-
-                double Vair = ventExh;
-                Vair = std::max(Vair, r_Qneed_ht[i] / (((heating.temperatureSetPointOccupied() + heating.dT_supp_ht()) - tiHeatCool) * rhoCpAir_277 + DBL_MIN));
-                Vair = std::max(Vair, r_Qneed_cl[i] / ((tiHeatCool - (cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl())) * rhoCpAir_277 + DBL_MIN));
                 r_Qfan_tot[i] = Vair * ventilation.fanPower() * 0.277778;
-
-                r_Qpump_tot[i] = (r_Qneed_cl[i] > 0) ? (cooling.E_pumps() * cooling.pumpControlReduction()) : ((r_Qneed_ht[i] > 0) ? (heating.E_pumps() * heating.pumpControlReduction()) : 0.0);
-                r_Q_illum_ext_tot[i] = (egh[i] > 0) ? 0.0 : (lights.exteriorEnergy() * flatExtLt[i] * iFA);
+                r_Qpump_tot[i] = (r_Qneed_cl[i] > 0) ? (cooling.E_pumps() * cooling.pumpControlReduction()) :
+                    ((r_Qneed_ht[i] > 0) ? (heating.E_pumps() * heating.pumpControlReduction()) : 0.0);
+                r_Q_illum_ext_tot[i] = (egh[i] > 0) ? 0.0 : (lights.exteriorEnergy() * fixedExteriorLightingSchedule[h][d] * invFloorArea);
             }
 
+            return processResults(r_Qneed_ht, r_Qneed_cl, r_Q_illum_tot, r_Q_illum_ext_tot, r_Qfan_tot, r_Qpump_tot, r_phi_plug, r_ext_equip, r_Q_dhw, aggregateByMonth);
+        }
+
+        void HourlyModel::calculateGains(int i, const std::vector<double>& curSolar, double egh_i,
+            double schedIntLight, double schedIntEquip,
+            double& out_phi_int, double& out_phii, double& out_lighting_tot, double& out_qSolarGain) {
+            double lightingLevel = 0.0;
+            out_qSolarGain = 0.0;
+            const double maxIrrad = structure.irradianceForMaxShadingUse();
+            const double invAreaNat = (areaNaturallyLightedRatio > 0) ? (53.0 / areaNaturallyLightedRatio) : 0.0;
+
+            for (int k = 0; k < 9; ++k) {
+                double sr = (k < 8) ? curSolar[k] : egh_i;
+                double srCl = std::min(sr, maxIrrad);
+                lightingLevel += invAreaNat * sr * (naturalLightRatio[k] + shadingUsePerWPerM2 * naturalLightShadeRatioReduction[k] * srCl);
+                out_qSolarGain += sr * (solarRatio[k] + solarShadeRatioReduction[k] * shadingUsePerWPerM2 * srCl);
+            }
+
+            double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / (elightNatural + DBL_MIN)));
+            out_lighting_tot = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * schedIntLight;
+            out_phi_int = schedIntEquip + (out_lighting_tot * lights.elecInternalGains());
+            out_phii = simSettings.phiSolFractionToAirNode() * out_qSolarGain + simSettings.phiIntFractionToAirNode() * out_phi_int;
+        }
+
+        void HourlyModel::calculateAirFlows(double windMps, double temperature, double tiHeatCool, double ventExh,
+            double& out_tEnt, double& out_hei, double& out_h1) {
+            double qSup = ventExh * windImpactSupplyRatio;
+            double exhSup = -(qSup - ventExh);
+            double tSupp = std::max(ventilation.ventPreheatDegC(), (1.0 - ventilation.heatRecoveryEfficiency()) * temperature + ventilation.heatRecoveryEfficiency() * 20.0);
+
+            double qWind = 0.0769 * q4Pa * fastPow23(ventilation.dCp() * windMps * windMps);
+            double absDT = std::max(std::fabs(temperature - tiHeatCool), 1e-5);
+            double qStack = 0.0146 * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
+            double qSW = qStack + qWind + 1E-15;
+            double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
+
+            double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + qSup;
+            out_tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + tSupp * qSup) / (qEnt + 1e-15);
+            out_hei = 0.34 * qEnt;
+            out_h1 = 1.0 / (1.0 / (out_hei + 1e-15) + 1.0 / H_tris);
+        }
+
+        double HourlyModel::solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
+            double qSolarGain, double hei, double h1, double schedHeatSP,
+            double schedCoolSP, double& TMT1, double& tiHeatCool) {
+            double h2 = h1 + hwindowWperkm2;
+            double h3 = 1.0 / (1.0 / h2 + 1.0 / H_ms);
+            double h3_hem = 0.5 * (h3 + hem);
+            double phisPhi0 = prsSolar * qSolarGain + prsInterior * phi_int;
+            double phimPhi0 = prmSolar * qSolarGain + prmInterior * phi_int;
+            double mid = phisPhi0 + hwindowWperkm2 * temperature + h1 * tEnt;
+            double h3_h2 = h3 / h2;
+            double t_phi = (h3_h2 * h1) / (hei + 1e-15);
+
+            auto solveTi = [&](double pInput) {
+                double phim = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * pInput;
+                double tmt1 = (TMT1 * (Cm / 3.6 - h3_hem) + phim) / (Cm / 3.6 + h3_hem);
+                double ts = (H_ms * (0.5 * (TMT1 + tmt1)) + mid + h1 * pInput / (hei + 1e-15)) / (H_ms + hwindowWperkm2 + h1);
+                return (H_tris * ts + hei * tEnt + pInput) / (H_tris + hei);
+                };
+
+            double ti_0 = solveTi(phii);
+            double ti_10 = solveTi(phii + 10.0);
+            double denom = (ti_10 - ti_0) + 1e-15;
+            double phiHC = std::max(0.0, 10.0 * (schedHeatSP - ti_0) / denom) + std::min(0.0, 10.0 * (schedCoolSP - ti_0) / denom);
+
+            double phimFinal = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * (phii + phiHC);
+            double tmt1_new = (TMT1 * (Cm / 3.6 - h3_hem) + phimFinal) / (Cm / 3.6 + h3_hem);
+            double ts_final = (H_ms * (0.5 * (TMT1 + tmt1_new)) + mid + h1 * (phii + phiHC) / (hei + 1e-15)) / (H_ms + hwindowWperkm2 + h1);
+
+            TMT1 = tmt1_new;
+            tiHeatCool = (H_tris * ts_final + hei * tEnt + phii + phiHC) / (H_tris + hei);
+            return phiHC;
+        }
+
+        std::vector<EndUses> HourlyModel::processResults(const std::vector<double>& r_Qneed_ht, const std::vector<double>& r_Qneed_cl,
+            const std::vector<double>& r_Q_illum_tot, const std::vector<double>& r_Q_illum_ext_tot,
+            const std::vector<double>& r_Qfan_tot, const std::vector<double>& r_Qpump_tot,
+            const std::vector<double>& r_phi_plug, const std::vector<double>& r_ext_equip,
+            const std::vector<double>& r_Q_dhw, bool aggregateByMonth) {
             double qh_yr = std::accumulate(r_Qneed_ht.begin(), r_Qneed_ht.end(), 0.0);
             double qc_yr = std::accumulate(r_Qneed_cl.begin(), r_Qneed_cl.end(), 0.0);
             double f_ht = std::max(qh_yr / (qc_yr + qh_yr + DBL_MIN), 0.1);
@@ -158,57 +166,44 @@ namespace openstudio {
             constexpr double W_TO_KWH = 0.001;
             std::vector<EndUses> results;
 
+            auto mapToEU = [&](EndUses& eu, double h, double c, double il, double el, double fn, double pm, double pi, double pe, double dw) {
+                double elec_ht = electricHeat ? (h * s_ht * W_TO_KWH) : 0.0;
+                double gas_ht = electricHeat ? 0.0 : (h * s_ht * W_TO_KWH);
+#ifdef ISOMODEL_STANDALONE
+                eu.addEndUse(0, elec_ht); eu.addEndUse(1, c * s_cl * W_TO_KWH); eu.addEndUse(2, il * W_TO_KWH); eu.addEndUse(3, el * W_TO_KWH);
+                eu.addEndUse(4, fn * W_TO_KWH); eu.addEndUse(5, pm * W_TO_KWH); eu.addEndUse(6, pi * W_TO_KWH); eu.addEndUse(7, pe * W_TO_KWH);
+                eu.addEndUse(8, dw * W_TO_KWH); eu.addEndUse(9, gas_ht);
+#else
+                eu.addEndUse(elec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+                eu.addEndUse(c * s_cl * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+                eu.addEndUse(il * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+                eu.addEndUse(el * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+                eu.addEndUse(fn * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+                eu.addEndUse(pm * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+                eu.addEndUse(pi * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+                eu.addEndUse(pe * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+                eu.addEndUse(dw * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+                eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
+#endif
+                };
+
             if (aggregateByMonth) {
                 const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
                 for (int m = 0; m < 12; ++m) {
-                    double sum_sys_ht = 0, sum_sys_cl = 0, sum_illum_int = 0, sum_illum_ext = 0, sum_fan = 0, sum_pump = 0, sum_plug_int = 0, sum_plug_ext = 0, sum_dhw = 0;
-                    for (int h = monthEnds[m]; h < monthEnds[m + 1]; ++h) {
-                        sum_sys_ht += r_Qneed_ht[h]; sum_sys_cl += r_Qneed_cl[h]; sum_illum_int += r_Q_illum_tot[h]; sum_illum_ext += r_Q_illum_ext_tot[h];
-                        sum_fan += r_Qfan_tot[h]; sum_pump += r_Qpump_tot[h]; sum_plug_int += r_phi_plug[h]; sum_plug_ext += r_ext_equip[h]; sum_dhw += r_Q_dhw[h];
-                    }
                     EndUses eu;
-                    double elec_ht = electricHeat ? (sum_sys_ht * s_ht * W_TO_KWH) : 0.0;
-                    double gas_ht = electricHeat ? 0.0 : (sum_sys_ht * s_ht * W_TO_KWH);
-#ifdef ISOMODEL_STANDALONE
-                    eu.addEndUse(0, elec_ht); eu.addEndUse(1, sum_sys_cl * s_cl * W_TO_KWH); eu.addEndUse(2, sum_illum_int * W_TO_KWH); eu.addEndUse(3, sum_illum_ext * W_TO_KWH);
-                    eu.addEndUse(4, sum_fan * W_TO_KWH); eu.addEndUse(5, sum_pump * W_TO_KWH); eu.addEndUse(6, sum_plug_int * W_TO_KWH); eu.addEndUse(7, sum_plug_ext * W_TO_KWH);
-                    eu.addEndUse(8, sum_dhw * W_TO_KWH); eu.addEndUse(9, gas_ht);
-#else
-                    eu.addEndUse(elec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-                    eu.addEndUse(sum_sys_cl * s_cl * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-                    eu.addEndUse(sum_illum_int * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-                    eu.addEndUse(sum_illum_ext * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-                    eu.addEndUse(sum_fan * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-                    eu.addEndUse(sum_pump * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-                    eu.addEndUse(sum_plug_int * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-                    eu.addEndUse(sum_plug_ext * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-                    eu.addEndUse(sum_dhw * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
-                    eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
-#endif
+                    double sums[9] = { 0 };
+                    for (int i = monthEnds[m]; i < monthEnds[m + 1]; ++i) {
+                        sums[0] += r_Qneed_ht[i]; sums[1] += r_Qneed_cl[i]; sums[2] += r_Q_illum_tot[i]; sums[3] += r_Q_illum_ext_tot[i];
+                        sums[4] += r_Qfan_tot[i]; sums[5] += r_Qpump_tot[i]; sums[6] += r_phi_plug[i]; sums[7] += r_ext_equip[i]; sums[8] += r_Q_dhw[i];
+                    }
+                    mapToEU(eu, sums[0], sums[1], sums[2], sums[3], sums[4], sums[5], sums[6], sums[7], sums[8]);
                     results.push_back(eu);
                 }
             }
             else {
                 for (int i = 0; i < 8760; ++i) {
                     EndUses eu;
-                    double elec_ht = electricHeat ? (r_Qneed_ht[i] * s_ht * W_TO_KWH) : 0.0;
-                    double gas_ht = electricHeat ? 0.0 : (r_Qneed_ht[i] * s_ht * W_TO_KWH);
-#ifdef ISOMODEL_STANDALONE
-                    eu.addEndUse(0, elec_ht); eu.addEndUse(1, r_Qneed_cl[i] * s_cl * W_TO_KWH); eu.addEndUse(2, r_Q_illum_tot[i] * W_TO_KWH); eu.addEndUse(3, r_Q_illum_ext_tot[i] * W_TO_KWH);
-                    eu.addEndUse(4, r_Qfan_tot[i] * W_TO_KWH); eu.addEndUse(5, r_Qpump_tot[i] * W_TO_KWH); eu.addEndUse(6, r_phi_plug[i] * W_TO_KWH); eu.addEndUse(7, r_ext_equip[i] * W_TO_KWH);
-                    eu.addEndUse(8, r_Q_dhw[i] * W_TO_KWH); eu.addEndUse(9, gas_ht);
-#else
-                    eu.addEndUse(elec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-                    eu.addEndUse(r_Qneed_cl[i] * s_cl * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-                    eu.addEndUse(r_Q_illum_tot[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-                    eu.addEndUse(r_Q_illum_ext_tot[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-                    eu.addEndUse(r_Qfan_tot[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-                    eu.addEndUse(r_Qpump_tot[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-                    eu.addEndUse(r_phi_plug[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-                    eu.addEndUse(r_ext_equip[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-                    eu.addEndUse(r_Q_dhw[i] * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
-                    eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
-#endif
+                    mapToEU(eu, r_Qneed_ht[i], r_Qneed_cl[i], r_Q_illum_tot[i], r_Q_illum_ext_tot[i], r_Qfan_tot[i], r_Qpump_tot[i], r_phi_plug[i], r_ext_equip[i], r_Q_dhw[i]);
                     results.push_back(eu);
                 }
             }
