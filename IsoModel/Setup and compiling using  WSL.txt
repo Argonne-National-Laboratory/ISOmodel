@@ -34,7 +34,7 @@ git clone https://github.com/Argonne-National-Laboratory/ISOmodel.git
 cd ISomodel/IsoModel
 mkdir bin
 cd bin
-make ../src
+cmake ../src
 
 This should run cmake and find both Boost and Gtest without having to give them on the command line.
 
