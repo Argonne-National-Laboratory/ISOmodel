@@ -81,11 +81,13 @@ namespace openstudio {
             /**
             * Calculates the solar declination in radians. The following is a more accurate formula
             * for declination as taken from "Solar Engineering of Thermal Processes,"
-            * Duffie and Beckman p. 14, eq. 1.6.1b.  B is the revolution enagle 
+            * Duffie and Beckman p. 14, eq. 1.6.1b.  B is the revolution enagle
+            * cut this off at cost 2B and sin 2B if trimming microseconds is important
             */
             double calculateSolarDeclination(double B) {
-                return 0.006918 - 0.399912 * cos(B) + 0.070257 * sin(B) 
-                    - 0.006758 * cos(2.0 * B) + 0.000907 * sin(2.0 * B);
+                return 0.006918 - 0.399912 * cos(B) + 0.070257 * sin(B)
+                    - 0.006758 * cos(2.0 * B) + 0.000907 * sin(2.0 * B)
+                    - 0.002697 * cos(3.0 * B) + 0.00148 * sin(3.0 * B);
             }
 
             // Calculates the solar hour angle in radians from ASHRAE2013 Fundamentals, Ch. 14, eq. 11.
