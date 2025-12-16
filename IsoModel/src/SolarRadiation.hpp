@@ -57,41 +57,93 @@ namespace openstudio {
             void calculateAverages();
             void calculateMonthAvg(int midx, int cnt);
             void clearMonthlyAvg(int midx);
-
-            // --- Restored Original Math Functions for Compatibility ---
+            
+            // Calculates the revolution angle in radians of the earth around the sun.
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 6. with dayOfYear going from 0 to 364 not 1 to 365
+            // Beckman and Duffie 1.4.2  (use B&D's notation of B to replace capGamma of ASHRAE = revolution angle)
             double calculateRevolutionAngle(int dayOfYear) { return 2.0 * PI * dayOfYear / 365.0; }
-            double calculateEquationOfTime(double rev) {
-                return 2.2918 * (0.0075 + 0.1868 * cos(rev) - 3.2077 * sin(rev) - 1.4615 * cos(2 * rev) - 4.089 * sin(2 * rev));
+            
+            // Calculates the difference between the apparent solar time and mean solar time (the equation of time).
+            //ASHRAE2013 Fundamentals, Ch. 14, eq. 5., Beckmand and Duffie 1.4.2 who use B for revolution angle
+            double calculateEquationOfTime(double B) {
+                return 2.2918 * (0.0075 + 0.1868 * cos(B) - 3.2077 * sin(B) 
+                    - 1.4615 * cos(2 * B) - 4.089 * sin(2 * B));
             }
-            double calculateApparentSolarTime(int hr, double eq) {
-                return hr + eq / 60.0 + (m_longitude - m_localMeridian) / (PI / 12.0);
+            /**
+            * Calculates the apparent Solar Time in hours.
+            * ASHRAE2013 Fundamentals, Ch. 14, eq. 7. 
+            * Note that because we use radians for longitude, we divide by 15*pi/180 instead of 15, or pi / 12.
+            */
+            double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
+                return localStandardTime + equationOfTime / 60.0 + (m_longitude - m_localMeridian) / (PI / 12.0);
             }
-            double calculateSolarDeclination(double rev) {
-                return 0.006918 - 0.399912 * cos(rev) + 0.070257 * sin(rev) - 0.006758 * cos(2.0 * rev) + 0.000907 * sin(2.0 * rev);
+
+            /**
+            * Calculates the solar declination in radians. The following is a more accurate formula
+            * for declination as taken from "Solar Engineering of Thermal Processes,"
+            * Duffie and Beckman p. 14, eq. 1.6.1b.  B is the revolution enagle 
+            */
+            double calculateSolarDeclination(double B) {
+                return 0.006918 - 0.399912 * cos(B) + 0.070257 * sin(B) 
+                    - 0.006758 * cos(2.0 * B) + 0.000907 * sin(2.0 * B);
             }
-            double calculateSolarHourAngle(double ast) { return 15 * (ast - 12) * PI / 180.0; }
+
+            // Calculates the solar hour angle in radians from ASHRAE2013 Fundamentals, Ch. 14, eq. 11.
+            double calculateSolarHourAngle(double ast) { return (ast - 12) * 15 * PI / 180.0; }
+
+            //Calculates the solar altitude angle in radians.
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 12.
             double calculateSolarAltitude(double dec, double sha) {
                 return asin(cos(m_latitude) * cos(dec) * cos(sha) + sin(m_latitude) * sin(dec));
             }
-            double calculateSolarAzimuthSin(double dec, double sha, double alt) { return sin(sha) * cos(dec) / cos(alt); }
-            double calculateSolarAzimuthCos(double dec, double sha, double alt) {
-                return (cos(sha) * cos(dec) * sin(m_latitude) - sin(dec) * cos(m_latitude)) / cos(alt);
+
+            // Calculates the sin and cos of the solar azimuth to get solar azimuth.
+            // from ASHRAE2025 Fundamentals, Ch. 14, eq. 14 and 15  H = hour angle, dec = declination and beta = solar altitude
+            // now we get the solar azimuth as from tan(solar azimuth) = sin (solar azimuth)/cos(solar azimuth)
+            double calculateSolarAzimuthSin(double dec, double H, double beta) { return sin(H) * cos(dec) / cos(beta); }
+            double calculateSolarAzimuthCos(double dec, double H, double beta) {
+                return (cos(H) * cos(dec) * sin(m_latitude) - sin(dec) * cos(m_latitude)) / cos(beta);
             }
-            double calculateSolarAzimuth(double s, double c) { return atan2(s, c); }
-            double calculateGroundReflectedIrradiance(double eb, double ed, double rho, double alt, double tilt) {
-                return (eb * sin(alt) + ed) * rho * (1 - cos(tilt)) / 2;
+            double calculateSolarAzimuth(double sina, double cosa) { return atan2(sina, cosa); }
+
+            // Calculate the total ground reflected radiation.
+            // ASHRAE2025 Fundamentals, Ch. 14, eq. 30.
+            // Eb = normal beam irradiance, Ed diffuce irrandiance, rho = reflectance, beta = solar altitude, tilt  = surface tilt angle
+            double calculateGroundReflectedIrradiance(double eb, double ed, double rho, double beta, double tilt) {
+                return (eb * sin(beta) + ed) * rho * (1 - cos(tilt)) / 2;
             }
+
+            // Calculates the surface solar azimuth(the difference between the surface and solar azimuths).
+            // solarAzimuth and surfaceAzimuth should be in radians.Result in radians.
+            // ASHRAE2013/2017/2025 Fundamentals, Ch. 14, eq. 21 
+            // note from RTM - why fabs??? Thats not in ashrae??
             double calculateSurfaceSolarAzimuth(double solAz, double surfAz) { return fabs(solAz - surfAz); }
-            double calculateAngleOfIncidence(double alt, double ssa, double tilt) {
-                return acos(cos(alt) * cos(ssa) * sin(tilt) + sin(alt) * cos(tilt));
+
+            // Calculates the angle of incidence of the sun on the surface.
+            // ASHRAE2013/2017.2025 Fundamentals, Ch. 14, eq. 22.
+            // beta = solar altitude, gamma = surface-solar-azimush, 
+            double calculateAngleOfIncidence(double beta, double gamma, double tilt) {
+                return acos(cos(beta) * cos(gamma) * sin(tilt) + sin(beta) * cos(tilt));
             }
-            double calculateTotalDirectBeamIrradiance(double eb, double inc) { return eb * std::max(cos(inc), 0.0); }
-            double calculateDiffuseAngleOfIncidenceFactor(double inc) {
-                return std::max(0.45, 0.55 + 0.437 * cos(inc) + 0.313 * std::pow(cos(inc), 2.0));
+
+            // Calculates the total direct beam irradiance on a surface.
+            // ASHRAE2013/2017/2025 Fundamentals, Ch. 14, eq. 26., theta = angle of incidence
+            double calculateTotalDirectBeamIrradiance(double eb, double theta) { return eb * std::max(cos(theta), 0.0); }
+
+            // Calculates the ratio of clear - sky diffuse irradiance on a vertical surface to that on a horizontal surface.
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 28, theta = angle of incidence
+
+            double calculateDiffuseAngleOfIncidenceFactor(double theta) {
+                return std::max(0.45, 0.55 + 0.437 * cos(theta) + 0.313 * std::pow(cos(theta), 2.0));
             }
-            double calculateTotalDiffuseIrradiance(double ed, double factor, double tilt) {
-                return (tilt > PI / 2) ? ed * factor * sin(tilt) : ed * (factor * sin(tilt) + cos(tilt));
+            // Calculates the total diffuse irradiance on the surface.
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 29, 30.
+            // ed = diffuse horizontal irrandiance, tilt - surface tilt angle, Y = diffuse angle of incidence factor
+            double calculateTotalDiffuseIrradiance(double ed, double Y, double tilt) {
+                return (tilt > PI / 2) ? ed * Y * sin(tilt) : ed * (Y * sin(tilt) + cos(tilt));
             }
+            // Calculates the total irradiance reaching a surface.
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 25.
             double calculateTotalIrradiance(double dir, double diff, double ground) { return dir + diff + ground; }
 
             // --- Original Getters ---

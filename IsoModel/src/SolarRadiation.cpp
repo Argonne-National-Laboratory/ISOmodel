@@ -2,7 +2,11 @@
 
 namespace openstudio {
     namespace isomodel {
-
+        /**
+         * Surface Azimuths of the "building" to calculate solar radiation for, in radians.
+         * In the order S, SE, E, NE, N, NW, W, SW.
+         * In degrees, the azimuths are: 0, -45, -90, -135, 180, 135, 90, 45.
+         */
         static double SurfaceAzimuths[] = { 0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4 };
 
         SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
@@ -11,6 +15,7 @@ namespace openstudio {
             m_surfaceTilt = tilt / 2.0;
             m_sinTilt = std::sin(m_surfaceTilt);
             m_cosTilt = std::cos(m_surfaceTilt);
+            // don't forget to convert from degrees to radians so * by PI/180
             m_longitude = wdata->longitude() * (PI / 180.0);
             m_localMeridian = wdata->timezone() * 15.0 * (PI / 180.0);
             m_latitude = wdata->latitude() * (PI / 180.0);
@@ -55,6 +60,8 @@ namespace openstudio {
             const std::vector<double>& vecEB = dataMap[EB];
             const std::vector<double>& vecED = dataMap[ED];
 
+            // precompute this as an array rather than on the fly to speed up the hourly calcs
+            // by setting it up like this it's easier to let the compiler vectorize to speed it up.
             for (int i = 0; i < 8760; i++) {
                 double rev = calculateRevolutionAngle(m_frame->YTD[i]);
                 double eq = calculateEquationOfTime(rev);
@@ -66,6 +73,7 @@ namespace openstudio {
 
                 double ground = calculateGroundReflectedIrradiance(vecEB[i], vecED[i], m_groundReflectance, alt, m_surfaceTilt);
 
+                // setting up the different surfaces this way lets the compiler vectorize
                 for (int s = 0; s < NUM_SURFACES; s++) {
                     double ssa = calculateSurfaceSolarAzimuth(sAz, SurfaceAzimuths[s]);
                     double inc = calculateAngleOfIncidence(alt, ssa, m_surfaceTilt);
