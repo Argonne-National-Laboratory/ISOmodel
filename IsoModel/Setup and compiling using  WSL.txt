@@ -31,6 +31,7 @@ This installs precompiled versions of the latest stable boost libraries and inst
 cd ~/git
 git clone https://github.com/Argonne-National-Laboratory/ISOmodel.git
 
+cd ISomodel/IsoModel
 mkdir bin
 cd bin
 make ../src
