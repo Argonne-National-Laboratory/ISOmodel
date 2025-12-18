@@ -2,6 +2,7 @@
  * HourlyModel.cpp
  *
  * Refactored version with modular simulation steps and complete fuel mapping.
+ * Updated to use standard C++ <numeric> and <vector> features instead of Boost.
  */
 
 #include "HourlyModel.hpp"
@@ -257,7 +258,12 @@ namespace openstudio {
             h_ms = simSettings.hci() + simSettings.hri() * 1.2;
             h_is = 1.0 / (1.0 / simSettings.hci() - 1.0 / h_ms);
             H_tris = h_is * structure.totalAreaPerFloorArea();
-            Cm = (structure.interiorHeatCapacity() + (structure.wallHeatCapacity() * sum(structure.wallArea()) * invFloorArea)) / 1000.0;
+
+            // Fix: Use std::accumulate instead of sum() for vector addition
+            const auto& wallAreas = structure.wallArea();
+            double totalWallArea = std::accumulate(wallAreas.begin(), wallAreas.end(), 0.0);
+
+            Cm = (structure.interiorHeatCapacity() + (structure.wallHeatCapacity() * totalWallArea * invFloorArea)) / 1000.0;
 
             if (Cm > 370.0) Am = 3.5;
             else if (Cm > 260.0) Am = 3.0 + 0.5 * ((Cm - 260) / 110.0);

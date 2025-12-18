@@ -1,119 +1,142 @@
 /*
  * solar_debug.cpp
  *
- *  Created on: 2015-03-11
- *      Author: Brendan Albano
+ * Refactored to remove boost dependencies and ensure output prints regardless of global debug flags.
  */
 
 #include "../UserModel.hpp"
 #include "../MonthlyModel.hpp"
+#include "../SolarRadiation.hpp"
 #include <iostream>
-
-#include <boost/program_options.hpp>
+#include <vector>
+#include <string>
+#include <iomanip>
 
 using namespace openstudio::isomodel;
 using namespace openstudio;
 
-void printMonthlySolar(UserModel umodel) {
+void printUsage(const char* execName) {
+    std::cout << "Usage: " << execName << " <ismfilepath> [options]\n"
+        << "Options:\n"
+        << "  -i, --ismfilepath <path>  Path to .ism file.\n"
+        << "  -m, --monthly             Print the monthly solar radiation values.\n"
+        << "  -h, --hourly              Print the hourly solar radiation values.\n";
+}
+
+// Explicit printing to bypass global DEBUG_ISO_MODEL_SIMULATION restrictions
+void forcePrintMonthlySolar(UserModel umodel) {
     umodel.loadWeather();
     WeatherData wd = *umodel.weatherData();
     Matrix msolar = wd.msolar();
     Matrix mhEgh = wd.mhEgh();
     Vector mEgh = wd.mEgh();
-    printMatrix("msolar", msolar);
-    printMatrix("mhEgh", mhEgh);
-    printVector("mEgh", mEgh);
-    std::cout << std::endl;
+
+    std::cout << "\n--- Monthly Solar Radiation (msolar) ---" << std::endl;
+    std::cout << "Month, S, SE, E, NE, N, NW, W, SW" << std::endl;
+    for (size_t i = 0; i < msolar.size1(); ++i) {
+        std::cout << i + 1;
+        for (size_t j = 0; j < msolar.size2(); ++j) {
+            std::cout << ", " << std::fixed << std::setprecision(4) << msolar(i, j);
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "\n--- Monthly Global Horizontal Radiation (mEgh) ---" << std::endl;
+    std::cout << "Month, W/m2" << std::endl;
+    for (size_t i = 0; i < mEgh.size(); ++i) {
+        std::cout << i + 1 << ", " << mEgh[i] << std::endl;
+    }
+
+    std::cout << "\n--- Monthly Hourly Average Egh (mhEgh) ---" << std::endl;
+    for (size_t i = 0; i < mhEgh.size1(); ++i) {
+        std::cout << "Month " << i + 1;
+        for (size_t j = 0; j < mhEgh.size2(); ++j) {
+            std::cout << ", " << mhEgh(i, j);
+        }
+        std::cout << std::endl;
+    }
 }
 
-void printHourlySolar(UserModel umodel) {
-  umodel.loadWeather(); // Added a function UserModel::epwData() to return the _edata attribute.
+void forcePrintHourlySolar(UserModel umodel) {
+    umodel.loadWeather();
 
-  // Solar radiation code pulled from IsoHourly::calculatHourly
-  // This has to be copied here for testing because it's all rolled into the calculate hourly function.
-  TimeFrame frame;
-  SolarRadiation pos(&frame, umodel.epwData().get());
-  pos.Calculate();
-  std::vector<std::vector<double> > radiation = pos.eglobe(); // Radiation for 8 directions (N, NE, E, etc.).
+    TimeFrame frame;
+    SolarRadiation pos(&frame, umodel.epwData().get());
+    pos.Calculate();
+    std::vector<std::vector<double>> radiation = pos.eglobe();
 
-  // Add the roof radiation (9th direction). EGH is global horizontal radiation.
-  for (auto i = 0; i != radiation.size(); ++i) {
-    radiation[i].push_back(umodel.epwData()->data()[EGH][i]);
-  }
-  std::cout << "Hour, N, NE, E, SE, S, SW, W, NW, Horizontal" << std::endl;
-
-  // Print out the radiation.
-  auto hour = 0;
-
-  for (auto hourRadiation : radiation) {
-    std::cout << hour << ", ";
-    for (auto directionRadiation : hourRadiation) {
-      std::cout << directionRadiation << ", ";
+    // Add the roof radiation (9th direction). EGH is global horizontal radiation.
+    for (size_t i = 0; i < radiation.size(); ++i) {
+        radiation[i].push_back(umodel.epwData()->data()[EGH][i]);
     }
-    std::cout << std::endl;
-    ++hour;
-  }
+
+    std::cout << "\n--- Hourly Solar Radiation ---" << std::endl;
+    std::cout << "Hour, S, SE, E, NE, N, NW, W, SW, Horizontal" << std::endl;
+
+    for (size_t i = 0; i < radiation.size(); ++i) {
+        std::cout << i;
+        for (const auto& val : radiation[i]) {
+            std::cout << ", " << std::fixed << std::setprecision(4) << val;
+        }
+        std::cout << std::endl;
+    }
 }
 
 int main(int argc, char* argv[])
 {
-  namespace po = boost::program_options; 
-  po::options_description desc("Options"); 
-  desc.add_options()
-    ("ismfilepath,i", po::value<std::string>()->required(), "Path to .ism file (positional argument).")
-    ("monthly,m", "Print the monthly solar radiation values.")
-    ("hourly,h", "Print the hourly solar radiation values.");
+    if (argc < 2) {
+        printUsage(argv[0]);
+        return 1;
+    }
 
-  po::positional_options_description positionalOptions; 
-  positionalOptions.add("ismfilepath", 1); 
+    std::string ismPath;
+    bool runMonthly = false;
+    bool runHourly = false;
 
-  po::variables_map vm;
+    // Improved argument parsing
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-i" || arg == "--ismfilepath") {
+            if (++i < argc) ismPath = argv[i];
+        }
+        else if (arg == "-m" || arg == "--monthly") {
+            runMonthly = true;
+        }
+        else if (arg == "-h" || arg == "--hourly") {
+            runHourly = true;
+        }
+        else if (arg[0] != '-') {
+            ismPath = arg;
+        }
+    }
 
-  try {
-    po::store(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions).run(), vm); // Throws on error. 
-    po::notify(vm); // Throws if required options are mising.
-  }
-  catch(boost::program_options::required_option& e) 
-  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
-    std::cerr << desc << std::endl;
-    return 1; 
-  } 
-  catch(boost::program_options::error& e) 
-  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
-    std::cerr << desc << std::endl;
-    return 1; 
-  } 
+    if (ismPath.empty()) {
+        std::cerr << "ERROR: ismfilepath is required.\n";
+        printUsage(argv[0]);
+        return 1;
+    }
 
-  if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "Loading User Model..." << std::endl;
-  }
+    openstudio::isomodel::UserModel umodel;
+    try {
+        umodel.load(ismPath);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error loading model: " << e.what() << std::endl;
+        return 1;
+    }
 
-  // Load the .ism file.
-  openstudio::isomodel::UserModel umodel;
-  umodel.load(vm["ismfilepath"].as<std::string>());
+    // Logic: Default to monthly if no flags are set, or run requested flags
+    if (!runMonthly && !runHourly) {
+        runMonthly = true;
+    }
 
-  bool simulationRan = false;
+    if (runMonthly) {
+        forcePrintMonthlySolar(umodel);
+    }
 
-  if (vm.count("monthly")) {
-    // Print monthly radiation
-    printMonthlySolar(umodel);
-    simulationRan = true;
-  }
+    if (runHourly) {
+        forcePrintHourlySolar(umodel);
+    }
 
-  if (vm.count("hourly")) {
-    // Print hourly radiation
-    printHourlySolar(umodel);
-    simulationRan = true;
-  }
-
-  if (!simulationRan) {
-    // Monthly radiation is default and will print if no other simulations did.
-    // Print monthly radiation
-    printMonthlySolar(umodel);
-  }
-
+    return 0;
 }
-
-

@@ -1,44 +1,40 @@
 /**********************************************************************
- *  Copyright (c) 2008-2015, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (c) 2008-2015, Alliance for Sustainable Energy.
+ * All rights reserved.
  **********************************************************************/
 
 #include "ISOResults.hpp"
+#include <vector>
 
 namespace openstudio {
-namespace isomodel {
+    namespace isomodel {
 
-// TODO: make a version of this for the standalone isomodel. BAA@2015-08-17.
-double totalEnergyUse(const std::vector<EndUses>& results) {
-  auto total = 0.0;
-  const auto fuelTypes = EndUses::fuelTypes();
-  const auto categories = EndUses::categories();
+        double totalEnergyUse(const std::vector<EndUses>& results) {
+            auto total = 0.0;
 
-  for (const auto& result : results) {
-    for (const auto& fuelType : fuelTypes) {
-      for (const auto& category : categories) {
-        total += result.getEndUse(fuelType, category);
-      }
-    }
-  }
+            // Create a non-const copy or use a non-const loop if the getter isn't thread-safe/const
+            // Since results is const&, we cast away constness locally to call the getter 
+            // if we cannot modify EndUses.hpp.
+            for (const auto& result : results) {
+                auto& mutableResult = const_cast<EndUses&>(result);
+#ifdef ISOMODEL_STANDALONE
+                for (int i = 0; i < 13; ++i) {
+                    total += mutableResult.getEndUse(i);
+                }
+#else
+                const auto fuelTypes = EndUses::fuelTypes();
+                const auto categories = EndUses::categories();
 
-  return total;
-}
+                for (const auto& fuelType : fuelTypes) {
+                    for (const auto& category : categories) {
+                        total += mutableResult.getEndUse(fuelType, category);
+                    }
+                }
+#endif
+            }
 
-}
-}
+            return total;
+        }
 
+    } // namespace isomodel
+} // namespace openstudio
