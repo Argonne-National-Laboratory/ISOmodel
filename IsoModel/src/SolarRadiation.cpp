@@ -1,4 +1,18 @@
+/*
+ * SolarRadiation.cpp
+ *
+ * OPTIMIZATION SUMMARY:
+ * 1. Day-Based Geometry: Orbital parameters (declination, equation of time) depend
+ * only on the day of the year. Recalculated only when the day changes (365 times)
+ * instead of every hour (8760 times).
+ * 2. Trig Removal: Replaced expensive trigonometric calls (asin, acos, atan2) in
+ * the inner surface loop with vector algebra identities.
+ * - Replaced 'calculateAngleOfIncidence' (ASHRAE eq 22) with dot product logic.
+ * - Replaced 'calculateSolarAzimuth' components with direct sin/cos derivation.
+ */
+
 #include "SolarRadiation.hpp"
+#include "EpwData.hpp"
 
 namespace openstudio {
     namespace isomodel {
@@ -60,27 +74,78 @@ namespace openstudio {
             const std::vector<double>& vecEB = dataMap[EB];
             const std::vector<double>& vecED = dataMap[ED];
 
-            // precompute this as an array rather than on the fly to speed up the hourly calcs
-            // by setting it up like this it's easier to let the compiler vectorize to speed it up.
+            // Caching variables for day-based optimization
+            int lastDay = -1;
+            double eq = 0.0, dec = 0.0;
+            double sinDec = 0.0, cosDec = 0.0;
+
             for (int i = 0; i < 8760; i++) {
-                double rev = calculateRevolutionAngle(m_frame->YTD[i]);
-                double eq = calculateEquationOfTime(rev);
+
+                // OPTIMIZATION: Recalculate daily variables only when day changes
+                // ASHRAE2013 Fundamentals, Ch. 14, eq. 5, 6, 1.6.1b
+                int currentDay = m_frame->YTD[i];
+                if (currentDay != lastDay) {
+                    double rev = calculateRevolutionAngle(currentDay);
+                    eq = calculateEquationOfTime(rev);
+                    dec = calculateSolarDeclination(rev);
+                    sinDec = std::sin(dec);
+                    cosDec = std::cos(dec);
+                    lastDay = currentDay;
+                }
+
+                // ASHRAE2013 Fundamentals, Ch. 14, eq. 7. (Apparent Solar Time)
                 double ast = calculateApparentSolarTime(m_frame->Hour[i], eq);
-                double dec = calculateSolarDeclination(rev);
+                // ASHRAE2013 Fundamentals, Ch. 14, eq. 11. (Hour Angle)
                 double sha = calculateSolarHourAngle(ast);
-                double alt = calculateSolarAltitude(dec, sha);
-                double sAz = calculateSolarAzimuth(calculateSolarAzimuthSin(dec, sha, alt), calculateSolarAzimuthCos(dec, sha, alt));
+                double cosSha = std::cos(sha);
+                double sinSha = std::sin(sha);
 
-                double ground = calculateGroundReflectedIrradiance(vecEB[i], vecED[i], m_groundReflectance, alt, m_surfaceTilt);
+                // OPTIMIZATION: TRIG REMOVAL
+                // Replaced 'calculateSolarAltitude' (ASHRAE eq. 12) 
+                // We compute sinBeta (sin(Altitude)) directly via dot product
+                double sinBeta = std::cos(m_latitude) * cosDec * cosSha + std::sin(m_latitude) * sinDec;
 
-                // setting up the different surfaces this way lets the compiler vectorize
+                // cosBeta = sqrt(1 - sinBeta^2). Clamp to avoid sqrt(negative).
+                // If sun is below horizon, sinBeta < 0.
+                double cosBeta;
+                if (sinBeta >= 1.0) cosBeta = 0.0;
+                else if (sinBeta <= -1.0) cosBeta = 0.0;
+                else cosBeta = std::sqrt(1.0 - sinBeta * sinBeta);
+
+                if (cosBeta < 1e-6) cosBeta = 1e-6; // Avoid division by zero
+
+                // Solar Azimuth Sine/Cosine (Derived from ASHRAE eq 14, 15)
+                double sinAz = sinSha * cosDec / cosBeta;
+                double cosAz = (cosSha * cosDec * std::sin(m_latitude) - sinDec * std::cos(m_latitude)) / cosBeta;
+
+                // OPTIMIZATION: Vectorized Ground Reflection
+                // ASHRAE2025 Fundamentals, Ch. 14, eq. 30 (Ground Reflected)
+                double ground = (vecEB[i] * sinBeta + vecED[i]) * m_groundReflectance * (1 - m_cosTilt) * 0.5;
+
                 for (int s = 0; s < NUM_SURFACES; s++) {
-                    double ssa = calculateSurfaceSolarAzimuth(sAz, SurfaceAzimuths[s]);
-                    double inc = calculateAngleOfIncidence(alt, ssa, m_surfaceTilt);
-                    double direct = calculateTotalDirectBeamIrradiance(vecEB[i], inc);
-                    double diff = calculateTotalDiffuseIrradiance(vecED[i], calculateDiffuseAngleOfIncidenceFactor(inc), m_surfaceTilt);
+                    // OPTIMIZATION: TRIG REMOVAL for Incidence Angle
+                    // Replaces 'calculateAngleOfIncidence' (ASHRAE Eq. 22)
+                    // cos(theta) = cosBeta * cos(Gamma) * sinTilt + sinBeta * cosTilt
+                    // where Gamma = SolarAz - SurfaceAz
+                    // cos(Gamma) = cos(SolarAz - SurfAz) = cosSol * cosSurf + sinSol * sinSurf
 
-                    m_eglobeFlat[i * NUM_SURFACES + s] = calculateTotalIrradiance(direct, diff, ground);
+                    double cosGamma = cosAz * m_surfCos[s] + sinAz * m_surfSin[s];
+                    double cosTheta = cosBeta * cosGamma * m_sinTilt + sinBeta * m_cosTilt;
+
+                    // Direct Beam: ASHRAE Eq. 26
+                    double direct = (cosTheta > 0.0) ? vecEB[i] * cosTheta : 0.0;
+
+                    // Diffuse Angle of Incidence Factor: ASHRAE Eq. 28
+                    // We clamp cosTheta for this empirical formula
+                    double Y = std::max(0.45, 0.55 + 0.437 * cosTheta + 0.313 * cosTheta * cosTheta);
+
+                    // Total Diffuse: ASHRAE Eq. 29, 30
+                    double diff = (m_surfaceTilt > PI / 2) ?
+                        vecED[i] * Y * m_sinTilt :
+                        vecED[i] * (Y * m_sinTilt + m_cosTilt);
+
+                    // Total Irradiance: ASHRAE Eq. 25
+                    m_eglobeFlat[i * NUM_SURFACES + s] = direct + diff + ground;
                 }
             }
         }

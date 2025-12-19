@@ -1,3 +1,16 @@
+/*
+ * SolarRadiation.hpp
+ *
+ * OPTIMIZATION SUMMARY:
+ * 1. Circular Dependency Fix: Removed `#include "EpwData.hpp"` to resolve the
+ * "too many include files" / circular dependency error. The class uses a
+ * pointer to EpwData, so the forward declaration is sufficient here.
+ * 2. Interface Stability: The math helper functions (calculateRevolutionAngle, etc.)
+ * are preserved with their original ASHRAE citations. While the optimized .cpp
+ * implementation bypasses some of these for speed (using vector algebra),
+ * these functions remain available for other potential uses or verification.
+ */
+
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
 #define ISOMODEL_SOLAR_RADIATION_HPP
 
@@ -5,7 +18,7 @@
 #include <cmath>
 #include <vector>
 #include "TimeFrame.hpp"
-#include "EpwData.hpp"
+ // REMOVED: #include "EpwData.hpp" to fix circular dependency
 
 namespace openstudio {
     namespace isomodel {
@@ -57,21 +70,22 @@ namespace openstudio {
             void calculateAverages();
             void calculateMonthAvg(int midx, int cnt);
             void clearMonthlyAvg(int midx);
-            
+
             // Calculates the revolution angle in radians of the earth around the sun.
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 6. with dayOfYear going from 0 to 364 not 1 to 365
             // Beckman and Duffie 1.4.2  (use B&D's notation of B to replace capGamma of ASHRAE = revolution angle)
             double calculateRevolutionAngle(int dayOfYear) { return 2.0 * PI * dayOfYear / 365.0; }
-            
+
             // Calculates the difference between the apparent solar time and mean solar time (the equation of time).
-            //ASHRAE2013 Fundamentals, Ch. 14, eq. 5., Beckmand and Duffie 1.4.2 who use B for revolution angle
+            // ASHRAE2013 Fundamentals, Ch. 14, eq. 5., Beckmand and Duffie 1.4.2 who use B for revolution angle
             double calculateEquationOfTime(double B) {
-                return 2.2918 * (0.0075 + 0.1868 * cos(B) - 3.2077 * sin(B) 
+                return 2.2918 * (0.0075 + 0.1868 * cos(B) - 3.2077 * sin(B)
                     - 1.4615 * cos(2 * B) - 4.089 * sin(2 * B));
             }
+
             /**
             * Calculates the apparent Solar Time in hours.
-            * ASHRAE2013 Fundamentals, Ch. 14, eq. 7. 
+            * ASHRAE2013 Fundamentals, Ch. 14, eq. 7.
             * Note that because we use radians for longitude, we divide by 15*pi/180 instead of 15, or pi / 12.
             */
             double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
@@ -93,7 +107,7 @@ namespace openstudio {
             // Calculates the solar hour angle in radians from ASHRAE2013 Fundamentals, Ch. 14, eq. 11.
             double calculateSolarHourAngle(double ast) { return (ast - 12) * 15 * PI / 180.0; }
 
-            //Calculates the solar altitude angle in radians.
+            // Calculates the solar altitude angle in radians.
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 12.
             double calculateSolarAltitude(double dec, double sha) {
                 return asin(cos(m_latitude) * cos(dec) * cos(sha) + sin(m_latitude) * sin(dec));
@@ -122,7 +136,7 @@ namespace openstudio {
             double calculateSurfaceSolarAzimuth(double solAz, double surfAz) { return fabs(solAz - surfAz); }
 
             // Calculates the angle of incidence of the sun on the surface.
-            // ASHRAE2013/2017.2025 Fundamentals, Ch. 14, eq. 22.
+            // ASHRAE2013/2017/2025 Fundamentals, Ch. 14, eq. 22.
             // beta = solar altitude, gamma = surface-solar-azimush, 
             double calculateAngleOfIncidence(double beta, double gamma, double tilt) {
                 return acos(cos(beta) * cos(gamma) * sin(tilt) + sin(beta) * cos(tilt));
@@ -134,10 +148,10 @@ namespace openstudio {
 
             // Calculates the ratio of clear - sky diffuse irradiance on a vertical surface to that on a horizontal surface.
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 28, theta = angle of incidence
-
             double calculateDiffuseAngleOfIncidenceFactor(double theta) {
                 return std::max(0.45, 0.55 + 0.437 * cos(theta) + 0.313 * std::pow(cos(theta), 2.0));
             }
+
             // Calculates the total diffuse irradiance on the surface.
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 29, 30.
             // ed = diffuse horizontal irrandiance, tilt - surface tilt angle, Y = diffuse angle of incidence factor
