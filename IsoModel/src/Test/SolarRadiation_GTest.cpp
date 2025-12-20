@@ -1,14 +1,15 @@
 /*
  * ISOModel_GTest.cpp
  *
- *  Created on: Dec 5, 2014
- *      Author: nick
+ * Created on: Dec 5, 2014
+ * Author: nick
  */
 
 #include "gtest/gtest.h"
 
 #include "ISOModelFixture.hpp"
 #include "../UserModel.hpp"
+#include "../SolarRadiation.hpp" // <--- ADDED: Explicit include required now
 
 using namespace openstudio::isomodel;
 
