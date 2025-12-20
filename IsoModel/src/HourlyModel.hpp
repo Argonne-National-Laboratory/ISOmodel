@@ -1,14 +1,15 @@
 /*
  * HourlyModel.hpp
  *
- * OPTIMIZATION SUMMARY (Round 3 - Fixed):
- * 1. Data Locality (Array of Structures): Replaced multiple separate vectors
- * with a single `std::vector<HourlyCache>`. This ensures all schedule and 
- * pre-calculated physics data for a specific hour are adjacent in memory.
- * 2. Unconditional Linear Solver: Reverted `solveThermalBalance` to the unconditional 
- * calculation to improve CPU pipelining (branchless).
- * 3. Solar Pointer: Retained the fast pointer-based solar access.
- * 4. Fix: Corrected function signature for calculateGains.
+ * OPTIMIZATION & REFACTORING (Round 4):
+ * 1. Compressed Cache (Float): Changed schedules, weather, and physics in `HourlyCache` 
+ * to `float`. This reduces the struct size to ~52 bytes, allowing one hour of 
+ * data to fit entirely in a single 64-byte cache line for maximum bandwidth efficiency.
+ * 2. Weather Locality: Added `env_temp` and `env_egh` to `HourlyCache`. This 
+ * consolidates all inputs for an hour into one contiguous block.
+ * 3. Member Cleanup: Removed persistent 2D schedule arrays. These are now 
+ * transient stack variables during initialization.
+ * 4. Modern C++: Continued use of std::span, std::array, and return structs.
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -22,6 +23,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
+#include <span> // Requires C++20
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -38,22 +40,40 @@ namespace openstudio {
             return std::cbrt(x * x);
         }
 
-        // Data structure for strict memory locality
+        // Compressed Data Structure (Array of Structures)
+        // Uses 'float' to fit ~52 bytes, ensuring 1 hour fits in 1 CPU cache line (64 bytes).
         struct HourlyCache {
-            // Schedules
-            double sched_ventilation;
-            double sched_ext_equip;
-            double sched_int_equip;
-            double sched_ext_light;
-            double sched_int_light;
-            double sched_heat_sp;
-            double sched_cool_sp;
+            // Schedules (0.0 - 1.0)
+            float sched_ventilation;
+            float sched_ext_equip;
+            float sched_int_equip;
+            float sched_ext_light;
+            float sched_int_light;
+            float sched_heat_sp;
+            float sched_cool_sp;
+
+            // Environmental
+            float env_temp;
+            float env_egh;
 
             // Pre-calculated Physics
-            double phys_qWind;
-            double phys_qSup;
-            double phys_exhSup;
-            double phys_tSupp;
+            float phys_qWind;
+            float phys_qSup;
+            float phys_exhSup;
+            float phys_tSupp;
+        };
+
+        struct GainsResult {
+            double phi_int;
+            double phii;
+            double lighting_tot;
+            double qSolarGain;
+        };
+
+        struct AirFlowResult {
+            double tEnt;
+            double hei;
+            double h1;
         };
 
         class ISOMODEL_API HourlyModel : public Simulation
@@ -65,24 +85,18 @@ namespace openstudio {
             std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
         private:
-            void populateSchedules();
             void initialize();
 
-            // Helpers
-            void calculateAirFlows(double temperature, double tiHeatCool, 
-                const HourlyCache& cache,
-                double& out_tEnt, double& out_hei, double& out_h1);
+            // Refactored Helpers
+            AirFlowResult calculateAirFlows(double tiHeatCool, const HourlyCache& cache) noexcept;
 
-            // FIX: Added missing schedIntEquip argument to match .cpp definition
-            void calculateGains(const double* curSolar, double egh_i,
+            GainsResult calculateGains(std::span<const double> curSolar,
                 const HourlyCache& cache,
-                double schedIntEquip,
-                double& out_phi_int, double& out_phii,
-                double& out_lighting_tot, double& out_qSolarGain);
+                double schedIntEquip) noexcept;
 
             double solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
                 double qSolarGain, double hei, double h1, double schedHeatSP,
-                double schedCoolSP, double& TMT1, double& tiHeatCool);
+                double schedCoolSP, double& TMT1, double& tiHeatCool) noexcept;
 
             std::vector<EndUses> processResults(const std::vector<double>& r_Qneed_ht, const std::vector<double>& r_Qneed_cl,
                 const std::vector<double>& r_Q_illum_tot, const std::vector<double>& r_Q_illum_ext_tot,
@@ -112,23 +126,40 @@ namespace openstudio {
             double m_frac_phi_sol_air;
             double m_frac_phi_int_air;
 
-            // Arrays
-            double nlams[9], nla[9], sams[9], sa[9], htot[9], hWindow[9];
-            double nlaWMovableShading[9], naturalLightRatio[9], naturalLightShadeRatioReduction[9];
-            double saWMovableShading[9], solarRatio[9], solarShadeRatioReduction[9];
-            double precalc_nla_shading[9];
-            double precalc_solar_shading[9];
+            // Arrays (std::array)
+            std::array<double, 9> nlams;
+            std::array<double, 9> nla;
+            std::array<double, 9> sams;
+            std::array<double, 9> sa;
+            std::array<double, 9> htot;
+            std::array<double, 9> hWindow;
+            std::array<double, 9> nlaWMovableShading;
+            std::array<double, 9> naturalLightRatio;
+            std::array<double, 9> naturalLightShadeRatioReduction;
+            std::array<double, 9> saWMovableShading;
+            std::array<double, 9> solarRatio;
+            std::array<double, 9> solarShadeRatioReduction;
+            std::array<double, 9> precalc_nla_shading;
+            std::array<double, 9> precalc_solar_shading;
 
-            // 2D Schedule Helpers (Intermediate usage only)
-            double fixedVentilationSchedule[24][7], fixedExteriorEquipmentSchedule[24][7];
-            double fixedInteriorEquipmentSchedule[24][7], fixedExteriorLightingSchedule[24][7];
-            double fixedInteriorLightingSchedule[24][7], fixedActualHeatingSetpoint[24][7], fixedActualCoolingSetpoint[24][7];
-
-            // OPTIMIZATION: Single vector of structs for cache locality
+            // Cache Locality Vector
             std::vector<HourlyCache> m_hourlyData;
 
             std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
+            // Helpers to replace removed persistent 2D arrays
+            struct WeeklyScheduleData {
+                double vent[24][7];
+                double extEquip[24][7];
+                double intEquip[24][7];
+                double extLight[24][7];
+                double intLight[24][7];
+                double heatSP[24][7];
+                double coolSP[24][7];
+            };
+            void buildWeeklySchedules(WeeklyScheduleData& sched);
+
+            // Virtuals (kept for interface compliance)
             virtual double ventilationSchedule(int, int, int) { return 0; }
             virtual double exteriorEquipmentSchedule(int, int, int) { return 0; }
             virtual double interiorEquipmentSchedule(int, int, int) { return 0; }
