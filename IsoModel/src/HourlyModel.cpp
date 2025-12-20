@@ -2,15 +2,10 @@
  * HourlyModel.cpp
  *
  * OPTIMIZATION SUMMARY:
- * 1. Linearized Solver: The ISO 13790 thermal network is linear with respect to heat input.
- * Replaced the iterative solver (which ran the network 2x per step) with an analytical
- * solution that calculates the slope d(Ti)/d(Phi) and intercept once.
- * 2. Loop Unrolling: The 'calculateGains' loop over 9 directions was unrolled to separate
- * the 8 cardinal directions from the horizontal, aiding vectorization.
- * 3. Factorization: Moved division (invAreaNat) out of the inner loop in 'calculateGains'.
- *
- * Refactored version with modular simulation steps and complete fuel mapping.
- * Updated to use standard C++ <numeric> and <vector> features instead of Boost.
+ * 1. Cache Locality: Uses `m_hourlyData` (Array of Structures) to load all 
+ * schedule/physics params for the current hour in a single cache line.
+ * 2. Unconditional Linear Solver: Reverted to the branchless analytical solver.
+ * 3. Solar Pointer: Fast pointer arithmetic for solar arrays.
  */
 
 #include "HourlyModel.hpp"
@@ -25,31 +20,34 @@ namespace openstudio {
 
         void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2) {}
 
-        HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(0), m_maxIrrad(0), m_vent_dCp(0), m_vent_preheat(0), m_vent_HRE(0), m_vent_fanPower(0), m_invAreaNat(0) {}
+        HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(0), m_maxIrrad(0), m_vent_dCp(0), 
+            m_vent_preheat(0), m_vent_HRE(0), m_vent_fanPower(0), m_invAreaNat(0),
+            m_frac_elec_internal_gains(0), m_frac_phi_sol_air(0), m_frac_phi_int_air(0) {}
         HourlyModel::~HourlyModel() {}
 
         std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth)
         {
             populateSchedules();
-            initialize();
+            initialize(); // Fills m_hourlyData
 
-            TimeFrame frame;
             double TMT1 = 20.0;
             double tiHeatCool = 20.0;
 
             const auto& data = epwData->data();
-            const std::vector<double>& wind = data[WSPD], & temp = data[DBT], & egh = data[EGH];
+            const std::vector<double>& temp = data[DBT], & egh = data[EGH];
 
-            SolarRadiation pos(&frame, epwData.get());
+            SolarRadiation pos(nullptr, epwData.get());
+            TimeFrame frame; 
+            pos = SolarRadiation(&frame, epwData.get());
             pos.Calculate();
-            const auto& eglobe = pos.eglobe();
+            const std::vector<double>& eglobeFlat = pos.eglobeFlat();
 
             size_t numHours = 8760;
             std::vector<double> r_Qneed_ht(numHours), r_Qneed_cl(numHours), r_Q_illum_tot(numHours),
                 r_Q_illum_ext_tot(numHours), r_Qfan_tot(numHours), r_Qpump_tot(numHours),
                 r_phi_plug(numHours), r_ext_equip(numHours), r_Q_dhw(numHours, 0.0);
 
-            // Cache loop constants for heating/cooling to avoid repeated accessors
+            // Cache loop constants
             const double heat_dT_supp = heating.dT_supp_ht();
             const double cool_dT_supp = cooling.dT_supp_cl();
             const double heat_occ_sp = heating.temperatureSetPointOccupied();
@@ -62,32 +60,33 @@ namespace openstudio {
             const double fan_power_factor = m_vent_fanPower * 0.277778;
 
             for (int i = 0; i < (int)numHours; ++i) {
-                int h = frame.Hour[i], d = frame.DayOfWeek[i];
+                // Optimization: Load all hourly properties in one go (Cache Locality)
+                const HourlyCache& cache = m_hourlyData[i];
                 double temperature = temp[i];
 
-                r_ext_equip[i] = fixedExteriorEquipmentSchedule[h][d] * invFloorArea;
-                r_phi_plug[i] = fixedInteriorEquipmentSchedule[h][d];
+                r_ext_equip[i] = cache.sched_ext_equip * invFloorArea;
+                r_phi_plug[i] = cache.sched_int_equip;
 
-                // 1. Gains calculation (Solar and Internal)
+                // 1. Gains calculation
                 double phii, phi_int, qSolarGain;
-                calculateGains(i, eglobe[i], egh[i], fixedInteriorLightingSchedule[h][d], r_phi_plug[i],
-                    phi_int, phii, r_Q_illum_tot[i], qSolarGain);
+                calculateGains(&eglobeFlat[i * 8], egh[i], cache,
+                    r_phi_plug[i], phi_int, phii, r_Q_illum_tot[i], qSolarGain);
 
-                // 2. Airflow and Ventilation physics
-                double ventExh = fixedVentilationSchedule[h][d] * 3.6 * invFloorArea;
+                // 2. Airflow (Using Pre-calculated Cache)
                 double tEnt, hei, h1;
-                calculateAirFlows(wind[i], temperature, tiHeatCool, ventExh, tEnt, hei, h1);
+                calculateAirFlows(temperature, tiHeatCool, cache, tEnt, hei, h1);
 
-                // 3. Solve RC Network (ISO 13790)
-                // Optimized: Uses linear analytic solution instead of iterative solver
+                // 3. Solve RC Network (Unconditional Linear)
                 double phiHC = solveThermalBalance(temperature, tEnt, phii, phi_int, qSolarGain, hei, h1,
-                    fixedActualHeatingSetpoint[h][d], fixedActualCoolingSetpoint[h][d],
+                    cache.sched_heat_sp, cache.sched_cool_sp,
                     TMT1, tiHeatCool);
 
                 r_Qneed_ht[i] = std::max(0.0, phiHC);
                 r_Qneed_cl[i] = std::max(0.0, -phiHC);
 
-                // 4. Auxiliary Systems (Fans and Pumps)
+                // 4. Auxiliary
+                double ventExh = cache.sched_ventilation * 3.6 * invFloorArea;
+
                 double Vair = std::max({ ventExh,
                     r_Qneed_ht[i] / (((heat_occ_sp + heat_dT_supp) - tiHeatCool) * rhoCpAir_277 + DBL_MIN),
                     r_Qneed_cl[i] / ((tiHeatCool - (cool_occ_sp - cool_dT_supp)) * rhoCpAir_277 + DBL_MIN) });
@@ -95,39 +94,26 @@ namespace openstudio {
                 r_Qfan_tot[i] = Vair * fan_power_factor;
                 r_Qpump_tot[i] = (r_Qneed_cl[i] > 0) ? (cool_E_pumps * cool_pumpRed) :
                     ((r_Qneed_ht[i] > 0) ? (heat_E_pumps * heat_pumpRed) : 0.0);
-                r_Q_illum_ext_tot[i] = (egh[i] > 0) ? 0.0 : (lights_extEnergy * fixedExteriorLightingSchedule[h][d] * invFloorArea);
+                r_Q_illum_ext_tot[i] = (egh[i] > 0) ? 0.0 : (lights_extEnergy * cache.sched_ext_light * invFloorArea);
             }
 
             return processResults(r_Qneed_ht, r_Qneed_cl, r_Q_illum_tot, r_Q_illum_ext_tot, r_Qfan_tot, r_Qpump_tot, r_phi_plug, r_ext_equip, r_Q_dhw, aggregateByMonth);
         }
 
-        void HourlyModel::calculateGains(int i, const std::vector<double>& curSolar, double egh_i,
-            double schedIntLight, double schedIntEquip,
-            double& out_phi_int, double& out_phii, double& out_lighting_tot, double& out_qSolarGain) {
-
+        void HourlyModel::calculateGains(const double* curSolar, double egh_i,
+            const HourlyCache& cache,
+            double schedIntEquip, double& out_phi_int, double& out_phii, double& out_lighting_tot, double& out_qSolarGain) {
+            
             double lightingLevelSum = 0.0;
             out_qSolarGain = 0.0;
             const double maxIrrad = m_maxIrrad;
 
-            // Loop Unrolling Optimization:
-            // Separated the first 8 directions (vertical walls) from the 9th (horizontal) 
-            // to avoid 'if (k < 8)' checks inside the hot loop.
-            // Uses precalculated shading factors [precalc_nla_shading] to reduce multiplication.
-
             for (int k = 0; k < 8; ++k) {
                 double sr = curSolar[k];
                 double srCl = (sr < maxIrrad) ? sr : maxIrrad;
-
-                // Original Logic:
-                // lightingLevel += invAreaNat * sr * (naturalLightRatio[k] + shading * reduction * srCl)
-                // New Logic (Factorized):
-                // lightingLevelSum += sr * (naturalLightRatio[k] + precalc_nla_shading[k] * srCl)
-
                 lightingLevelSum += sr * (naturalLightRatio[k] + precalc_nla_shading[k] * srCl);
                 out_qSolarGain += sr * (solarRatio[k] + precalc_solar_shading[k] * srCl);
             }
-
-            // 9th element (Horizontal / Diffuse)
             {
                 double sr = egh_i;
                 double srCl = (sr < maxIrrad) ? sr : maxIrrad;
@@ -135,30 +121,29 @@ namespace openstudio {
                 out_qSolarGain += sr * (solarRatio[8] + precalc_solar_shading[8] * srCl);
             }
 
-            // Apply invAreaNat here once instead of 9 times in the loop
             double lightingLevel = lightingLevelSum * m_invAreaNat;
-
             double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / (elightNatural + DBL_MIN)));
-            out_lighting_tot = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * schedIntLight;
-            out_phi_int = schedIntEquip + (out_lighting_tot * lights.elecInternalGains());
-            out_phii = simSettings.phiSolFractionToAirNode() * out_qSolarGain + simSettings.phiIntFractionToAirNode() * out_phi_int;
+            out_lighting_tot = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * cache.sched_int_light;
+            
+            out_phi_int = schedIntEquip + (out_lighting_tot * m_frac_elec_internal_gains);
+            out_phii = m_frac_phi_sol_air * out_qSolarGain + m_frac_phi_int_air * out_phi_int;
         }
 
-        void HourlyModel::calculateAirFlows(double windMps, double temperature, double tiHeatCool, double ventExh,
+        void HourlyModel::calculateAirFlows(double temperature, double tiHeatCool, 
+            const HourlyCache& cache,
             double& out_tEnt, double& out_hei, double& out_h1) {
-            double qSup = ventExh * windImpactSupplyRatio;
-            double exhSup = -(qSup - ventExh);
-            double tSupp = std::max(m_vent_preheat, (1.0 - m_vent_HRE) * temperature + m_vent_HRE * 20.0);
-
-            // fastPow23 optimizes x^0.667
-            double qWind = 0.0769 * q4Pa * fastPow23(m_vent_dCp * windMps * windMps);
+            
             double absDT = std::max(std::fabs(temperature - tiHeatCool), 1e-5);
             double qStack = 0.0146 * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
+            
+            double qWind = cache.phys_qWind;
+            double exhSup = cache.phys_exhSup;
+
             double qSW = qStack + qWind + 1E-15;
             double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
 
-            double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + qSup;
-            out_tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + tSupp * qSup) / (qEnt + 1e-15);
+            double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + cache.phys_qSup;
+            out_tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnt + 1e-15);
             out_hei = 0.34 * qEnt;
             out_h1 = 1.0 / (1.0 / (out_hei + 1e-15) + 1.0 / H_tris);
         }
@@ -166,72 +151,47 @@ namespace openstudio {
         double HourlyModel::solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
             double qSolarGain, double hei, double h1, double schedHeatSP,
             double schedCoolSP, double& TMT1, double& tiHeatCool) {
-
-            // RC Network setup (ISO 13790 5R1C model)
+            
             double h2 = h1 + hwindowWperkm2;
             double h3 = 1.0 / (1.0 / h2 + 1.0 / H_ms);
             double h3_hem = 0.5 * (h3 + hem);
+            double h3_h2 = h3 / h2;
+            
+            double safe_hei = hei + 1e-15;
+            double inv_safe_hei = 1.0 / safe_hei; 
+            double t_phi = (h3_h2 * h1) * inv_safe_hei; // d(phim)/dP
+            
+            double cm_term = Cm / 3.6;
+            double cm_plus_h3hem = cm_term + h3_hem;
+            double d_tmt1_dp = t_phi / cm_plus_h3hem;
+            
+            double h_denom_ts = H_ms + hwindowWperkm2 + h1;
+            double d_ts_dp = (H_ms * 0.5 * d_tmt1_dp + h1 * inv_safe_hei) / h_denom_ts;
+            double d_ti_dp = (H_tris * d_ts_dp + 1.0) / (H_tris + hei); // Slope
+            
             double phisPhi0 = prsSolar * qSolarGain + prsInterior * phi_int;
             double phimPhi0 = prmSolar * qSolarGain + prmInterior * phi_int;
             double mid = phisPhi0 + hwindowWperkm2 * temperature + h1 * tEnt;
-            double h3_h2 = h3 / h2;
-
-            // ANALYTICAL SOLUTION OPTIMIZATION:
-            // The equations for Ti (Internal Temp) are linear with respect to heat input P (phiHC).
-            // Relations:
-            // 1. phim = phimPhi0 + hem*temp + h3_h2*mid + t_phi * P
-            // 2. tmt1 = (TMT1_old * (Cm/3.6 - h3_hem) + phim) / (Cm/3.6 + h3_hem)
-            // 3. ts   = (H_ms * 0.5 * (TMT1_old + tmt1) + mid + h1 * P / hei_safe) / H_denom
-            // 4. Ti   = (H_tris * ts + hei * tEnt + P) / (H_tris + hei)
-
-            // We calculate the Slope d(Ti)/d(P) and the Intercept Ti(P=phii) directly.
-
-            double safe_hei = hei + 1e-15;
-            double t_phi = (h3_h2 * h1) / safe_hei; // d(phim)/dP
-
-            double cm_term = Cm / 3.6;
-            double cm_plus_h3hem = cm_term + h3_hem;
-
-            // d(tmt1)/dP
-            double d_tmt1_dp = t_phi / cm_plus_h3hem;
-
-            double h_denom_ts = H_ms + hwindowWperkm2 + h1;
-            // d(ts)/dP
-            double d_ts_dp = (H_ms * 0.5 * d_tmt1_dp + h1 / safe_hei) / h_denom_ts;
-
-            // d(Ti)/dP (The Slope)
-            double d_ti_dp = (H_tris * d_ts_dp + 1.0) / (H_tris + hei);
-
-            // Intercept Calculation (Calculate Ti at current phii, P=phii):
+            
+            // Intercept Calculation (P=phii)
             double phim_at_phii = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * phii;
             double tmt1_at_phii = (TMT1 * (cm_term - h3_hem) + phim_at_phii) / cm_plus_h3hem;
-            double ts_at_phii = (H_ms * 0.5 * (TMT1 + tmt1_at_phii) + mid + h1 * phii / safe_hei) / h_denom_ts;
-            double ti_0 = (H_tris * ts_at_phii + hei * tEnt + phii) / (H_tris + hei);
-
-            // Solve for phiHC (Heating/Cooling Power)
-            // If Ti < HeatSP, phiHC = (HeatSP - Ti) / Slope
-            // If Ti > CoolSP, phiHC = (CoolSP - Ti) / Slope
-
+            double ts_at_phii   = (H_ms * 0.5 * (TMT1 + tmt1_at_phii) + mid + h1 * phii * inv_safe_hei) / h_denom_ts;
+            double ti_0         = (H_tris * ts_at_phii + hei * tEnt + phii) / (H_tris + hei);
+            
             double phiHC = 0.0;
             if (ti_0 < schedHeatSP) {
                 phiHC = (schedHeatSP - ti_0) / d_ti_dp;
-                if (phiHC < 0) phiHC = 0; // Bound to physical reality
-            }
-            else if (ti_0 > schedCoolSP) {
+                if (phiHC < 0) phiHC = 0; 
+            } else if (ti_0 > schedCoolSP) {
                 phiHC = (schedCoolSP - ti_0) / d_ti_dp;
-                if (phiHC > 0) phiHC = 0; // Bound to physical reality
+                if (phiHC > 0) phiHC = 0; 
             }
 
-            // Final Update of State Variables
             double phimFinal = phim_at_phii + t_phi * phiHC;
-            double tmt1_new = (TMT1 * (cm_term - h3_hem) + phimFinal) / cm_plus_h3hem;
-
-            // ts_final optimization: ts_new = ts_at_phii + d_ts_dp * phiHC
-            // tiHeatCool optimization: ti_new = ti_0 + d_ti_dp * phiHC
-
-            TMT1 = tmt1_new;
+            TMT1 = (TMT1 * (cm_term - h3_hem) + phimFinal) / cm_plus_h3hem;
             tiHeatCool = ti_0 + d_ti_dp * phiHC;
-
+            
             return phiHC;
         }
 
@@ -299,12 +259,16 @@ namespace openstudio {
             double floorArea = structure.floorArea();
             invFloorArea = (floorArea > 0) ? 1.0 / floorArea : 0.0;
             rhoCpAir_277 = phys.rhoCpAir() * 277.777778;
-
+            
             m_maxIrrad = structure.irradianceForMaxShadingUse();
             m_vent_dCp = ventilation.dCp();
             m_vent_preheat = ventilation.ventPreheatDegC();
             m_vent_HRE = ventilation.heatRecoveryEfficiency();
             m_vent_fanPower = ventilation.fanPower();
+            
+            m_frac_elec_internal_gains = lights.elecInternalGains();
+            m_frac_phi_sol_air = simSettings.phiSolFractionToAirNode();
+            m_frac_phi_int_air = simSettings.phiIntFractionToAirNode();
 
             auto lightingOccupancySensorDimmingFraction = building.lightingOccupancySensor();
             auto daylightSensorDimmingFraction = lights.dimmingFraction();
@@ -344,9 +308,8 @@ namespace openstudio {
             }
 
             shadingUsePerWPerM2 = structure.shadingFactorAtMaxUse() / structure.irradianceForMaxShadingUse();
-
-            // FILL PRECALCULATED ARRAYS for gain optimization
-            for (int i = 0; i < 9; ++i) {
+            
+            for(int i=0; i<9; ++i) {
                 precalc_nla_shading[i] = shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i];
                 precalc_solar_shading[i] = solarShadeRatioReduction[i] * shadingUsePerWPerM2;
             }
@@ -382,6 +345,37 @@ namespace openstudio {
             hem = 1.0 / (1.0 / std::max(hWall * invFloorArea, 0.000001) - 1.0 / H_ms);
             windImpactHz = std::max(0.1, ventilation.hzone());
             windImpactSupplyRatio = std::max(0.00001, ventilation.fanControlFactor());
+
+            // ----------------------------------------------------
+            // OPTIMIZATION: ARRAY OF STRUCTURES (Locality)
+            // ----------------------------------------------------
+            m_hourlyData.resize(8760);
+            
+            const auto& data = epwData->data();
+            const std::vector<double>& wind = data[WSPD];
+            const std::vector<double>& temp = data[DBT];
+            
+            TimeFrame frame;
+            for(int i=0; i<8760; ++i) {
+                int h = frame.Hour[i];
+                int d = frame.DayOfWeek[i];
+                HourlyCache& c = m_hourlyData[i];
+
+                c.sched_ventilation = fixedVentilationSchedule[h][d];
+                c.sched_ext_equip = fixedExteriorEquipmentSchedule[h][d];
+                c.sched_int_equip = fixedInteriorEquipmentSchedule[h][d];
+                c.sched_ext_light = fixedExteriorLightingSchedule[h][d];
+                c.sched_int_light = fixedInteriorLightingSchedule[h][d];
+                c.sched_heat_sp = fixedActualHeatingSetpoint[h][d];
+                c.sched_cool_sp = fixedActualCoolingSetpoint[h][d];
+                
+                c.phys_qWind = 0.0769 * q4Pa * fastPow23(m_vent_dCp * wind[i] * wind[i]);
+                
+                double ventExh = c.sched_ventilation * 3.6 * invFloorArea;
+                c.phys_qSup = ventExh * windImpactSupplyRatio;
+                c.phys_exhSup = -(c.phys_qSup - ventExh);
+                c.phys_tSupp = std::max(m_vent_preheat, (1.0 - m_vent_HRE) * temp[i] + m_vent_HRE * 20.0);
+            }
         }
 
         void HourlyModel::populateSchedules() {

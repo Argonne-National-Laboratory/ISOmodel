@@ -2,13 +2,10 @@
  * SolarRadiation.hpp
  *
  * OPTIMIZATION SUMMARY:
- * 1. Circular Dependency Fix: Removed `#include "EpwData.hpp"` to resolve the
- * "too many include files" / circular dependency error. The class uses a
- * pointer to EpwData, so the forward declaration is sufficient here.
- * 2. Interface Stability: The math helper functions (calculateRevolutionAngle, etc.)
- * are preserved with their original ASHRAE citations. While the optimized .cpp
- * implementation bypasses some of these for speed (using vector algebra),
- * these functions remain available for other potential uses or verification.
+ * 1. Circular Dependency Fix: Removed `#include "EpwData.hpp"`.
+ * 2. Flat Memory Access: Exposed `eglobeFlat()` to allow `HourlyModel` to access 
+ * the solar data as a single contiguous array, avoiding vector-of-vector allocations.
+ * 3. Interface Stability: Preserved all original math helper functions and citations.
  */
 
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
@@ -18,12 +15,13 @@
 #include <cmath>
 #include <vector>
 #include "TimeFrame.hpp"
- // REMOVED: #include "EpwData.hpp" to fix circular dependency
+
+// REMOVED: #include "EpwData.hpp" to fix circular dependency
 
 namespace openstudio {
     namespace isomodel {
 
-        // Forward declaration to fix "identifier EpwData" errors
+        // Forward declaration matches the pointer usage below
         class EpwData;
 
         const double PI = 3.14159265358979323846;
@@ -70,22 +68,22 @@ namespace openstudio {
             void calculateAverages();
             void calculateMonthAvg(int midx, int cnt);
             void clearMonthlyAvg(int midx);
-
+            
             // Calculates the revolution angle in radians of the earth around the sun.
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 6. with dayOfYear going from 0 to 364 not 1 to 365
             // Beckman and Duffie 1.4.2  (use B&D's notation of B to replace capGamma of ASHRAE = revolution angle)
             double calculateRevolutionAngle(int dayOfYear) { return 2.0 * PI * dayOfYear / 365.0; }
-
+            
             // Calculates the difference between the apparent solar time and mean solar time (the equation of time).
             // ASHRAE2013 Fundamentals, Ch. 14, eq. 5., Beckmand and Duffie 1.4.2 who use B for revolution angle
             double calculateEquationOfTime(double B) {
-                return 2.2918 * (0.0075 + 0.1868 * cos(B) - 3.2077 * sin(B)
+                return 2.2918 * (0.0075 + 0.1868 * cos(B) - 3.2077 * sin(B) 
                     - 1.4615 * cos(2 * B) - 4.089 * sin(2 * B));
             }
 
             /**
             * Calculates the apparent Solar Time in hours.
-            * ASHRAE2013 Fundamentals, Ch. 14, eq. 7.
+            * ASHRAE2013 Fundamentals, Ch. 14, eq. 7. 
             * Note that because we use radians for longitude, we divide by 15*pi/180 instead of 15, or pi / 12.
             */
             double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
