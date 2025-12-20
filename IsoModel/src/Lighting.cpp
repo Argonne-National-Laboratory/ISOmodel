@@ -3,13 +3,8 @@
 namespace openstudio {
 namespace isomodel {
 
-Lighting::Lighting(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-Lighting::~Lighting(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace isomodel
+} // namespace openstudio

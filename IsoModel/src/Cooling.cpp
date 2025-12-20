@@ -3,13 +3,8 @@
 namespace openstudio {
 namespace isomodel {
 
-Cooling::Cooling(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-Cooling::~Cooling(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace isomodel
+} // namespace openstudio

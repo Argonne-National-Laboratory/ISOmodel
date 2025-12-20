@@ -1,274 +1,94 @@
-/**********************************************************************
- *  Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
 #ifndef ISOMODEL_LIGHTING_HPP
 #define ISOMODEL_LIGHTING_HPP
 
 #include "ISOModelAPI.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
+
 class ISOMODEL_API Lighting
 {
 public:
-  Lighting(void);
-  ~Lighting(void);
+  Lighting() = default;
+  ~Lighting() = default;
 
-  /**
-  * Lighting power density occupied (W/m2).
-  */
-  double powerDensityOccupied() const {
-    return m_powerDensityOccupied;
-  }
+  double powerDensityOccupied() const { return m_powerDensityOccupied; }
+  void setPowerDensityOccupied(double value) { m_powerDensityOccupied = value; }
 
-  void setPowerDensityOccupied(double value) {
-    m_powerDensityOccupied = value;
-  }
+  double powerDensityUnoccupied() const { return m_powerDensityUnoccupied; }
+  void setPowerDensityUnoccupied(double value) { m_powerDensityUnoccupied = value; }
 
-  /**
-  * Lighting power density unoccupied (W/m2).
-  */
-  double powerDensityUnoccupied() const {
-    return m_powerDensityUnoccupied;
-  }
+  double dimmingFraction() const { return m_dimmingFraction; }
+  void setDimmingFraction(double value) { m_dimmingFraction = value; }
 
-  void setPowerDensityUnoccupied(double value) {
-    m_powerDensityUnoccupied = value;
-  }
+  double exteriorEnergy() const { return m_exteriorEnergy; }
+  void setExteriorEnergy(double value) { m_exteriorEnergy = value; }
 
-  /**
-  * Daylight sensor dimming fraction (unitless).
-  * Illum controls are set to 1 if there is no control.
-  * See iso 15193 Annex F/G for values.
-  */
-  double dimmingFraction() const {
-    return m_dimmingFraction;
-  }
+  double n_day_start() const { return m_n_day_start; }
+  void setN_day_start(double value) { m_n_day_start = value; }
 
-  void setDimmingFraction(double value) {
-    m_dimmingFraction = value;
-  }
+  double n_day_end() const { return m_n_day_end; }
+  void setN_day_end(double value) { m_n_day_end = value; }
 
-  /**
-  * Exterior lighting power (W).
-  */
-  double exteriorEnergy() const {
-    return m_exteriorEnergy;
-  }
+  double n_weeks() const { return m_n_weeks; }
+  void setN_weeks(double value) { m_n_weeks = value; }
 
-  void setExteriorEnergy(double value) {
-    m_exteriorEnergy = value;
-  }
+  double elecInternalGains() const { return m_elecInternalGains; }
+  void setElecInternalGains(double value) { m_elecInternalGains = value; }
 
-  /**
-  * Sunrise (24-hour time). Defaults to 7.0.
-  */
-  double n_day_start() const {
-    return m_n_day_start;
-  }
+  double permLightPowerDensity() const { return m_permLightPowerDensity; }
+  void setPermLightPowerDensity(double value) { m_permLightPowerDensity = value; }
 
-  void setN_day_start(double n_day_start) {
-    m_n_day_start = n_day_start;
-  }
+  double presenceSensorAd() const { return m_presenceSensorAd; }
+  void setPresenceSensorAd(double value) { m_presenceSensorAd = value; }
 
-  /**
-  * Sunset (24-hour time). Defaults to 18.0.
-  */
-  double n_day_end() const {
-    return m_n_day_end;
-  }
+  double automaticAd() const { return m_automaticAd; }
+  void setAutomaticAd(double value) { m_automaticAd = value; }
 
-  void setN_day_end(double n_day_end) {
-    m_n_day_end = n_day_end;
-  }
+  double presenceAutoAd() const { return m_presenceAutoAd; }
+  void setPresenceAutoAd(double value) { m_presenceAutoAd = value; }
 
-  /**
-  * Number of occupied weeks for lighting purposes.
-  */
-  double n_weeks() const {
-    return m_n_weeks;
-  }
+  double manualSwitchAd() const { return m_manualSwitchAd; }
+  void setManualSwitchAd(double value) { m_manualSwitchAd = value; }
 
-  void setN_weeks(double n_weeks) {
-    m_n_weeks = n_weeks;
-  }
+  double presenceSensorLux() const { return m_presenceSensorLux; }
+  void setPresenceSensorLux(double value) { m_presenceSensorLux = value; }
 
-  /**
-  * Electric internal gains. XXX: This appears to be a ratio/factor but I'm not sure - BAA@2015-06-08.
-  */
-  double elecInternalGains() const {
-    return m_elecInternalGains;
-  }
+  double automaticLux() const { return m_automaticLux; }
+  void setAutomaticLux(double value) { m_automaticLux = value; }
 
-  void setElecInternalGains(double electInternalGains) {
-    m_elecInternalGains = electInternalGains;
-  }
+  double presenceAutoLux() const { return m_presenceAutoLux; }
+  void setPresenceAutoLux(double value) { m_presenceAutoLux = value; }
 
-  /**
-  * Permanent lighting power density (W/m2). Lighting that is always on regardless of occupancy
-  * (e.g. emergency lights).
-  */
-  double permLightPowerDensity() const {
-    return m_permLightPowerDensity;
-  }
+  double manualSwitchLux() const { return m_manualSwitchLux; }
+  void setManualSwitchLux(double value) { m_manualSwitchLux = value; }
 
-  void setPermLightPowerDensity(double permLightPowerDensity) {
-    m_permLightPowerDensity = permLightPowerDensity;
-  }
+  double naturallyLightedArea() const { return m_naturallyLightedArea; }
+  void setNaturallyLightedArea(double value) { m_naturallyLightedArea = value; }
 
-  /**
-  * Occupancy based lighting controls use adjustment factors.
-  */
-  double presenceSensorAd() const {
-    return m_presenceSensorAd;
-  }
+  double lightingPowerFixedOccupied() const { return m_lightingPowerFixedOccupied; }
+  void setLightingPowerFixedOccupied(double value) { m_lightingPowerFixedOccupied = value; }
 
-  void setPresenceSensorAd(double presenceSensorAd) {
-    m_presenceSensorAd = presenceSensorAd;
-  }
-
-  /**
-  * Occupancy based lighting controls use adjustment factors.
-  */
-  double automaticAd() const {
-    return m_automaticAd;
-  }
-
-  void setAutomaticAd(double automaticAd) {
-    m_automaticAd = automaticAd;
-  }
-
-  /**
-  * Occupancy based lighting controls use adjustment factors.
-  */
-  double presenceAutoAd() const {
-    return m_presenceAutoAd;
-  }
-
-  void setPresenceAutoAd(double presenceAutoAd) {
-    m_presenceAutoAd = presenceAutoAd;
-  }
-
-  /**
-  * Occupancy based lighting controls use adjustment factors.
-  */
-  double manualSwitchAd() const {
-    return m_manualSwitchAd;
-  }
-
-  void setManualSwitchAd(double manualSwitchAd) {
-    m_manualSwitchAd = manualSwitchAd;
-  }
-
-  /**
-  * Daylight based lighting control target lux levels.
-  */
-  double presenceSensorLux() const {
-    return m_presenceSensorLux;
-  }
-
-  void setPresenceSensorLux(double presenceSensorLux) {
-    m_presenceSensorLux = presenceSensorLux;
-  }
-
-  /**
-  * Daylight based lighting control target lux levels.
-  */
-  double automaticLux() const {
-    return m_automaticLux;
-  }
-
-  void setAutomaticLux(double automaticLux) {
-    m_automaticLux = automaticLux;
-  }
-
-  /**
-  * Daylight based lighting control target lux levels.
-  */
-  double presenceAutoLux() const {
-    return m_presenceAutoLux;
-  }
-
-  void setPresenceAutoLux(double presenceAutoLux) {
-    m_presenceAutoLux = presenceAutoLux;
-  }
-
-  /**
-  * Daylight based lighting control target lux levels.
-  */
-  double manualSwitchLux() const {
-    return m_manualSwitchLux;
-  }
-
-  void setManualSwitchLux(double manualSwitchLux) {
-    m_manualSwitchLux = manualSwitchLux;
-  }
-
-  /**
-  * Area that utlizes natural lighting (m2).
-  */
-  double naturallyLightedArea() const {
-    return m_naturallyLightedArea;
-  }
-
-  void setNaturallyLightedArea(double naturallyLightedArea) {
-    m_naturallyLightedArea = naturallyLightedArea;
-  }
-
-  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
-  /**
-  *
-  */
-  double lightingPowerFixedOccupied() const {
-    return m_lightingPowerFixedOccupied;
-  }
-
-  void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied) {
-    m_lightingPowerFixedOccupied = lightingPowerFixedOccupied;
-  }
-
-  /**
-  *
-  */
-  double lightingPowerFixedUnoccupied() const {
-    return m_lightingPowerFixedUnoccupied;
-  }
-
-  void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied) {
-    m_lightingPowerFixedUnoccupied = lightingPowerFixedUnoccupied;
-  }
+  double lightingPowerFixedUnoccupied() const { return m_lightingPowerFixedUnoccupied; }
+  void setLightingPowerFixedUnoccupied(double value) { m_lightingPowerFixedUnoccupied = value; }
 
 private:
-  double m_powerDensityOccupied;
-  double m_powerDensityUnoccupied;
-  double m_dimmingFraction;
-  double m_exteriorEnergy;
-  // Members with default values:
-  double m_n_day_start = 7.0; // TODO: sunrise shouldn't be the same every month.
-  double m_n_day_end = 18.0; // TODO: sunrise shouldbe be the same every month.
+  double m_powerDensityOccupied = 0.0;
+  double m_powerDensityUnoccupied = 0.0;
+  double m_dimmingFraction = 0.0;
+  double m_exteriorEnergy = 0.0;
+  
+  // Default values
+  double m_n_day_start = 7.0; 
+  double m_n_day_end = 18.0; 
   double m_n_weeks = 50.0;
   double m_elecInternalGains = 1.0;
   double m_permLightPowerDensity = 0.0;
+  
   // Automatic lighting control defaults:
   double m_presenceSensorAd = 0.6;
   double m_automaticAd = 0.8;
   double m_presenceAutoAd = 0.6;
-  double m_manualSwitchAd = 1;
+  double m_manualSwitchAd = 1.0;
   double m_presenceSensorLux = 500.0;
   double m_automaticLux = 300.0;
   double m_presenceAutoLux = 300.0;
@@ -276,11 +96,9 @@ private:
   // Daylighting
   double m_naturallyLightedArea = 0.0;
 
-  // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
-  double m_lightingPowerFixedOccupied;
-  double m_lightingPowerFixedUnoccupied;
+  double m_lightingPowerFixedOccupied = 0.0;
+  double m_lightingPowerFixedUnoccupied = 0.0;
 };
 
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel
 #endif // ISOMODEL_LIGHTING_HPP
