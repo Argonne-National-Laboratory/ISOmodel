@@ -1,16 +1,18 @@
 /*
  * HourlyModel.cpp
  *
- * OPTIMIZATION & REFACTORING (Round 4):
+ * OPTIMIZATION & REFACTORING (Round 4 - Fixed):
  * 1. Compressed Cache: Using `float` for schedules and physics in `HourlyCache`
  * reduces memory footprint and aligns data to cache lines (52 bytes per hour).
  * 2. Data Locality: `env_temp` and `env_egh` are fetched from `HourlyCache`, 
  * avoiding lookups into the separate EpwData vectors during the loop.
  * 3. Cleanup: 2D schedule arrays are now stack-allocated in `initialize` via 
  * `buildWeeklySchedules`, removing persistent state.
+ * 4. Fix: Added include for SolarRadiation.hpp to resolve incomplete type error.
  */
 
 #include "HourlyModel.hpp"
+#include "SolarRadiation.hpp" // <--- FIXED: Added missing include
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -42,11 +44,16 @@ namespace openstudio {
             double TMT1 = 20.0;
             double tiHeatCool = 20.0;
 
-            SolarRadiation pos(nullptr, epwData.get());
+            // Simplified initialization
             TimeFrame frame; 
-            pos = SolarRadiation(&frame, epwData.get());
+            SolarRadiation pos(&frame, epwData.get());
             pos.Calculate();
             const std::vector<double>& eglobeFlat = pos.eglobeFlat();
+
+            const auto& data = epwData->data();
+            // Note: We use 'egh' from the cache in the loop, but needed here for initialization/debugging if necessary
+            const std::vector<double>& egh = data[EGH]; 
+            // We use 'temp' from cache in loop
 
             size_t numHours = 8760;
             std::vector<double> r_Qneed_ht(numHours), r_Qneed_cl(numHours), r_Q_illum_tot(numHours),
