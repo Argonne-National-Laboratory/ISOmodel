@@ -1,8 +1,8 @@
 #include "TimeFrame.hpp"
 
-namespace openstudio {
-namespace isomodel {
-TimeFrame::TimeFrame(void)
+namespace openstudio::isomodel {
+
+TimeFrame::TimeFrame()
 {
   int hourOfYear = 0;
   int dayOfYear = 0;
@@ -24,13 +24,10 @@ TimeFrame::TimeFrame(void)
       dayOfWeek = (dayOfWeek == 6) ? 0 : dayOfWeek + 1;
     }
   }
-
 }
 
-TimeFrame::~TimeFrame(void)
-{
-
-}
+// Fix: Explicitly define the destructor here
+TimeFrame::~TimeFrame() = default;
 
 int TimeFrame::monthLength(int month)
 {
@@ -46,5 +43,5 @@ int TimeFrame::monthLength(int month)
     return 31;
   }
 }
-}
-}
+
+} // namespace openstudio::isomodel

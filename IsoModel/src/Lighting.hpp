@@ -8,6 +8,7 @@ namespace openstudio::isomodel {
 class ISOMODEL_API Lighting
 {
 public:
+  // Use compiler-generated default constructor/destructor
   Lighting() = default;
   ~Lighting() = default;
 
@@ -72,12 +73,13 @@ public:
   void setLightingPowerFixedUnoccupied(double value) { m_lightingPowerFixedUnoccupied = value; }
 
 private:
+  // In-class initialization for safety
   double m_powerDensityOccupied = 0.0;
   double m_powerDensityUnoccupied = 0.0;
   double m_dimmingFraction = 0.0;
   double m_exteriorEnergy = 0.0;
   
-  // Default values
+  // Default values moved from constructor
   double m_n_day_start = 7.0; 
   double m_n_day_end = 18.0; 
   double m_n_weeks = 50.0;

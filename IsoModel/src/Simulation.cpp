@@ -1,7 +1,5 @@
 #include "Simulation.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

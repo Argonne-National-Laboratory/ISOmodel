@@ -1,15 +1,8 @@
 #include "PhysicalQuantities.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-PhysicalQuantities::PhysicalQuantities(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-PhysicalQuantities::~PhysicalQuantities(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

@@ -1,15 +1,8 @@
 #include "Location.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-Location::Location(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-Location::~Location(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

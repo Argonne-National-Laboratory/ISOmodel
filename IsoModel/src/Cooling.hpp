@@ -8,6 +8,7 @@ namespace openstudio::isomodel {
 class ISOMODEL_API Cooling
 {
 public:
+  // Use compiler-generated default constructor/destructor
   Cooling() = default;
   ~Cooling() = default;
 
@@ -60,14 +61,15 @@ public:
   void setE_pumps(double value) { m_E_pumps = value; }
 
 private:
+  // In-class initialization ensures safer default state
   double m_temperatureSetPointOccupied = 0.0;
   double m_temperatureSetPointUnoccupied = 0.0;
   double m_cop = 0.0;
   double m_partialLoadValue = 0.0;
   double m_hvacLossFactor = 0.0;
   double m_pumpControlReduction = 0.0;
-  
-  // Default values moved from old initialization
+
+  // Defaults preserved from original logic
   bool m_forcedAirCooling = true;
   double m_T_cl_ctrl_flag = 1.0;
   double m_dT_supp_cl = 7.0;

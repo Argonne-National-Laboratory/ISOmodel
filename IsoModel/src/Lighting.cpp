@@ -1,10 +1,8 @@
 #include "Lighting.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
 // Constructor and Destructor are now defaulted in the header.
 // No implementation needed here.
 
-} // namespace isomodel
-} // namespace openstudio
+} // namespace openstudio::isomodel

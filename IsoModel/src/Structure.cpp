@@ -1,17 +1,10 @@
 #include "Structure.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-Structure::Structure() : m_wallArea(9, 0), m_windowArea (9, 0), m_wallUniform(9, 0), m_windowUniform(9, 0),
-    m_wallThermalEmissivity(9, 0), m_wallSolarAbsorbtion(9, 0), m_windowShadingDevice(9, 0),
-    m_windowNormalIncidenceSolarEnergyTransmittance(9, 0), m_windowShadingCorrectionFactor(9, 0)
-{
-}
+// Explicitly default constructor and destructor in the source file
+// to ensure linker symbols are generated for the exported class.
+Structure::Structure() = default;
+Structure::~Structure() = default;
 
-Structure::~Structure()
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

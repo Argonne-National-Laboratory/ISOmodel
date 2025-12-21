@@ -1,15 +1,8 @@
 #include "Population.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-Population::Population(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-Population::~Population(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

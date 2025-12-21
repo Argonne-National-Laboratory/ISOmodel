@@ -28,62 +28,70 @@
 #include "../utilities/data/DataEnums.hpp"
 #endif
 
-namespace openstudio {
-    namespace isomodel {
+namespace openstudio::isomodel {
 
-        class ISOMODEL_API EndUses
-        {
-        public:
+class ISOMODEL_API EndUses
+{
+public:
+  // Default destructor
+  ~EndUses() = default;
 
 #ifdef ISOMODEL_STANDALONE
-            EndUses() : _endUses(13, 0.0) {}
+  // Default constructor (initialization handled in-class below)
+  EndUses() = default;
 
-            void addEndUse(int index, double value) {
-                _endUses[index] = value;
-            }
+  void addEndUse(int index, double value) {
+    if (index >= 0 && index < static_cast<int>(_endUses.size())) {
+      _endUses[index] = value;
+    }
+  }
 
-            // Added const qualifier to allow calling from const references
-            double getEndUse(int index) const {
-                return _endUses[index];
-            }
+  // Added const qualifier for read-only access
+  double getEndUse(int index) const {
+    if (index >= 0 && index < static_cast<int>(_endUses.size())) {
+      return _endUses[index];
+    }
+    return 0.0;
+  }
 #else
-            EndUses() {}
+  // Default constructor
+  EndUses() = default;
 
-            void addEndUse(double value, EndUseFuelType fuel, EndUseCategoryType category) {
-                _endUses.push_back(std::make_pair(std::make_pair(fuel, category), value));
-            }
+  void addEndUse(double value, EndUseFuelType fuel, EndUseCategoryType category) {
+    _endUses.push_back(std::make_pair(std::make_pair(fuel, category), value));
+  }
 
-            // Added const qualifier to allow calling from const references
-            double getEndUse(EndUseFuelType fuel, EndUseCategoryType category) const {
-                for (auto const& endUse : _endUses) {
-                    if (endUse.first.first == fuel && endUse.first.second == category) {
-                        return endUse.second;
-                    }
-                }
-                return 0.0;
-            }
+  // Added const qualifier for read-only access
+  double getEndUse(EndUseFuelType fuel, EndUseCategoryType category) const {
+    for (auto const& endUse : _endUses) {
+      if (endUse.first.first == fuel && endUse.first.second == category) {
+        return endUse.second;
+      }
+    }
+    return 0.0;
+  }
 
-            static std::vector<EndUseFuelType> fuelTypes() {
-                return { EndUseFuelType::Electricity, EndUseFuelType::Gas };
-            }
+  static std::vector<EndUseFuelType> fuelTypes() {
+    return { EndUseFuelType::Electricity, EndUseFuelType::Gas };
+  }
 
-            static std::vector<EndUseCategoryType> categories() {
-                return { EndUseCategoryType::Heating, EndUseCategoryType::Cooling, EndUseCategoryType::InteriorLights,
-                  EndUseCategoryType::ExteriorLights, EndUseCategoryType::Fans, EndUseCategoryType::Pumps,
-                  EndUseCategoryType::InteriorEquipment, EndUseCategoryType::ExteriorEquipment, EndUseCategoryType::WaterSystems };
-            }
+  static std::vector<EndUseCategoryType> categories() {
+    return { EndUseCategoryType::Heating, EndUseCategoryType::Cooling, EndUseCategoryType::InteriorLights,
+             EndUseCategoryType::ExteriorLights, EndUseCategoryType::Fans, EndUseCategoryType::Pumps,
+             EndUseCategoryType::InteriorEquipment, EndUseCategoryType::ExteriorEquipment, EndUseCategoryType::WaterSystems };
+  }
 #endif
 
-        private:
+private:
 #ifdef ISOMODEL_STANDALONE
-            std::vector<double> _endUses;
+  // In-class initialization replaces constructor initialization list
+  std::vector<double> _endUses = std::vector<double>(13, 0.0);
 #else
-            std::vector<std::pair<std::pair<EndUseFuelType, EndUseCategoryType>, double>> _endUses;
+  std::vector<std::pair<std::pair<EndUseFuelType, EndUseCategoryType>, double>> _endUses;
 #endif
 
-        };
+};
 
-    } // isomodel
-} // openstudio
+} // namespace openstudio::isomodel
 
 #endif // ISOMODEL_ENDUSES_HPP

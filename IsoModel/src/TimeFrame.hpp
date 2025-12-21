@@ -1,28 +1,14 @@
 /**********************************************************************
- *  Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ * All rights reserved.
  **********************************************************************/
 #ifndef ISOMODEL_TIMEFRAME_HPP
 #define ISOMODEL_TIMEFRAME_HPP
 
 #include "ISOModelAPI.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
+
 #define TIMESLICES 8760
 
 /**
@@ -31,9 +17,13 @@ namespace isomodel {
 */
 class ISOMODEL_API TimeFrame
 {
-protected:
-
 public:
+  // Constructor keeps implementation in cpp to populate arrays
+  TimeFrame();
+  
+  // Fix: Declare destructor here, define in cpp to ensure symbol export
+  ~TimeFrame();
+
   /// Returns the number of days in the month.
   int monthLength(int month);
 
@@ -44,17 +34,14 @@ public:
   int Hour[TIMESLICES];
 
   /// Returns the day of the month (1-monthLength)
-  int DayOfMonth[TIMESLICES]; // XXX: This does not appear to ever be used. BAA@2015-05-04
+  int DayOfMonth[TIMESLICES];
 
   /// Returns the day of the week (0-6).
   int DayOfWeek[TIMESLICES];
 
   /// Returns the month (1-12).
   int Month[TIMESLICES];
-
-  TimeFrame(void);
-  ~TimeFrame(void);
 };
-}
-}
-#endif
+
+} // namespace openstudio::isomodel
+#endif // ISOMODEL_TIMEFRAME_HPP

@@ -1,15 +1,8 @@
 #include "Ventilation.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-Ventilation::Ventilation(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-Ventilation::~Ventilation(void)
-{
-}
-
-} // isomodel
-} // openstudio
+} // namespace openstudio::isomodel

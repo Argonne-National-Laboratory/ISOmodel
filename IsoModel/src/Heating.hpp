@@ -8,6 +8,7 @@ namespace openstudio::isomodel {
 class ISOMODEL_API Heating
 {
 public:
+  // Use compiler-generated default constructor/destructor
   Heating() = default;
   ~Heating() = default;
 
@@ -81,6 +82,7 @@ public:
   void setDhw_tsupply(double value) { m_dhw_tsupply = value; }
 
 private:
+  // In-class initialization ensures safer default state
   double m_temperatureSetPointOccupied = 0.0;
   double m_temperatureSetPointUnoccupied = 0.0;
   double m_hvacLossFactor = 0.0;
@@ -93,7 +95,7 @@ private:
   double m_hotWaterEnergyType = 0.0;
   double m_hotcoldWasteFactor = 0.0;
   
-  // Default Initializers
+  // Default values preserved
   bool m_forcedAirHeating = true;
   double m_dT_supp_ht = 7.0;
   double m_E_pumps = 0.25;

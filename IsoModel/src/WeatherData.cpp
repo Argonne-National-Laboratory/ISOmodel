@@ -1,15 +1,8 @@
 #include "WeatherData.hpp"
 
-namespace openstudio {
-namespace isomodel {
+namespace openstudio::isomodel {
 
-WeatherData::WeatherData(void)
-{
-}
+// Constructor and Destructor are now defaulted in the header.
+// No implementation needed here.
 
-WeatherData::~WeatherData(void)
-{
-}
-
-}
-}
+} // namespace openstudio::isomodel
