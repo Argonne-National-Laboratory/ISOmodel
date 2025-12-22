@@ -11,6 +11,8 @@
  * 4. Fix: Added include for SolarRadiation.hpp to resolve incomplete type error.
  */
 
+#include "Constants.hpp"
+
 #include "HourlyModel.hpp"
 #include "SolarRadiation.hpp" // <--- FIXED: Added missing include
 #include <algorithm>
@@ -55,10 +57,10 @@ namespace openstudio {
             const std::vector<double>& egh = data[EGH]; 
             // We use 'temp' from cache in loop
 
-            size_t numHours = 8760;
-            std::vector<double> r_Qneed_ht(numHours), r_Qneed_cl(numHours), r_Q_illum_tot(numHours),
-                r_Q_illum_ext_tot(numHours), r_Qfan_tot(numHours), r_Qpump_tot(numHours),
-                r_phi_plug(numHours), r_ext_equip(numHours), r_Q_dhw(numHours, 0.0);
+            //size_t numHours = 8760;
+            std::vector<double> r_Qneed_ht(HOURS_IN_YEAR), r_Qneed_cl(HOURS_IN_YEAR), r_Q_illum_tot(HOURS_IN_YEAR),
+                r_Q_illum_ext_tot(HOURS_IN_YEAR), r_Qfan_tot(HOURS_IN_YEAR), r_Qpump_tot(HOURS_IN_YEAR),
+                r_phi_plug(HOURS_IN_YEAR), r_ext_equip(HOURS_IN_YEAR), r_Q_dhw(HOURS_IN_YEAR, 0.0);
 
             // Cache loop constants
             const double heat_dT_supp = heating.dT_supp_ht();
@@ -72,7 +74,7 @@ namespace openstudio {
             const double lights_extEnergy = lights.exteriorEnergy();
             const double fan_power_factor = m_vent_fanPower * 0.277778;
 
-            for (int i = 0; i < (int)numHours; ++i) {
+            for (int i = 0; i < HOURS_IN_YEAR; ++i) {
                 // Optimization: Load all hourly properties (Schedules + Weather + Physics)
                 // in one go. 'cache' is ~52 bytes, fitting in a CPU cache line.
                 const HourlyCache& cache = m_hourlyData[i];
@@ -101,7 +103,7 @@ namespace openstudio {
                 r_Qneed_cl[i] = std::max(0.0, -phiHC);
 
                 // 4. Auxiliary
-                double ventExh = cache.sched_ventilation * 3.6 * invFloorArea;
+                double ventExh = cache.sched_ventilation * KWH_TO_MJ * invFloorArea;
 
                 double Vair = std::max({ ventExh,
                     r_Qneed_ht[i] / (((heat_occ_sp + heat_dT_supp) - tiHeatCool) * rhoCpAir_277 + DBL_MIN),
@@ -154,7 +156,7 @@ namespace openstudio {
             areaNaturallyLightedRatio = std::max(0.0001, lights.naturallyLightedArea()) * invFloorArea;
             m_invAreaNat = (areaNaturallyLightedRatio > 0) ? (53.0 / areaNaturallyLightedRatio) : 0.0;
 
-            for (int i = 0; i != 9; ++i) {
+            for (int i = 0; i != NUM_TOTAL_SURFACES; ++i) {
                 structureCalculations(structure.windowShadingDevice()[i], structure.wallArea()[i],
                     structure.windowArea()[i], structure.wallUniform()[i], structure.windowUniform()[i],
                     structure.wallSolarAbsorption()[i], structure.windowShadingCorrectionFactor()[i],
@@ -170,7 +172,7 @@ namespace openstudio {
 
             shadingUsePerWPerM2 = structure.shadingFactorAtMaxUse() / structure.irradianceForMaxShadingUse();
             
-            for(int i=0; i<9; ++i) {
+            for(int i=0; i<NUM_TOTAL_SURFACES; ++i) {
                 precalc_nla_shading[i] = shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i];
                 precalc_solar_shading[i] = solarShadeRatioReduction[i] * shadingUsePerWPerM2;
             }
@@ -192,7 +194,7 @@ namespace openstudio {
             else Am = 2.5;
 
             double hWind = 0.0, hWall = 0.0;
-            for (int i = 0; i != 9; ++i) { hWind += hWindow[i]; hWall += htot[i] - hWindow[i]; }
+            for (int i = 0; i != NUM_TOTAL_SURFACES; ++i) { hWind += hWindow[i]; hWall += htot[i] - hWindow[i]; }
             hwindowWperkm2 = hWind * invFloorArea;
 
             prs = (structure.totalAreaPerFloorArea() - Am - hwindowWperkm2 / h_ms) / structure.totalAreaPerFloorArea();
@@ -213,7 +215,7 @@ namespace openstudio {
             WeeklyScheduleData weekly;
             buildWeeklySchedules(weekly); // Local helper, fills stack arrays
 
-            m_hourlyData.resize(8760);
+            m_hourlyData.resize(HOURS_IN_YEAR);
             
             const auto& data = epwData->data();
             const std::vector<double>& wind = data[WSPD];
@@ -221,7 +223,7 @@ namespace openstudio {
             const std::vector<double>& egh = data[EGH];
             
             TimeFrame frame;
-            for(int i=0; i<8760; ++i) {
+            for(int i=0; i<HOURS_IN_YEAR; ++i) {
                 int h = frame.Hour[i];
                 int d = frame.DayOfWeek[i];
                 HourlyCache& c = m_hourlyData[i];
@@ -242,7 +244,7 @@ namespace openstudio {
                 // Pre-calc Physics (float is sufficient)
                 c.phys_qWind = (float)(0.0769 * q4Pa * fastPow23(m_vent_dCp * wind[i] * wind[i]));
                 
-                double ventExh = c.sched_ventilation * 3.6 * invFloorArea;
+                double ventExh = c.sched_ventilation * KWH_TO_MJ * invFloorArea;
                 c.phys_qSup = (float)(ventExh * windImpactSupplyRatio);
                 c.phys_exhSup = (float)(-(c.phys_qSup - ventExh));
                 c.phys_tSupp = (float)(std::max(m_vent_preheat, (1.0 - m_vent_HRE) * temp[i] + m_vent_HRE * 20.0));
@@ -258,9 +260,9 @@ namespace openstudio {
             const double htOcc = heating.temperatureSetPointOccupied(), htUnocc = heating.temperatureSetPointUnoccupied();
             const double clOcc = cooling.temperatureSetPointOccupied(), clUnocc = cooling.temperatureSetPointUnoccupied();
 
-            for (int h = 0; h < 24; ++h) {
+            for (int h = 0; h < HOURS_IN_DAY; ++h) {
                 bool hoccupied = (h >= hourStart && h <= hourEnd);
-                for (int d = 0; d < 7; ++d) {
+                for (int d = 0; d < DAYS_IN_WEEK; ++d) {
                     bool popoccupied = hoccupied && (d >= dayStart && d <= dayEnd);
                     sched.vent[h][d] = hoccupied ? ventRate : 0.0;
                     sched.extEquip[h][d] = extEquip;
@@ -317,13 +319,13 @@ namespace openstudio {
             double qWind = cache.phys_qWind;
             double exhSup = cache.phys_exhSup;
 
-            double qSW = qStack + qWind + 1E-15;
+            double qSW = qStack + qWind + SMALL_EPSILON;
             double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
 
             double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + cache.phys_qSup;
-            res.tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnt + 1e-15);
+            res.tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnt + SMALL_EPSILON);
             res.hei = 0.34 * qEnt;
-            res.h1 = 1.0 / (1.0 / (res.hei + 1e-15) + 1.0 / H_tris);
+            res.h1 = 1.0 / (1.0 / (res.hei + SMALL_EPSILON) + 1.0 / H_tris);
             return res;
         }
 
@@ -336,11 +338,11 @@ namespace openstudio {
             double h3_hem = 0.5 * (h3 + hem);
             double h3_h2 = h3 / h2;
             
-            double safe_hei = hei + 1e-15;
+            double safe_hei = hei + SMALL_EPSILON;
             double inv_safe_hei = 1.0 / safe_hei; 
             double t_phi = (h3_h2 * h1) * inv_safe_hei; // d(phim)/dP
             
-            double cm_term = Cm / 3.6;
+            double cm_term = Cm / KWH_TO_MJ;
             double cm_plus_h3hem = cm_term + h3_hem;
             double d_tmt1_dp = t_phi / cm_plus_h3hem;
             
@@ -385,34 +387,34 @@ namespace openstudio {
             double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_ht)))) / cooling.cop();
 
             bool electricHeat = (heating.energyType() == 1);
-            constexpr double W_TO_KWH = 0.001;
+            //constexpr double W_TO_KW = 0.001;
             std::vector<EndUses> results;
-            if (!aggregateByMonth) results.reserve(8760);
+            if (!aggregateByMonth) results.reserve(HOURS_IN_YEAR);
 
             auto mapToEU = [&](EndUses& eu, double h, double c, double il, double el, double fn, double pm, double pi, double pe, double dw) {
-                double elec_ht = electricHeat ? (h * s_ht * W_TO_KWH) : 0.0;
-                double gas_ht = electricHeat ? 0.0 : (h * s_ht * W_TO_KWH);
+                double elec_ht = electricHeat ? (h * s_ht * W_TO_KW) : 0.0;
+                double gas_ht = electricHeat ? 0.0 : (h * s_ht * W_TO_KW);
 #ifdef ISOMODEL_STANDALONE
-                eu.addEndUse(0, elec_ht); eu.addEndUse(1, c * s_cl * W_TO_KWH); eu.addEndUse(2, il * W_TO_KWH); eu.addEndUse(3, el * W_TO_KWH);
-                eu.addEndUse(4, fn * W_TO_KWH); eu.addEndUse(5, pm * W_TO_KWH); eu.addEndUse(6, pi * W_TO_KWH); eu.addEndUse(7, pe * W_TO_KWH);
-                eu.addEndUse(8, dw * W_TO_KWH); eu.addEndUse(9, gas_ht);
+                eu.addEndUse(0, elec_ht); eu.addEndUse(1, c * s_cl * W_TO_KW); eu.addEndUse(2, il * W_TO_KW); eu.addEndUse(3, el * W_TO_KW);
+                eu.addEndUse(4, fn * W_TO_KW); eu.addEndUse(5, pm * W_TO_KW); eu.addEndUse(6, pi * W_TO_KW); eu.addEndUse(7, pe * W_TO_KW);
+                eu.addEndUse(8, dw * W_TO_KW); eu.addEndUse(9, gas_ht);
 #else
                 eu.addEndUse(elec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-                eu.addEndUse(c * s_cl * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-                eu.addEndUse(il * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-                eu.addEndUse(el * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-                eu.addEndUse(fn * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-                eu.addEndUse(pm * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-                eu.addEndUse(pi * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-                eu.addEndUse(pe * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-                eu.addEndUse(dw * W_TO_KWH, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+                eu.addEndUse(c * s_cl * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+                eu.addEndUse(il * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+                eu.addEndUse(el * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+                eu.addEndUse(fn * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+                eu.addEndUse(pm * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+                eu.addEndUse(pi * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+                eu.addEndUse(pe * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+                eu.addEndUse(dw * W_TO_KW, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
                 eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
 #endif
                 };
 
             if (aggregateByMonth) {
                 const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
-                for (int m = 0; m < 12; ++m) {
+                for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
                     EndUses eu;
                     double sums[9] = { 0 };
                     for (int i = monthEnds[m]; i < monthEnds[m + 1]; ++i) {
@@ -424,7 +426,7 @@ namespace openstudio {
                 }
             }
             else {
-                for (int i = 0; i < 8760; ++i) {
+                for (int i = 0; i < HOURS_IN_YEAR; ++i) {
                     EndUses eu;
                     mapToEU(eu, r_Qneed_ht[i], r_Qneed_cl[i], r_Q_illum_tot[i], r_Q_illum_ext_tot[i], r_Qfan_tot[i], r_Qpump_tot[i], r_phi_plug[i], r_ext_equip[i], r_Q_dhw[i]);
                     results.push_back(eu);

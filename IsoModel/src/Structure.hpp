@@ -8,7 +8,8 @@
 #include "ISOModelAPI.hpp"
 
 #ifdef ISOMODEL_STANDALONE
-#include "Vector.hpp"
+//#include "Vector.hpp"
+#include "MathHelpers.hpp"
 #else
 #include "../utilities/data/Vector.hpp"
 #endif

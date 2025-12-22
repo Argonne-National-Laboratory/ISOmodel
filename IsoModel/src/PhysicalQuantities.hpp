@@ -31,7 +31,7 @@ public:
   ~PhysicalQuantities() = default;
 
   /**
-  * Specific heat of air in terms of volume (MJ/m3/K). Different parts of the simulation
+  * Specific heat of air and water  in terms of volume (MJ/m3/K). Different parts of the simulation
   * use different units of rhoCpAir. Multiply by 277.777778 to convert to watt-hr/m3/K.
   * Multiply by 1000000.0 to covert to W/m3/K.
   */
@@ -43,9 +43,6 @@ public:
     m_rhoCpAir = rhoCpAir;
   }
 
-  /**
-  * Specific heat of water in terms of volume (MJ/m3/K).
-  */
   double rhoCpWater() const {
     return m_rhoCpWater;
   }

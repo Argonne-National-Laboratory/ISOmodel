@@ -25,8 +25,7 @@
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
-#include "Vector.hpp"
-#include "Matrix.hpp"
+#include "MathHelpers.hpp"
 #else
 #include "../utilities/core/Logger.hpp"
 #include "../utilities/data/EndUses.hpp"
