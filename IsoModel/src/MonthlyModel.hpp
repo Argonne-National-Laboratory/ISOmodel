@@ -53,32 +53,32 @@ namespace isomodel {
 //flag to turn on debug printing of many intermediate variables to stdout
 #define DEBUG_ISO_MODEL_SIMULATION false
 
-ISOMODEL_API void printVector(const char* vecName, Vector vec);
-ISOMODEL_API void printMatrix(const char* matName, Matrix mat);
-ISOMODEL_API void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2);
-
-ISOMODEL_API Vector mult(const double* v1, const double s1, int size);
-ISOMODEL_API Vector mult(const Vector& v1, const double s1);
-ISOMODEL_API Vector mult(const Vector& v1, const double* v2);
-ISOMODEL_API Vector mult(const Vector& v1, const Vector& v2);
-ISOMODEL_API Vector div(const Vector& v1, const double s1);
-ISOMODEL_API Vector div(const double s1, const Vector& v1);
-ISOMODEL_API Vector div(const Vector& v1, const Vector& v2);
-ISOMODEL_API Vector sum(const Vector& v1, const Vector& v2);
-ISOMODEL_API Vector sum(const Vector& v1, const double v2);
-ISOMODEL_API Vector dif(const Vector& v1, const Vector& v2);
-ISOMODEL_API Vector dif(const Vector& v1, const double v2);
-ISOMODEL_API Vector dif(const double v1, const Vector& v2);
-
-ISOMODEL_API Vector maximum(const Vector& v1, const Vector& v2);
-ISOMODEL_API Vector maximum(const Vector& v1, double val);
-ISOMODEL_API double maximum(const Vector& v1);
-
-ISOMODEL_API Vector minimum(const Vector& v1, double val);
-ISOMODEL_API double minimum(const Vector& v1);
-
-ISOMODEL_API Vector abs(const Vector& v1);
-ISOMODEL_API Vector pow(const Vector& v1, const double xp);
+//ISOMODEL_API void printVector(const char* vecName, Vector vec);
+//ISOMODEL_API void printMatrix(const char* matName, Matrix mat);
+//ISOMODEL_API void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2);
+//
+//ISOMODEL_API Vector mult(const double* v1, const double s1, int size);
+//ISOMODEL_API Vector mult(const Vector& v1, const double s1);
+//ISOMODEL_API Vector mult(const Vector& v1, const double* v2);
+//ISOMODEL_API Vector mult(const Vector& v1, const Vector& v2);
+//ISOMODEL_API Vector div(const Vector& v1, const double s1);
+//ISOMODEL_API Vector div(const double s1, const Vector& v1);
+//ISOMODEL_API Vector div(const Vector& v1, const Vector& v2);
+//ISOMODEL_API Vector sum(const Vector& v1, const Vector& v2);
+//ISOMODEL_API Vector sum(const Vector& v1, const double v2);
+//ISOMODEL_API Vector dif(const Vector& v1, const Vector& v2);
+//ISOMODEL_API Vector dif(const Vector& v1, const double v2);
+//ISOMODEL_API Vector dif(const double v1, const Vector& v2);
+//
+//ISOMODEL_API Vector maximum(const Vector& v1, const Vector& v2);
+//ISOMODEL_API Vector maximum(const Vector& v1, double val);
+//ISOMODEL_API double maximum(const Vector& v1);
+//
+//ISOMODEL_API Vector minimum(const Vector& v1, double val);
+//ISOMODEL_API double minimum(const Vector& v1);
+//
+//ISOMODEL_API Vector abs(const Vector& v1);
+//ISOMODEL_API Vector pow(const Vector& v1, const double xp);
 
 class ISOMODEL_API MonthlyModel : public Simulation
 {
