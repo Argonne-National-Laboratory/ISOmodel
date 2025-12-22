@@ -8,6 +8,7 @@ namespace openstudio {
 
         constexpr int MONTHS_IN_YEAR = 12;
         constexpr int HOURS_IN_DAY = 24;
+        constexpr int HOURS_IN_WEEK = 168;
         constexpr int DAYS_IN_WEEK = 7;
         constexpr int DAYS_IN_YEAR = 365;
         //constexpr int HOURS_IN_YEAR = 8760;
