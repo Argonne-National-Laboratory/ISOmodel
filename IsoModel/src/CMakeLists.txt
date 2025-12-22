@@ -44,34 +44,34 @@ set(${target_name}_solar_debug
 )
 
 set(${target_name}_src
-  Building.cpp
+  # Building.cpp
   Building.hpp
-  Cooling.cpp
+  # Cooling.cpp
   Cooling.hpp
   EndUses.hpp
   EpwData.cpp
   EpwData.hpp
-  Heating.cpp
+  # Heating.cpp
   Heating.hpp
   HourlyModel.cpp
   HourlyModel.hpp
   ISOModelAPI.hpp
   ISOResults.cpp
   ISOResults.hpp
-  Lighting.cpp
+  # Lighting.cpp
   Lighting.hpp
-  Location.cpp
+  # Location.cpp
   Location.hpp
   Matrix.hpp
   MonthlyModel.cpp
   MonthlyModel.hpp
-  PhysicalQuantities.cpp
+  # PhysicalQuantities.cpp
   PhysicalQuantities.hpp
-  Population.cpp
+  # Population.cpp
   Population.hpp
-  Simulation.cpp
+  # Simulation.cpp
   Simulation.hpp
-  SimulationSettings.cpp
+  # SimulationSettings.cpp
   SimulationSettings.hpp
   SolarRadiation.cpp
   SolarRadiation.hpp
@@ -82,9 +82,9 @@ set(${target_name}_src
   UserModel.cpp
   UserModel.hpp
   Vector.hpp
-  Ventilation.cpp
+  # Ventilation.cpp
   Ventilation.hpp
-  WeatherData.cpp
+  # WeatherData.cpp
   WeatherData.hpp
 )
 

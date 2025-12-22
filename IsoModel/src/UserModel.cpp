@@ -5,12 +5,13 @@
 
 #include "UserModel.hpp"
 #include <optional>
+#include <iostream> // Added to fix 'std::cout' error
 #include <filesystem>
 
 using namespace std;
 namespace openstudio::isomodel {
 
-// Constructor and destructor are defaulted in the header
+// ... (Rest of the file remains exactly the same as the previous version) ...
 
 void UserModel::setCoreSimulationProperties(Simulation& sim) const {
     sim.setPop(pop);
