@@ -119,7 +119,7 @@ namespace openstudio {
         void HourlyModel::initialize() {
             double floorArea = structure.floorArea();
             invFloorArea = (floorArea > 0) ? 1.0 / floorArea : 0.0;
-            rhoCpAir_277 = phys.rhoCpAir() * 277.777778;
+            rhoCpAir_277 = phys.rhoCpAir() * 277.777778;  // converts from MJ/m^3*K to Whr/m^3*K :  1 MJ =  1E6 W/MJ*s / 3600 s/hr = 277.78.. Whr
             
             m_maxIrrad = structure.irradianceForMaxShadingUse();
             m_vent_dCp = ventilation.dCp();

@@ -56,8 +56,8 @@ public:
 
 private:
   // In-class initialization (values preserved from original)
-  double m_rhoCpAir = 1.22521 * 0.001012;
-  double m_rhoCpWater = 4.1813; 
+  double m_rhoCpAir = 1.22521 * 0.001012;  // rho = 1.22521 kg/m3  * cp = 1.012 kJ / kg*K / 1000 kJ/MJ =   rhocp in MJ/(m^3 K)
+  double m_rhoCpWater = 4.1813;  // 4.1813 kJ/(m^3 k) / 1000 kJ/MJ
 };
 
 } // namespace openstudio::isomodel
