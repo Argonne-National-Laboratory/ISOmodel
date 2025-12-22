@@ -65,7 +65,7 @@ set(${target_name}_src
   Matrix.hpp
   MonthlyModel.cpp
   MonthlyModel.hpp
-  MonthlyModelHelpers.hpp
+  MathHelpers.hpp
   # PhysicalQuantities.cpp
   PhysicalQuantities.hpp
   # Population.cpp

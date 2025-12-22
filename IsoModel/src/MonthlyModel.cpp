@@ -20,7 +20,7 @@
  //to run main
 #include "UserModel.hpp"
 // [Refactor] Include the helpers for vector/matrix math
-#include "MonthlyModelHelpers.hpp"
+#include "MathHelpers.hpp"
 
 #include <cmath>
 #include <algorithm>

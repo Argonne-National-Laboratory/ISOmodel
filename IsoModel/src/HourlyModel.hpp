@@ -20,6 +20,7 @@
 #include "Simulation.hpp"
 #include "TimeFrame.hpp"
 #include "MonthlyModel.hpp"
+#include "MathHelpers.hpp"
 #include <vector>
 #include <array>
 #include <cmath>
@@ -36,9 +37,9 @@
 namespace openstudio {
     namespace isomodel {
 
-        inline double fastPow23(double x) {
-            return std::cbrt(x * x);
-        }
+        //inline double fastPow23(double x) {
+        //    return std::cbrt(x * x);
+        //}
 
         // Compressed Data Structure (Array of Structures)
         // Uses 'float' to fit ~52 bytes, ensuring 1 hour fits in 1 CPU cache line (64 bytes).
