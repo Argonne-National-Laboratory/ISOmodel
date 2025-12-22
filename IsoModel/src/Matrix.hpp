@@ -1,17 +1,3 @@
-
-// update to remove boost library dependence
-//#ifndef ISOMODEL_MATRIX_HPP
-//#define ISOMODEL_MATRIX_HPP
-//
-//#include <vector>
-//#include <boost/numeric/ublas/matrix.hpp>
-//
-//namespace openstudio {
-///// Matrix 
-//typedef boost::numeric::ublas::matrix<double> Matrix;
-//}
-//#endif
-
 #ifndef ISOMODEL_MATRIX_HPP
 #define ISOMODEL_MATRIX_HPP
 
@@ -20,36 +6,43 @@
 
 namespace openstudio {
 
-    /// Lightweight Matrix class to replace boost::numeric::ublas::matrix
+    /// Lightweight Matrix class replacing boost::numeric::ublas::matrix
     class Matrix {
     public:
-        Matrix() : m_rows(0), m_cols(0) {}
+        Matrix() = default;
+
+        // Defaulted Rule of Five for optimal move semantics
+        Matrix(const Matrix&) = default;
+        Matrix(Matrix&&) noexcept = default;
+        Matrix& operator=(const Matrix&) = default;
+        Matrix& operator=(Matrix&&) noexcept = default;
+        ~Matrix() = default;
 
         Matrix(size_t r, size_t c, double val = 0.0)
             : m_rows(r), m_cols(c), m_data(r* c, val) {
         }
 
-        size_t size1() const { return m_rows; }
-        size_t size2() const { return m_cols; }
+        [[nodiscard]] size_t size1() const noexcept { return m_rows; }
+        [[nodiscard]] size_t size2() const noexcept { return m_cols; }
 
-        // Resize method that clears data (sufficient for this codebase's usage)
+        // Resize method that clears data (consistent with original behavior)
         void resize(size_t r, size_t c) {
             m_rows = r;
             m_cols = c;
             m_data.assign(r * c, 0.0);
         }
 
-        double& operator()(size_t r, size_t c) {
+        double& operator()(size_t r, size_t c) noexcept {
             return m_data[r * m_cols + c];
         }
 
-        const double& operator()(size_t r, size_t c) const {
+        const double& operator()(size_t r, size_t c) const noexcept {
             return m_data[r * m_cols + c];
         }
 
     private:
-        size_t m_rows;
-        size_t m_cols;
+        size_t m_rows = 0;
+        size_t m_cols = 0;
         std::vector<double> m_data;
     };
 
