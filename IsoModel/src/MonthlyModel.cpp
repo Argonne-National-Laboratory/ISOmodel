@@ -31,23 +31,23 @@
 namespace openstudio {
     namespace isomodel {
 
-        // Constants
-        const double daysInMonth[] =
-        { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        const double hoursInMonth[] =
-        { 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
-        const double megasecondsInMonth[] =
-        { 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
-        const double monthFractionOfYear[] =
-        { 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
-            0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
+        // // Constants
+        // const double daysInMonth[] =
+        // { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+        // const double hoursInMonth[] =
+        // { 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
+        // const double megasecondsInMonth[] =
+        // { 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
+        // const double monthFractionOfYear[] =
+        // { 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
+        //     0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
         //const double daysInYear = 365;
         //const double hoursInYear = 8760;
         //const double hoursInWeek = 168;
-        //const double MONTHS_IN_YEAR = 12;
-        //const double HOURS_IN_DAY = 24;
-        const double EECALC_WEEKDAY_START = 7;
-        //const double KWH_TO_MJ = 3.6f;
+        //const double monthsInYear = 12;
+        //const double hoursInDay = 24;
+        // const double EECALC_WEEKDAY_START = 7;
+        //const double kWh2MJ = 3.6f;
 
         // TODO: All member variables initialized in the constructor should eventually be initialized
         // by the .ism file or a default initialization of some sort.
@@ -61,40 +61,40 @@ namespace openstudio {
         {
             hoursOccupiedPerDay = pop.hoursEnd() - pop.hoursStart();
             if (hoursOccupiedPerDay < 0) {
-                hoursOccupiedPerDay += HOURS_IN_DAY;
+                hoursOccupiedPerDay += hoursInDay;
             }
             double daysOccupiedPerWeek = pop.daysEnd() - pop.daysStart() + 1;
             if (daysOccupiedPerWeek < 0) {
-                daysOccupiedPerWeek += DAYS_IN_WEEK;
+                daysOccupiedPerWeek += daysInWeek;
             }
 
             double hoursOccupiedDuringWeek = hoursOccupiedPerDay * daysOccupiedPerWeek;
-            frac_hrs_wk_day = hoursOccupiedDuringWeek / HOURS_IN_WEEK;
+            frac_hrs_wk_day = hoursOccupiedDuringWeek / hoursInWeek;
 
             hoursUnoccupiedPerDay = 24 - hoursOccupiedPerDay;
             double hoursUnoccupiedDuringWeek = (daysOccupiedPerWeek - 1) * hoursUnoccupiedPerDay;
-            frac_hrs_wk_nt = hoursUnoccupiedDuringWeek / HOURS_IN_WEEK;
+            frac_hrs_wk_nt = hoursUnoccupiedDuringWeek / hoursInWeek;
 
             double occupationDensity = pop.densityOccupied();
             double unoccupiedDensity = pop.densityUnoccupied();
             double densityRatio = occupationDensity / unoccupiedDensity;
 
-            double totalWeekendHours = HOURS_IN_WEEK - hoursOccupiedDuringWeek - hoursUnoccupiedDuringWeek;
-            frac_hrs_wke_tot = totalWeekendHours / HOURS_IN_WEEK;
+            double totalWeekendHours = hoursInWeek - hoursOccupiedDuringWeek - hoursUnoccupiedDuringWeek;
+            frac_hrs_wke_tot = totalWeekendHours / hoursInWeek;
 
-            double weekendHoursOccupied = (DAYS_IN_WEEK - daysOccupiedPerWeek) * hoursOccupiedPerDay;
-            double frac_hrs_wke_day = weekendHoursOccupied / HOURS_IN_WEEK;
+            double weekendHoursOccupied = (daysInWeek - daysOccupiedPerWeek) * hoursOccupiedPerDay;
+            double frac_hrs_wke_day = weekendHoursOccupied / hoursInWeek;
 
             double weekendHoursUnoccupied = totalWeekendHours - weekendHoursOccupied;
-            double frac_hrs_wke_nt = weekendHoursUnoccupied / HOURS_IN_WEEK;
+            double frac_hrs_wke_nt = weekendHoursUnoccupied / hoursInWeek;
 
-            for (int m = 0; m < MONTHS_IN_YEAR; m++) {
+            for (int m = 0; m < monthsInYear; m++) {
                 weekdayOccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wk_day;
                 weekdayUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wk_nt;
                 weekendOccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_day;
                 weekendUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_nt;
             }
-            for (int h = 0; h < HOURS_IN_DAY; h++) {
+            for (int h = 0; h < hoursInDay; h++) {
                 if (h - EECALC_WEEKDAY_START >= 0 && h - EECALC_WEEKDAY_START < hoursOccupiedPerDay) {
                     clockHourOccupied[h] = 1;
                     clockHourUnoccupied[h] = 0;
@@ -156,12 +156,12 @@ namespace openstudio {
             frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
 
             // Find what time the sun comes up and goes down and the fraction of hours sun is up and down.
-            Vector v_frac_hrs_sun_down = Vector(MONTHS_IN_YEAR);
-            Vector v_frac_hrs_sun_up = Vector(MONTHS_IN_YEAR);
-            Vector v_sun_up_time = Vector(MONTHS_IN_YEAR);
-            Vector v_sun_down_time = Vector(MONTHS_IN_YEAR);
+            Vector v_frac_hrs_sun_down = Vector(monthsInYear);
+            Vector v_frac_hrs_sun_up = Vector(monthsInYear);
+            Vector v_sun_up_time = Vector(monthsInYear);
+            Vector v_sun_down_time = Vector(monthsInYear);
 
-            for (int i = 0; i < MONTHS_IN_YEAR; i++) {
+            for (int i = 0; i < monthsInYear; i++) {
                 v_frac_hrs_sun_up[i] = 0;
                 v_frac_hrs_sun_down[i] = 0;
 
@@ -221,7 +221,7 @@ namespace openstudio {
             }
             double daysOccupied = pop.daysEnd() - pop.daysStart() + 1;
             if (daysOccupied < 0) {
-                daysOccupied += DAYS_IN_WEEK;
+                daysOccupied += daysInWeek;
             }
             double t_lt_D = hoursOccupied * daysOccupied * lights.n_weeks();
 
@@ -230,7 +230,7 @@ namespace openstudio {
             double t_lt_N = hoursOccupied * daysOccupied * lights.n_weeks();
 
             // Unoccupied hours.
-            double t_unocc = HOURS_IN_YEAR - t_lt_D - t_lt_N;
+            double t_unocc = hoursInYear - t_lt_D - t_lt_N;
 
             // Total lighting energy for occupied times (kWh).
             Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O * (t_lt_D * F_D + t_lt_N) / 1000.0;
@@ -240,7 +240,7 @@ namespace openstudio {
             Q_illum_tot_yr = Q_illum_occ + Q_illum_unocc;
 
             // Split annual lighting energy into monthly lighting energy via the month fraction of the year (kWh).
-            v_Q_illum_tot = mult(monthFractionOfYear, Q_illum_tot_yr, MONTHS_IN_YEAR);
+            v_Q_illum_tot = mult(monthFractionOfYear, Q_illum_tot_yr, monthsInYear);
             // Total exterior lighting (kWh).
             v_Q_illum_ext_tot = mult(v_hrs_sun_down_mo, lights.exteriorEnergy() / 1000.0);
         }
@@ -370,7 +370,7 @@ namespace openstudio {
             }
 
             // Combine vertical surface radiation (mosolar) and horizontal radiation (mEgh) into one matrix (W/m2).
-            Matrix m_I_sol(MONTHS_IN_YEAR, 9); // MONTHS_IN_YEAR months, 8 directions + 1 roof.
+            Matrix m_I_sol(monthsInYear, 9); // monthsInYear months, 8 directions + 1 roof.
             for (unsigned int r = 0; r < m_I_sol.size1(); r++) {
                 for (unsigned int c = 0; c < m_I_sol.size2() - 1; c++) {
                     m_I_sol(r, c) = location.weather()->msolar()(r, c);
@@ -380,7 +380,7 @@ namespace openstudio {
             printMatrix("m_I_sol", m_I_sol);
 
             // Compute the total solar heat gain for the glazing area.
-            Vector v_win_phi_sol(MONTHS_IN_YEAR);
+            Vector v_win_phi_sol(monthsInYear);
             Vector temp(9);
             for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
                 for (unsigned int j = 0; j < temp.size(); j++) {
@@ -412,7 +412,7 @@ namespace openstudio {
             Vector v_wall_phi_r = mult(mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
 
             // Total solar heat gain for opaque area.
-            Vector v_wall_phi_sol(MONTHS_IN_YEAR);
+            Vector v_wall_phi_sol(monthsInYear);
 
             // Compute the total solar heat gain for the opaque area.
             for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
@@ -451,9 +451,9 @@ namespace openstudio {
             phi_plug_avg = phi_plug_occ * frac_hrs_wk_day + phi_plug_unocc * (1 - frac_hrs_wk_day);
 
             // Internal heat gain from illumination (W/m2).
-            double phi_illum_occ = Q_illum_occ / structure.floorArea() / HOURS_IN_YEAR / frac_hrs_wk_day * 1000;
-            double phi_illum_unocc = Q_illum_unocc / structure.floorArea() / HOURS_IN_YEAR / (1 - frac_hrs_wk_day) * 1000;
-            phi_illum_avg = Q_illum_tot_yr / structure.floorArea() / HOURS_IN_YEAR * 1000;
+            double phi_illum_occ = Q_illum_occ / structure.floorArea() / hoursInYear / frac_hrs_wk_day * 1000;
+            double phi_illum_unocc = Q_illum_unocc / structure.floorArea() / hoursInYear / (1 - frac_hrs_wk_day) * 1000;
+            phi_illum_avg = Q_illum_tot_yr / structure.floorArea() / hoursInYear * 1000;
 
 
             // Original spreadsheet computed the approximate internal heat gain for week nights, weekend days, and weekend nights
@@ -555,8 +555,8 @@ namespace openstudio {
             double ht_tset_unocc = heating.temperatureSetPointUnoccupied();
             double cl_tset_unocc = cooling.temperatureSetPointUnoccupied();
 
-            Vector v_ht_tset_ctrl(MONTHS_IN_YEAR);
-            Vector v_cl_tset_ctrl(MONTHS_IN_YEAR);
+            Vector v_ht_tset_ctrl(monthsInYear);
+            Vector v_cl_tset_ctrl(monthsInYear);
 
             // Create vectors of the adjusted heating set points.
             for (unsigned int i = 0; i < v_cl_tset_ctrl.size(); i++) {
@@ -638,7 +638,7 @@ namespace openstudio {
 
             // Compute the change in temp from setback to another heating temp in unoccupied times
             if (heating.T_ht_ctrl_flag() == 1) { // If the HVAC heating controls are turned on.
-                Matrix M_Ta(MONTHS_IN_YEAR, 4);
+                Matrix M_Ta(monthsInYear, 4);
                 Vector v_Tstart(v_ht_tset_ctrl);
                 for (unsigned int i = 0; i < M_Ta.size2(); i++) {
                     for (unsigned int j = 0; j < M_Ta.size1(); j++) {
@@ -661,7 +661,7 @@ namespace openstudio {
                 // The temp will only decay to the new lower setpoint, so find which is
                 // higher the setpoint or the decay and select that as the start point for
                 // the average integration to follow.
-                Matrix M_Taa(MONTHS_IN_YEAR, 5);
+                Matrix M_Taa(monthsInYear, 5);
                 for (unsigned int j = 0; j < M_Taa.size1(); j++) {
                     M_Taa(j, 0) = v_ht_tset_ctrl[j];
                 }
@@ -680,7 +680,7 @@ namespace openstudio {
                     printMatrix("M_Taa", M_Taa);
                 }
 
-                Matrix M_Tb(MONTHS_IN_YEAR, 5);
+                Matrix M_Tb(monthsInYear, 5);
 
                 // For each time period, find the average temp given the start and
                 // ending temp and assuming exponential decay of temps.
@@ -717,7 +717,7 @@ namespace openstudio {
             // If cooling is on, find the temp decay after any changes in cooling temp setpoint.
             // TODO: Consider pulling this giant if statement into its own function. -BAA@2015-07-14
             if (cooling.T_cl_ctrl_flag() == 1) {
-                Matrix M_Tc(MONTHS_IN_YEAR, 4);
+                Matrix M_Tc(monthsInYear, 4);
                 Vector v_Tstart(v_cl_tset_ctrl);
                 for (unsigned int i = 0; i < M_Tc.size2(); i++) {
                     for (unsigned int j = 0; j < M_Tc.size1(); j++) {
@@ -728,7 +728,7 @@ namespace openstudio {
                 // Check to see if the decay temp is lower than the temp setpoint.  If so, the space will cool
                 // to that level. If the cooling setpoint is lower the cooling system will kick in and lower the
                 // temp to the cold temp setpoint.
-                Matrix M_Tcc(MONTHS_IN_YEAR, 5);
+                Matrix M_Tcc(monthsInYear, 5);
                 for (unsigned int j = 0; j < M_Tcc.size1(); j++) {
                     M_Tcc(j, 0) = std::min(v_ht_tset_ctrl[j], cl_tset_unocc);
                 }
@@ -743,7 +743,7 @@ namespace openstudio {
                 }
 
                 // For each time period, find the average temp given the exponential decay.
-                Matrix M_Td(MONTHS_IN_YEAR, 5);
+                Matrix M_Td(monthsInYear, 5);
 
                 for (unsigned int i = 0; i < M_Td.size2(); i++) {
                     for (unsigned int j = 0; j < M_Td.size1(); j++) {
@@ -919,8 +919,8 @@ namespace openstudio {
             }
 
             double initVal = ventilation.ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
-            Vector v_qv_mve_ht(MONTHS_IN_YEAR, initVal);
-            Vector v_qv_mve_cl(MONTHS_IN_YEAR, initVal);
+            Vector v_qv_mve_ht(monthsInYear, initVal);
+            Vector v_qv_mve_cl(monthsInYear, initVal);
 
             // Total air flow in m3/s when heating.
             Vector v_qve_ht = sum(v_qv_inf_ht, v_qv_mve_ht);
@@ -943,7 +943,7 @@ namespace openstudio {
             Vector& v_Qneed_cl, double& Qneed_ht_yr, double& Qneed_cl_yr) const
         {
             // Convert internal heat gains from W to MJ.
-            Vector temp = mult(megasecondsInMonth, phi_I_tot, MONTHS_IN_YEAR);
+            Vector temp = mult(megasecondsInMonth, phi_I_tot, monthsInYear);
 
             // Total internal + solar heat gains (MJ).
             Vector v_tot_mo_ht_gain = sum(temp, v_E_sol);
@@ -962,7 +962,7 @@ namespace openstudio {
             Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, DBL_MIN)); // Add DBL_MIN to avoid divide by zero.
 
             // Heating utilization factor.
-            Vector v_eta_g_H(MONTHS_IN_YEAR);
+            Vector v_eta_g_H(monthsInYear);
 
             // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
             for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
@@ -985,7 +985,7 @@ namespace openstudio {
             Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, DBL_MIN));
 
             // Compute the cooling gain utilization factor eta_g_cl
-            Vector v_eta_g_CL(MONTHS_IN_YEAR);
+            Vector v_eta_g_CL(monthsInYear);
             for (unsigned int i = 0; i < v_eta_g_CL.size(); i++) {
                 if (DEBUG_ISO_MODEL_SIMULATION) {
                     double numer = (1.0 - std::pow(v_gamma_H_cl[i], a_H));
@@ -1016,7 +1016,7 @@ namespace openstudio {
             // Total air flow (m3).
             // Multiply by 1000000 to convert megaseconds to seconds.
             // Divide by 1000 to convert liters to m3.
-            Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation.supplyRate() * frac_hrs_wk_day * 1000000.0, MONTHS_IN_YEAR), 1000));
+            Vector v_Vair_tot = maximum(sum(v_Vair_ht, v_Vair_cl), div(mult(megasecondsInMonth, ventilation.supplyRate() * frac_hrs_wk_day * 1000000.0, monthsInYear), 1000));
             printVector("v_Vair_tot", v_Vair_tot);
 
             // Fan power (MJ)
@@ -1087,10 +1087,10 @@ namespace openstudio {
             printVector("v_Qloss_ht_dist", v_Qloss_ht_dist);
             printVector("v_Qloss_cl_dist", v_Qloss_cl_dist);
 
-            Vector v_Qht_sys(MONTHS_IN_YEAR, 0.0);
-            Vector v_Qht_DH(MONTHS_IN_YEAR, 0.0);
-            Vector v_Qcl_sys(MONTHS_IN_YEAR, 0.0);
-            Vector v_Qcool_DC(MONTHS_IN_YEAR, 0.0);
+            Vector v_Qht_sys(monthsInYear, 0.0);
+            Vector v_Qht_DH(monthsInYear, 0.0);
+            Vector v_Qcl_sys(monthsInYear, 0.0);
+            Vector v_Qcool_DC(monthsInYear, 0.0);
 
             if (heating.DH_YesNo() == 1) {
                 v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
@@ -1113,19 +1113,19 @@ namespace openstudio {
             // From original matlab code. Preserved for future implementation of district heating/cooling. BAA@2015-07-15.
             /*
              if DH_YesNo==1
-             v_Qht_sys = zeros(MONTHS_IN_YEAR,1);  % if we have district heating our heating energy needs from our system are zero
+             v_Qht_sys = zeros(monthsInYear,1);  % if we have district heating our heating energy needs from our system are zero
              v_Qht_DH = v_Qneed_ht+v_Qloss_ht_dist;  %Q_heat_nd for DH
              else
              v_Qht_sys =(v_Qloss_ht_dist+v_Qneed_ht)/(In.heat_sys_eff+eps);  % total heating energy need from our system including losses
-             v_Qht_DH = zeros(MONTHS_IN_YEAR,1);
+             v_Qht_DH = zeros(monthsInYear,1);
              end
 
              if DC_YesNo==1
-             v_Qcl_sys = zeros(MONTHS_IN_YEAR,1);  % if we have district cooling our cooling energy needs from our system are zero
+             v_Qcl_sys = zeros(monthsInYear,1);  % if we have district cooling our cooling energy needs from our system are zero
              v_Qcool_DC = v_Qloss_cl_dist+v_Qneed_cl;  % if we have DC the cooling needs are the dist losses + the cooling needs themselves
              else
              v_Qcl_sys =(v_Qloss_cl_dist+v_Qneed_cl)/(IEER+eps);  % if no DC compute our total system cooling energy needs including losses
-             v_Qcool_DC=zeros(MONTHS_IN_YEAR,1); % if no DC, DC cooling needs are zero
+             v_Qcool_DC=zeros(monthsInYear,1); % if no DC, DC cooling needs are zero
              end
 
 
@@ -1149,7 +1149,7 @@ namespace openstudio {
                 v_Qgas_ht = v_Qht_DH_total;
             }
             else {
-                v_Qelec_ht = Vector(MONTHS_IN_YEAR);
+                v_Qelec_ht = Vector(monthsInYear);
                 zero(v_Qelec_ht);
                 v_Qgas_ht = sum(v_Qht_sys, v_Qht_DH_total);
             }
@@ -1169,7 +1169,7 @@ namespace openstudio {
              v_Qelec_ht=v_Qht_sys;  % total electric heating energy (MJ)
              v_Qgas_ht=v_Qht_DH_total; % total gas heating energy is DH if fuel type is electric
              else
-             v_Qelec_ht = zeros(MONTHS_IN_YEAR,1);  % if we get here, fuel was gas to total electric heating energy is 0
+             v_Qelec_ht = zeros(monthsInYear,1);  % if we get here, fuel was gas to total electric heating energy is 0
              v_Qgas_ht=v_Qht_sys+v_Qht_DH_total;  % total gas heating energy is building + any DH
              end
 
@@ -1190,9 +1190,9 @@ namespace openstudio {
             // Total annual pump energy for heating systems if the pumps are running continuously.
             // NOTE: This assumption (that the annual pump energy is equal to the energy of the pumps running continuosly) is the source of the
             // problems in the pump results. BAA@2015-07-15.
-            double Q_pumps_yr_ht = sum(mult(megasecondsInMonth, heating.E_pumps(), MONTHS_IN_YEAR));
+            double Q_pumps_yr_ht = sum(mult(megasecondsInMonth, heating.E_pumps(), monthsInYear));
             // Total annual pump energy for cooling systems if the pumps are running continuously.
-            double Q_pumps_yr_cl = sum(mult(megasecondsInMonth, cooling.E_pumps(), MONTHS_IN_YEAR));
+            double Q_pumps_yr_cl = sum(mult(megasecondsInMonth, cooling.E_pumps(), monthsInYear));
 
             // Fraction of time the system is in heating mode each month.
             Vector v_frac_ht_mode = div(v_Qneed_ht, sum(v_Qneed_ht, v_Qneed_cl));
@@ -1200,7 +1200,7 @@ namespace openstudio {
             double frac_ht_total = sum(v_frac_ht_mode);
             // Total yearly pump energy.
             double Q_pumps_ht = Q_pumps_yr_ht * heating.pumpControlReduction() * structure.floorArea();
-            // Distribute the total annual pump energy between the MONTHS_IN_YEAR months proportional to the distribution of the heating
+            // Distribute the total annual pump energy between the monthsInYear months proportional to the distribution of the heating
             Vector v_Q_pumps_ht = div(mult(v_frac_ht_mode, Q_pumps_ht), frac_ht_total);
 
             // Fraction of time the system is in cooling mode each month.
@@ -1209,7 +1209,7 @@ namespace openstudio {
             double frac_cl_total = sum(v_frac_cl_mode);
             // Total yearly pump energy.
             double Q_pumps_cl = Q_pumps_yr_cl * cooling.pumpControlReduction() * structure.floorArea();
-            // Distribute the total annual pump energy between the MONTHS_IN_YEAR months proportional to the distribution of the cooling.
+            // Distribute the total annual pump energy between the monthsInYear months proportional to the distribution of the cooling.
             Vector v_Q_pumps_cl = div(mult(v_frac_cl_mode, Q_pumps_cl), frac_cl_total);
 
             // Total pump operational factor.
@@ -1242,18 +1242,18 @@ namespace openstudio {
         void MonthlyModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
         {
             // Energy from solar energy hot water collectors - not included yet
-            Vector v_Q_dhw_solar(MONTHS_IN_YEAR);
+            Vector v_Q_dhw_solar(monthsInYear);
             zero(v_Q_dhw_solar);
 
             // Total annual energy demand required for heating DHW (MJ/yr).
             double Q_dhw_yr = heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * phys.rhoCpWater();
 
-            Vector v_MonthlyDemand = mult(daysInMonth, Q_dhw_yr, MONTHS_IN_YEAR);
-            Vector v_frac_MonthlyDemand_yr = div(v_MonthlyDemand, DAYS_IN_YEAR);
+            Vector v_MonthlyDemand = mult(daysInMonth, Q_dhw_yr, monthsInYear);
+            Vector v_frac_MonthlyDemand_yr = div(v_MonthlyDemand, daysInYear);
             Vector v_Qe_demand = div(v_frac_MonthlyDemand_yr, heating.hotWaterDistributionEfficiency());
 
             // Monthly DHW energy demand including distribution efficiency.
-            Vector v_Q_dhw_demand = div(v_Qe_demand, KWH_TO_MJ);
+            Vector v_Q_dhw_demand = div(v_Qe_demand, kWh2MJ);
             // Total monthly supply need is (demand - solar)/system efficiency.
             Vector v_Q_dhw_need = maximum(div(dif(v_Q_dhw_demand, v_Q_dhw_solar), heating.hotWaterSystemEfficiency()), 0);
 
@@ -1281,10 +1281,10 @@ namespace openstudio {
 
         std::vector<EndUses> MonthlyModel::simulate() const
         {
-            Vector weekdayOccupiedMegaseconds(MONTHS_IN_YEAR);
-            Vector weekdayUnoccupiedMegaseconds(MONTHS_IN_YEAR);
-            Vector weekendOccupiedMegaseconds(MONTHS_IN_YEAR);
-            Vector weekendUnoccupiedMegaseconds(MONTHS_IN_YEAR);
+            Vector weekdayOccupiedMegaseconds(monthsInYear);
+            Vector weekdayUnoccupiedMegaseconds(monthsInYear);
+            Vector weekendOccupiedMegaseconds(monthsInYear);
+            Vector weekendUnoccupiedMegaseconds(monthsInYear);
             Vector clockHourOccupied(24);
             Vector clockHourUnoccupied(24);
             double frac_hrs_wk_day = 0;
@@ -1294,7 +1294,7 @@ namespace openstudio {
             double frac_hrs_wke_tot = 0;
 
             //Solor Radiation Breakdown Results
-            Vector v_hrs_sun_down_mo(MONTHS_IN_YEAR), v_Tdbt_nt, v_Tdbt_day;
+            Vector v_hrs_sun_down_mo(monthsInYear), v_Tdbt_nt, v_Tdbt_day;
             Vector frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt;
             //Envelop Calculations Results
             Vector v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U, v_wall_A;
@@ -1311,7 +1311,7 @@ namespace openstudio {
             double H_tr;
             Vector v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt;
 
-            Vector v_Th_avg(MONTHS_IN_YEAR), v_Tc_avg(MONTHS_IN_YEAR);
+            Vector v_Th_avg(monthsInYear), v_Tc_avg(monthsInYear);
 
             double phi_I_tot, tau;
             Vector v_Hve_ht, v_Hve_cl;
@@ -1501,19 +1501,19 @@ namespace openstudio {
                 + building.gasApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
 
             // Electric plug load (kWh/m2).
-            Vector v_Q_plug_elec = div(mult(hoursInMonth, E_plug_elec, MONTHS_IN_YEAR), 1000.0);
+            Vector v_Q_plug_elec = div(mult(hoursInMonth, E_plug_elec, monthsInYear), 1000.0);
             // Gas plug load (kWh/m2).
-            Vector v_Q_plug_gas = div(mult(hoursInMonth, E_plug_gas, MONTHS_IN_YEAR), 1000.0);
+            Vector v_Q_plug_gas = div(mult(hoursInMonth, E_plug_gas, monthsInYear), 1000.0);
             printVector("v_Q_plug_elec", v_Q_plug_elec);
             printVector("v_Q_plug_gas", v_Q_plug_gas);
 
             // Electric loads (kWh/m2).
-            Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()), KWH_TO_MJ); // Total monthly electric usage for heating.
-            Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()), KWH_TO_MJ); // Total monthly electric usage for cooling.
+            Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()), kWh2MJ); // Total monthly electric usage for heating.
+            Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()), kWh2MJ); // Total monthly electric usage for cooling.
             Vector Eelec_int_lt = div(v_Q_illum_tot, structure.floorArea()); // Total monthly electric usage density for interior lighting.
             Vector Eelec_ext_lt = div(v_Q_illum_ext_tot, structure.floorArea()); // Total monthly electric usage for exterior lights.
             Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
-            Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()), KWH_TO_MJ); // Total monthly elec usage for pumps.
+            Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()), kWh2MJ); // Total monthly elec usage for pumps.
             Vector Eelec_plug = v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
             Vector Eelec_dhw = div(v_Q_dhw_elec, structure.floorArea());
 
@@ -1526,13 +1526,13 @@ namespace openstudio {
             }
 
             // Gas loads (kWh/m2).
-            Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()), KWH_TO_MJ); // Total monthly gas usage for heating.
-            Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()), KWH_TO_MJ); // Total monthly gas usage for cooling.
+            Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()), kWh2MJ); // Total monthly gas usage for heating.
+            Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()), kWh2MJ); // Total monthly gas usage for cooling.
             Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
             Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
 
-            EndUses results[MONTHS_IN_YEAR];
-            for (int i = 0; i < MONTHS_IN_YEAR; i++) {
+            EndUses results[monthsInYear];
+            for (int i = 0; i < monthsInYear; i++) {
 
 #ifdef ISOMODEL_STANDALONE
                 int euse = 0;

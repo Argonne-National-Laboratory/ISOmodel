@@ -10,6 +10,7 @@
 #ifndef ISOMODEL_SOLAR_RADIATION_HPP
 #define ISOMODEL_SOLAR_RADIATION_HPP
 
+#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "TimeFrame.hpp"
 #include <cmath>
@@ -21,10 +22,10 @@ namespace openstudio::isomodel {
     class EpwData;
 
     // Constants as constexpr for compile-time optimization
-    constexpr double PI = 3.14159265358979323846;
-    constexpr int NUM_SURFACES = 8;
-    constexpr int MONTHS = 12;
-    constexpr int HOURS = 24;
+    // constexpr double PI = 3.14159265358979323846;
+    // constexpr int numVerticalSurfaces = 8;
+    // constexpr int monthsInYear = 12;
+    // constexpr int hoursInDay = 24;
 
     class ISOMODEL_API SolarRadiation {
     protected:
@@ -55,8 +56,8 @@ namespace openstudio::isomodel {
         // Performance caches
         double m_sinTilt = 0.0;
         double m_cosTilt = 0.0;
-        double m_surfSin[NUM_SURFACES] = {}; // Zero-initialized
-        double m_surfCos[NUM_SURFACES] = {};
+        double m_surfSin[numVerticalSurfaces] = {}; // Zero-initialized
+        double m_surfCos[numVerticalSurfaces] = {};
 
     public:
         SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt = PI);
@@ -83,7 +84,7 @@ namespace openstudio::isomodel {
                 - 1.4615 * std::cos(2 * B) - 4.089 * std::sin(2 * B));
         }
 
-        // Calculates the apparent Solar Time in hours.
+        // Calculates the apparent Solar Time in hoursInDay.
         double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
             return localStandardTime + equationOfTime / 60.0 + (m_longitude - m_localMeridian) / (PI / 12.0);
         }

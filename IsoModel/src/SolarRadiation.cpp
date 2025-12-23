@@ -31,32 +31,32 @@ namespace openstudio::isomodel {
         m_localMeridian = wdata->timezone() * 15.0 * (PI / 180.0);
         m_latitude = wdata->latitude() * (PI / 180.0);
 
-        for (int i = 0; i < NUM_SURFACES; ++i) {
+        for (int i = 0; i < numVerticalSurfaces; ++i) {
             m_surfSin[i] = std::sin(SurfaceAzimuths[i]);
             m_surfCos[i] = std::cos(SurfaceAzimuths[i]);
         }
 
-        m_eglobeFlat.assign(8760 * NUM_SURFACES, 0.0);
+        m_eglobeFlat.assign(hoursInYear * numVerticalSurfaces, 0.0);
         
-        m_monthlyDryBulbTemp.assign(MONTHS, 0.0);
-        m_monthlyDewPointTemp.assign(MONTHS, 0.0);
-        m_monthlyRelativeHumidity.assign(MONTHS, 0.0);
-        m_monthlyWindspeed.assign(MONTHS, 0.0);
-        m_monthlyGlobalHorizontalRadiation.assign(MONTHS, 0.0);
+        m_monthlyDryBulbTemp.assign(monthsInYear, 0.0);
+        m_monthlyDewPointTemp.assign(monthsInYear, 0.0);
+        m_monthlyRelativeHumidity.assign(monthsInYear, 0.0);
+        m_monthlyWindspeed.assign(monthsInYear, 0.0);
+        m_monthlyGlobalHorizontalRadiation.assign(monthsInYear, 0.0);
 
-        m_monthlySolarRadiation.assign(MONTHS, std::vector<double>(NUM_SURFACES, 0.0));
-        m_hourlyDryBulbTemp.assign(MONTHS, std::vector<double>(HOURS, 0.0));
-        m_hourlyDewPointTemp.assign(MONTHS, std::vector<double>(HOURS, 0.0));
-        m_hourlyGlobalHorizontalRadiation.assign(MONTHS, std::vector<double>(HOURS, 0.0));
+        m_monthlySolarRadiation.assign(monthsInYear, std::vector<double>(numVerticalSurfaces, 0.0));
+        m_hourlyDryBulbTemp.assign(monthsInYear, std::vector<double>(hoursInDay, 0.0));
+        m_hourlyDewPointTemp.assign(monthsInYear, std::vector<double>(hoursInDay, 0.0));
+        m_hourlyGlobalHorizontalRadiation.assign(monthsInYear, std::vector<double>(hoursInDay, 0.0));
     }
 
     // Destructor is defaulted in header
 
     std::vector<std::vector<double>> SolarRadiation::eglobe() {
-        std::vector<std::vector<double>> legacy(8760, std::vector<double>(NUM_SURFACES, 0.0));
-        for (int i = 0; i < 8760; ++i) {
-            for (int s = 0; s < NUM_SURFACES; ++s) {
-                legacy[i][s] = m_eglobeFlat[i * NUM_SURFACES + s];
+        std::vector<std::vector<double>> legacy(hoursInYear, std::vector<double>(numVerticalSurfaces, 0.0));
+        for (int i = 0; i < hoursInYear; ++i) {
+            for (int s = 0; s < numVerticalSurfaces; ++s) {
+                legacy[i][s] = m_eglobeFlat[i * numVerticalSurfaces + s];
             }
         }
         return legacy;
@@ -76,7 +76,7 @@ namespace openstudio::isomodel {
         double eq = 0.0, dec = 0.0;
         double sinDec = 0.0, cosDec = 0.0;
 
-        for (int i = 0; i < 8760; i++) {
+        for (int i = 0; i < hoursInYear; i++) {
             
             // Recalculate daily variables only when day changes
             int currentDay = m_frame->YTD[i]; 
@@ -116,7 +116,7 @@ namespace openstudio::isomodel {
             // Ground Reflected
             double ground = (vecEB[i] * sinBeta + vecED[i]) * m_groundReflectance * (1 - m_cosTilt) * 0.5;
 
-            for (int s = 0; s < NUM_SURFACES; s++) {
+            for (int s = 0; s < numVerticalSurfaces; s++) {
                 // Incidence Angle
                 double cosGamma = cosAz * m_surfCos[s] + sinAz * m_surfSin[s];
                 double cosTheta = cosBeta * cosGamma * m_sinTilt + sinBeta * m_cosTilt;
@@ -133,7 +133,7 @@ namespace openstudio::isomodel {
                                vecED[i] * (Y * m_sinTilt + m_cosTilt);
 
                 // Total Irradiance
-                m_eglobeFlat[i * NUM_SURFACES + s] = direct + diff + ground;
+                m_eglobeFlat[i * numVerticalSurfaces + s] = direct + diff + ground;
             }
         }
     }
@@ -150,7 +150,7 @@ namespace openstudio::isomodel {
 
         int month = 0, midx = -1, cnt = 0;
 
-        for (int i = 0; i < 8760; i++, cnt++) {
+        for (int i = 0; i < hoursInYear; i++, cnt++) {
             if (m_frame->Month[i] != month) {
                 if (midx >= 0) calculateMonthAvg(midx, cnt);
                 month = m_frame->Month[i];
@@ -169,8 +169,8 @@ namespace openstudio::isomodel {
             m_hourlyDewPointTemp[midx][h] += dpt[i];
             m_hourlyGlobalHorizontalRadiation[midx][h] += egh[i];
 
-            for (int s = 0; s < NUM_SURFACES; s++) {
-                m_monthlySolarRadiation[midx][s] += m_eglobeFlat[i * NUM_SURFACES + s];
+            for (int s = 0; s < numVerticalSurfaces; s++) {
+                m_monthlySolarRadiation[midx][s] += m_eglobeFlat[i * numVerticalSurfaces + s];
             }
         }
         calculateMonthAvg(midx, cnt);
@@ -184,12 +184,12 @@ namespace openstudio::isomodel {
         m_monthlyWindspeed[midx] *= inv;
         m_monthlyGlobalHorizontalRadiation[midx] *= inv;
         
-        for (int s = 0; s < NUM_SURFACES; s++) {
+        for (int s = 0; s < numVerticalSurfaces; s++) {
             m_monthlySolarRadiation[midx][s] *= inv;
         }
 
         double days = m_frame->monthLength(midx + 1);
-        for (int h = 0; h < 24; h++) {
+        for (int h = 0; h < hoursInDay; h++) {
             m_hourlyDryBulbTemp[midx][h] /= days;
             m_hourlyDewPointTemp[midx][h] /= days;
             m_hourlyGlobalHorizontalRadiation[midx][h] /= days;

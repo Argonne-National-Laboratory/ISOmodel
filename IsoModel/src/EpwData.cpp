@@ -1,6 +1,7 @@
 #include "EpwData.hpp"
 #include "SolarRadiation.hpp" 
 #include "TimeFrame.hpp" 
+#include "Constants.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -15,7 +16,7 @@ namespace openstudio::isomodel {
         // Pre-allocate the 7 data columns
         m_data.resize(7);
         for (auto& col : m_data) {
-            col.reserve(8760); // Optional optimization
+            col.reserve(hoursInYear); // Optional optimization
         }
     }
 
@@ -112,29 +113,29 @@ namespace openstudio::isomodel {
             }
         };
 
-        write_csv("mdbt", pos.monthlyDryBulbTemp(), 12);
-        write_csv("mwind", pos.monthlyWindspeed(), 12);
-        write_csv("mEgh", pos.monthlyGlobalHorizontalRadiation(), 12);
+        write_csv("mdbt", pos.monthlyDryBulbTemp(), monthsInYear);
+        write_csv("mwind", pos.monthlyWindspeed(), monthsInYear);
+        write_csv("mEgh", pos.monthlyGlobalHorizontalRadiation(), monthsInYear);
 
         sstream << "hdbt\n";
         const auto& hdbt = pos.hourlyDryBulbTemp();
-        for (int i = 0; i < 12; ++i) {
+        for (int i = 0; i < monthsInYear; ++i) {
             sstream << i;
-            for (int h = 0; h < 24; ++h) sstream << "," << hdbt[i][h];
+            for (int h = 0; h < hoursInDay; ++h) sstream << "," << hdbt[i][h];
             sstream << "\n";
         }
 
         sstream << "hEgh\n";
         const auto& hegh = pos.hourlyGlobalHorizontalRadiation();
-        for (int i = 0; i < 12; ++i) {
+        for (int i = 0; i < monthsInYear; ++i) {
             sstream << i;
-            for (int h = 0; h < 24; ++h) sstream << "," << hegh[i][h];
+            for (int h = 0; h < hoursInDay; ++h) sstream << "," << hegh[i][h];
             sstream << "\n";
         }
 
         sstream << "solar\n";
         const auto& msolar = pos.monthlySolarRadiation();
-        for (int i = 0; i < 12; ++i) {
+        for (int i = 0; i < monthsInYear; ++i) {
             sstream << i;
             for (int s = 0; s < 8; ++s) sstream << "," << msolar[i][s]; // NUM_SURFACES = 8
             sstream << "\n";
@@ -152,10 +153,10 @@ namespace openstudio::isomodel {
         m_timezone = static_cast<int>(data[2]);
 
         double* ptr = data + 3;
-        size_t rows = std::min(static_cast<size_t>(block_size), static_cast<size_t>(8760));
+        size_t rows = std::min(static_cast<size_t>(block_size), static_cast<size_t>(hoursInYear));
 
         for (int c = 0; c < 7; ++c) {
-            m_data[c].resize(8760); // Ensure size
+            m_data[c].resize(hoursInYear); // Ensure size
             for (size_t i = 0; i < rows; ++i) {
                 m_data[c][i] = *ptr++;
             }
@@ -168,7 +169,7 @@ namespace openstudio::isomodel {
 
         // Ensure vectors are ready
         for (auto& col : m_data) {
-            col.assign(8760, 0.0);
+            col.assign(hoursInYear, 0.0);
         }
 
         if (myfile.is_open()) {
@@ -179,7 +180,7 @@ namespace openstudio::isomodel {
             int lineCount = 0;
             int row = 0;
 
-            while (std::getline(myfile, line) && row < 8760) {
+            while (std::getline(myfile, line) && row < hoursInYear) {
                 lineCount++;
                 if (lineCount == 1) {
                     parseHeader(line);
