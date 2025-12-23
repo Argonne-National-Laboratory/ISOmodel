@@ -6,13 +6,13 @@ namespace openstudio {
 
         // --- Time Constants ---
 
-        constexpr int MONTHS_IN_YEAR = 12;
-        constexpr int HOURS_IN_DAY = 24;
-        constexpr int HOURS_IN_WEEK = 168;
-        constexpr int DAYS_IN_WEEK = 7;
-        constexpr int DAYS_IN_YEAR = 365;
-        //constexpr int HOURS_IN_YEAR = 8760;
-        constexpr int HOURS_IN_YEAR = DAYS_IN_YEAR * HOURS_IN_DAY;
+        constexpr int monthsInYear = 12;
+        constexpr int hoursInDay = 24;
+        constexpr int hoursInWeek = 168;
+        constexpr int daysInWeek = 7;
+        constexpr int daysInYear = 365;
+        //constexpr int hoursInYear = 8760;
+        constexpr int hoursInYear = daysInYear * hoursInDay;
         constexpr int SECONDS_IN_HOUR = 3600;
 
         // --- Geometry & Directions ---
@@ -26,10 +26,13 @@ namespace openstudio {
         constexpr double SMALL_EPSILON = 1e-15;  // Used for safe division/avoiding zero
 
         //// --- Unit Conversions ---
-        constexpr double KWH_TO_MJ = 3.6;              // 1 kWh = 3.6 MJ
-        constexpr double MJ_TO_KWH = 1.0 / 3.6;
-        constexpr double MJ_TO_WATT_HOURS = 277.777778; // 1 MJ = 277.78 Wh
-        constexpr double W_TO_KW = 0.001;
+        constexpr double kWh2MJ = 3.6;              // 1 kWh = 3.6 MJ
+        constexpr double Wh2MJ = 3600;               // 1 Wh = 3.6 kJ
+        constexpr double MJ2kWh = 1.0 / 3.6;
+        constexpr double MJ2Wh = MJ2kWh * 1000; // 1 MJ = 277.78 Wh
+        constexpr double W2kW = 0.001;
+        constexpr double kW2W = 1000.0;
+        constexpr double W2MW = 1000000.0;
 
         //// --- EPW Data Indices (for internal storage vectors) ---
         //enum EpwIndex {
