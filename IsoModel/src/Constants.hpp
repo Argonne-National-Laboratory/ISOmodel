@@ -4,6 +4,18 @@
 namespace openstudio {
     namespace isomodel {
 
+        #ifndef DBL_MAX
+        #define DBL_MAX    1.7976931348623157E+308
+        #endif
+        #ifndef DBL_MIN
+        #define DBL_MIN    2.2250738585072014E-308
+        #endif
+
+
+
+
+
+
         // --- Time Constants ---
 
         constexpr int MONTHS_IN_YEAR = 12;

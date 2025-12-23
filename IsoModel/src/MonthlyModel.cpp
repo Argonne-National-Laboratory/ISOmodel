@@ -1572,22 +1572,22 @@ namespace openstudio {
             // TODO: Why is this here? It is after the function returns... BAA@2015-07-15.
 
             // Calculate the annual totals.
-            Vector Etot_ht = sum(Eelec_ht, Egas_ht);
-            Vector Etot_cl = sum(Eelec_cl, Egas_cl);
-            Vector Etot_int_lt = Eelec_int_lt; // Total monthly electric usage density for interior lighting
-            Vector Etot_ext_lt = Eelec_ext_lt; // Total monthly electric usage for exterior lights
-            Vector Etot_fan = Eelec_fan; // Total monthly elec usage for fans
-            Vector Etot_pump = Eelec_pump; // Total monthly elec usage for pumps
-            Vector Etot_plug = sum(v_Q_plug_elec, v_Q_plug_gas); // Total monthly elec usage for elec plugloads
-            Vector Etot_dhw = sum(v_Q_dhw_elec, v_Q_plug_elec);
+            // Vector Etot_ht = sum(Eelec_ht, Egas_ht);
+            // Vector Etot_cl = sum(Eelec_cl, Egas_cl);
+            // Vector Etot_int_lt = Eelec_int_lt; // Total monthly electric usage density for interior lighting
+            // Vector Etot_ext_lt = Eelec_ext_lt; // Total monthly electric usage for exterior lights
+            // Vector Etot_fan = Eelec_fan; // Total monthly elec usage for fans
+            // Vector Etot_pump = Eelec_pump; // Total monthly elec usage for pumps
+            // Vector Etot_plug = sum(v_Q_plug_elec, v_Q_plug_gas); // Total monthly elec usage for elec plugloads
+            // Vector Etot_dhw = sum(v_Q_dhw_elec, v_Q_plug_elec);
 
-            // Find the total annual energy use.
-            double yrSum = 0;
-            Vector monthly(Etot_ht.size());
-            for (unsigned int i = 0; i < Etot_ht.size(); i++) {
-                monthly[i] = Etot_ht[i] + Etot_cl[i] + Etot_int_lt[i] + Etot_ext_lt[i] + Etot_fan[i] + Etot_pump[i] + Etot_plug[i] + Etot_dhw[i];
-                yrSum += monthly[i];
-            }
+            // // Find the total annual energy use.
+            // double yrSum = 0;
+            // Vector monthly(Etot_ht.size());
+            // for (unsigned int i = 0; i < Etot_ht.size(); i++) {
+            //     monthly[i] = Etot_ht[i] + Etot_cl[i] + Etot_int_lt[i] + Etot_ext_lt[i] + Etot_fan[i] + Etot_pump[i] + Etot_plug[i] + Etot_dhw[i];
+            //     yrSum += monthly[i];
+            // }
         }
     } // isomodel
 } // openstudio
