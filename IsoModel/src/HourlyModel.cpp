@@ -21,7 +21,8 @@ namespace openstudio {
 
         void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2) {}
 
-        HourlyModel::HourlyModel() : A_floor_inv(0), rhoCpAir_277(0), m_I_sol_max(0), m_Cp_air_pressure(0), 
+
+        HourlyModel::HourlyModel() : A_floor_inv(0), rhoCpAir_277(rhoCpAirWh), m_I_sol_max(0), m_Cp_air_pressure(0), 
             m_theta_ve_preheat(0), m_eta_ve_rec(0), m_phi_fan_spec(0), m_A_nat_inv(0),
             m_f_phi_int_L(0), m_f_phi_sol_air(0), m_f_phi_int_air(0) {
             
@@ -119,8 +120,8 @@ namespace openstudio {
                 // Calculate Air Volume for fans (V_{air}) based on heating/cooling delivery needs
                 // Using rhoCpAir_277 (Wh/m3K)
                 double V_air = std::max({ q_ve_mech,
-                    phi_H_nd[i] / (((heat_occ_sp + heat_dT_supp) - theta_air) * rhoCpAir_277 + DBL_MIN),
-                    phi_C_nd[i] / ((theta_air - (cool_occ_sp - cool_dT_supp)) * rhoCpAir_277 + DBL_MIN) });
+                    phi_H_nd[i] / (((heat_occ_sp + heat_dT_supp) - theta_air) * rhoCpAirWh+ DBL_MIN),
+                    phi_C_nd[i] / ((theta_air - (cool_occ_sp - cool_dT_supp)) * rhoCpAirWh + DBL_MIN) });
 
                 // Fan energy: V_{air} * specific fan power
                 phi_fan[i] = V_air * fan_power_factor;
@@ -139,7 +140,7 @@ namespace openstudio {
         void HourlyModel::initialize() {
             double floorArea = structure.floorArea();
             A_floor_inv = (floorArea > 0) ? 1.0 / floorArea : 0.0;
-            rhoCpAir_277 = phys.rhoCpAir() * 277.777778; 
+            // rhoCpAir_277 = phys.rhoCpAir() * 277.777778; // don't need to initialize here anymore
             
             m_I_sol_max = structure.irradianceForMaxShadingUse();
             m_Cp_air_pressure = ventilation.dCp();
@@ -198,7 +199,8 @@ namespace openstudio {
             }
 
             // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
-            q_ve_4Pa = std::max(0.000001, (0.19 * (ventilation.n50() * (floorArea * structure.buildingHeight()))) * A_floor_inv);
+            //0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to Constants.hpp 
+            q_ve_4Pa = std::max(0.000001, (n50ToQ4 * (ventilation.n50() * (floorArea * structure.buildingHeight()))) * A_floor_inv);
 
             // ISO 13790 12.2.2: h_ms fixed at 9.1 W/m^2K unless overridden
             h_ms = simSettings.hci() + simSettings.hri() * 1.2;
@@ -214,9 +216,11 @@ namespace openstudio {
             C_m = (structure.interiorHeatCapacity() + (structure.wallHeatCapacity() * A_wall_total * A_floor_inv)) / 1000.0;
 
             // Calculate Am (Effective Mass Area) - ISO 13790 12.3.1.2 Table 12
-            if (C_m > 370.0) A_m = 3.5;
-            else if (C_m > 260.0) A_m = 3.0 + 0.5 * ((C_m - 260) / 110.0);
-            else if (C_m > 165.0) A_m = 2.5 + 0.5 * ((C_m - 165) / 95.0);
+            // ordered from lightest to heaviest because lighter is more common
+
+            if (C_m > veryHeavy) A_m = 3.5;
+            else if (C_m > heavy) A_m = 3.0 + 0.5 * ((C_m - heavy) / 110.0);
+            else if (C_m > medium) A_m = 2.5 + 0.5 * ((C_m - medium) / 95.0);
             else A_m = 2.5;
 
             double H_win_sum = 0.0, H_wall_sum = 0.0;
@@ -503,7 +507,7 @@ namespace openstudio {
             double U_wall, double U_win, double alpha_wall,
             double F_sh_with, double F_sh_without, int direction) {
             
-            double WindowT = SHGC / 0.87;
+            double WindowT = SHGC / SHGCClearGlass;
             A_nla_ms[direction] = A_win * WindowT;
             A_nla[direction] = A_win * WindowT;
             A_sol_ms[direction] = A_wall * (alpha_wall * U_wall * structure.R_se()) + A_win * F_sh_with;

@@ -42,6 +42,13 @@ namespace openstudio {
         // Q_4Pa = Q_50Pa * (4/50)^0.667 = Q_50Pa * 0.28 but reduce by a factor to account for the fact that
         // the wind pressure is not always perpendicular to the surface and other empirical factors.
 
+        // ISO 13790 12.3.1.2 Table 12 constants for heat capacity categories
+        constexpr double veryHeavy = 370.0;
+        constexpr double heavy = 260.0;
+        constexpr double medium = 165.0;
+        constexpr double Light = 110.0;
+        constexpr double VeryLight = 80.0;
+
         // from usermodel.hpp
         // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
         constexpr const char* GAS = "gas";
@@ -101,6 +108,10 @@ namespace openstudio {
         constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
         constexpr double W2kW = 0.001;
 
+        // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
+        //0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to Constants.hpp 
+        constexpr double n50ToQ4 = 0.19;
+
         //// --- ISO 13790 Constants ---
         // Solar heat gain coefficient for internal gains
         constexpr double n_si_coeff = 0.9;
@@ -116,7 +127,7 @@ namespace openstudio {
         // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
         constexpr double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
 
-
+        constexpr double SHGCClearGlass = 0.87;
 
         //// --- EPW Data Indices (for internal storage vectors) ---
         //enum EpwIndex {
