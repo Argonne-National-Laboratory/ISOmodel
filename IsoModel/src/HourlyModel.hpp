@@ -1,12 +1,11 @@
 /*
  * HourlyModel.hpp
  *
- * REFACTORING: ISO STANDARD ALIGNMENT
- * Variables renamed to match ISO 13790 and ISO 15242 symbols.
- * OPTIMIZATION: Added Solar Radiation Caching.
- * OPTIMIZATION UPDATE: 
- * - Moved static calculations (A_floor_inv, A_m, win_floor_ratio) to initialization.
- * - Optimized dynamic loop calculations for H_em and pumps.
+ * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
+ * - Renamed A_floor_inv -> invFloorArea
+ * - Added static optimization members (win_floor_ratio, invFloorArea)
+ * - Added persistent result vectors to reduce heap allocation overhead
+ * - Marked helper functions as inline for loop performance
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -22,20 +21,17 @@
 #include <array>
 #include <cmath>
 #include <span> 
-#include <memory> // Added for std::shared_ptr
+#include <memory> 
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
-// #include "Vector.hpp"
 #else
 #include "../utilities/data/EndUses.hpp"
-// #include "../utilities/data/Vector.hpp"
 #endif
 
 namespace openstudio {
     namespace isomodel {
 
-        // Forward declare EpwData to ensure pointer comparison validity
         class EpwData;
 
         // Compressed Data Structure (Array of Structures)
@@ -89,22 +85,29 @@ namespace openstudio {
             std::shared_ptr<EpwData> m_lastEpwData;
             std::vector<double> m_cachedSolarRadiation; 
 
-            // Refactored Helpers
-            AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
+            // OPTIMIZATION: Persistent Result Vectors (Avoid Re-allocation)
+            std::vector<double> m_phi_H_nd;
+            std::vector<double> m_phi_C_nd;
+            std::vector<double> m_phi_int_L;
+            std::vector<double> m_phi_ext_L;
+            std::vector<double> m_phi_fan;
+            std::vector<double> m_phi_pump;
+            std::vector<double> m_phi_int_App;
+            std::vector<double> m_phi_ext_App;
+            std::vector<double> m_phi_dhw;
 
-            GainsResult calculateGains(std::span<const double> curSolar,
+            // Refactored Helpers - Inlined for performance
+            inline AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
+
+            inline GainsResult calculateGains(std::span<const double> curSolar,
                 const HourlyCache& cache,
                 double phi_int_App) noexcept;
 
-            double solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
+            inline double solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
                 double phi_sol, double H_ve, double H_tr_1, double theta_H_set,
                 double theta_C_set, double& theta_m_prev, double& theta_air) noexcept;
 
-            std::vector<EndUses> processResults(const std::vector<double>& phi_H_nd, const std::vector<double>& phi_C_nd,
-                const std::vector<double>& phi_int_L, const std::vector<double>& phi_ext_L,
-                const std::vector<double>& phi_fan, const std::vector<double>& phi_pump,
-                const std::vector<double>& phi_int_App, const std::vector<double>& phi_ext_App,
-                const std::vector<double>& phi_dhw, bool aggregateByMonth);
+            std::vector<EndUses> processResults(bool aggregateByMonth);
 
             void structureCalculations(double SHGC, double A_wall, double A_win,
                 double U_wall, double U_win,
@@ -112,13 +115,13 @@ namespace openstudio {
                 double F_sh_without, int direction);
 
             // Constants
-            double A_floor_inv, rhoCpAir_277, f_ve_mech_sup, q_ve_4Pa, H_z;
+            double invFloorArea, rhoCpAir_277, f_ve_mech_sup, q_ve_4Pa, H_z;
             double A_m, C_m, f_sh_use, f_A_nat, f_L_max;
             double I_lux_nat, H_zone, h_ms, h_is, H_tr_is, H_tr_w;
             double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
-
+            
             // NEW: Pre-calculated Optimization Member
-            double win_floor_ratio; // Optimization 5: Ratio for solar geom
+            double win_floor_ratio; // Optimization: Ratio for solar geom
 
             // Cached Config
             double m_I_sol_max; 
