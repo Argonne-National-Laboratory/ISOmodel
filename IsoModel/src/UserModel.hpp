@@ -1459,7 +1459,7 @@ private:
   Heating heating;
   Cooling cooling;
   Ventilation ventilation;
-  PhysicalQuantities phys;
+  // PhysicalQuantities phys;
   SimulationSettings simSettings;
 
   bool _valid = false;

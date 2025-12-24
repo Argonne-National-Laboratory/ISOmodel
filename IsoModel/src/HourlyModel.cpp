@@ -1,20 +1,14 @@
 /*
  * HourlyModel.cpp
  *
- * OPTIMIZATION & REFACTORING (Round 4 - Fixed):
- * 1. Compressed Cache: Using `float` for schedules and physics in `HourlyCache`
- * reduces memory footprint and aligns data to cache lines (52 bytes per hour).
- * 2. Data Locality: `env_temp` and `env_egh` are fetched from `HourlyCache`, 
- * avoiding lookups into the separate EpwData vectors during the loop.
- * 3. Cleanup: 2D schedule arrays are now stack-allocated in `initialize` via 
- * `buildWeeklySchedules`, removing persistent state.
- * 4. Fix: Added include for SolarRadiation.hpp to resolve incomplete type error.
+ * REFACTORING: ISO STANDARD ALIGNMENT
+ * Implementation now uses variable names consistent with ISO 13790 and ISO 15242.
  */
 
 #include "Constants.hpp"
 
 #include "HourlyModel.hpp"
-#include "SolarRadiation.hpp" // <--- FIXED: Added missing include
+#include "SolarRadiation.hpp" 
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -26,15 +20,14 @@ namespace openstudio {
 
         void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2) {}
 
-        // initialize rhoCpAir_277 to the constant rhoCpAirWh in constructor but replace it elsewhere
-        HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(rhoCpAirWh), m_maxIrrad(0), m_vent_dCp(0), 
-            m_vent_preheat(0), m_vent_HRE(0), m_vent_fanPower(0), m_invAreaNat(0),
-            m_frac_elec_internal_gains(0), m_frac_phi_sol_air(0), m_frac_phi_int_air(0) {
+        HourlyModel::HourlyModel() : A_floor_inv(0), rhoCpAir_277(0), m_I_sol_max(0), m_Cp_air_pressure(0), 
+            m_theta_ve_preheat(0), m_eta_ve_rec(0), m_phi_fan_spec(0), m_A_nat_inv(0),
+            m_f_phi_int_L(0), m_f_phi_sol_air(0), m_f_phi_int_air(0) {
             
             // Safe zero initialization
-            nlams.fill(0); nla.fill(0); sams.fill(0); sa.fill(0); htot.fill(0); hWindow.fill(0);
-            nlaWMovableShading.fill(0); naturalLightRatio.fill(0); naturalLightShadeRatioReduction.fill(0);
-            saWMovableShading.fill(0); solarRatio.fill(0); solarShadeRatioReduction.fill(0);
+            A_nla_ms.fill(0); A_nla.fill(0); A_sol_ms.fill(0); A_sol.fill(0); H_tot.fill(0); H_win.fill(0);
+            A_nla_ms_norm.fill(0); f_light_ratio.fill(0); f_light_shade_reduction.fill(0);
+            A_sol_ms_norm.fill(0); f_sol_ratio.fill(0); f_sol_shade_reduction.fill(0);
             precalc_nla_shading.fill(0); precalc_solar_shading.fill(0);
         }
         
@@ -44,8 +37,8 @@ namespace openstudio {
         {
             initialize(); // Builds schedules and pre-calculates physics
 
-            double TMT1 = 20.0;
-            double tiHeatCool = 20.0;
+            double theta_m_prev = 20.0; // T_m,t-1
+            double theta_air = 20.0;    // Theta_air
 
             // Simplified initialization
             TimeFrame frame; 
@@ -54,14 +47,18 @@ namespace openstudio {
             const std::vector<double>& eglobeFlat = pos.eglobeFlat();
 
             const auto& data = epwData->data();
-            // Note: We use 'egh' from the cache in the loop, but needed here for initialization/debugging if necessary
             const std::vector<double>& egh = data[EGH]; 
-            // We use 'temp' from cache in loop
 
-            //size_t numHours = 8760;
-            std::vector<double> r_Qneed_ht(hoursInYear), r_Qneed_cl(hoursInYear), r_Q_illum_tot(hoursInYear),
-                r_Q_illum_ext_tot(hoursInYear), r_Qfan_tot(hoursInYear), r_Qpump_tot(hoursInYear),
-                r_phi_plug(hoursInYear), r_ext_equip(hoursInYear), r_Q_dhw(hoursInYear, 0.0);
+            // Result Vectors (Renamed to ISO symbols)
+            std::vector<double> phi_H_nd(hoursInYear);       // Heating need
+            std::vector<double> phi_C_nd(hoursInYear);       // Cooling need
+            std::vector<double> phi_int_L(hoursInYear);      // Interior Lighting
+            std::vector<double> phi_ext_L(hoursInYear);      // Exterior Lighting
+            std::vector<double> phi_fan(hoursInYear);        // Fan energy
+            std::vector<double> phi_pump(hoursInYear);       // Pump energy
+            std::vector<double> phi_int_App(hoursInYear);    // Equipment/Plug loads
+            std::vector<double> phi_ext_App(hoursInYear);    // Exterior Equipment
+            std::vector<double> phi_dhw(hoursInYear, 0.0);   // DHW
 
             // Cache loop constants
             const double heat_dT_supp = heating.dT_supp_ht();
@@ -73,148 +70,168 @@ namespace openstudio {
             const double cool_E_pumps = cooling.E_pumps();
             const double cool_pumpRed = cooling.pumpControlReduction();
             const double lights_extEnergy = lights.exteriorEnergy();
-            const double fan_power_factor = m_vent_fanPower * 0.277778;
+            const double fan_power_factor = m_phi_fan_spec * 0.277778; // Convert to W/(m^3/h)
 
             for (int i = 0; i < hoursInYear; ++i) {
-                // Optimization: Load all hourly properties (Schedules + Weather + Physics)
-                // in one go. 'cache' is ~52 bytes, fitting in a CPU cache line.
                 const HourlyCache& cache = m_hourlyData[i];
                 
-                // Fetch weather from cache (float -> double implicit promotion)
-                double temperature = cache.env_temp;
+                // ISO 13790: theta_e (external temp)
+                double theta_e = cache.theta_e;
 
-                r_ext_equip[i] = cache.sched_ext_equip * invFloorArea;
-                r_phi_plug[i] = cache.sched_int_equip;
+                // ISO 13790 10.4.2: Internal heat gains from appliances (\Phi_{int,A})
+                phi_ext_App[i] = cache.sched_ext_equip * A_floor_inv;
+                phi_int_App[i] = cache.sched_phi_int_App;
 
                 // 1. Gains calculation 
-                // Uses cache.env_egh and cache.sched_int_light internally
-                // Note: Solar array slice is still doubles, input egh from cache is float
-                GainsResult gains = calculateGains(std::span<const double>(&eglobeFlat[i * 8], 8), cache, r_phi_plug[i]);
-                r_Q_illum_tot[i] = gains.lighting_tot;
+                // Calculates \Phi_{int} (ISO 13790 10.2.2 eq. 35) and \Phi_{sol} (11.3.2 eq. 43)
+                GainsResult gains = calculateGains(std::span<const double>(&eglobeFlat[i * 8], 8), cache, phi_int_App[i]);
+                phi_int_L[i] = gains.phi_int_L;
 
-                // 2. Airflow (Using Pre-calculated Cache)
-                AirFlowResult flow = calculateAirFlows(tiHeatCool, cache);
+                // 2. Airflow (Using Pre-calculated Physics from Initialize)
+                // ISO 15242 calculations for wind and stack effect
+                AirFlowResult flow = calculateAirFlows(theta_air, cache);
 
                 // 3. Solve RC Network (Unconditional Linear)
-                double phiHC = solveThermalBalance(temperature, flow.tEnt, gains.phii, gains.phi_int, gains.qSolarGain, flow.hei, flow.h1,
-                    cache.sched_heat_sp, cache.sched_cool_sp,
-                    TMT1, tiHeatCool);
+                // Solves the 5R1C network described in ISO 13790 Annex C
+                // Calculates \Phi_{HC,nd} (Heating/Cooling need)
+                double phi_HC_nd = solveThermalBalance(theta_e, flow.theta_ent, gains.phi_ia, gains.phi_int, gains.phi_sol, flow.H_ve, flow.H_tr_1,
+                    cache.sched_theta_H_set, cache.sched_theta_C_set,
+                    theta_m_prev, theta_air);
 
-                r_Qneed_ht[i] = std::max(0.0, phiHC);
-                r_Qneed_cl[i] = std::max(0.0, -phiHC);
+                phi_H_nd[i] = std::max(0.0, phi_HC_nd);
+                phi_C_nd[i] = std::max(0.0, -phi_HC_nd);
 
-                // 4. Auxiliary
-                double ventExh = cache.sched_ventilation * kWh2MJ * invFloorArea;
+                // 4. Auxiliary Calculations
+                double q_ve_mech = cache.sched_q_ve_mech * kWh2MJ * A_floor_inv; // Convert to energy units
 
-                double Vair = std::max({ ventExh,
-                    r_Qneed_ht[i] / (((heat_occ_sp + heat_dT_supp) - tiHeatCool) * rhoCpAirWh + minDouble),
-                    r_Qneed_cl[i] / ((tiHeatCool - (cool_occ_sp - cool_dT_supp)) * rhoCpAirWh + minDouble) });
+                // Calculate Air Volume for fans (V_{air}) based on heating/cooling delivery needs
+                // Using rhoCpAir_277 (Wh/m3K)
+                double V_air = std::max({ q_ve_mech,
+                    phi_H_nd[i] / (((heat_occ_sp + heat_dT_supp) - theta_air) * rhoCpAir_277 + DBL_MIN),
+                    phi_C_nd[i] / ((theta_air - (cool_occ_sp - cool_dT_supp)) * rhoCpAir_277 + DBL_MIN) });
 
-                r_Qfan_tot[i] = Vair * fan_power_factor;
-                r_Qpump_tot[i] = (r_Qneed_cl[i] > 0) ? (cool_E_pumps * cool_pumpRed) :
-                    ((r_Qneed_ht[i] > 0) ? (heat_E_pumps * heat_pumpRed) : 0.0);
-                r_Q_illum_ext_tot[i] = (cache.env_egh > 0) ? 0.0 : (lights_extEnergy * cache.sched_ext_light * invFloorArea);
+                // Fan energy: V_{air} * specific fan power
+                phi_fan[i] = V_air * fan_power_factor;
+                
+                // Pump energy
+                phi_pump[i] = (phi_C_nd[i] > 0) ? (cool_E_pumps * cool_pumpRed) :
+                    ((phi_H_nd[i] > 0) ? (heat_E_pumps * heat_pumpRed) : 0.0);
+                
+                // Exterior lighting (only when sun is down)
+                phi_ext_L[i] = (cache.I_sol_gh > 0) ? 0.0 : (lights_extEnergy * cache.sched_ext_light * A_floor_inv);
             }
 
-            return processResults(r_Qneed_ht, r_Qneed_cl, r_Q_illum_tot, r_Q_illum_ext_tot, r_Qfan_tot, r_Qpump_tot, r_phi_plug, r_ext_equip, r_Q_dhw, aggregateByMonth);
+            return processResults(phi_H_nd, phi_C_nd, phi_int_L, phi_ext_L, phi_fan, phi_pump, phi_int_App, phi_ext_App, phi_dhw, aggregateByMonth);
         }
 
         void HourlyModel::initialize() {
             double floorArea = structure.floorArea();
-            invFloorArea = (floorArea > 0) ? 1.0 / floorArea : 0.0;
-            // rhoCPAir_277 = rhoCpAirWh;  
-
-            m_maxIrrad = structure.irradianceForMaxShadingUse();
-            m_vent_dCp = ventilation.dCp();
-            m_vent_preheat = ventilation.ventPreheatDegC();
-            m_vent_HRE = ventilation.heatRecoveryEfficiency();
-            m_vent_fanPower = ventilation.fanPower();
+            A_floor_inv = (floorArea > 0) ? 1.0 / floorArea : 0.0;
+            rhoCpAir_277 = phys.rhoCpAir() * 277.777778; 
             
-            m_frac_elec_internal_gains = lights.elecInternalGains();
-            m_frac_phi_sol_air = simSettings.phiSolFractionToAirNode();
-            m_frac_phi_int_air = simSettings.phiIntFractionToAirNode();
+            m_I_sol_max = structure.irradianceForMaxShadingUse();
+            m_Cp_air_pressure = ventilation.dCp();
+            m_theta_ve_preheat = ventilation.ventPreheatDegC();
+            m_eta_ve_rec = ventilation.heatRecoveryEfficiency();
+            m_phi_fan_spec = ventilation.fanPower();
+            
+            m_f_phi_int_L = lights.elecInternalGains();
+            m_f_phi_sol_air = simSettings.phiSolFractionToAirNode();
+            m_f_phi_int_air = simSettings.phiIntFractionToAirNode();
 
+            // Lighting Control Initialization
             auto lightingOccupancySensorDimmingFraction = building.lightingOccupancySensor();
             auto daylightSensorDimmingFraction = lights.dimmingFraction();
 
             if (lightingOccupancySensorDimmingFraction < 1.0 && daylightSensorDimmingFraction < 1.0) {
-                maxRatioElectricLighting = lights.presenceAutoAd();
-                elightNatural = lights.presenceAutoLux();
+                f_L_max = lights.presenceAutoAd();
+                I_lux_nat = lights.presenceAutoLux();
             }
             else if (lightingOccupancySensorDimmingFraction < 1.0) {
-                maxRatioElectricLighting = lights.presenceSensorAd();
-                elightNatural = lights.presenceSensorLux();
+                f_L_max = lights.presenceSensorAd();
+                I_lux_nat = lights.presenceSensorLux();
             }
             else if (daylightSensorDimmingFraction < 1.0) {
-                maxRatioElectricLighting = lights.automaticAd();
-                elightNatural = lights.automaticLux();
+                f_L_max = lights.automaticAd();
+                I_lux_nat = lights.automaticLux();
             }
             else {
-                maxRatioElectricLighting = lights.manualSwitchAd();
-                elightNatural = lights.manualSwitchLux();
+                f_L_max = lights.manualSwitchAd();
+                I_lux_nat = lights.manualSwitchLux();
             }
 
-            areaNaturallyLightedRatio = std::max(0.0001, lights.naturallyLightedArea()) * invFloorArea;
-            m_invAreaNat = (areaNaturallyLightedRatio > 0) ? (53.0 / areaNaturallyLightedRatio) : 0.0;
+            f_A_nat = std::max(0.0001, lights.naturallyLightedArea()) * A_floor_inv;
+            m_A_nat_inv = (f_A_nat > 0) ? (53.0 / f_A_nat) : 0.0;
 
+            // Structure solar calculations
             for (int i = 0; i != numTotalSurfaces; ++i) {
                 structureCalculations(structure.windowShadingDevice()[i], structure.wallArea()[i],
                     structure.windowArea()[i], structure.wallUniform()[i], structure.windowUniform()[i],
                     structure.wallSolarAbsorption()[i], structure.windowShadingCorrectionFactor()[i],
                     structure.windowNormalIncidenceSolarEnergyTransmittance()[i], i);
 
-                nlaWMovableShading[i] = nlams[i] * invFloorArea;
-                naturalLightRatio[i] = nla[i] * invFloorArea;
-                naturalLightShadeRatioReduction[i] = nlaWMovableShading[i] - naturalLightRatio[i];
-                saWMovableShading[i] = sams[i] * invFloorArea;
-                solarRatio[i] = sa[i] * invFloorArea;
-                solarShadeRatioReduction[i] = saWMovableShading[i] - solarRatio[i];
+                A_nla_ms_norm[i] = A_nla_ms[i] * A_floor_inv;
+                f_light_ratio[i] = A_nla[i] * A_floor_inv;
+                f_light_shade_reduction[i] = A_nla_ms_norm[i] - f_light_ratio[i];
+                A_sol_ms_norm[i] = A_sol_ms[i] * A_floor_inv;
+                f_sol_ratio[i] = A_sol[i] * A_floor_inv;
+                f_sol_shade_reduction[i] = A_sol_ms_norm[i] - f_sol_ratio[i];
             }
 
-            shadingUsePerWPerM2 = structure.shadingFactorAtMaxUse() / structure.irradianceForMaxShadingUse();
+            f_sh_use = structure.shadingFactorAtMaxUse() / structure.irradianceForMaxShadingUse();
             
             for(int i=0; i<numTotalSurfaces; ++i) {
-                precalc_nla_shading[i] = shadingUsePerWPerM2 * naturalLightShadeRatioReduction[i];
-                precalc_solar_shading[i] = solarShadeRatioReduction[i] * shadingUsePerWPerM2;
+                precalc_nla_shading[i] = f_sh_use * f_light_shade_reduction[i];
+                precalc_solar_shading[i] = f_sol_shade_reduction[i] * f_sh_use;
             }
 
-            q4Pa = std::max(0.000001, (0.19 * (ventilation.n50() * (floorArea * structure.buildingHeight()))) * invFloorArea);
+            // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
+            q_ve_4Pa = std::max(0.000001, (0.19 * (ventilation.n50() * (floorArea * structure.buildingHeight()))) * A_floor_inv);
 
+            // ISO 13790 12.2.2: h_ms fixed at 9.1 W/m^2K unless overridden
             h_ms = simSettings.hci() + simSettings.hri() * 1.2;
+            // ISO 13790 7.2.2.2: h_is
             h_is = 1.0 / (1.0 / simSettings.hci() - 1.0 / h_ms);
-            H_tris = h_is * structure.totalAreaPerFloorArea();
+            // ISO 13790 7.2.2.2 eq. 9: H_{tr,is}
+            H_tr_is = h_is * structure.totalAreaPerFloorArea();
 
             const auto& wallAreas = structure.wallArea();
-            double totalWallArea = std::accumulate(wallAreas.begin(), wallAreas.end(), 0.0);
+            double A_wall_total = std::accumulate(wallAreas.begin(), wallAreas.end(), 0.0);
 
-            Cm = (structure.interiorHeatCapacity() + (structure.wallHeatCapacity() * totalWallArea * invFloorArea)) / 1000.0;
+            // Calculate internal heat capacity (Cm) - ISO 13790 12.3.1.2
+            C_m = (structure.interiorHeatCapacity() + (structure.wallHeatCapacity() * A_wall_total * A_floor_inv)) / 1000.0;
 
-            if (Cm > 370.0) Am = 3.5;
-            else if (Cm > 260.0) Am = 3.0 + 0.5 * ((Cm - 260) / 110.0);
-            else if (Cm > 165.0) Am = 2.5 + 0.5 * ((Cm - 165) / 95.0);
-            else Am = 2.5;
+            // Calculate Am (Effective Mass Area) - ISO 13790 12.3.1.2 Table 12
+            if (C_m > 370.0) A_m = 3.5;
+            else if (C_m > 260.0) A_m = 3.0 + 0.5 * ((C_m - 260) / 110.0);
+            else if (C_m > 165.0) A_m = 2.5 + 0.5 * ((C_m - 165) / 95.0);
+            else A_m = 2.5;
 
-            double hWind = 0.0, hWall = 0.0;
-            for (int i = 0; i != numTotalSurfaces; ++i) { hWind += hWindow[i]; hWall += htot[i] - hWindow[i]; }
-            hwindowWperkm2 = hWind * invFloorArea;
+            double H_win_sum = 0.0, H_wall_sum = 0.0;
+            for (int i = 0; i != numTotalSurfaces; ++i) { H_win_sum += H_win[i]; H_wall_sum += H_tot[i] - H_win[i]; }
+            H_tr_w = H_win_sum * A_floor_inv;
 
-            prs = (structure.totalAreaPerFloorArea() - Am - hwindowWperkm2 / h_ms) / structure.totalAreaPerFloorArea();
-            prsInterior = (1.0 - simSettings.phiIntFractionToAirNode()) * prs;
-            prsSolar = (1.0 - simSettings.phiSolFractionToAirNode()) * prs;
-            prm = Am / structure.totalAreaPerFloorArea();
-            prmInterior = (1.0 - simSettings.phiIntFractionToAirNode()) * prm;
-            prmSolar = (1.0 - simSettings.phiSolFractionToAirNode()) * prm;
+            // Constant portions of \Phi_{st} and \Phi_{m} (ISO 13790 Annex C.2)
+            p_rs = (structure.totalAreaPerFloorArea() - A_m - H_tr_w / h_ms) / structure.totalAreaPerFloorArea();
+            p_rs_int = (1.0 - simSettings.phiIntFractionToAirNode()) * p_rs;
+            p_rs_sol = (1.0 - simSettings.phiSolFractionToAirNode()) * p_rs;
+            p_rm = A_m / structure.totalAreaPerFloorArea();
+            p_rm_int = (1.0 - simSettings.phiIntFractionToAirNode()) * p_rm;
+            p_rm_sol = (1.0 - simSettings.phiSolFractionToAirNode()) * p_rm;
 
-            H_ms = h_ms * Am;
-            hem = 1.0 / (1.0 / std::max(hWall * invFloorArea, 0.000001) - 1.0 / H_ms);
-            windImpactHz = std::max(0.1, ventilation.hzone());
-            windImpactSupplyRatio = std::max(0.00001, ventilation.fanControlFactor());
+            // ISO 13790 12.2.2 eq. 64: H_{ms}
+            H_ms = h_ms * A_m;
+            // ISO 13790 12.2.2 eq. 63: H_{em}
+            H_em = 1.0 / (1.0 / std::max(H_wall_sum * A_floor_inv, 0.000001) - 1.0 / H_ms);
+            
+            H_z = std::max(0.1, ventilation.hzone());
+            f_ve_mech_sup = std::max(0.00001, ventilation.fanControlFactor());
 
             // ----------------------------------------------------
             // OPTIMIZATION: FLATTEN SCHEDULES & PRE-CALC PHYSICS
             // ----------------------------------------------------
             WeeklyScheduleData weekly;
-            buildWeeklySchedules(weekly); // Local helper, fills stack arrays
+            buildWeeklySchedules(weekly); 
 
             m_hourlyData.resize(hoursInYear);
             
@@ -230,25 +247,27 @@ namespace openstudio {
                 HourlyCache& c = m_hourlyData[i];
 
                 // Convert schedules to float for cache compression
-                c.sched_ventilation = (float)weekly.vent[h][d];
-                c.sched_ext_equip   = (float)weekly.extEquip[h][d];
-                c.sched_int_equip   = (float)weekly.intEquip[h][d];
-                c.sched_ext_light   = (float)weekly.extLight[h][d];
-                c.sched_int_light   = (float)weekly.intLight[h][d];
-                c.sched_heat_sp     = (float)weekly.heatSP[h][d];
-                c.sched_cool_sp     = (float)weekly.coolSP[h][d];
+                c.sched_q_ve_mech   = (float)weekly.q_ve[h][d];
+                c.sched_ext_equip   = (float)weekly.ext_App[h][d];
+                c.sched_phi_int_App = (float)weekly.int_App[h][d];
+                c.sched_ext_light   = (float)weekly.ext_L[h][d];
+                c.sched_phi_int_L   = (float)weekly.int_L[h][d];
+                c.sched_theta_H_set = (float)weekly.theta_H[h][d];
+                c.sched_theta_C_set = (float)weekly.theta_C[h][d];
                 
-                // Copy Weather to Cache (Locality)
-                c.env_temp = (float)temp[i];
-                c.env_egh = (float)egh[i];
+                // Copy Weather to Cache
+                c.theta_e = (float)temp[i];
+                c.I_sol_gh = (float)egh[i];
 
                 // Pre-calc Physics (float is sufficient)
-                c.phys_qWind = (float)(windFactor * q4Pa * fastPow23(m_vent_dCp * wind[i] * wind[i]));
+                // ISO 15242 6.7.1 Step 1: q_{v,wind}
+                c.q_ve_wind = (float)(0.0769 * q_ve_4Pa * fastPow23(m_Cp_air_pressure * wind[i] * wind[i]));
                 
-                double ventExh = c.sched_ventilation * kWh2MJ * invFloorArea;
-                c.phys_qSup = (float)(ventExh * windImpactSupplyRatio);
-                c.phys_exhSup = (float)(-(c.phys_qSup - ventExh));
-                c.phys_tSupp = (float)(std::max(m_vent_preheat, (1.0 - m_vent_HRE) * temp[i] + m_vent_HRE * 20.0));
+                // Ventilation supply/exhaust
+                double q_ve = c.sched_q_ve_mech * kWh2MJ * A_floor_inv;
+                c.q_ve_mech_sup = (float)(q_ve * f_ve_mech_sup);
+                c.q_ve_diff = (float)(-(c.q_ve_mech_sup - q_ve)); // ISO 15242 q_{v-diff}
+                c.theta_sup = (float)(std::max(m_theta_ve_preheat, (1.0 - m_eta_ve_rec) * temp[i] + m_eta_ve_rec * 20.0));
             }
         }
 
@@ -265,133 +284,162 @@ namespace openstudio {
                 bool hoccupied = (h >= hourStart && h <= hourEnd);
                 for (int d = 0; d < daysInWeek; ++d) {
                     bool popoccupied = hoccupied && (d >= dayStart && d <= dayEnd);
-                    sched.vent[h][d] = hoccupied ? ventRate : 0.0;
-                    sched.extEquip[h][d] = extEquip;
-                    sched.intEquip[h][d] = popoccupied ? intOcc : intUnocc;
-                    sched.extLight[h][d] = 1.0;
-                    sched.intLight[h][d] = popoccupied ? intLtOcc : intLtUnocc;
-                    sched.heatSP[h][d] = popoccupied ? htOcc : htUnocc;
-                    sched.coolSP[h][d] = popoccupied ? clOcc : clUnocc;
+                    sched.q_ve[h][d] = hoccupied ? ventRate : 0.0;
+                    sched.ext_App[h][d] = extEquip;
+                    sched.int_App[h][d] = popoccupied ? intOcc : intUnocc;
+                    sched.ext_L[h][d] = 1.0;
+                    sched.int_L[h][d] = popoccupied ? intLtOcc : intLtUnocc;
+                    sched.theta_H[h][d] = popoccupied ? htOcc : htUnocc;
+                    sched.theta_C[h][d] = popoccupied ? clOcc : clUnocc;
                 }
             }
         }
 
         GainsResult HourlyModel::calculateGains(std::span<const double> curSolar,
-            const HourlyCache& cache, double schedIntEquip) noexcept {
+            const HourlyCache& cache, double phi_int_App) noexcept {
             
             GainsResult res;
             double lightingLevelSum = 0.0;
-            res.qSolarGain = 0.0;
-            const double maxIrrad = m_maxIrrad;
+            res.phi_sol = 0.0;
+            const double I_max = m_I_sol_max;
 
+            // ISO 13790 11.3.2 eq. 43: \Phi_{sol,k} (Solar gains)
+            // Includes movable shading logic (switching between g_gl and g_gl+sh)
             for (int k = 0; k < 8; ++k) {
-                double sr = curSolar[k];
-                double srCl = (sr < maxIrrad) ? sr : maxIrrad;
-                lightingLevelSum += sr * (naturalLightRatio[k] + precalc_nla_shading[k] * srCl);
-                res.qSolarGain += sr * (solarRatio[k] + precalc_solar_shading[k] * srCl);
+                double I_k = curSolar[k];
+                double I_cl = (I_k < I_max) ? I_k : I_max;
+                lightingLevelSum += I_k * (f_light_ratio[k] + precalc_nla_shading[k] * I_cl);
+                res.phi_sol += I_k * (f_sol_ratio[k] + precalc_solar_shading[k] * I_cl);
             }
             {
-                // Use egh from cache (float)
-                double sr = cache.env_egh;
-                double srCl = (sr < maxIrrad) ? sr : maxIrrad;
-                lightingLevelSum += sr * (naturalLightRatio[8] + precalc_nla_shading[8] * srCl);
-                res.qSolarGain += sr * (solarRatio[8] + precalc_solar_shading[8] * srCl);
+                // Roof (EGH) - Use I_sol_gh from cache
+                double I_k = cache.I_sol_gh;
+                double I_cl = (I_k < I_max) ? I_k : I_max;
+                lightingLevelSum += I_k * (f_light_ratio[8] + precalc_nla_shading[8] * I_cl);
+                res.phi_sol += I_k * (f_sol_ratio[8] + precalc_solar_shading[8] * I_cl);
             }
 
-            double lightingLevel = lightingLevelSum * m_invAreaNat;
-            double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / (elightNatural + minDouble)));
-            res.lighting_tot = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * cache.sched_int_light;
+            // ISO 13790 10.4.3: \Phi_{int,L} (Lighting Gains)
+            double lightingLevel = lightingLevelSum * m_A_nat_inv;
+            double f_L = std::max(0.0, f_L_max * (1.0 - lightingLevel / (I_lux_nat + DBL_MIN)));
+            res.phi_int_L = (f_L * f_A_nat + (1.0 - f_A_nat) * f_L_max) * cache.sched_phi_int_L;
             
-            res.phi_int = schedIntEquip + (res.lighting_tot * m_frac_elec_internal_gains);
-            res.phii = m_frac_phi_sol_air * res.qSolarGain + m_frac_phi_int_air * res.phi_int;
+            // ISO 13790 10.2.2 eq. 35: \Phi_{int} (Total internal gains)
+            res.phi_int = phi_int_App + (res.phi_int_L * m_f_phi_int_L);
+            
+            // ISO 13790 C.2 eq. C.1: \Phi_{ia} (Gains split to air node)
+            res.phi_ia = m_f_phi_sol_air * res.phi_sol + m_f_phi_int_air * res.phi_int;
             
             return res;
         }
 
-        AirFlowResult HourlyModel::calculateAirFlows(double tiHeatCool, const HourlyCache& cache) noexcept {
+        AirFlowResult HourlyModel::calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept {
             
             AirFlowResult res;
-            // Use temp from cache (float)
-            double temperature = cache.env_temp;
-            double absDT = std::max(std::fabs(temperature - tiHeatCool), 1e-5);
-            double qStack = stackFactor * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
+            double theta_e = cache.theta_e;
+            double absDT = std::max(std::fabs(theta_e - theta_air), 1e-5);
+            
+            // ISO 15242 6.7.1 Step 1: q_{stack} (Stack effect)
+            double q_ve_stack = 0.0146 * q_ve_4Pa * fastPow23(0.5 * H_z * absDT);
             
             // Promote float physics to double
-            double qWind = cache.phys_qWind;
-            double exhSup = cache.phys_exhSup;
+            double q_ve_wind = cache.q_ve_wind;
+            double q_ve_diff = cache.q_ve_diff;
 
-            double qSW = qStack + qWind + smallEpsilon;
-            double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
+            // ISO 15242 6.7.1 Step 2: q_{exfiltration}
+            double q_ve_sw = q_ve_stack + q_ve_wind + smallEpsilon;
+            double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::fabs(q_ve_diff) * (0.5 * q_ve_stack + 0.667 * q_ve_wind / q_ve_sw));
 
-            double qEnteringTotal = (exhSup > 0 ? exhSup : 0.0) + qExf + cache.phys_qSup;
-
-            res.tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnteringTotal + smallEpsilon);
-            // res.hei = 0.34 * qEnteringTotal;
-            res.hei = rhoCpAirWh * qEnteringTotal;  // 13790 Eq 21 in 9.3.1 
-            res.h1 = 1.0 / (1.0 / (res.hei + smallEpsilon) + 1.0 / H_tris);
+            // ISO 15242 6.7.2: q_{ent} (Total entering air)
+            double q_ve_ent = (q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf + cache.q_ve_mech_sup;
+            
+            // ISO 13790 9.3: \theta_{sup} (Supply temperature)
+            res.theta_ent = (theta_e * ((q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf) + cache.theta_sup * cache.q_ve_mech_sup) / (q_ve_ent + smallEpsilon);
+            
+            // ISO 13790 9.3.1 eq. 21: H_{ve} (Ventilation heat transfer coefficient)
+            res.H_ve = rhoCpAirWh * q_ve_ent;
+            
+            // ISO 13790 C.3 eq. C.6: H_{tr,1}
+            res.H_tr_1 = 1.0 / (1.0 / (res.H_ve + smallEpsilon) + 1.0 / H_tr_is);
             return res;
         }
 
-
-        double HourlyModel::solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
-            double qSolarGain, double hei, double h1, double schedHeatSP,
-            double schedCoolSP, double& TMT1, double& tiHeatCool) noexcept {
+        double HourlyModel::solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
+            double phi_sol, double H_ve, double H_tr_1, double theta_H_set,
+            double theta_C_set, double& theta_m_prev, double& theta_air) noexcept {
             
-            double h2 = h1 + hwindowWperkm2;
-            double h3 = 1.0 / (1.0 / h2 + 1.0 / H_ms);
-            double h3_hem = 0.5 * (h3 + hem);
-            double h3_h2 = h3 / h2;
+            // ISO 13790 C.3 eq. C.7: H_{tr,2}
+            double H_tr_2 = H_tr_1 + H_tr_w;
+            // ISO 13790 C.3 eq. C.9: H_{tr,3}
+            double H_tr_3 = 1.0 / (1.0 / H_tr_2 + 1.0 / H_ms);
             
-            double safe_hei = hei + smallEpsilon;
-            double inv_safe_hei = 1.0 / safe_hei; 
-            double t_phi = (h3_h2 * h1) * inv_safe_hei; // d(phim)/dP
+            double H_tr_3_H_em = 0.5 * (H_tr_3 + H_em);
+            double H_tr_3_H_tr_2 = H_tr_3 / H_tr_2;
             
-            double cm_term = Cm / kWh2MJ;
-            double cm_plus_h3hem = cm_term + h3_hem;
-            double d_tmt1_dp = t_phi / cm_plus_h3hem;
+            double H_ve_safe = H_ve + smallEpsilon;
+            double H_ve_inv = 1.0 / H_ve_safe; 
+            double d_phim_dp = (H_tr_3_H_tr_2 * H_tr_1) * H_ve_inv; // d(phim)/dP
             
-            double h_denom_ts = H_ms + hwindowWperkm2 + h1;
-            double d_ts_dp = (H_ms * 0.5 * d_tmt1_dp + h1 * inv_safe_hei) / h_denom_ts;
-            double d_ti_dp = (H_tris * d_ts_dp + 1.0) / (H_tris + hei); // Slope
+            double Cm_units = C_m / kWh2MJ;
+            double Cm_plus_H = Cm_units + H_tr_3_H_em;
+            double d_thetam_dp = d_phim_dp / Cm_plus_H;
             
-            double phisPhi0 = prsSolar * qSolarGain + prsInterior * phi_int;
-            double phimPhi0 = prmSolar * qSolarGain + prmInterior * phi_int;
-            double mid = phisPhi0 + hwindowWperkm2 * temperature + h1 * tEnt;
+            double H_denom = H_ms + H_tr_w + H_tr_1;
+            double d_thetas_dp = (H_ms * 0.5 * d_thetam_dp + H_tr_1 * H_ve_inv) / H_denom;
             
-            double phim_at_phii = phimPhi0 + hem * temperature + h3_h2 * mid + t_phi * phii;
-            double tmt1_at_phii = (TMT1 * (cm_term - h3_hem) + phim_at_phii) / cm_plus_h3hem;
-            double ts_at_phii   = (H_ms * 0.5 * (TMT1 + tmt1_at_phii) + mid + h1 * phii * inv_safe_hei) / h_denom_ts;
-            double ti_0         = (H_tris * ts_at_phii + hei * tEnt + phii) / (H_tris + hei);
+            // Slope d(\theta_{air})/d(\phi)
+            double d_theta_air_dp = (H_tr_is * d_thetas_dp + 1.0) / (H_tr_is + H_ve); 
             
-            double phiHC = 0.0;
-            if (ti_0 < schedHeatSP) {
-                phiHC = (schedHeatSP - ti_0) / d_ti_dp;
-                if (phiHC < 0) phiHC = 0; 
-            } else if (ti_0 > schedCoolSP) {
-                phiHC = (schedCoolSP - ti_0) / d_ti_dp;
-                if (phiHC > 0) phiHC = 0; 
+            // ISO 13790 C.2 eq. C.3: \Phi_{st} (Generalized)
+            double phi_st = p_rs_sol * phi_sol + p_rs_int * phi_int;
+            // ISO 13790 C.2 eq. C.2: \Phi_{m} (Generalized)
+            double phi_m = p_rm_sol * phi_sol + p_rm_int * phi_int;
+            double mid = phi_st + H_tr_w * theta_e + H_tr_1 * theta_ent;
+            
+            // ISO 13790 C.3 eq. C.5: \Phi_{mtot}
+            double phi_mtot = phi_m + H_em * theta_e + H_tr_3_H_tr_2 * mid + d_phim_dp * phi_ia;
+            
+            // ISO 13790 C.3 eq. C.4: \theta_{m,t}
+            double theta_m = (theta_m_prev * (Cm_units - H_tr_3_H_em) + phi_mtot) / Cm_plus_H;
+            
+            // ISO 13790 C.3 eq. C.10: \theta_{s}
+            double theta_s   = (H_ms * 0.5 * (theta_m_prev + theta_m) + mid + H_tr_1 * phi_ia * H_ve_inv) / H_denom;
+            
+            // ISO 13790 C.3 eq. C.11: \theta_{air} (Indoor air temperature)
+            double theta_air_0 = (H_tr_is * theta_s + H_ve * theta_ent + phi_ia) / (H_tr_is + H_ve);
+            
+            // Calculate required Heating/Cooling power (\Phi_{HC,nd})
+            double phi_HC_nd = 0.0;
+            if (theta_air_0 < theta_H_set) {
+                phi_HC_nd = (theta_H_set - theta_air_0) / d_theta_air_dp;
+                if (phi_HC_nd < 0) phi_HC_nd = 0; 
+            } else if (theta_air_0 > theta_C_set) {
+                phi_HC_nd = (theta_C_set - theta_air_0) / d_theta_air_dp;
+                if (phi_HC_nd > 0) phi_HC_nd = 0; 
             }
 
-            double phimFinal = phim_at_phii + t_phi * phiHC;
-            TMT1 = (TMT1 * (cm_term - h3_hem) + phimFinal) / cm_plus_h3hem;
-            tiHeatCool = ti_0 + d_ti_dp * phiHC;
+            // Update State for next step
+            double phi_m_final = phi_mtot + d_phim_dp * phi_HC_nd;
+            theta_m_prev = (theta_m_prev * (Cm_units - H_tr_3_H_em) + phi_m_final) / Cm_plus_H;
+            theta_air = theta_air_0 + d_theta_air_dp * phi_HC_nd;
             
-            return phiHC;
+            return phi_HC_nd;
         }
 
-        std::vector<EndUses> HourlyModel::processResults(const std::vector<double>& r_Qneed_ht, const std::vector<double>& r_Qneed_cl,
-            const std::vector<double>& r_Q_illum_tot, const std::vector<double>& r_Q_illum_ext_tot,
-            const std::vector<double>& r_Qfan_tot, const std::vector<double>& r_Qpump_tot,
-            const std::vector<double>& r_phi_plug, const std::vector<double>& r_ext_equip,
-            const std::vector<double>& r_Q_dhw, bool aggregateByMonth) {
-            double qh_yr = std::accumulate(r_Qneed_ht.begin(), r_Qneed_ht.end(), 0.0);
-            double qc_yr = std::accumulate(r_Qneed_cl.begin(), r_Qneed_cl.end(), 0.0);
-            double f_ht = std::max(qh_yr / (qc_yr + qh_yr + minDouble), 0.1);
-            double s_ht = (1.0 / (1.0 / (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_ht))) / heating.efficiency();
-            double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_ht)))) / cooling.cop();
+        std::vector<EndUses> HourlyModel::processResults(const std::vector<double>& phi_H_nd, const std::vector<double>& phi_C_nd,
+            const std::vector<double>& phi_int_L, const std::vector<double>& phi_ext_L,
+            const std::vector<double>& phi_fan, const std::vector<double>& phi_pump,
+            const std::vector<double>& phi_int_App, const std::vector<double>& phi_ext_App,
+            const std::vector<double>& phi_dhw, bool aggregateByMonth) {
+            
+            double phi_H_tot = std::accumulate(phi_H_nd.begin(), phi_H_nd.end(), 0.0);
+            double phi_C_tot = std::accumulate(phi_C_nd.begin(), phi_C_nd.end(), 0.0);
+            double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot + DBL_MIN), 0.1);
+            
+            double s_ht = (1.0 / (1.0 / (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_H))) / heating.efficiency();
+            double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_H)))) / cooling.cop();
 
             bool electricHeat = (heating.energyType() == 1);
-            //constexpr double W2kW = 0.001;
             std::vector<EndUses> results;
             if (!aggregateByMonth) results.reserve(hoursInYear);
 
@@ -417,13 +465,13 @@ namespace openstudio {
                 };
 
             if (aggregateByMonth) {
-                // const int monthEndHours[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+                const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
                 for (int m = 0; m < monthsInYear; ++m) {
                     EndUses eu;
                     double sums[9] = { 0 };
-                    for (int i = monthEndHours[m]; i < monthEndHours[m + 1]; ++i) {
-                        sums[0] += r_Qneed_ht[i]; sums[1] += r_Qneed_cl[i]; sums[2] += r_Q_illum_tot[i]; sums[3] += r_Q_illum_ext_tot[i];
-                        sums[4] += r_Qfan_tot[i]; sums[5] += r_Qpump_tot[i]; sums[6] += r_phi_plug[i]; sums[7] += r_ext_equip[i]; sums[8] += r_Q_dhw[i];
+                    for (int i = monthEnds[m]; i < monthEnds[m + 1]; ++i) {
+                        sums[0] += phi_H_nd[i]; sums[1] += phi_C_nd[i]; sums[2] += phi_int_L[i]; sums[3] += phi_ext_L[i];
+                        sums[4] += phi_fan[i]; sums[5] += phi_pump[i]; sums[6] += phi_int_App[i]; sums[7] += phi_ext_App[i]; sums[8] += phi_dhw[i];
                     }
                     mapToEU(eu, sums[0], sums[1], sums[2], sums[3], sums[4], sums[5], sums[6], sums[7], sums[8]);
                     results.push_back(eu);
@@ -432,23 +480,24 @@ namespace openstudio {
             else {
                 for (int i = 0; i < hoursInYear; ++i) {
                     EndUses eu;
-                    mapToEU(eu, r_Qneed_ht[i], r_Qneed_cl[i], r_Q_illum_tot[i], r_Q_illum_ext_tot[i], r_Qfan_tot[i], r_Qpump_tot[i], r_phi_plug[i], r_ext_equip[i], r_Q_dhw[i]);
+                    mapToEU(eu, phi_H_nd[i], phi_C_nd[i], phi_int_L[i], phi_ext_L[i], phi_fan[i], phi_pump[i], phi_int_App[i], phi_ext_App[i], phi_dhw[i]);
                     results.push_back(eu);
                 }
             }
             return results;
         }
 
-        void HourlyModel::structureCalculations(double SHGC, double wallAreaM2, double windowAreaM2,
-            double wallUValue, double windowUValue, double wallSolarAbsorption,
-            double solarFactorWith, double solarFactorWithout, int direction) {
+        void HourlyModel::structureCalculations(double SHGC, double A_wall, double A_win,
+            double U_wall, double U_win, double alpha_wall,
+            double F_sh_with, double F_sh_without, int direction) {
+            
             double WindowT = SHGC / 0.87;
-            nlams[direction] = windowAreaM2 * WindowT;
-            nla[direction] = windowAreaM2 * WindowT;
-            sams[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * structure.R_se()) + windowAreaM2 * solarFactorWith;
-            sa[direction] = wallAreaM2 * (wallSolarAbsorption * wallUValue * structure.R_se()) + windowAreaM2 * solarFactorWithout;
-            htot[direction] = wallAreaM2 * wallUValue + windowAreaM2 * windowUValue;
-            hWindow[direction] = windowAreaM2 * windowUValue;
+            A_nla_ms[direction] = A_win * WindowT;
+            A_nla[direction] = A_win * WindowT;
+            A_sol_ms[direction] = A_wall * (alpha_wall * U_wall * structure.R_se()) + A_win * F_sh_with;
+            A_sol[direction] = A_wall * (alpha_wall * U_wall * structure.R_se()) + A_win * F_sh_without;
+            H_tot[direction] = A_wall * U_wall + A_win * U_win;
+            H_win[direction] = A_win * U_win;
         }
 
         std::vector<double> HourlyModel::sumHoursByMonth(const std::vector<double>& hourlyData) { return {}; }

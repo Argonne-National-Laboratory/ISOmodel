@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     std::cout << "Creating HourlyModel" << std::endl;
     HourlyModel hourlyModel = userModel.toHourlyModel();
 
-    int iterations = 100;
+    int iterations = 1000;
     std::cout << "Benchmark: Running Simulations. Timing just the simulation. Iterations = " << iterations << std::endl;
 
     // 1. Monthly Benchmark (Static Model)

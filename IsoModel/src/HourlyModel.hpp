@@ -1,15 +1,13 @@
 /*
  * HourlyModel.hpp
  *
- * OPTIMIZATION & REFACTORING (Round 4):
- * 1. Compressed Cache (Float): Changed schedules, weather, and physics in `HourlyCache` 
- * to `float`. This reduces the struct size to ~52 bytes, allowing one hour of 
- * data to fit entirely in a single 64-byte cache line for maximum bandwidth efficiency.
- * 2. Weather Locality: Added `env_temp` and `env_egh` to `HourlyCache`. This 
- * consolidates all inputs for an hour into one contiguous block.
- * 3. Member Cleanup: Removed persistent 2D schedule arrays. These are now 
- * transient stack variables during initialization.
- * 4. Modern C++: Continued use of std::span, std::array, and return structs.
+ * REFACTORING: ISO STANDARD ALIGNMENT
+ * Variables renamed to match ISO 13790 and ISO 15242 symbols:
+ * - theta_ : Temperatures (degC)
+ * - phi_   : Heat flow rates (W)
+ * - q_ve_  : Ventilation airflow rates (m3/s or m3/h)
+ * - H_     : Heat transfer coefficients (W/K)
+ * - A_     : Areas (m2)
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -24,7 +22,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include <span> // Requires C++20
+#include <span> 
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -37,41 +35,40 @@
 namespace openstudio {
     namespace isomodel {
 
-
         // Compressed Data Structure (Array of Structures)
-        // Uses 'float' to fit ~52 bytes, ensuring 1 hour fits in 1 CPU cache line (64 bytes).
+        // Renamed members to match ISO symbols where applicable
         struct HourlyCache {
             // Schedules (0.0 - 1.0)
-            float sched_ventilation;
-            float sched_ext_equip;
-            float sched_int_equip;
-            float sched_ext_light;
-            float sched_int_light;
-            float sched_heat_sp;
-            float sched_cool_sp;
+            float sched_q_ve_mech;    // Mechanical ventilation schedule
+            float sched_phi_int_App;  // Appliances gain schedule
+            float sched_phi_int_L;    // Lighting gain schedule
+            float sched_ext_light;    // Exterior lighting control
+            float sched_ext_equip;    // Exterior equipment control
+            float sched_theta_H_set;  // Heating setpoint
+            float sched_theta_C_set;  // Cooling setpoint
 
             // Environmental
-            float env_temp;
-            float env_egh;
+            float theta_e;  // External air temperature (ISO 13790 theta_e)
+            float I_sol_gh; // Global Horizontal Irradiance (ISO 13790 I_sol)
 
-            // Pre-calculated Physics
-            float phys_qWind;
-            float phys_qSup;
-            float phys_exhSup;
-            float phys_tSupp;
+            // Pre-calculated Physics (ISO 15242)
+            float q_ve_wind;      // Airflow due to wind (q_v,wind)
+            float q_ve_mech_sup;  // Mechanical supply airflow (q_v,sup)
+            float q_ve_diff;      // Difference (exhaust - supply)
+            float theta_sup;      // Supply air temperature (theta_sup)
         };
 
         struct GainsResult {
-            double phi_int;
-            double phii;
-            double lighting_tot;
-            double qSolarGain;
+            double phi_int;      // Total internal gains (Phi_int)
+            double phi_ia;       // Internal gains to air node (Phi_ia)
+            double phi_int_L;    // Lighting gains (Phi_int,L)
+            double phi_sol;      // Solar gains (Phi_sol)
         };
 
         struct AirFlowResult {
-            double tEnt;
-            double hei;
-            double h1;
+            double theta_ent;    // Entering air temperature (theta_ent)
+            double H_ve;         // Ventilation heat transfer coefficient (H_ve)
+            double H_tr_1;       // Coupling conductance 1 (H_tr,1)
         };
 
         class ISOMODEL_API HourlyModel : public Simulation
@@ -86,57 +83,57 @@ namespace openstudio {
             void initialize();
 
             // Refactored Helpers
-            AirFlowResult calculateAirFlows(double tiHeatCool, const HourlyCache& cache) noexcept;
+            AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
 
             GainsResult calculateGains(std::span<const double> curSolar,
                 const HourlyCache& cache,
-                double schedIntEquip) noexcept;
+                double phi_int_App) noexcept;
 
-            double solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
-                double qSolarGain, double hei, double h1, double schedHeatSP,
-                double schedCoolSP, double& TMT1, double& tiHeatCool) noexcept;
+            double solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
+                double phi_sol, double H_ve, double H_tr_1, double theta_H_set,
+                double theta_C_set, double& theta_m_prev, double& theta_air) noexcept;
 
-            std::vector<EndUses> processResults(const std::vector<double>& r_Qneed_ht, const std::vector<double>& r_Qneed_cl,
-                const std::vector<double>& r_Q_illum_tot, const std::vector<double>& r_Q_illum_ext_tot,
-                const std::vector<double>& r_Qfan_tot, const std::vector<double>& r_Qpump_tot,
-                const std::vector<double>& r_phi_plug, const std::vector<double>& r_ext_equip,
-                const std::vector<double>& r_Q_dhw, bool aggregateByMonth);
+            std::vector<EndUses> processResults(const std::vector<double>& phi_H_nd, const std::vector<double>& phi_C_nd,
+                const std::vector<double>& phi_int_L, const std::vector<double>& phi_ext_L,
+                const std::vector<double>& phi_fan, const std::vector<double>& phi_pump,
+                const std::vector<double>& phi_int_App, const std::vector<double>& phi_ext_App,
+                const std::vector<double>& phi_dhw, bool aggregateByMonth);
 
-            void structureCalculations(double SHGC, double wallAreaM2, double windowAreaM2,
-                double wallUValue, double windowUValue,
-                double wallSolarAbsorption, double solarFactorWith,
-                double solarFactorWithout, int direction);
+            void structureCalculations(double SHGC, double A_wall, double A_win,
+                double U_wall, double U_win,
+                double alpha_wall, double F_sh_with,
+                double F_sh_without, int direction);
 
             // Constants
-            double invFloorArea, rhoCpAir_277, windImpactSupplyRatio, q4Pa, windImpactHz;
-            double Am, Cm, shadingUsePerWPerM2, areaNaturallyLightedRatio, maxRatioElectricLighting;
-            double elightNatural, hzone, h_ms, h_is, H_tris, hwindowWperkm2;
-            double prs, prsInterior, prsSolar, prm, prmInterior, prmSolar, H_ms, hOpaqueWperkm2, hem;
+            double A_floor_inv, rhoCpAir_277, f_ve_mech_sup, q_ve_4Pa, H_z;
+            double A_m, C_m, f_sh_use, f_A_nat, f_L_max;
+            double I_lux_nat, H_zone, h_ms, h_is, H_tr_is, H_tr_w;
+            double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
 
             // Cached Config
-            double m_maxIrrad;
-            double m_vent_dCp;
-            double m_vent_preheat;
-            double m_vent_HRE;
-            double m_vent_fanPower;
-            double m_invAreaNat;
-            double m_frac_elec_internal_gains;
-            double m_frac_phi_sol_air;
-            double m_frac_phi_int_air;
+            double m_I_sol_max; // Max irradiance for shading
+            double m_Cp_air_pressure; // "dCp" in old code
+            double m_theta_ve_preheat;
+            double m_eta_ve_rec; // Heat recovery efficiency
+            double m_phi_fan_spec; // Specific fan power
+            double m_A_nat_inv; 
+            double m_f_phi_int_L; // Fraction of lighting energy to internal gains
+            double m_f_phi_sol_air;
+            double m_f_phi_int_air;
 
             // Arrays (std::array)
-            std::array<double, 9> nlams;
-            std::array<double, 9> nla;
-            std::array<double, 9> sams;
-            std::array<double, 9> sa;
-            std::array<double, 9> htot;
-            std::array<double, 9> hWindow;
-            std::array<double, 9> nlaWMovableShading;
-            std::array<double, 9> naturalLightRatio;
-            std::array<double, 9> naturalLightShadeRatioReduction;
-            std::array<double, 9> saWMovableShading;
-            std::array<double, 9> solarRatio;
-            std::array<double, 9> solarShadeRatioReduction;
+            std::array<double, 9> A_nla_ms;
+            std::array<double, 9> A_nla;
+            std::array<double, 9> A_sol_ms;
+            std::array<double, 9> A_sol;
+            std::array<double, 9> H_tot;
+            std::array<double, 9> H_win;
+            std::array<double, 9> A_nla_ms_norm;
+            std::array<double, 9> f_light_ratio;
+            std::array<double, 9> f_light_shade_reduction;
+            std::array<double, 9> A_sol_ms_norm;
+            std::array<double, 9> f_sol_ratio;
+            std::array<double, 9> f_sol_shade_reduction;
             std::array<double, 9> precalc_nla_shading;
             std::array<double, 9> precalc_solar_shading;
 
@@ -145,15 +142,15 @@ namespace openstudio {
 
             std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
-            // Helpers to replace removed persistent 2D arrays
+            // Helpers
             struct WeeklyScheduleData {
-                double vent[24][7];
-                double extEquip[24][7];
-                double intEquip[24][7];
-                double extLight[24][7];
-                double intLight[24][7];
-                double heatSP[24][7];
-                double coolSP[24][7];
+                double q_ve[24][7];
+                double ext_App[24][7];
+                double int_App[24][7];
+                double ext_L[24][7];
+                double int_L[24][7];
+                double theta_H[24][7];
+                double theta_C[24][7];
             };
             void buildWeeklySchedules(WeeklyScheduleData& sched);
 
