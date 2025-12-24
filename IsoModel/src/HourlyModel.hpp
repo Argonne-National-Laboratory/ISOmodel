@@ -4,6 +4,9 @@
  * REFACTORING: ISO STANDARD ALIGNMENT
  * Variables renamed to match ISO 13790 and ISO 15242 symbols.
  * OPTIMIZATION: Added Solar Radiation Caching.
+ * OPTIMIZATION UPDATE: 
+ * - Moved static calculations (A_floor_inv, A_m, win_floor_ratio) to initialization.
+ * - Optimized dynamic loop calculations for H_em and pumps.
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -23,10 +26,10 @@
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
-#include "Vector.hpp"
+// #include "Vector.hpp"
 #else
 #include "../utilities/data/EndUses.hpp"
-#include "../utilities/data/Vector.hpp"
+// #include "../utilities/data/Vector.hpp"
 #endif
 
 namespace openstudio {
@@ -113,6 +116,9 @@ namespace openstudio {
             double A_m, C_m, f_sh_use, f_A_nat, f_L_max;
             double I_lux_nat, H_zone, h_ms, h_is, H_tr_is, H_tr_w;
             double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
+
+            // NEW: Pre-calculated Optimization Member
+            double win_floor_ratio; // Optimization 5: Ratio for solar geom
 
             // Cached Config
             double m_I_sol_max; 
