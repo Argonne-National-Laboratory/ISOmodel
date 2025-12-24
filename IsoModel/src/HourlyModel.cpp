@@ -273,7 +273,7 @@ namespace openstudio {
 
                 // Pre-calc Physics (float is sufficient)
                 // ISO 15242 6.7.1 Step 1: q_{v,wind}
-                c.q_ve_wind = (float)(0.0769 * q_ve_4Pa * fastPow23(m_Cp_air_pressure * wind[i] * wind[i]));
+                c.q_ve_wind = (float)(windFactor * q_ve_4Pa * fastPow23(m_Cp_air_pressure * wind[i] * wind[i]));
                 
                 // Ventilation supply/exhaust
                 double q_ve = c.sched_q_ve_mech * kWh2MJ * A_floor_inv;
@@ -352,7 +352,7 @@ namespace openstudio {
             double absDT = std::max(std::fabs(theta_e - theta_air), 1e-5);
             
             // ISO 15242 6.7.1 Step 1: q_{stack} (Stack effect)
-            double q_ve_stack = 0.0146 * q_ve_4Pa * fastPow23(0.5 * H_z * absDT);
+            double q_ve_stack = stackFactor * q_ve_4Pa * fastPow23(effectiveStackHeightFraction * H_z * absDT);
             
             // Promote float physics to double
             double q_ve_wind = cache.q_ve_wind;

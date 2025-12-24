@@ -27,16 +27,20 @@ namespace openstudio {
         // Derived from: rho (1.22521 kg/m3) * cp (1.012 kJ/kg*K) / 1000 kJ/MJ
         constexpr double rhoCpAir = 1.22521 * 0.001012; // = 0.001239 MJ/m3/K
         constexpr double rhoCpAirWh = rhoCpAir*1000000.0/3600; // Volumetric heat capacity of air ~1200 J/m3K / 3600 = 0.33-0.34 Wh/m3K
-          /**
-  * Specific heat of air and water  in terms of volume (MJ/m3/K). Different parts of the simulation
-  * use different units of rhoCpAir. Multiply by 277.777778 to convert to watt-hr/m3/K.
-  * Multiply by 1000000.0 to covert to W/m3/K.
-  */
-        constexpr double rhoCpWater = 4.1813;  // Volumetric heat capacity of water (MJ/m3/K)
-       
-        constexpr double windFactor = 0.0769; // Physics constant for qWind
-        constexpr double stackFactor = 0.0146; // Physics constant for qStack
 
+        constexpr double rhoCpWater = 4.1813;  // Volumetric heat capacity of water (MJ/m3/K)
+
+
+        // ventilation physics constants from ISO 15242 6.7.1
+        // based on Q = C * (dP)^0.667
+        constexpr double stackFactor = 0.0146; // Physics constant for qStack
+        constexpr double effectiveStackHeightFraction = 0.5; // Effective stack height is 50% of zone height    
+        constexpr double windFactor = 0.0769; // Physics constant for qWind
+
+        //This constant converts the physics of thermal buoyancy (stack effect) into a flow rate relative 
+        //to the leakage measured at 4 Pa ($Q_{4Pa}$).
+        // Q_4Pa = Q_50Pa * (4/50)^0.667 = Q_50Pa * 0.28 but reduce by a factor to account for the fact that
+        // the wind pressure is not always perpendicular to the surface and other empirical factors.
 
         // from usermodel.hpp
         // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
