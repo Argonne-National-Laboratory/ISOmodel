@@ -36,6 +36,9 @@ namespace openstudio {
         constexpr double stackFactor = 0.0146; // Physics constant for qStack
         constexpr double effectiveStackHeightFraction = 0.5; // Effective stack height is 50% of zone height    
         constexpr double windFactor = 0.0769; // Physics constant for qWind
+        constexpr double qInfilStackFraction = 0.5; // coefficient for infiltration from stack effect 
+        constexpr double qInfilWindFraction = 2.0/3.0; // coefficient for infiltration from wind effect 
+
 
         //This constant converts the physics of thermal buoyancy (stack effect) into a flow rate relative 
         //to the leakage measured at 4 Pa ($Q_{4Pa}$).

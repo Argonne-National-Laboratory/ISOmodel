@@ -364,7 +364,7 @@ namespace openstudio {
 
             // ISO 15242 6.7.1 Step 2: q_{exfiltration}
             double q_ve_sw = q_ve_stack + q_ve_wind + smallEpsilon;
-            double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::fabs(q_ve_diff) * (0.5 * q_ve_stack + 0.667 * q_ve_wind / q_ve_sw));
+            double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::fabs(q_ve_diff) * (qInfilStackFraction * q_ve_stack + qInfilWindFraction * q_ve_wind / q_ve_sw));
 
             // ISO 15242 6.7.2: q_{ent} (Total entering air)
             double q_ve_ent = (q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf + cache.q_ve_mech_sup;
@@ -481,11 +481,11 @@ namespace openstudio {
                 };
 
             if (aggregateByMonth) {
-                const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+                // const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
                 for (int m = 0; m < monthsInYear; ++m) {
                     EndUses eu;
                     double sums[9] = { 0 };
-                    for (int i = monthEnds[m]; i < monthEnds[m + 1]; ++i) {
+                    for (int i = monthEndHours[m]; i < monthEndHours[m + 1]; ++i) {
                         sums[0] += phi_H_nd[i]; sums[1] += phi_C_nd[i]; sums[2] += phi_int_L[i]; sums[3] += phi_ext_L[i];
                         sums[4] += phi_fan[i]; sums[5] += phi_pump[i]; sums[6] += phi_int_App[i]; sums[7] += phi_ext_App[i]; sums[8] += phi_dhw[i];
                     }
