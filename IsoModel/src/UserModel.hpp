@@ -7,6 +7,7 @@
 #define ISOMODEL_USERMODEL_HPP
 
 #include "ISOModelAPI.hpp"
+#include "Constants.hpp" // Added to access ConfigStrings and Physics constants
 #include "EpwData.hpp"
 #include "MonthlyModel.hpp"
 #include "HourlyModel.hpp"
@@ -25,16 +26,8 @@ namespace openstudio::isomodel {
 class MonthlyModel;
 class WeatherData;
 
-const std::string GAS = "gas";
-const std::string ELECTRIC = "electric";
-
-const std::string MECHANICAL = "mechanical";
-const std::string NATURAL = "natural";
-const std::string COMBINED = "combined";
-
-const std::string NONE = "none";
-const std::string SIMPLE = "simple";
-const std::string ADVANCED = "advanced";
+// NOTE: String constants (GAS, ELECTRIC, etc.) are now defined in Constants.hpp
+// inside the openstudio::isomodel namespace.
 
 struct ISOMODEL_API LatLon {
   double lat, lon;
@@ -113,6 +106,7 @@ public:
   /// Sets a Building property.
   void setBemType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    // Constants like NONE are now pulled from Constants.hpp via the namespace
     if (type == NONE)
       building.setBuildingEnergyManagement(1.0);
     else if (type == SIMPLE)
@@ -594,17 +588,8 @@ public:
   /// Sets a Location property.
   void setTerrainClass(double val) { location.setTerrain(val); }
 
-  /// Gets a PhysicalQuantities property.
-  double rhoCpAir() const { return phys.rhoCpAir(); }
-
-  /// Sets a PhysicalQuantities property.
-  void setRhoCpAir(double rhoCpAir) { phys.setRhoCpAir(rhoCpAir); }
-
-  /// Gets a PhysicalQuantities property.
-  double rhoCpWater() const { return phys.rhoCpWater(); }
-
-  /// Sets a PhysicalQuantities property.
-  void setRhoCpWater(double rhoCpWater) { phys.setRhoCpWater(rhoCpWater); }
+  /// Gets a PhysicalQuantities property (now constants)
+  // Removed accessors to PhysicalQuantities.hpp members as they are constants
 
   /// Sets a Population property.
   void setBuildingOccupancyFrom(double val) { pop.setDaysStart(val); }
@@ -1474,7 +1459,6 @@ private:
   Heating heating;
   Cooling cooling;
   Ventilation ventilation;
-  // EpwData epwData; // XXX: Currently a shared_ptr already.
   PhysicalQuantities phys;
   SimulationSettings simSettings;
 

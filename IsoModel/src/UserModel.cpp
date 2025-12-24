@@ -5,13 +5,11 @@
 
 #include "UserModel.hpp"
 #include <optional>
-#include <iostream> // Added to fix 'std::cout' error
+#include <iostream> 
 #include <filesystem>
 
 using namespace std;
 namespace openstudio::isomodel {
-
-// ... (Rest of the file remains exactly the same as the previous version) ...
 
 void UserModel::setCoreSimulationProperties(Simulation& sim) const {
     sim.setPop(pop);
@@ -24,7 +22,7 @@ void UserModel::setCoreSimulationProperties(Simulation& sim) const {
     sim.setLocation(location);
     sim.setEpwData(_edata); 
     sim.setSimulationSettings(simSettings);
-    sim.setPhysicalQuantities(phys);
+    // Removed setPhysicalQuantities, as models now use constants
 }
 
 HourlyModel UserModel::toHourlyModel() const
@@ -40,7 +38,6 @@ HourlyModel UserModel::toHourlyModel() const
 
 MonthlyModel UserModel::toMonthlyModel() const
 {
-
     MonthlyModel sim;
 
     if (!valid()) {
@@ -52,6 +49,7 @@ MonthlyModel UserModel::toMonthlyModel() const
 
     return sim;
 }
+
 //http://stackoverflow.com/questions/10051679/c-tokenize-string
 std::vector<std::string> inline stringSplit(const std::string& source, char delimiter = ' ', bool keepEmpty = false)
 {
@@ -203,8 +201,9 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setPresenceAutoLux, buildingParams, "presenceautolux", false);
     initializeParameter(&UserModel::setManualSwitchLux, buildingParams, "manualswitchlux", false);
     initializeParameter(&UserModel::setNaturallyLightedArea, buildingParams, "naturallylightedarea", false);
-    initializeParameter(&UserModel::setRhoCpAir, buildingParams, "rhocpair", false);
-    initializeParameter(&UserModel::setRhoCpWater, buildingParams, "rhocpwater", false);
+    
+    // Removed setRhoCpAir and setRhoCpWater as they are now constants
+    
     initializeParameter(&UserModel::setPhiIntFractionToAirNode, buildingParams, "phiintfractiontoairnode", false);
     initializeParameter(&UserModel::setPhiSolFractionToAirNode, buildingParams, "phisolfractiontoairnode", false);
     initializeParameter(&UserModel::setHci, buildingParams, "hci", false);

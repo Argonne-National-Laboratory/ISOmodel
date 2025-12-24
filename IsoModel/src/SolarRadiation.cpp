@@ -14,10 +14,7 @@
 
 namespace openstudio::isomodel {
 
-    // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
-    static constexpr std::array<double, 8> SurfaceAzimuths = { 
-        0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4 
-    };
+
 
     SolarRadiation::SolarRadiation(TimeFrame* frame, EpwData* wdata, double tilt)
         : m_frame(frame), m_epwData(wdata)

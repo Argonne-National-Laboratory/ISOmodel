@@ -21,11 +21,6 @@ namespace openstudio::isomodel {
     // Forward declaration
     class EpwData;
 
-    // Constants as constexpr for compile-time optimization
-    // constexpr double PI = 3.14159265358979323846;
-    // constexpr int numVerticalSurfaces = 8;
-    // constexpr int monthsInYear = 12;
-    // constexpr int hoursInDay = 24;
 
     class ISOMODEL_API SolarRadiation {
     protected:
@@ -37,7 +32,7 @@ namespace openstudio::isomodel {
         double m_localMeridian = 0.0;
         double m_longitude = 0.0;
         double m_latitude = 0.0;
-        double m_groundReflectance = 0.14;
+        double m_groundReflectance = defaultGroundReflectance;
 
         // Optimized Storage
         std::vector<double> m_eglobeFlat;

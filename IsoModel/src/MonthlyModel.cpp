@@ -30,25 +30,7 @@
 
 namespace openstudio {
     namespace isomodel {
-
-        // // Constants
-        // const double daysInMonth[] =
-        // { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        // const double hoursInMonth[] =
-        // { 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
-        // const double megasecondsInMonth[] =
-        // { 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
-        // const double monthFractionOfYear[] =
-        // { 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
-        //     0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
-        //const double daysInYear = 365;
-        //const double hoursInYear = 8760;
-        //const double hoursInWeek = 168;
-        //const double monthsInYear = 12;
-        //const double hoursInDay = 24;
-        // const double EECALC_WEEKDAY_START = 7;
-        //const double kWh2MJ = 3.6f;
-
+        
         // TODO: All member variables initialized in the constructor should eventually be initialized
         // by the .ism file or a default initialization of some sort.
         MonthlyModel::MonthlyModel() {}
@@ -95,7 +77,7 @@ namespace openstudio {
                 weekendUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_nt;
             }
             for (int h = 0; h < hoursInDay; h++) {
-                if (h - EECALC_WEEKDAY_START >= 0 && h - EECALC_WEEKDAY_START < hoursOccupiedPerDay) {
+                if (h - eecalcWeekdayStart >= 0 && h - eecalcWeekdayStart < hoursOccupiedPerDay) {
                     clockHourOccupied[h] = 1;
                     clockHourUnoccupied[h] = 0;
                 }
@@ -297,21 +279,18 @@ namespace openstudio {
             // F_f = Frame area fraction (ratio of projected frame area to overall glazed element area) as per 11.4.5 (v_wind_ff)
             // A_w,p = ovaral projected area of glazed element in m2 (v_wind_A)
 
-            int vsize = 9; // 8 compass directions + roof = 9.
-
             // Frame factor.
-            Vector v_win_ff = Vector(vsize);
+            Vector v_win_ff = Vector(numTotalSurfaces);
 
-            double n_win_SDF_table[] = { 0.5, 0.35, 1.0 };
-            Vector v_win_SDF = Vector(vsize);
-            Vector v_win_SDF_frac = Vector(vsize);
+            Vector v_win_SDF = Vector(numTotalSurfaces);
+            Vector v_win_SDF_frac = Vector(numTotalSurfaces);
 
-            for (int i = 0; i < vsize; i++) {
+            for (int i = 0; i < numTotalSurfaces; i++) {
                 v_win_ff[i] = 1.0 - structure.win_ff();
                 // Assign SDF based on pulldown value of 1, 2 or 3.
                 // TODO: This needs to be clarified in the .ism file as it's not obvious that the
                 // window SDF is a magic number rather than the actual value. BAA@2015-07-13 BAA@2015-07-143
-                v_win_SDF[i] = n_win_SDF_table[((int)structure.windowShadingDevice()[i]) - 1];
+                v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDevice()[i]) - 1];
                 // Set the SDF fractions which include heat transfer - set at 100% for now.
                 v_win_SDF_frac[i] = 1.0;
             }
@@ -325,13 +304,13 @@ namespace openstudio {
 
             v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
 
-            // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for unshaded roof
-            double n_v_env_form_factors[] =
-            { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
+            // // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for unshaded roof
+            // double envFormFactors[] =
+            // { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
 
             // Vertical wall external convective surface heat resistances.
-            v_wall_R_sc = Vector(vsize);
-            for (int i = 0; i < vsize; i++) {
+            v_wall_R_sc = Vector(numTotalSurfaces);
+            for (int i = 0; i < numTotalSurfaces; i++) {
                 v_wall_R_sc[i] = structure.R_sc_ext();
             }
 
@@ -406,7 +385,7 @@ namespace openstudio {
                 // determine which default value to use for theta_er. BAA@2015-07-13.
                 theta_er[i] = 11.0;
             }
-            double n_v_env_form_factors[] =
+            double envFormFactors[] =
             { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
 
             Vector v_wall_phi_r = mult(mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
@@ -417,7 +396,7 @@ namespace openstudio {
             // Compute the total solar heat gain for the opaque area.
             for (unsigned int i = 0; i < v_win_phi_sol.size(); i++) {
                 for (unsigned int j = 0; j < temp.size(); j++) {
-                    temp[j] = v_wall_A_sol[j] * m_I_sol(i, j) - v_wall_phi_r[j] * n_v_env_form_factors[j];
+                    temp[j] = v_wall_A_sol[j] * m_I_sol(i, j) - v_wall_phi_r[j] * envFormFactors[j];
                 }
                 v_wall_phi_sol[i] = sum(temp);
             }
@@ -881,7 +860,8 @@ namespace openstudio {
             printVector("v_qv_ht_max", v_qv_ht_max);
             printVector("v_qv_cl_max", v_qv_cl_max);
 
-            double n_sw_coeff = 0.14;
+            // double n_sw_coeff = 0.14;
+            
             Vector v_qv_sw_ht = sum(v_qv_ht_max, div(mult(mult(v_qv_stack_ht, v_qv_wind_ht), n_sw_coeff), v_Q4pa)); // m3/h/m2
             Vector v_qv_sw_cl = sum(v_qv_cl_max, div(mult(mult(v_qv_stack_cl, v_qv_wind_cl), n_sw_coeff), v_Q4pa)); // m3/h/m2
             printVector("v_qv_sw_ht", v_qv_sw_ht);
@@ -930,9 +910,9 @@ namespace openstudio {
             printVector("v_qve_cl", v_qve_cl);
 
             // Hve heating (W/K/m2).
-            v_Hve_ht = div(mult(v_qve_ht, phys.rhoCpAir() * 1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+            v_Hve_ht = div(mult(v_qve_ht, rhoCpAir * 1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
             // Hve cooling (W/K/m2).
-            v_Hve_cl = div(mult(v_qve_cl, phys.rhoCpAir() * 1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+            v_Hve_cl = div(mult(v_qve_cl, rhoCpAir* 1000000), 3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
         }
 
         /**
@@ -959,7 +939,7 @@ namespace openstudio {
             Vector v_Qtot_ht = sum(v_QT_ht, v_QV_ht);
 
             // Compute the ratio of heat gain to heat loss.
-            Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, DBL_MIN)); // Add DBL_MIN to avoid divide by zero.
+            Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, minDouble)); // Add minDouble to avoid divide by zero.
 
             // Heating utilization factor.
             Vector v_eta_g_H(monthsInYear);
@@ -967,7 +947,7 @@ namespace openstudio {
             // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
             for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
                 v_eta_g_H[i] =
-                    v_gamma_H_ht[i] > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht[i] + DBL_MIN);
+                    v_gamma_H_ht[i] > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht[i] + minDouble);
             }
 
             // Total heating need (MJ).
@@ -982,7 +962,7 @@ namespace openstudio {
             Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl);
 
             // Heat transfer (loss) to heat gain ratio, cooling.
-            Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, DBL_MIN));
+            Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, minDouble));
 
             // Compute the cooling gain utilization factor eta_g_cl
             Vector v_eta_g_CL(monthsInYear);
@@ -1006,9 +986,9 @@ namespace openstudio {
             double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
             // Volume of air moved for heating (m3).
-            Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), phys.rhoCpAir()), DBL_MIN));
+            Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), rhoCpAir), minDouble));
             // Volume of air moved for cooling (m3).
-            Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), phys.rhoCpAir()), DBL_MIN));
+            Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), rhoCpAir), minDouble));
 
             printVector("v_Vair_ht", v_Vair_ht);
             printVector("v_Vair_cl", v_Vair_cl);
@@ -1096,14 +1076,14 @@ namespace openstudio {
                 v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
             }
             else {
-                v_Qht_sys = div(sum(v_Qloss_ht_dist, v_Qneed_ht), heating.efficiency() + DBL_MIN);
+                v_Qht_sys = div(sum(v_Qloss_ht_dist, v_Qneed_ht), heating.efficiency() + minDouble);
             }
 
             if (cooling.DC_YesNo() == 1) {
                 v_Qcool_DC = sum(v_Qneed_cl, v_Qloss_cl_dist);
             }
             else {
-                v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl), IEER + DBL_MIN);
+                v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl), IEER + minDouble);
             }
             printVector("v_Qht_sys", v_Qht_sys);
             printVector("v_Qht_DH", v_Qht_DH);
@@ -1246,7 +1226,7 @@ namespace openstudio {
             zero(v_Q_dhw_solar);
 
             // Total annual energy demand required for heating DHW (MJ/yr).
-            double Q_dhw_yr = heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * phys.rhoCpWater();
+            double Q_dhw_yr = heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * rhoCpWater;
 
             Vector v_MonthlyDemand = mult(daysInMonth, Q_dhw_yr, monthsInYear);
             Vector v_frac_MonthlyDemand_yr = div(v_MonthlyDemand, daysInYear);

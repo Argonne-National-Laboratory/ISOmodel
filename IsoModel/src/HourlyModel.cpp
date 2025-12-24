@@ -26,7 +26,8 @@ namespace openstudio {
 
         void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2) {}
 
-        HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(0), m_maxIrrad(0), m_vent_dCp(0), 
+        // initialize rhoCpAir_277 to the constant rhoCpAirWh in constructor but replace it elsewhere
+        HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(rhoCpAirWh), m_maxIrrad(0), m_vent_dCp(0), 
             m_vent_preheat(0), m_vent_HRE(0), m_vent_fanPower(0), m_invAreaNat(0),
             m_frac_elec_internal_gains(0), m_frac_phi_sol_air(0), m_frac_phi_int_air(0) {
             
@@ -106,8 +107,8 @@ namespace openstudio {
                 double ventExh = cache.sched_ventilation * kWh2MJ * invFloorArea;
 
                 double Vair = std::max({ ventExh,
-                    r_Qneed_ht[i] / (((heat_occ_sp + heat_dT_supp) - tiHeatCool) * rhoCpAir_277 + DBL_MIN),
-                    r_Qneed_cl[i] / ((tiHeatCool - (cool_occ_sp - cool_dT_supp)) * rhoCpAir_277 + DBL_MIN) });
+                    r_Qneed_ht[i] / (((heat_occ_sp + heat_dT_supp) - tiHeatCool) * rhoCpAirWh + minDouble),
+                    r_Qneed_cl[i] / ((tiHeatCool - (cool_occ_sp - cool_dT_supp)) * rhoCpAirWh + minDouble) });
 
                 r_Qfan_tot[i] = Vair * fan_power_factor;
                 r_Qpump_tot[i] = (r_Qneed_cl[i] > 0) ? (cool_E_pumps * cool_pumpRed) :
@@ -121,8 +122,8 @@ namespace openstudio {
         void HourlyModel::initialize() {
             double floorArea = structure.floorArea();
             invFloorArea = (floorArea > 0) ? 1.0 / floorArea : 0.0;
-            rhoCpAir_277 = phys.rhoCpAir() * 277.777778;  // converts from MJ/m^3*K to Whr/m^3*K :  1 MJ =  1E6 W/MJ*s / 3600 s/hr = 277.78.. Whr
-            
+            // rhoCPAir_277 = rhoCpAirWh;  
+
             m_maxIrrad = structure.irradianceForMaxShadingUse();
             m_vent_dCp = ventilation.dCp();
             m_vent_preheat = ventilation.ventPreheatDegC();
@@ -242,7 +243,7 @@ namespace openstudio {
                 c.env_egh = (float)egh[i];
 
                 // Pre-calc Physics (float is sufficient)
-                c.phys_qWind = (float)(0.0769 * q4Pa * fastPow23(m_vent_dCp * wind[i] * wind[i]));
+                c.phys_qWind = (float)(windFactor * q4Pa * fastPow23(m_vent_dCp * wind[i] * wind[i]));
                 
                 double ventExh = c.sched_ventilation * kWh2MJ * invFloorArea;
                 c.phys_qSup = (float)(ventExh * windImpactSupplyRatio);
@@ -298,7 +299,7 @@ namespace openstudio {
             }
 
             double lightingLevel = lightingLevelSum * m_invAreaNat;
-            double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / (elightNatural + DBL_MIN)));
+            double electricForNaturalLightArea = std::max(0.0, maxRatioElectricLighting * (1.0 - lightingLevel / (elightNatural + minDouble)));
             res.lighting_tot = (electricForNaturalLightArea * areaNaturallyLightedRatio + (1.0 - areaNaturallyLightedRatio) * maxRatioElectricLighting) * cache.sched_int_light;
             
             res.phi_int = schedIntEquip + (res.lighting_tot * m_frac_elec_internal_gains);
@@ -313,7 +314,7 @@ namespace openstudio {
             // Use temp from cache (float)
             double temperature = cache.env_temp;
             double absDT = std::max(std::fabs(temperature - tiHeatCool), 1e-5);
-            double qStack = 0.0146 * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
+            double qStack = stackFactor * q4Pa * fastPow23(0.5 * windImpactHz * absDT);
             
             // Promote float physics to double
             double qWind = cache.phys_qWind;
@@ -322,12 +323,15 @@ namespace openstudio {
             double qSW = qStack + qWind + smallEpsilon;
             double qExf = std::max(0.0, std::max(qStack, qWind) - std::fabs(exhSup) * (0.5 * qStack + 0.667 * qWind / qSW));
 
-            double qEnt = (exhSup > 0 ? exhSup : 0.0) + qExf + cache.phys_qSup;
-            res.tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnt + smallEpsilon);
-            res.hei = 0.34 * qEnt;
+            double qEnteringTotal = (exhSup > 0 ? exhSup : 0.0) + qExf + cache.phys_qSup;
+
+            res.tEnt = (temperature * ((exhSup > 0 ? exhSup : 0.0) + qExf) + cache.phys_tSupp * cache.phys_qSup) / (qEnteringTotal + smallEpsilon);
+            // res.hei = 0.34 * qEnteringTotal;
+            res.hei = rhoCpAirWh * qEnteringTotal;  // 13790 Eq 21 in 9.3.1 
             res.h1 = 1.0 / (1.0 / (res.hei + smallEpsilon) + 1.0 / H_tris);
             return res;
         }
+
 
         double HourlyModel::solveThermalBalance(double temperature, double tEnt, double phii, double phi_int,
             double qSolarGain, double hei, double h1, double schedHeatSP,
@@ -382,7 +386,7 @@ namespace openstudio {
             const std::vector<double>& r_Q_dhw, bool aggregateByMonth) {
             double qh_yr = std::accumulate(r_Qneed_ht.begin(), r_Qneed_ht.end(), 0.0);
             double qc_yr = std::accumulate(r_Qneed_cl.begin(), r_Qneed_cl.end(), 0.0);
-            double f_ht = std::max(qh_yr / (qc_yr + qh_yr + DBL_MIN), 0.1);
+            double f_ht = std::max(qh_yr / (qc_yr + qh_yr + minDouble), 0.1);
             double s_ht = (1.0 / (1.0 / (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_ht))) / heating.efficiency();
             double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_ht)))) / cooling.cop();
 
@@ -413,11 +417,11 @@ namespace openstudio {
                 };
 
             if (aggregateByMonth) {
-                const int monthEnds[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
+                // const int monthEndHours[] = { 0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 };
                 for (int m = 0; m < monthsInYear; ++m) {
                     EndUses eu;
                     double sums[9] = { 0 };
-                    for (int i = monthEnds[m]; i < monthEnds[m + 1]; ++i) {
+                    for (int i = monthEndHours[m]; i < monthEndHours[m + 1]; ++i) {
                         sums[0] += r_Qneed_ht[i]; sums[1] += r_Qneed_cl[i]; sums[2] += r_Q_illum_tot[i]; sums[3] += r_Q_illum_ext_tot[i];
                         sums[4] += r_Qfan_tot[i]; sums[5] += r_Qpump_tot[i]; sums[6] += r_phi_plug[i]; sums[7] += r_ext_equip[i]; sums[8] += r_Q_dhw[i];
                     }
