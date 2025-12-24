@@ -2,7 +2,8 @@
  * HourlyModel.cpp
  *
  * REFACTORING: ISO STANDARD ALIGNMENT
- * Implementation now uses variable names consistent with ISO 13790 and ISO 15242.
+ * Implementation uses variable names consistent with ISO 13790 and ISO 15242.
+ * OPTIMIZATION: Implemented Solar Radiation Caching.
  */
 
 #include "Constants.hpp"
@@ -40,11 +41,22 @@ namespace openstudio {
             double theta_m_prev = 20.0; // T_m,t-1
             double theta_air = 20.0;    // Theta_air
 
-            // Simplified initialization
-            TimeFrame frame; 
-            SolarRadiation pos(&frame, epwData.get());
-            pos.Calculate();
-            const std::vector<double>& eglobeFlat = pos.eglobeFlat();
+            // -----------------------------------------------------------
+            // OPTIMIZATION: SOLAR CACHING
+            // -----------------------------------------------------------
+            // Check if we can reuse previous solar calculations.
+            // This prevents expensive trigonometry re-calculation on repeated calls.
+            if (m_cachedSolarRadiation.empty() || m_lastEpwData != epwData) {
+                TimeFrame frame; 
+                SolarRadiation pos(&frame, epwData.get());
+                pos.Calculate();
+                m_cachedSolarRadiation = pos.eglobeFlat();
+                m_lastEpwData = epwData;
+            }
+
+            // Use the cached vector
+            const std::vector<double>& eglobeFlat = m_cachedSolarRadiation;
+            // -----------------------------------------------------------
 
             const auto& data = epwData->data();
             const std::vector<double>& egh = data[EGH]; 

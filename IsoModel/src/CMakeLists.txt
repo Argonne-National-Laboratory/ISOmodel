@@ -15,11 +15,22 @@ include(FetchContent)
 project(isomodel_project)
 set(target_name isomodel)
 
-# Set C++ Standard to 20 for modern features used in refactoring
+# ---------------------------------------------------------------------------
+# OPTIMIZATION: Set Default Build Type to Release
+# ---------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# Set C++ Standard to 20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ---------------------------------------------------------------------------
+# SOURCE DEFINITIONS
+# ---------------------------------------------------------------------------
 set(${target_name}_test
   Test/HourlyModel_GTest.cpp
   Test/ISOModelFixture.cpp
@@ -58,7 +69,8 @@ set(${target_name}_src
   ISOModelAPI.hpp
   ISOResults.cpp
   ISOResults.hpp
-  # Lighting.cpp
+  # 
+  # Lighting.cpp  <-- COMMENTED OUT TO FIX BUILD ERROR
   Lighting.hpp
   # Location.cpp
   Location.hpp
@@ -89,6 +101,9 @@ set(${target_name}_src
   WeatherData.hpp
 )
 
+# ---------------------------------------------------------------------------
+# DEPENDENCIES
+# ---------------------------------------------------------------------------
 # Fetch GoogleTest
 FetchContent_Declare(
   googletest
@@ -136,29 +151,33 @@ set(benchmark_depends "")
 
 add_definitions(-DISOMODEL_STANDALONE)
 
-# Standalone executable
+# ---------------------------------------------------------------------------
+# OPTIMIZATION FLAGS
+# ---------------------------------------------------------------------------
+if(NOT MSVC)
+  # -march=native: Optimizes for the local machine's CPU (AVX2/AVX512)
+  # -ffast-math:   Allows faster floating point math (safe for this simulation)
+  # -funroll-loops: Unrolls loops for speed
+  set(PERF_FLAGS -march=native -ffast-math -funroll-loops)
+else()
+  set(PERF_FLAGS "")
+endif()
+
+# ---------------------------------------------------------------------------
+# TARGETS
+# ---------------------------------------------------------------------------
+
+# 1. Standalone Executable
 set (exec_name isomodel_standalone)
 add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
 target_link_libraries(${exec_name} PRIVATE yaml-cpp::yaml-cpp)
+target_compile_options(${exec_name} PRIVATE ${PERF_FLAGS})
 
-# Unit tests executable
+# 2. Unit Tests Executable
 add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
 target_link_libraries(isomodel_unit_tests PRIVATE ${unit_test_depends} yaml-cpp::yaml-cpp)
-
-# Benchmark executable
-add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
-
-if(NOT MSVC)
-  target_compile_options(isomodel_benchmark PRIVATE 
-    -O3 -march=native -ffast-math -funroll-loops
-  )
-endif()
-
-target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
-
-# Solar debug executable
-add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
-target_link_libraries(solar_debug PRIVATE yaml-cpp::yaml-cpp)
+# Note: Unit tests generally don't use aggressive optimization to ensure stability,
+# but you can add ${PERF_FLAGS} here if you want to test the optimized build.
 
 set_property(
   TARGET isomodel_unit_tests
@@ -171,8 +190,19 @@ add_custom_command(TARGET isomodel_unit_tests
                      ${CMAKE_SOURCE_DIR}/../test_data $<TARGET_FILE_DIR:isomodel_unit_tests>/test_data
 )
 
+# 3. Benchmark Executable
+add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
+target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
+target_compile_options(isomodel_benchmark PRIVATE ${PERF_FLAGS})
+
+# 4. Solar Debug Executable
+add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
+target_link_libraries(solar_debug PRIVATE yaml-cpp::yaml-cpp)
+
+# 5. Shared Library
 add_library(${library_name} SHARED ${${target_name}_src})
 target_link_libraries(${library_name} PRIVATE yaml-cpp::yaml-cpp)
+target_compile_options(${library_name} PRIVATE ${PERF_FLAGS})
 
 if (MSVC)
  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")

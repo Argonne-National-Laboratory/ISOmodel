@@ -2,12 +2,8 @@
  * HourlyModel.hpp
  *
  * REFACTORING: ISO STANDARD ALIGNMENT
- * Variables renamed to match ISO 13790 and ISO 15242 symbols:
- * - theta_ : Temperatures (degC)
- * - phi_   : Heat flow rates (W)
- * - q_ve_  : Ventilation airflow rates (m3/s or m3/h)
- * - H_     : Heat transfer coefficients (W/K)
- * - A_     : Areas (m2)
+ * Variables renamed to match ISO 13790 and ISO 15242 symbols.
+ * OPTIMIZATION: Added Solar Radiation Caching.
  */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
@@ -23,6 +19,7 @@
 #include <array>
 #include <cmath>
 #include <span> 
+#include <memory> // Added for std::shared_ptr
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -35,8 +32,10 @@
 namespace openstudio {
     namespace isomodel {
 
+        // Forward declare EpwData to ensure pointer comparison validity
+        class EpwData;
+
         // Compressed Data Structure (Array of Structures)
-        // Renamed members to match ISO symbols where applicable
         struct HourlyCache {
             // Schedules (0.0 - 1.0)
             float sched_q_ve_mech;    // Mechanical ventilation schedule
@@ -48,27 +47,27 @@ namespace openstudio {
             float sched_theta_C_set;  // Cooling setpoint
 
             // Environmental
-            float theta_e;  // External air temperature (ISO 13790 theta_e)
-            float I_sol_gh; // Global Horizontal Irradiance (ISO 13790 I_sol)
+            float theta_e;  // External air temperature
+            float I_sol_gh; // Global Horizontal Irradiance
 
             // Pre-calculated Physics (ISO 15242)
-            float q_ve_wind;      // Airflow due to wind (q_v,wind)
-            float q_ve_mech_sup;  // Mechanical supply airflow (q_v,sup)
+            float q_ve_wind;      // Airflow due to wind
+            float q_ve_mech_sup;  // Mechanical supply airflow
             float q_ve_diff;      // Difference (exhaust - supply)
-            float theta_sup;      // Supply air temperature (theta_sup)
+            float theta_sup;      // Supply air temperature
         };
 
         struct GainsResult {
-            double phi_int;      // Total internal gains (Phi_int)
-            double phi_ia;       // Internal gains to air node (Phi_ia)
-            double phi_int_L;    // Lighting gains (Phi_int,L)
-            double phi_sol;      // Solar gains (Phi_sol)
+            double phi_int;      // Total internal gains
+            double phi_ia;       // Internal gains to air node
+            double phi_int_L;    // Lighting gains
+            double phi_sol;      // Solar gains
         };
 
         struct AirFlowResult {
-            double theta_ent;    // Entering air temperature (theta_ent)
-            double H_ve;         // Ventilation heat transfer coefficient (H_ve)
-            double H_tr_1;       // Coupling conductance 1 (H_tr,1)
+            double theta_ent;    // Entering air temperature
+            double H_ve;         // Ventilation heat transfer coefficient
+            double H_tr_1;       // Coupling conductance 1
         };
 
         class ISOMODEL_API HourlyModel : public Simulation
@@ -77,10 +76,15 @@ namespace openstudio {
             HourlyModel();
             virtual ~HourlyModel();
 
+            // Original Interface preserved
             std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
         private:
             void initialize();
+
+            // Solar Caching Members
+            std::shared_ptr<EpwData> m_lastEpwData;
+            std::vector<double> m_cachedSolarRadiation; 
 
             // Refactored Helpers
             AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
@@ -111,13 +115,13 @@ namespace openstudio {
             double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
 
             // Cached Config
-            double m_I_sol_max; // Max irradiance for shading
-            double m_Cp_air_pressure; // "dCp" in old code
+            double m_I_sol_max; 
+            double m_Cp_air_pressure;
             double m_theta_ve_preheat;
-            double m_eta_ve_rec; // Heat recovery efficiency
-            double m_phi_fan_spec; // Specific fan power
+            double m_eta_ve_rec;
+            double m_phi_fan_spec;
             double m_A_nat_inv; 
-            double m_f_phi_int_L; // Fraction of lighting energy to internal gains
+            double m_f_phi_int_L;
             double m_f_phi_sol_air;
             double m_f_phi_int_air;
 

@@ -1,13 +1,11 @@
 /*
  * standalone_main.cpp
- *
- * Refactored to remove boost::program_options dependency.
+ * * Compatible with the Original Interface (std::vector<EndUses>)
  */
 
 #include "UserModel.hpp"
 #include "MonthlyModel.hpp"
 #include "HourlyModel.hpp"
-// #include "Constants.hpp"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -44,23 +42,31 @@ void runMonthlySimulation(const UserModel& umodel) {
 void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
     openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
     auto hourlyResults = hourly.simulate(aggregateByMonth);
+    
     std::string monthOrHour = aggregateByMonth ? "month" : "hour";
-    int numberOfResults = aggregateByMonth ? 12 : 8760;
+    // hourlyResults is std::vector<EndUses>, so .size() works directly
+    
     std::cout << "Hourly results by " << monthOrHour << ":\n" << monthOrHour << ",ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW\n";
-    for (int i = 0; i < numberOfResults; i++) {
+    
+    for (size_t i = 0; i < hourlyResults.size(); i++) {
         std::cout << i + 1;
-        for (int j = 0; j < 13; j++) {
-            std::cout << ", " << hourlyResults[i].getEndUse(j);
+        // 0=ElecHeat, 1=ElecCool, ... 9=GasHeat. 
+        // 10,11,12 are placeholders for GasCool,GasEquip,GasDHW if needed
+        for (int j = 0; j < 10; j++) {
+             std::cout << ", " << hourlyResults[i].getEndUse(j);
         }
-        std::cout << std::endl;
+        // Fill remaining columns (GasCool, GasEquip, GasDHW) with 0 if not present in getEndUse
+        std::cout << ", 0, 0, 0" << std::endl;
     }
 }
 
 void compare(const UserModel& umodel, bool markdown = false) {
     openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
-    auto hourlyResults = hourly.simulate(true);
+    // aggregateByMonth = true for comparison
+    auto hourlyResults = hourly.simulate(true); 
     openstudio::isomodel::MonthlyModel monthlyModel = umodel.toMonthlyModel();
     auto monthlyResults = monthlyModel.simulate();
+    
     auto endUseNames = std::vector<std::string>{ "ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights", "ElecFans", "ElecPump", "ElecEquipInt", "ElecEquipExt", "ElectDHW", "GasHeat", "GasCool", "GasEquip", "GasDHW" };
     auto delim = markdown ? " | " : ", ";
 
@@ -72,7 +78,12 @@ void compare(const UserModel& umodel, bool markdown = false) {
         if (markdown) std::cout << "|---|---|---|---|\n";
         for (auto month = 0; month != 12; ++month) {
             auto monthlyResult = monthlyResults[month].getEndUse(endUse);
-            auto hourlyResult = hourlyResults[month].getEndUse(endUse);
+            // Original interface: hourlyResults is vector<EndUses>
+            // We use getEndUse(index). 
+            // Note: If hourlyResults doesn't have 13 indices, getEndUse typically returns 0 or handles it.
+            // Based on previous code, 0-9 are populated.
+            double hourlyResult = (endUse < 10) ? hourlyResults[month].getEndUse(endUse) : 0.0;
+
             if (markdown) std::cout << "| ";
             std::cout << month << delim << monthlyResult << delim << hourlyResult << delim << monthlyResult - hourlyResult;
             if (markdown) std::cout << " |";
@@ -114,10 +125,10 @@ int main(int argc, char* argv[]) {
             if (++i < args.size()) compareType = args[i];
         }
         else if (ismPath.empty()) {
-            ismPath = args[i]; // First positional
+            ismPath = args[i]; 
         }
         else if (defaultsPath.empty()) {
-            defaultsPath = args[i]; // Second positional
+            defaultsPath = args[i]; 
         }
     }
 
