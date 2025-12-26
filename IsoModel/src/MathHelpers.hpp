@@ -289,6 +289,21 @@ namespace openstudio {
             return std::cbrt(x * x);
         }
 
+        inline Matrix toMatrix(const std::vector<std::vector<double>>& source, size_t rows, size_t cols) {
+            Matrix mat(rows, cols);
+            for (size_t r = 0; r < rows; ++r) {
+                for (size_t c = 0; c < cols; ++c) {
+                    // Check bounds to be safe
+                    if (r < source.size() && c < source[r].size()) {
+                        mat(r, c) = source[r][c];
+                    } else {
+                        mat(r, c) = 0.0;
+                    }
+                }
+            }
+            return mat;
+        }
+
     } // namespace isomodel
 } // namespace openstudio
 

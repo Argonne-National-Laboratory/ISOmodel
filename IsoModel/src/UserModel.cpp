@@ -8,6 +8,10 @@
 #include <iostream> 
 #include <filesystem>
 
+// Optimizations: 
+// 1. Removed stringSplit helper (no longer needed for solar initialization)
+// 2. initializeSolar() now delegates directly to EpwData::populateWeatherData
+
 using namespace std;
 namespace openstudio::isomodel {
 
@@ -48,29 +52,6 @@ MonthlyModel UserModel::toMonthlyModel() const
     setCoreSimulationProperties(sim);
 
     return sim;
-}
-
-//http://stackoverflow.com/questions/10051679/c-tokenize-string
-std::vector<std::string> inline stringSplit(const std::string& source, char delimiter = ' ', bool keepEmpty = false)
-{
-    std::vector<std::string> results;
-
-    size_t prev = 0;
-    size_t next = 0;
-    if (source.size() == 0)
-        return results;
-    while ((next = source.find_first_of(delimiter, prev)) != std::string::npos) {
-        if (keepEmpty || (next - prev != 0)) {
-            results.push_back(source.substr(prev, next - prev));
-        }
-        prev = next + 1;
-    }
-
-    if (prev < source.size()) {
-        results.push_back(source.substr(prev));
-    }
-
-    return results;
 }
 
 void UserModel::initializeStructure(const YAML::Node& buildingParams)
@@ -386,6 +367,7 @@ void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 
 int UserModel::weatherState(std::string header)
 {
+    // Function kept for symbol compatibility with header, though unused in new initializeSolar logic
     if (!header.compare("solar"))
         return 1;
     else if (!header.compare("hdbt"))
@@ -401,6 +383,7 @@ int UserModel::weatherState(std::string header)
     else
         return -1;
 }
+
 std::string UserModel::resolveFilename(std::string baseFile, std::string relativeFile)
 {
     unsigned int lastSeparator = 0;
@@ -483,72 +466,13 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     _valid = true;
 }
 
+// OPTIMIZED IMPLEMENTATION: ITEM 1
 void UserModel::initializeSolar()
 {
-
-    int state = 0, row = 0;
-    Matrix _msolar(12, 8);
-    Matrix _mhdbt(12, 24);
-    Matrix _mhEgh(12, 24);
-    Vector _mEgh(12);
-    Vector _mdbt(12);
-    Vector _mwind(12);
-
-    string line;
-    std::vector<std::string> linesplit;
-
-    std::stringstream inputFile(_edata->toISOData());
-
-    while (inputFile.good()) {
-        getline(inputFile, line);
-        if (line.size() > 0 && line[0] == '#')
-            continue;
-        linesplit = stringSplit(line, ',', true);
-        if (linesplit.size() == 0) {
-            continue;
-        }
-        else if (linesplit.size() == 1) {
-            state = weatherState(linesplit[0]);
-            row = 0;
-        }
-        else if (row < 12) {
-            switch (state) {
-            case 1: 
-                for (unsigned int c = 1; c < linesplit.size() && c < 9; c++) {
-                    _msolar(row, c - 1) = atof(linesplit[c].c_str());
-                }
-                break;
-            case 2: 
-                for (unsigned int c = 1; c < linesplit.size() && c < 25; c++) {
-                    _mhdbt(row, c - 1) = atof(linesplit[c].c_str());
-                }
-                break;
-            case 3: 
-                for (unsigned int c = 1; c < linesplit.size() && c < 25; c++) {
-                    _mhEgh(row, c - 1) = atof(linesplit[c].c_str());
-                }
-                break;
-            case 4:  
-                _mEgh[row] = atof(linesplit[1].c_str());
-                break;
-            case 5:    
-                _mdbt[row] = atof(linesplit[1].c_str());
-                break;
-            case 6:    
-                _mwind[row] = atof(linesplit[1].c_str());
-                break;
-            default:
-                break;
-            }
-            row++;
-        }
+    // Replaces the entire CSV parsing logic by calling the new efficient transfer method
+    if (_edata && _weather) {
+        _edata->populateWeatherData(_weather);
     }
-    _weather->setMdbt(_mdbt);
-    _weather->setMEgh(_mEgh);
-    _weather->setMhdbt(_mhdbt);
-    _weather->setMhEgh(_mhEgh);
-    _weather->setMsolar(_msolar);
-    _weather->setMwind(_mwind);
 }
 
 void UserModel::load(std::string buildingFile)

@@ -2,6 +2,8 @@
 #include "SolarRadiation.hpp" 
 #include "TimeFrame.hpp" 
 #include "Constants.hpp"
+#include "WeatherData.hpp"
+#include "MathHelpers.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -21,6 +23,45 @@ namespace openstudio::isomodel {
     }
 
     // Destructor defaulted in header
+
+    // New method for Item 1: Direct population of WeatherData to avoid string serialization
+    void EpwData::populateWeatherData(std::shared_ptr<WeatherData> wd)
+    {
+        if (!wd) return;
+
+        TimeFrame frames;
+        SolarRadiation pos(&frames, this);
+        pos.Calculate();
+
+        // Direct transfer for Vectors (std::vector<double> is compatible with Vector)
+        wd->setMdbt(pos.monthlyDryBulbTemp());
+        wd->setMwind(pos.monthlyWindspeed());
+        wd->setMEgh(pos.monthlyGlobalHorizontalRadiation());
+
+        // // Helper lambda to convert std::vector<std::vector<double>> to Matrix
+        // auto toMatrix = [](const std::vector<std::vector<double>>& source, int rows, int cols) {
+        //     Matrix mat(rows, cols);
+        //     for (int r = 0; r < rows; ++r) {
+        //         for (int c = 0; c < cols; ++c) {
+        //             if (static_cast<size_t>(r) < source.size() && static_cast<size_t>(c) < source[r].size()) {
+        //                 mat(r, c) = source[r][c];
+        //             }
+        //             else {
+        //                 mat(r, c) = 0.0;
+        //             }
+        //         }
+        //     }
+        //     return mat;
+        // };
+
+        // Convert and set matrices
+        // Hourly data is 12 months x 24 hours
+        wd->setMhdbt(toMatrix(pos.hourlyDryBulbTemp(), monthsInYear, hoursInDay));
+        wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), monthsInYear, hoursInDay));
+        
+        // Solar radiation is 12 months x 8 surfaces
+        wd->setMsolar(toMatrix(pos.monthlySolarRadiation(), monthsInYear, 8));
+    }
 
     void EpwData::parseHeader(std::string line)
     {
