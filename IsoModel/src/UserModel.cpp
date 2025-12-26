@@ -7,10 +7,7 @@
 #include <optional>
 #include <iostream> 
 #include <filesystem>
-
-// Optimizations: 
-// 1. Removed stringSplit helper (no longer needed for solar initialization)
-// 2. initializeSolar() now delegates directly to EpwData::populateWeatherData
+#include <algorithm> // Required for std::transform in loadBuilding
 
 using namespace std;
 namespace openstudio::isomodel {
@@ -54,19 +51,21 @@ MonthlyModel UserModel::toMonthlyModel() const
     return sim;
 }
 
+// OPTIMIZATION ITEM 4: Keys changed to strictly lowercase
 void UserModel::initializeStructure(const YAML::Node& buildingParams)
 {
-    initializeParameter(&UserModel::setWallArea, buildingParams, "wallArea", true);
-    initializeParameter(&UserModel::setWallU, buildingParams, "wallU", true);
-    initializeParameter(&UserModel::setWallThermalEmissivity, buildingParams, "wallEmissivity", true);
-    initializeParameter(&UserModel::setWallSolarAbsorption, buildingParams, "wallAbsorption", true);
-    initializeParameter(&UserModel::setWindowArea, buildingParams, "windowArea", true);
-    initializeParameter(&UserModel::setWindowU, buildingParams, "windowU", true);
-    initializeParameter(&UserModel::setWindowSHGC, buildingParams, "windowSHGC", true);
-    initializeParameter(&UserModel::setWindowSCF, buildingParams, "windowSCF", true);
-    initializeParameter(&UserModel::setWindowSDF, buildingParams, "windowSDF", true);
+    initializeParameter(&UserModel::setWallArea, buildingParams, "wallarea", true);
+    initializeParameter(&UserModel::setWallU, buildingParams, "wallu", true);
+    initializeParameter(&UserModel::setWallThermalEmissivity, buildingParams, "wallemissivity", true);
+    initializeParameter(&UserModel::setWallSolarAbsorption, buildingParams, "wallabsorption", true);
+    initializeParameter(&UserModel::setWindowArea, buildingParams, "windowarea", true);
+    initializeParameter(&UserModel::setWindowU, buildingParams, "windowu", true);
+    initializeParameter(&UserModel::setWindowSHGC, buildingParams, "windowshgc", true);
+    initializeParameter(&UserModel::setWindowSCF, buildingParams, "windowscf", true);
+    initializeParameter(&UserModel::setWindowSDF, buildingParams, "windowsdf", true);
 }
 
+// OPTIMIZATION ITEM 4: Keys changed to strictly lowercase
 void UserModel::initializeParameters(const YAML::Node& buildingParams)
 {
     initializeParameter(&UserModel::setTerrainClass, buildingParams, "terrainclass", true);
@@ -109,7 +108,7 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(setBemTypeWithString, buildingParams, "bemtype", true);
 
     initializeParameter(&UserModel::setFreshAirFlowRate, buildingParams, "ventilationintakerateoccupied", true);
-    initializeParameter(&UserModel::setSupplyExhaustRate, buildingParams, "ventilationExhaustRateOccupied", true);
+    initializeParameter(&UserModel::setSupplyExhaustRate, buildingParams, "ventilationexhaustrateoccupied", true); // was camelCase
     initializeParameter(&UserModel::setHeatRecovery, buildingParams, "heatrecovery", true);
     initializeParameter(&UserModel::setExhaustAirRecirclation, buildingParams, "exhaustairrecirculation", true);
     initializeParameter(&UserModel::setBuildingAirLeakage, buildingParams, "infiltrationrateoccupied", true);
@@ -130,15 +129,15 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setHeatingUnoccupiedSetpoint, buildingParams, "heatingsetpointunoccupied", true);
 
 #if (USE_NEW_BUILDING_PARAMS)
-    initializeParameter(&UserModel::setVentilationIntakeRateUnoccupied, buildingParams, "ventilationIntakeRateUnoccupied", true);
-    initializeParameter(&UserModel::setVentilationExhaustRateUnoccupied, buildingParams, "ventilationExhaustRateUnoccupied", true);
-    initializeParameter(&UserModel::setInfiltrationRateUnoccupied, buildingParams, "infiltrationRateUnoccupied", true);
-    initializeParameter(&UserModel::setLightingPowerFixedOccupied, buildingParams, "lightingPowerFixedOccupied", true);
-    initializeParameter(&UserModel::setLightingPowerFixedUnoccupied, buildingParams, "lightingPowerFixedUnoccupied", true);
-    initializeParameter(&UserModel::setElectricAppliancePowerFixedOccupied, buildingParams, "electricAppliancePowerFixedOccupied", true);
-    initializeParameter(&UserModel::setElectricAppliancePowerFixedUnoccupied, buildingParams, "electricAppliancePowerFixedUnoccupied", true);
-    initializeParameter(&UserModel::setGasAppliancePowerFixedOccupied, buildingParams, "gasAppliancePowerFixedOccupied", true);
-    initializeParameter(&UserModel::setGasAppliancePowerFixedUnoccupied, buildingParams, "gasAppliancePowerFixedUnoccupied", true);
+    initializeParameter(&UserModel::setVentilationIntakeRateUnoccupied, buildingParams, "ventilationintakerateunoccupied", true);
+    initializeParameter(&UserModel::setVentilationExhaustRateUnoccupied, buildingParams, "ventilationexhaustrateunoccupied", true);
+    initializeParameter(&UserModel::setInfiltrationRateUnoccupied, buildingParams, "infiltrationrateunoccupied", true);
+    initializeParameter(&UserModel::setLightingPowerFixedOccupied, buildingParams, "lightingpowerfixedoccupied", true);
+    initializeParameter(&UserModel::setLightingPowerFixedUnoccupied, buildingParams, "lightingpowerfixedunoccupied", true);
+    initializeParameter(&UserModel::setElectricAppliancePowerFixedOccupied, buildingParams, "electricappliancepowerfixedoccupied", true);
+    initializeParameter(&UserModel::setElectricAppliancePowerFixedUnoccupied, buildingParams, "electricappliancepowerfixedunoccupied", true);
+    initializeParameter(&UserModel::setGasAppliancePowerFixedOccupied, buildingParams, "gasappliancepowerfixedoccupied", true);
+    initializeParameter(&UserModel::setGasAppliancePowerFixedUnoccupied, buildingParams, "gasappliancepowerfixedunoccupied", true);
 
     initializeParameter(&UserModel::setScheduleFilePath, buildingParams, "schedulefilepath", true);
 #endif
@@ -183,8 +182,6 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setManualSwitchLux, buildingParams, "manualswitchlux", false);
     initializeParameter(&UserModel::setNaturallyLightedArea, buildingParams, "naturallylightedarea", false);
     
-    // Removed setRhoCpAir and setRhoCpWater as they are now constants
-    
     initializeParameter(&UserModel::setPhiIntFractionToAirNode, buildingParams, "phiintfractiontoairnode", false);
     initializeParameter(&UserModel::setPhiSolFractionToAirNode, buildingParams, "phisolfractiontoairnode", false);
     initializeParameter(&UserModel::setHci, buildingParams, "hci", false);
@@ -210,14 +207,16 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
 }
 
+// OPTIMIZATION ITEM 4: Removed std::transform and string copy
 template <typename T>
 std::optional<T> getParameter(const YAML::Node& params,
     const std::string& paramName) {
-    std::string pn(paramName);
-    std::transform(paramName.begin(), paramName.end(), pn.begin(), ::tolower);
-    if (params[pn]) {
+    
+    // Direct access to map avoids string allocation and transformation
+    // params map is already lowercased by loadBuilding
+    if (params[paramName]) {
         try {
-            return params[pn].as<T>();
+            return params[paramName].as<T>();
         }
         catch (YAML::TypedBadConversion<T>& ex) {
             return std::nullopt;
@@ -226,14 +225,14 @@ std::optional<T> getParameter(const YAML::Node& params,
     return std::nullopt;
 }
 
+// OPTIMIZATION ITEM 4: Removed std::transform and string copy
 bool getParameterAsVector(const YAML::Node& params,
     const std::string& paramName, Vector& vec) {
 
-    std::string pn(paramName);
-    std::transform(paramName.begin(), paramName.end(), pn.begin(), ::tolower);
-    if (params[pn]) {
+    // Direct access to map avoids string allocation and transformation
+    if (params[paramName]) {
         vec.clear();
-        auto param = params[pn];
+        auto param = params[paramName];
         size_t n = std::distance(param.begin(), param.end());
         if (vec.size() != n) {
             vec.resize(n);
@@ -252,7 +251,6 @@ bool getParameterAsVector(const YAML::Node& params,
     }
     return false;
 }
-
 
 void UserModel::initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& params, std::string paramName, bool required) {
     if (auto prop = getParameter<double>(params, paramName)) {
@@ -323,6 +321,7 @@ void UserModel::loadBuilding(std::string buildingFile)
 
     for (auto iter : tmp) {
         std::string key = iter.first.as<std::string>();
+        // Key transformation happens ONCE here, enabling direct lookup elsewhere
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         buildingParams[key] = iter.second;
     }
@@ -367,7 +366,7 @@ void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 
 int UserModel::weatherState(std::string header)
 {
-    // Function kept for symbol compatibility with header, though unused in new initializeSolar logic
+    // Unused in optimized solar initialization, but kept for ABI compatibility
     if (!header.compare("solar"))
         return 1;
     else if (!header.compare("hdbt"))
@@ -466,10 +465,10 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     _valid = true;
 }
 
-// OPTIMIZED IMPLEMENTATION: ITEM 1
+// OPTIMIZATION ITEM 1: Direct transfer
 void UserModel::initializeSolar()
 {
-    // Replaces the entire CSV parsing logic by calling the new efficient transfer method
+    // Optimization: Direct transfer replaces the CSV parsing logic
     if (_edata && _weather) {
         _edata->populateWeatherData(_weather);
     }
