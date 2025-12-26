@@ -21,9 +21,10 @@
 #define ISOMODEL_ENDUSES_HPP
 
 #include "ISOModelAPI.hpp"
+#include <vector> // Ensure vector is available for both modes
 
 #ifdef ISOMODEL_STANDALONE
-#include <vector>
+// Standalone includes if needed
 #else
 #include "../utilities/data/DataEnums.hpp"
 #endif
@@ -54,19 +55,26 @@ public:
     return 0.0;
   }
 #else
-  // Default constructor
-  EndUses() = default;
+  // --------------------------------------------------------------------------
+  // OPTIMIZATION (Item 2): 
+  // Flattened storage for O(1) access instead of linear search through pairs.
+  // 2 Fuel Types * 9 Categories = 18 slots.
+  // --------------------------------------------------------------------------
+
+  // Default constructor: pre-allocate flattened vector
+  EndUses() : _endUses(18, 0.0) {}
 
   void addEndUse(double value, EndUseFuelType fuel, EndUseCategoryType category) {
-    _endUses.push_back(std::make_pair(std::make_pair(fuel, category), value));
+    int index = getIndex(fuel, category);
+    if (index >= 0 && index < static_cast<int>(_endUses.size())) {
+      _endUses[index] = value;
+    }
   }
 
-  // Added const qualifier for read-only access
   double getEndUse(EndUseFuelType fuel, EndUseCategoryType category) const {
-    for (auto const& endUse : _endUses) {
-      if (endUse.first.first == fuel && endUse.first.second == category) {
-        return endUse.second;
-      }
+    int index = getIndex(fuel, category);
+    if (index >= 0 && index < static_cast<int>(_endUses.size())) {
+      return _endUses[index];
     }
     return 0.0;
   }
@@ -84,10 +92,26 @@ public:
 
 private:
 #ifdef ISOMODEL_STANDALONE
-  // In-class initialization replaces constructor initialization list
   std::vector<double> _endUses = std::vector<double>(13, 0.0);
 #else
-  std::vector<std::pair<std::pair<EndUseFuelType, EndUseCategoryType>, double>> _endUses;
+  // Flattened storage: 
+  // Index = (FuelIndex * 9) + CategoryIndex
+  std::vector<double> _endUses;
+
+  // Helper to map Enums to flat integer index
+  // Returns -1 if invalid (though enums are strongly typed)
+  int getIndex(EndUseFuelType fuel, EndUseCategoryType category) const {
+      // Map Fuel (0 or 1)
+      int f = (fuel == EndUseFuelType::Gas) ? 1 : 0; 
+      
+      // Map Category (0 to 8)
+      // Relying on EndUseCategoryType enum integer values matching standard OS order.
+      // If enum values are not contiguous 0-8, a switch statement would be safer,
+      // but casting is standard for this specific optimization in OS-related code.
+      int c = static_cast<int>(category); 
+      
+      return (f * 9) + c; 
+  }
 #endif
 
 };
