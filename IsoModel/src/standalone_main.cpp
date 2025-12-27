@@ -23,6 +23,7 @@ void printUsage(const char* execName) {
         << "  -m, --monthly                 Run the monthly simulation (default).\n"
         << "  -h, --hourlyByMonth           Run the hourly simulation (results aggregated by month).\n"
         << "  -H, --hourlyByHour            Run the hourly simulation (results for each hour).\n"
+        << "  -p                            Run the hourly version and print schedules to the screen.\n"
         << "  -c, --compare <md|csv>        Run monthly/hourly comparison.\n";
 }
 
@@ -57,6 +58,29 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
         }
         // Fill remaining columns (GasCool, GasEquip, GasDHW) with 0 if not present in getEndUse
         std::cout << ", 0, 0, 0" << std::endl;
+    }
+}
+
+void printSchedules(const UserModel& umodel) {
+    openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
+    // Run simulate to ensure initialize() populates the cache
+    hourly.simulate(false); 
+    
+    const auto& schedules = hourly.getCachedSchedules();
+    
+    std::cout << "Hour,MechVent,IntApp,IntLight,ExtLight,ExtEquip,HeatSet,CoolSet\n";
+    
+    for (size_t i = 0; i < schedules.size(); ++i) {
+        const auto& s = schedules[i];
+        std::cout << (i + 1) 
+            << ", " << s.sched_q_ve_mech
+            << ", " << s.sched_phi_int_App
+            << ", " << s.sched_phi_int_L
+            << ", " << s.sched_ext_light
+            << ", " << s.sched_ext_equip
+            << ", " << s.sched_theta_H_set
+            << ", " << s.sched_theta_C_set
+            << "\n";
     }
 }
 
@@ -101,6 +125,7 @@ int main(int argc, char* argv[]) {
 
     std::string ismPath, defaultsPath, compareType;
     bool runMonthly = false, runHourlyByMonth = false, runHourlyByHour = false, runCompare = false;
+    bool runPrintSched = false;
 
     // Simple manual parser
     std::vector<std::string> args(argv + 1, argv + argc);
@@ -119,6 +144,9 @@ int main(int argc, char* argv[]) {
         }
         else if (args[i] == "-H" || args[i] == "--hourlyByHour") {
             runHourlyByHour = true;
+        }
+        else if (args[i] == "-p") {
+            runPrintSched = true;
         }
         else if (args[i] == "-c" || args[i] == "--compare") {
             runCompare = true;
@@ -149,6 +177,10 @@ int main(int argc, char* argv[]) {
     bool simulationRan = false;
     if (runCompare) {
         compare(umodel, (compareType == "md"));
+        simulationRan = true;
+    }
+    if (runPrintSched) {
+        printSchedules(umodel);
         simulationRan = true;
     }
     if (runMonthly) {

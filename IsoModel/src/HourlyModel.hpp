@@ -78,6 +78,9 @@ namespace openstudio {
             // Original Interface preserved
             std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
+            // NEW: Accessor for the internal schedule cache
+            const std::vector<HourlyCache>& getCachedSchedules() const { return m_hourlyData; }
+
         private:
             void initialize();
 
