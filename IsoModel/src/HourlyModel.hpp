@@ -22,6 +22,7 @@
 #include <cmath>
 #include <span> 
 #include <memory> 
+#include <string>
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -69,6 +70,18 @@ namespace openstudio {
             double H_tr_1;       // Coupling conductance 1
         };
 
+        // Struct to hold raw CSV schedule data
+        struct LoadedScheduleData {
+            int Hour;
+            double MechVent;
+            double IntApp;
+            double IntLight;
+            int ExtLight;
+            int ExtEquip;
+            int HeatSet;
+            int CoolSet;
+        };
+
         class ISOMODEL_API HourlyModel : public Simulation
         {
         public:
@@ -80,6 +93,9 @@ namespace openstudio {
 
             // NEW: Accessor for the internal schedule cache
             const std::vector<HourlyCache>& getCachedSchedules() const { return m_hourlyData; }
+            
+            // Set the path for the hourly schedule file
+            void setHourlySchedulePath(const std::string& path) { m_hourlySchedulePath = path; }
 
         private:
             void initialize();
@@ -136,6 +152,8 @@ namespace openstudio {
             double m_f_phi_int_L;
             double m_f_phi_sol_air;
             double m_f_phi_int_air;
+            
+            std::string m_hourlySchedulePath;
 
             // Arrays (std::array)
             std::array<double, 9> A_nla_ms;
@@ -169,6 +187,8 @@ namespace openstudio {
                 double theta_C[24][7];
             };
             void buildWeeklySchedules(WeeklyScheduleData& sched);
+            bool loadSchedulesFromFile(const std::string& path, std::vector<LoadedScheduleData>& data);
+
 
             // Virtuals (kept for interface compliance)
             virtual double ventilationSchedule(int, int, int) { return 0; }

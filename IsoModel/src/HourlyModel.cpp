@@ -16,6 +16,9 @@
 #include <cmath>
 #include <cfloat> 
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 namespace openstudio {
     namespace isomodel {
@@ -460,7 +463,21 @@ namespace openstudio {
             f_ve_mech_sup = std::max(0.00001, ventilation.fanControlFactor());
 
             WeeklyScheduleData weekly;
-            buildWeeklySchedules(weekly); 
+            std::vector<LoadedScheduleData> fileData;
+            bool useFile = false;
+            
+            // Try to load from file if path is present and not "false"
+            if (!m_hourlySchedulePath.empty()) {
+                std::string lowerPath = m_hourlySchedulePath;
+                std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+                if (lowerPath != "false") {
+                     useFile = loadSchedulesFromFile(m_hourlySchedulePath, fileData);
+                }
+            }
+
+            if (!useFile) {
+                buildWeeklySchedules(weekly);
+            }
 
             m_hourlyData.resize(hoursInYear);
             
@@ -475,13 +492,27 @@ namespace openstudio {
                 int d = frame.DayOfWeek[i];
                 HourlyCache& c = m_hourlyData[i];
 
-                c.sched_q_ve_mech   = (float)weekly.q_ve[h][d];
-                c.sched_ext_equip   = (float)weekly.ext_App[h][d];
-                c.sched_phi_int_App = (float)weekly.int_App[h][d];
-                c.sched_ext_light   = (float)weekly.ext_L[h][d];
-                c.sched_phi_int_L   = (float)weekly.int_L[h][d];
-                c.sched_theta_H_set = (float)weekly.theta_H[h][d];
-                c.sched_theta_C_set = (float)weekly.theta_C[h][d];
+                if (useFile) {
+                    const auto& row = fileData[i];
+                    c.sched_q_ve_mech = (float)row.MechVent; // Assumed to be in same units as weekly (L/s?) or is it directly used? 
+                    // Note: file values are used directly. If file contains raw flow, ensure it matches expectations.
+                    // However, in existing code: c.sched_q_ve_mech = weekly.q_ve[h][d] = ventRate.
+                    
+                    c.sched_ext_equip = (float)row.ExtEquip; // Using as double/float directly
+                    c.sched_phi_int_App = (float)row.IntApp;
+                    c.sched_ext_light = (float)row.ExtLight;
+                    c.sched_phi_int_L = (float)row.IntLight;
+                    c.sched_theta_H_set = (float)row.HeatSet;
+                    c.sched_theta_C_set = (float)row.CoolSet;
+                } else {
+                    c.sched_q_ve_mech   = (float)weekly.q_ve[h][d];
+                    c.sched_ext_equip   = (float)weekly.ext_App[h][d];
+                    c.sched_phi_int_App = (float)weekly.int_App[h][d];
+                    c.sched_ext_light   = (float)weekly.ext_L[h][d];
+                    c.sched_phi_int_L   = (float)weekly.int_L[h][d];
+                    c.sched_theta_H_set = (float)weekly.theta_H[h][d];
+                    c.sched_theta_C_set = (float)weekly.theta_C[h][d];
+                }
                 
                 c.theta_e = (float)temp[i];
                 c.I_sol_gh = (float)egh[i];
@@ -493,6 +524,52 @@ namespace openstudio {
                 c.q_ve_diff = (float)(-(c.q_ve_mech_sup - q_ve)); 
                 c.theta_sup = (float)(std::max(m_theta_ve_preheat, (1.0 - m_eta_ve_rec) * temp[i] + m_eta_ve_rec * 20.0));
             }
+        }
+        
+        bool HourlyModel::loadSchedulesFromFile(const std::string& path, std::vector<LoadedScheduleData>& data) {
+            std::ifstream file(path);
+            if (!file.is_open()) {
+                std::cerr << "Error: Could not open schedule file: " << path << std::endl;
+                return false;
+            }
+
+            std::string line;
+            std::getline(file, line); // Skip header
+
+            data.clear();
+            data.reserve(8760);
+
+            while (std::getline(file, line)) {
+                std::stringstream ss(line);
+                std::string cell;
+                LoadedScheduleData row;
+                
+                try {
+                    // Expected format: Hour,MechVent,IntApp,IntLight,ExtLight,ExtEquip,HeatSet,CoolSet
+                    std::getline(ss, cell, ','); row.Hour = std::stoi(cell);
+                    std::getline(ss, cell, ','); row.MechVent = std::stod(cell);
+                    std::getline(ss, cell, ','); row.IntApp = std::stod(cell);
+                    std::getline(ss, cell, ','); row.IntLight = std::stod(cell);
+                    std::getline(ss, cell, ','); row.ExtLight = std::stoi(cell);
+                    std::getline(ss, cell, ','); row.ExtEquip = std::stoi(cell);
+                    std::getline(ss, cell, ','); row.HeatSet = std::stoi(cell);
+                    std::getline(ss, cell, ','); row.CoolSet = std::stoi(cell);
+                    data.push_back(row);
+                } catch (...) {
+                    std::cerr << "Error parsing line in schedule file: " << line << std::endl;
+                    return false;
+                }
+            }
+            
+            if (data.size() < 8760) {
+                 std::cerr << "Warning: Schedule file has fewer than 8760 rows (" << data.size() << ")" << std::endl;
+                 // Could fill remainder or fail. For now, let's warn.
+                 // To prevent crash in loop, resize with defaults or last value
+                 if(data.empty()) return false;
+                 data.resize(8760, data.back()); 
+            }
+            
+            return true;
         }
 
         void HourlyModel::buildWeeklySchedules(WeeklyScheduleData& sched) {

@@ -34,6 +34,7 @@ HourlyModel UserModel::toHourlyModel() const
     }
 
     setCoreSimulationProperties(sim);
+    sim.setHourlySchedulePath(_hourlySchedulePath);
     return sim;
 }
 
@@ -141,6 +142,9 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
 
     initializeParameter(&UserModel::setScheduleFilePath, buildingParams, "schedulefilepath", true);
 #endif
+
+    // Updated to match the YAML key "hourlyScheduleFilePath" (which becomes lowercase)
+    initializeParameter(&UserModel::setHourlySchedulePath, buildingParams, "hourlyschedulefilepath", false);
 
     initializeParameter(&UserModel::setWeatherFilePath, buildingParams, "weatherfilepath", true);
 

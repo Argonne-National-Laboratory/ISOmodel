@@ -633,6 +633,12 @@ public:
   /// Sets a Population property.
   void setScheduleFilePath(std::string scheduleFilePath) { pop.setScheduleFilePath(scheduleFilePath); }
 
+  /// Gets a Population property.
+  std::string hourlySchedulePath() const { return _hourlySchedulePath; }
+
+  /// Sets a Population property.
+  void setHourlySchedulePath(std::string hourlySchedulePath) { _hourlySchedulePath = hourlySchedulePath; }
+
   /// Gets a SimulationSettings property.
   double hci() const { return simSettings.hci(); }
 
@@ -1464,7 +1470,7 @@ private:
 
   bool _valid = false;
 
-  std::string _weatherFilePath, _scheduleFilePath;
+  std::string _weatherFilePath, _scheduleFilePath, _hourlySchedulePath;
   std::string dataFile;
 
   void initializeParameters(const YAML::Node& params);
