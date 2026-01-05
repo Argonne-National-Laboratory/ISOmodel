@@ -195,6 +195,16 @@ add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchma
 target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(isomodel_benchmark PRIVATE ${PERF_FLAGS})
 
+add_custom_command(TARGET isomodel_benchmark POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml"
+          "$<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg.yaml"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_SOURCE_DIR}/../test_data/test.epw"
+          "$<TARGET_FILE_DIR:isomodel_benchmark>/test.epw"
+  COMMENT "Copying test data files next to the executable"
+)
+
 # 4. Solar Debug Executable
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
 target_link_libraries(solar_debug PRIVATE yaml-cpp::yaml-cpp)
