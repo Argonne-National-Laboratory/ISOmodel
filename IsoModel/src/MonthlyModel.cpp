@@ -938,7 +938,7 @@ namespace openstudio::isomodel {
         Vector v_Qtot_ht = sum(v_QT_ht, v_QV_ht);
 
         // Compute the ratio of heat gain to heat loss.
-        Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, minDouble)); // Add minDouble to avoid divide by zero.
+        Vector v_gamma_H_ht = div(v_tot_mo_ht_gain, sum(v_Qtot_ht, std::numeric_limits<double>::epsilon())); // Add std::numeric_limits<double>::epsilon() to avoid divide by zero.
 
         // Heating utilization factor.
         Vector v_eta_g_H(monthsInYear);
@@ -946,7 +946,7 @@ namespace openstudio::isomodel {
         // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
         for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
             v_eta_g_H[i] =
-                v_gamma_H_ht[i] > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht[i] + minDouble);
+                v_gamma_H_ht[i] > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
         }
 
         // Total heating need (MJ).
@@ -961,7 +961,7 @@ namespace openstudio::isomodel {
         Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl);
 
         // Heat transfer (loss) to heat gain ratio, cooling.
-        Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, minDouble));
+        Vector v_gamma_H_cl = div(v_Qtot_cl, sum(v_tot_mo_ht_gain, std::numeric_limits<double>::epsilon()));
 
         // Compute the cooling gain utilization factor eta_g_cl
         Vector v_eta_g_CL(monthsInYear);
@@ -985,9 +985,9 @@ namespace openstudio::isomodel {
         double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
         // Volume of air moved for heating (m3).
-        Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), rhoCpAir), minDouble));
+        Vector v_Vair_ht = div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), rhoCpAir), std::numeric_limits<double>::epsilon()));
         // Volume of air moved for cooling (m3).
-        Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), rhoCpAir), minDouble));
+        Vector v_Vair_cl = div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), rhoCpAir), std::numeric_limits<double>::epsilon()));
 
         printVector("v_Vair_ht", v_Vair_ht);
         printVector("v_Vair_cl", v_Vair_cl);
@@ -1075,14 +1075,14 @@ namespace openstudio::isomodel {
             v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
         }
         else {
-            v_Qht_sys = div(sum(v_Qloss_ht_dist, v_Qneed_ht), heating.efficiency() + minDouble);
+            v_Qht_sys = div(sum(v_Qloss_ht_dist, v_Qneed_ht), heating.efficiency() + std::numeric_limits<double>::epsilon());
         }
 
         if (cooling.DC_YesNo() == 1) {
             v_Qcool_DC = sum(v_Qneed_cl, v_Qloss_cl_dist);
         }
         else {
-            v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl), IEER + minDouble);
+            v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl), IEER + std::numeric_limits<double>::epsilon());
         }
         printVector("v_Qht_sys", v_Qht_sys);
         printVector("v_Qht_DH", v_Qht_DH);

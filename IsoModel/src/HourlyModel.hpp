@@ -35,19 +35,19 @@ namespace openstudio::isomodel {
     class EpwData;
 
     // Compressed Data Structure (Array of Structures)
-    struct HourlyCache {
+    struct HourlyCache final { // Use final for structs that are not intended for inheritance
         // Schedules (0.0 - 1.0)
-        float sched_q_ve_mech;    // Mechanical ventilation schedule
-        float sched_phi_int_App;  // Appliances gain schedule
-        float sched_phi_int_L;    // Lighting gain schedule
-        float sched_ext_light;    // Exterior lighting control
-        float sched_ext_equip;    // Exterior equipment control
-        float sched_theta_H_set;  // Heating setpoint
-        float sched_theta_C_set;  // Cooling setpoint
+        float sched_q_ve_mech = 0.0f;    // Mechanical ventilation schedule
+        float sched_phi_int_App = 0.0f;  // Appliances gain schedule
+        float sched_phi_int_L = 0.0f;    // Lighting gain schedule
+        float sched_ext_light = 0.0f;    // Exterior lighting control
+        float sched_ext_equip = 0.0f;    // Exterior equipment control
+        float sched_theta_H_set = 0.0f;  // Heating setpoint
+        float sched_theta_C_set = 0.0f;  // Cooling setpoint
 
         // Environmental
-        float theta_e;  // External air temperature
-        float I_sol_gh; // Global Horizontal Irradiance
+        float theta_e = 0.0f;  // External air temperature
+        float I_sol_gh = 0.0f; // Global Horizontal Irradiance
 
         // Pre-calculated Physics (ISO 15242)
         float q_ve_wind;      // Airflow due to wind
@@ -56,21 +56,21 @@ namespace openstudio::isomodel {
         float theta_sup;      // Supply air temperature
     };
 
-    struct GainsResult {
-        double phi_int;      // Total internal gains
-        double phi_ia;       // Internal gains to air node
-        double phi_int_L;    // Lighting gains
-        double phi_sol;      // Solar gains
+    struct GainsResult final {
+        double phi_int = 0.0;      // Total internal gains
+        double phi_ia = 0.0;       // Internal gains to air node
+        double phi_int_L = 0.0;    // Lighting gains
+        double phi_sol = 0.0;      // Solar gains
     };
 
-    struct AirFlowResult {
-        double theta_ent;    // Entering air temperature
-        double H_ve;         // Ventilation heat transfer coefficient
-        double H_tr_1;       // Coupling conductance 1
+    struct AirFlowResult final {
+        double theta_ent = 0.0;    // Entering air temperature
+        double H_ve = 0.0;         // Ventilation heat transfer coefficient
+        double H_tr_1 = 0.0;       // Coupling conductance 1
     };
 
     // Struct to hold raw CSV schedule data
-    struct LoadedScheduleData {
+    struct LoadedScheduleData final {
         int Hour;
         double MechVent;
         double IntApp;
@@ -84,14 +84,14 @@ namespace openstudio::isomodel {
     class ISOMODEL_API HourlyModel : public Simulation
     {
     public:
-        HourlyModel();
-        virtual ~HourlyModel();
+        HourlyModel() noexcept;
+        ~HourlyModel() override = default;
 
         // Original Interface preserved
-        std::vector<EndUses> simulate(bool aggregateByMonth = false);
+        [[nodiscard]] std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
         // NEW: Accessor for the internal schedule cache
-        const std::vector<HourlyCache>& getCachedSchedules() const { return m_hourlyData; }
+        [[nodiscard]] const std::vector<HourlyCache>& getCachedSchedules() const { return m_hourlyData; }
             
         // Set the path for the hourly schedule file
         void setHourlySchedulePath(const std::string& path) { m_hourlySchedulePath = path; }
@@ -115,13 +115,13 @@ namespace openstudio::isomodel {
         std::vector<double> m_phi_dhw;
 
         // Refactored Helpers - Inlined for performance
-        inline AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
+        [[nodiscard]] inline AirFlowResult calculateAirFlows(double theta_air, const HourlyCache& cache) noexcept;
 
-        inline GainsResult calculateGains(std::span<const double> curSolar,
+        [[nodiscard]] inline GainsResult calculateGains(std::span<const double> curSolar,
             const HourlyCache& cache,
             double phi_int_App) noexcept;
 
-        inline double solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
+        [[nodiscard]] inline double solveThermalBalance(double theta_e, double theta_ent, double phi_ia, double phi_int,
             double phi_sol, double H_ve, double H_tr_1, double theta_H_set,
             double theta_C_set, double& theta_m_prev, double& theta_air) noexcept;
 
@@ -176,14 +176,14 @@ namespace openstudio::isomodel {
         std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
 
         // Helpers
-        struct WeeklyScheduleData {
+        struct WeeklyScheduleData final {
             double q_ve[24][7];
             double ext_App[24][7];
             double int_App[24][7];
             double ext_L[24][7];
             double int_L[24][7];
-            double theta_H[24][7];
-            double theta_C[24][7];
+            double theta_H[24][7]; // Heating setpoint
+            double theta_C[24][7]; // Cooling setpoint
         };
         void buildWeeklySchedules(WeeklyScheduleData& sched);
         bool loadSchedulesFromFile(const std::string& path, std::vector<LoadedScheduleData>& data);

@@ -22,9 +22,7 @@
 
 namespace openstudio::isomodel {
 
-    void printMatrix(const char* matName, double* mat, unsigned int dim1, unsigned int dim2) {}
-
-    HourlyModel::HourlyModel() : invFloorArea(0), rhoCpAir_277(rhoCpAirWh), m_I_sol_max(0), m_Cp_air_pressure(0),
+    HourlyModel::HourlyModel() noexcept : invFloorArea(0), rhoCpAir_277(rhoCpAirWh), m_I_sol_max(0), m_Cp_air_pressure(0),
         m_theta_ve_preheat(0), m_eta_ve_rec(0), m_phi_fan_spec(0), m_A_nat_inv(0),
         m_f_phi_int_L(0), m_f_phi_sol_air(0), m_f_phi_int_air(0), win_floor_ratio(0) {
 
@@ -35,7 +33,7 @@ namespace openstudio::isomodel {
         precalc_nla_shading.fill(0); precalc_solar_shading.fill(0);
     }
 
-    HourlyModel::~HourlyModel() {}
+    // Destructor is defaulted in header
 
     std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth)
     {
@@ -129,8 +127,8 @@ namespace openstudio::isomodel {
             // Calculate Air Volume for fans (V_{air}) based on heating/cooling delivery needs
             // Using rhoCpAir_277 (Wh/m3K)
             double V_air = std::max({ q_ve_mech,
-                m_phi_H_nd[i] / (((heat_occ_sp + heat_dT_supp) - theta_air) * _rhoCpAirWh + DBL_MIN),
-                m_phi_C_nd[i] / ((theta_air - (cool_occ_sp - cool_dT_supp)) * _rhoCpAirWh + DBL_MIN) });
+                m_phi_H_nd[i] / (((heat_occ_sp + heat_dT_supp) - theta_air) * _rhoCpAirWh + std::numeric_limits<double>::epsilon()),
+                m_phi_C_nd[i] / ((theta_air - (cool_occ_sp - cool_dT_supp)) * _rhoCpAirWh + std::numeric_limits<double>::epsilon()) });
 
             // Fan energy: V_{air} * specific fan power
             m_phi_fan[i] = V_air * fan_power_factor;
@@ -177,7 +175,7 @@ namespace openstudio::isomodel {
 
         // ISO 13790 10.4.3: \Phi_{int,L} (Lighting Gains)
         double lightingLevel = lightingLevelSum * m_A_nat_inv;
-        double f_L = std::max(0.0, f_L_max * (1.0 - lightingLevel / (I_lux_nat + DBL_MIN)));
+        double f_L = std::max(0.0, f_L_max * (1.0 - lightingLevel / (I_lux_nat + std::numeric_limits<double>::epsilon()))); // Use epsilon for small divisor
         res.phi_int_L = (f_L * f_A_nat + (1.0 - f_A_nat) * f_L_max) * cache.sched_phi_int_L;
 
         // ISO 13790 10.2.2 eq. 35: \Phi_{int} (Total internal gains)
@@ -204,7 +202,7 @@ namespace openstudio::isomodel {
 
         // ISO 15242 6.7.1 Step 2: q_{exfiltration}
         // Protection needed here: stack and wind could both be zero
-        double q_ve_sw = q_ve_stack + q_ve_wind + smallEpsilon;
+        double q_ve_sw = q_ve_stack + q_ve_wind + std::numeric_limits<double>::epsilon(); // Use epsilon for small additive factor
         double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::fabs(q_ve_diff) * (qInfilStackFraction * q_ve_stack + qInfilWindFraction * q_ve_wind / q_ve_sw));
 
         // ISO 15242 6.7.2: q_{ent} (Total entering air)
@@ -212,7 +210,7 @@ namespace openstudio::isomodel {
 
         // ISO 13790 9.3: \theta_{sup} (Supply temperature)
         // Protection needed here: q_ve_ent can be zero
-        res.theta_ent = (theta_e * ((q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf) + cache.theta_sup * cache.q_ve_mech_sup) / (q_ve_ent + smallEpsilon);
+        res.theta_ent = (theta_e * ((q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf) + cache.theta_sup * cache.q_ve_mech_sup) / (q_ve_ent + std::numeric_limits<double>::epsilon()); // Use epsilon for small additive factor
 
         // ISO 13790 9.3.1 eq. 21: H_{ve} (Ventilation heat transfer coefficient)
         res.H_ve = rhoCpAirWh * q_ve_ent;
@@ -307,8 +305,8 @@ namespace openstudio::isomodel {
     std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
 
         double phi_H_tot = std::accumulate(m_phi_H_nd.begin(), m_phi_H_nd.end(), 0.0);
-        double phi_C_tot = std::accumulate(m_phi_C_nd.begin(), m_phi_C_nd.end(), 0.0);
-        double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot + DBL_MIN), 0.1);
+        double phi_C_tot = std::accumulate(m_phi_C_nd.begin(), m_phi_C_nd.end(), 0.0); // Total cooling need
+        double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot + std::numeric_limits<double>::epsilon()), 0.1); // Use epsilon for small additive factor
 
         double s_ht = (1.0 / (1.0 / (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_H))) / heating.efficiency();
         double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_H)))) / cooling.cop();
@@ -614,4 +612,3 @@ namespace openstudio::isomodel {
 
     std::vector<double> HourlyModel::sumHoursByMonth(const std::vector<double>& hourlyData) { return {}; }
 } // namespace openstudio::isomodel
-
