@@ -8,142 +8,171 @@
 // #define DEBUG_ISO_MODEL_SIMULATION false
 
 
-namespace openstudio {
-    namespace isomodel {
+namespace openstudio::isomodel {
 
-        constexpr bool debugIsoModelSimulation = false;
+    constexpr bool debugIsoModelSimulation = false;
 
-        // Replaces #define maxDouble and minDouble
-        constexpr double maxDouble = std::numeric_limits<double>::max();
-        constexpr double minDouble = std::numeric_limits<double>::min();   
+    // Replaces #define maxDouble and minDouble
+    constexpr double maxDouble = std::numeric_limits<double>::max();
+    constexpr double minDouble = std::numeric_limits<double>::min();   
 
-        //// --- Math & Physics ---
-        constexpr double PI = 3.14159265358979323846;
-        constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
-
-
-        // Pyhsical Constants
-        // Volumetric heat capacity of air (MJ/m3/K)
-        // Derived from: rho (1.22521 kg/m3) * cp (1.012 kJ/kg*K) / 1000 kJ/MJ
-        constexpr double rhoCpAir = 1.22521 * 0.001012; // = 0.001239 MJ/m3/K
-        constexpr double rhoCpAirWh = rhoCpAir*1000000.0/3600; // Volumetric heat capacity of air ~1200 J/m3K / 3600 = 0.33-0.34 Wh/m3K
-
-        constexpr double rhoCpWater = 4.1813;  // Volumetric heat capacity of water (MJ/m3/K)
+    //// --- Math & Physics ---
+    constexpr double PI = 3.14159265358979323846;
+    constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
 
 
-        // ventilation physics constants from ISO 15242 6.7.1
-        // based on Q = C * (dP)^0.667
-        constexpr double stackFactor = 0.0146; // Physics constant for qStack
-        constexpr double effectiveStackHeightFraction = 0.5; // Effective stack height is 50% of zone height    
-        constexpr double windFactor = 0.0769; // Physics constant for qWind
-        constexpr double qInfilStackFraction = 0.5; // coefficient for infiltration from stack effect 
-        constexpr double qInfilWindFraction = 2.0/3.0; // coefficient for infiltration from wind effect 
+    // Pyhsical Constants
+    // Volumetric heat capacity of air (MJ/m3/K)
+    // Derived from: rho (1.22521 kg/m3) * cp (1.012 kJ/kg*K) / 1000 kJ/MJ
+    constexpr double rhoCpAir = 1.22521 * 0.001012; // = 0.001239 MJ/m3/K
+    constexpr double rhoCpAirWh = rhoCpAir*1000000.0/3600; // Volumetric heat capacity of air ~1200 J/m3K / 3600 = 0.33-0.34 Wh/m3K
+
+    constexpr double rhoCpWater = 4.1813;  // Volumetric heat capacity of water (MJ/m3/K)
 
 
-        //This constant converts the physics of thermal buoyancy (stack effect) into a flow rate relative 
-        //to the leakage measured at 4 Pa ($Q_{4Pa}$).
-        // Q_4Pa = Q_50Pa * (4/50)^0.667 = Q_50Pa * 0.28 but reduce by a factor to account for the fact that
-        // the wind pressure is not always perpendicular to the surface and other empirical factors.
-
-        // ISO 13790 12.3.1.2 Table 12 constants for heat capacity categories
-        constexpr double veryHeavy = 370.0;
-        constexpr double heavy = 260.0;
-        constexpr double medium = 165.0;
-        constexpr double Light = 110.0;
-        constexpr double VeryLight = 80.0;
-
-        // from usermodel.hpp
-        // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
-        constexpr const char* GAS = "gas";
-        constexpr const char* ELECTRIC = "electric";
-        constexpr const char* MECHANICAL = "mechanical";
-        constexpr const char* NATURAL = "natural";
-        constexpr const char* COMBINED = "combined";
-        constexpr const char* NONE = "none";
-        constexpr const char* SIMPLE = "simple";
-        constexpr const char* ADVANCED = "advanced";
+    // ventilation physics constants from ISO 15242 6.7.1
+    // based on Q = C * (dP)^0.667
+    constexpr double stackFactor = 0.0146; // Physics constant for qStack
+    constexpr double effectiveStackHeightFraction = 0.5; // Effective stack height is 50% of zone height    
+    constexpr double windFactor = 0.0769; // Physics constant for qWind
+    constexpr double qInfilStackFraction = 0.5; // coefficient for infiltration from stack effect 
+    constexpr double qInfilWindFraction = 2.0/3.0; // coefficient for infiltration from wind effect 
 
 
-        // --- Time Constants ---
+    //This constant converts the physics of thermal buoyancy (stack effect) into a flow rate relative 
+    //to the leakage measured at 4 Pa ($Q_{4Pa}$).
+    // Q_4Pa = Q_50Pa * (4/50)^0.667 = Q_50Pa * 0.28 but reduce by a factor to account for the fact that
+    // the wind pressure is not always perpendicular to the surface and other empirical factors.
 
-        constexpr int monthsInYear = 12;
-        constexpr int hoursInDay = 24;
-        constexpr int hoursInWeek = 168;
-        constexpr int daysInWeek = 7;
-        constexpr int daysInYear = 365;
-        //constexpr int hoursInYear = 8760;
-        constexpr int hoursInYear = daysInYear * hoursInDay;
-        constexpr int secondsInHour = 3600;
+    // ISO 13790 12.3.1.2 Table 12 constants for heat capacity categories
+    constexpr double veryHeavy = 370.0;
+    constexpr double heavy = 260.0;
+    constexpr double medium = 165.0;
+    constexpr double Light = 110.0;
+    constexpr double VeryLight = 80.0;
 
-        // Start hour for a standard weekday in EECALC
-        constexpr int eecalcWeekdayStart = 7;
+    // from usermodel.hpp
+    // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
+    constexpr const char* GAS = "gas";
+    constexpr const char* ELECTRIC = "electric";
+    constexpr const char* MECHANICAL = "mechanical";
+    constexpr const char* NATURAL = "natural";
+    constexpr const char* COMBINED = "combined";
+    constexpr const char* NONE = "none";
+    constexpr const char* SIMPLE = "simple";
+    constexpr const char* ADVANCED = "advanced";
 
-        // Constants
-        const double daysInMonth[] =
-        { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        const double hoursInMonth[] =
-        { 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
-        const double megasecondsInMonth[] =
-        { 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
-        const double monthFractionOfYear[] =
-        { 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
-            0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
-        // Cumulative hours at the end of each month (0 to 8760)
-        constexpr int monthEndHours[] = { 
-            0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 
-        };
 
-        // --- Geometry & Directions ---
-        // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
-        constexpr int numCompassDIrections = 8;
-        // 8 Compass directions + 1 Roof/Horizontal = 9 (Used often in loops)
-        constexpr int numTotalSurfaces = 9;
-        constexpr int numVerticalSurfaces = 8;
+    // --- Time Constants ---
 
-        // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
-        static constexpr std::array<double, 8> SurfaceAzimuths = { 
-            0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4 
-        };
+    constexpr int monthsInYear = 12;
+    constexpr int hoursInDay = 24;
+    constexpr int hoursInWeek = 168;
+    constexpr int daysInWeek = 7;
+    constexpr int daysInYear = 365;
+    //constexpr int hoursInYear = 8760;
+    constexpr int hoursInYear = daysInYear * hoursInDay;
+    constexpr int secondsInHour = 3600;
 
-        //// --- Unit Conversions ---
-        constexpr double kWh2MJ = 3.6;              // 1 kWh = 3.6 MJ
-        constexpr double MJ2kWh = 1.0 / 3.6;
-        constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
-        constexpr double W2kW = 0.001;
+    // Start hour for a standard weekday in EECALC
+    constexpr int eecalcWeekdayStart = 7;
 
-        // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
-        //0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to Constants.hpp 
-        constexpr double n50ToQ4 = 0.19;
+    //// Constants
+    //const double daysInMonth[] =
+    //{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    //const double hoursInMonth[] =
+    //{ 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
+    //const double megasecondsInMonth[] =
+    //{ 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
+    //const double monthFractionOfYear[] =
+    //{ 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
+    //    0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
+    //// Cumulative hours at the end of each month (0 to 8760)
+    //constexpr int monthEndHours[] = { 
+    //    0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 
+    //};
 
-        //// --- ISO 13790 Constants ---
-        // Solar heat gain coefficient for internal gains
-        constexpr double n_si_coeff = 0.9;
 
-        // from ventilation calcs in MonthlyModel.cpp
-        constexpr double n_sw_coeff = 0.14;
+    // Constants
+    inline constexpr std::array<double, 12> daysInMonth = {
+        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+    };
 
-        // default ground reflectance
-        constexpr double defaultGroundReflectance = 0.14;
+    inline constexpr std::array<double, 12> hoursInMonth = {
+        744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744
+    };
 
-        // Shading device factors (1=None, 2=Internal, 3=External)
-        constexpr double winSDFTable[] = { 0.5, 0.35, 1.0 };;
-        // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
-        constexpr double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
+    inline constexpr std::array<double, 12> megasecondsInMonth = {
+        2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784
+    };
 
-        constexpr double SHGCClearGlass = 0.87;
+    inline constexpr std::array<double, 12> monthFractionOfYear = {
+        0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178,
+        0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0849315068493151,
+        0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151
+    };
 
-        //// --- EPW Data Indices (for internal storage vectors) ---
-        //enum EpwIndex {
-        //    IDX_DBT = 0, // Dry Bulb Temp
-        //    IDX_DPT = 1, // Dew Point Temp
-        //    IDX_RH = 2, // Relative Humidity
-        //    IDX_EGH = 3, // Global Horizontal Radiation
-        //    IDX_EB = 4, // Direct Normal/Beam Radiation
-        //    IDX_ED = 5, // Diffuse Radiation
-        //    IDX_WSPD = 6  // Wind Speed
-        //};
+    // Cumulative hours at the end of each month (0 to 8760)
+    inline constexpr std::array<int, 13> monthEndHours = {
+        0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760
+    };
 
-    } // namespace isomodel
-} // namespace openstudio
 
-#endif // ISOMODEL_CONSTANTS_HPP#pragma once
+
+    // --- Geometry & Directions ---
+    // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
+    constexpr int numCompassDIrections = 8;
+    // 8 Compass directions + 1 Roof/Horizontal = 9 (Used often in loops)
+    constexpr int numTotalSurfaces = 9;
+    constexpr int numVerticalSurfaces = 8;
+
+    // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
+    //static constexpr std::array<double, 8> SurfaceAzimuths = { 
+    //    0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4 
+    //};
+    inline constexpr std::array<double, 8> SurfaceAzimuths = {
+        0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4
+    };
+
+    //// --- Unit Conversions ---
+    constexpr double kWh2MJ = 3.6;              // 1 kWh = 3.6 MJ
+    constexpr double MJ2kWh = 1.0 / 3.6;
+    constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
+    constexpr double W2kW = 0.001;
+
+    // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
+    //0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to Constants.hpp 
+    constexpr double n50ToQ4 = 0.19;
+
+    //// --- ISO 13790 Constants ---
+    // Solar heat gain coefficient for internal gains
+    constexpr double n_si_coeff = 0.9;
+
+    // from ventilation calcs in MonthlyModel.cpp
+    constexpr double n_sw_coeff = 0.14;
+
+    // default ground reflectance
+    constexpr double defaultGroundReflectance = 0.14;
+
+    // Shading device factors (1=None, 2=Internal, 3=External)
+    constexpr double winSDFTable[] = { 0.5, 0.35, 1.0 };;
+    // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
+    constexpr double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
+
+    constexpr double SHGCClearGlass = 0.87;
+
+    //// --- EPW Data Indices (for internal storage vectors) ---
+    //enum EpwIndex {
+    //    IDX_DBT = 0, // Dry Bulb Temp
+    //    IDX_DPT = 1, // Dew Point Temp
+    //    IDX_RH = 2, // Relative Humidity
+    //    IDX_EGH = 3, // Global Horizontal Radiation
+    //    IDX_EB = 4, // Direct Normal/Beam Radiation
+    //    IDX_ED = 5, // Diffuse Radiation
+    //    IDX_WSPD = 6  // Wind Speed
+    //};
+
+} // namespace openstudio::isomodel 
+
+
+#endif // ISOMODEL_CONSTANTS_HPP

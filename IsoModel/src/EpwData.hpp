@@ -70,6 +70,7 @@ namespace openstudio::isomodel {
         void populateWeatherData(std::shared_ptr<class WeatherData> wd);
     };
 
+
 } // namespace openstudio::isomodel
 
 #endif // ISOMODEL_EPW_DATA_HPP

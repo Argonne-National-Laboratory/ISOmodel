@@ -57,7 +57,9 @@ set(${target_name}_solar_debug
 set(${target_name}_src
   # Building.cpp
   Building.hpp
+  Constants.hpp
   # Cooling.cpp
+
   Cooling.hpp
   EndUses.hpp
   EpwData.cpp

@@ -7,12 +7,14 @@
 
 #include "ISOModelAPI.hpp"
 
-#ifdef ISOMODEL_STANDALONE
-//#include "Vector.hpp"
+//#ifdef ISOMODEL_STANDALONE
+////#include "Vector.hpp"
+//#include "MathHelpers.hpp"
+//#else
+//#include "../utilities/data/Vector.hpp"
+//#endif
+
 #include "MathHelpers.hpp"
-#else
-#include "../utilities/data/Vector.hpp"
-#endif
 
 namespace openstudio::isomodel {
 

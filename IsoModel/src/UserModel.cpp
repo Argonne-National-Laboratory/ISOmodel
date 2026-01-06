@@ -222,7 +222,10 @@ std::optional<T> getParameter(const YAML::Node& params,
         try {
             return params[paramName].as<T>();
         }
-        catch (YAML::TypedBadConversion<T>& ex) {
+        // catch (YAML::TypedBadConversion<T>& ex) {
+        //     return std::nullopt;
+        // }
+        catch (const YAML::TypedBadConversion<T>&) {
             return std::nullopt;
         }
     }
@@ -249,7 +252,11 @@ bool getParameterAsVector(const YAML::Node& params,
             }
             return true;
         }
-        catch (YAML::TypedBadConversion<double>& ex) {
+        // catch (YAML::TypedBadConversion<double>& ex) {
+        //     return false;
+        // }
+
+        catch (const YAML::TypedBadConversion<double>&) {
             return false;
         }
     }
