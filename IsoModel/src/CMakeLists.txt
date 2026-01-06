@@ -74,7 +74,7 @@ set(${target_name}_src
   Lighting.hpp
   # Location.cpp
   Location.hpp
-  Matrix.hpp
+  # Matrix.hpp
   MonthlyModel.cpp
   MonthlyModel.hpp
   MathHelpers.hpp
@@ -94,7 +94,7 @@ set(${target_name}_src
   TimeFrame.hpp
   UserModel.cpp
   UserModel.hpp
-  Vector.hpp
+  # Vector.hpp
   # Ventilation.cpp
   Ventilation.hpp
   # WeatherData.cpp
@@ -173,6 +173,17 @@ add_executable(${exec_name} ${${target_name}_src} ${${target_name}_standalone})
 target_link_libraries(${exec_name} PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(${exec_name} PRIVATE ${PERF_FLAGS})
 
+add_custom_command(TARGET ${exec_name}
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
+                     $<TARGET_FILE_DIR:${exec_name}>/test_bldg.yaml
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test.epw
+                     $<TARGET_FILE_DIR:${exec_name}>/test.epw
+                   COMMENT "Copying test_bldg.yaml and test.epw to standalone binary directory"
+)
+
 # 2. Unit Tests Executable
 add_executable(isomodel_unit_tests ${${target_name}_src} ${${target_name}_test})
 target_link_libraries(isomodel_unit_tests PRIVATE ${unit_test_depends} yaml-cpp::yaml-cpp)
@@ -194,6 +205,18 @@ add_custom_command(TARGET isomodel_unit_tests
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
 target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(isomodel_benchmark PRIVATE ${PERF_FLAGS})
+
+add_custom_command(TARGET isomodel_benchmark
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg.yaml
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test.epw
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test.epw
+                   COMMENT "Copying test_bldg.yaml and test.epw to benchmark binary directory"
+)
+
 
 # 4. Solar Debug Executable
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
