@@ -12,7 +12,7 @@
 #include "Structure.hpp"
 #include "Ventilation.hpp"
 #include "EpwData.hpp"
-#include "PhysicalQuantities.hpp"
+// REMOVED: #include "PhysicalQuantities.hpp"
 #include "SimulationSettings.hpp"
 
 #include <memory>
@@ -36,7 +36,7 @@ public:
   void setVentilation(const Ventilation& value) { ventilation = value; }
   
   void setEpwData(std::shared_ptr<EpwData> value) { epwData = value; }
-  void setPhysicalQuantities(const PhysicalQuantities& value) { phys = value; }
+  // REMOVED: void setPhysicalQuantities(const PhysicalQuantities& value) { phys = value; }
   void setSimulationSettings(const SimulationSettings& value) { simSettings = value; }
 
 protected:
@@ -50,7 +50,7 @@ protected:
   Cooling cooling;
   Ventilation ventilation;
   std::shared_ptr<EpwData> epwData;
-  PhysicalQuantities phys;
+  // REMOVED: PhysicalQuantities phys;
   SimulationSettings simSettings;
 };
 
