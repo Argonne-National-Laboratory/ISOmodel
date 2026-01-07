@@ -95,6 +95,17 @@ namespace {
         return false;
     }
 
+    // Internal helper overloads: paramName is already lowercased
+    template <typename T>
+    std::optional<T> getParameter(const YAML::Node& params, std::string_view paramName) {
+    // YAML::Node operator[] needs std::string, so convert once here
+    return getParameter<T>(params, std::string(paramName));
+    }
+
+    bool getParameterAsVector(const YAML::Node& params, std::string_view paramName, openstudio::Vector& vec) {
+    return getParameterAsVector(params, std::string(paramName), vec);
+    }
+
     YAML::Node loadLowercasedYamlMapFromFile(const std::string& filename) {
         YAML::Node src = YAML::LoadFile(filename);
         YAML::Node dst = YAML::Load("{}");
@@ -336,50 +347,74 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
 
 
 void UserModel::initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& params, std::string paramName, bool required) {
-    if (auto prop = getParameter<double>(params, paramName)) {
-        (this->*setProp)(*prop);
-    }
-    else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
-    }
-}
-
-void UserModel::initializeParameter(void(UserModel::* setProp)(int), const YAML::Node& params, std::string paramName, bool required) {
-    if (auto prop = getParameter<int>(params, paramName)) {
-        (this->*setProp)(*prop);
-    }
-    else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+    const std::string_view key = paramName; // paramName already lowercased by loadBuilding
+    if (auto prop = getParameter<double>(params, key)) {
+    (this->*setProp)(*prop);
+    } else if (required) {
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
     }
 }
 
-void UserModel::initializeParameter(void(UserModel::* setProp)(bool), const YAML::Node& params, std::string paramName, bool required) {
-    if (auto prop = getParameter<bool>(params, paramName)) {
-        (this->*setProp)(*prop);
-    }
-    else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
-    }
+void UserModel::initializeParameter(void(UserModel::* setProp)(int), 
+                                    const YAML::Node& params, 
+                                    std::string paramName, 
+                                    bool required) 
+{
+  const std::string_view key = paramName;
+  if (auto prop = getParameter<int>(params, key)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+  }
+
+
 }
 
-void UserModel::initializeParameter(void(UserModel::* setProp)(const Vector&), const YAML::Node& params, std::string paramName, bool required) {
+void UserModel::initializeParameter(void(UserModel::* setProp)(bool), 
+const YAML::Node& params, std::string paramName, bool required) {
+
+    const std::string_view key = paramName;
+    if (auto prop = getParameter<bool>(params, key)) {
+        (this->*setProp)(*prop);
+    } else if (required) {
+        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+    }
+
+}
+
+void UserModel::initializeParameter(void(UserModel::* setProp)(const Vector&), 
+                                const YAML::Node& params, 
+                                std::string paramName, 
+                                bool required) 
+{
+
     Vector vec;
-    if (getParameterAsVector(params, paramName, vec)) {
+    const std::string_view key = paramName;
+    if (getParameterAsVector(params, key, vec)) {
         northToSouth(vec);
         (this->*setProp)(vec);
-    }
-    else if (required) {
+    } else if (required) {
         throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
     }
 }
 
-void UserModel::initializeParameter(void(UserModel::* setProp)(std::string), const YAML::Node& params, std::string paramName, bool required) {
-    if (auto prop = getParameter<std::string>(params, paramName)) {
-        (this->*setProp)(*prop);
-    }
-    else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
-    }
+void UserModel::initializeParameter(void(UserModel::* setProp)(std::string), 
+                                                        const YAML::Node& params, 
+                                                        std::string paramName, 
+                                                        bool required) 
+{
+    // if (auto prop = getParameter<std::string>(params, paramName)) {
+    //     (this->*setProp)(*prop);
+    // }
+    // else if (required) {
+    //     throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+    // }
+  const std::string_view key = paramName;
+  if (auto prop = getParameter<std::string>(params, key)) {
+    (this->*setProp)(*prop);
+  } else if (required) {
+    throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+  }
 }
 
 void UserModel::northToSouth(Vector& vec) {
