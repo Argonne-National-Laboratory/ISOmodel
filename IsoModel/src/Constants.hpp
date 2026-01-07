@@ -4,18 +4,15 @@
 #include <limits>
 #include <array>
 
-//flag to turn on debug printing of many intermediate variables to stdout
-// #define DEBUG_ISO_MODEL_SIMULATION false
+/namespace openstudio::isomodel {
 
 
-namespace openstudio::isomodel {
-
+    //flag to turn on debug printing of many intermediate variables to stdout
     constexpr bool debugIsoModelSimulation = false;
 
-    // Replaces #define maxDouble and minDouble
-    // constexpr double maxDouble = std::numeric_limits<double>::max();
-    // constexpr double minDouble = std::numeric_limits<double>::min();   
-
+    // Replaced #define maxDouble and minDouble with inline use of std::numeric_limits 
+    // using e.g. std::numeric_limits<double>::epsilon() and std::numeric_limits<double>::infinity()
+     
     //// --- Math & Physics ---
     constexpr double PI = 3.14159265358979323846;
     // constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
@@ -77,23 +74,7 @@ namespace openstudio::isomodel {
     // Start hour for a standard weekday in EECALC
     constexpr int eecalcWeekdayStart = 7;
 
-    //// Constants
-    //const double daysInMonth[] =
-    //{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    //const double hoursInMonth[] =
-    //{ 744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744 };
-    //const double megasecondsInMonth[] =
-    //{ 2.6784, 2.4192, 2.6784, 2.592, 2.6784, 2.592, 2.6784, 2.6784, 2.592, 2.6784, 2.592, 2.6784 };
-    //const double monthFractionOfYear[] =
-    //{ 0.0849315068493151, 0.0767123287671233, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151,
-    //    0.0849315068493151, 0.0821917808219178, 0.0849315068493151, 0.0821917808219178, 0.0849315068493151 };
-    //// Cumulative hours at the end of each month (0 to 8760)
-    //constexpr int monthEndHours[] = { 
-    //    0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760 
-    //};
-
-
-    // Constants
+      // Constants
     inline constexpr std::array<double, 12> daysInMonth = {
         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
@@ -127,9 +108,6 @@ namespace openstudio::isomodel {
     constexpr int numVerticalSurfaces = 8;
 
     // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
-    //static constexpr std::array<double, 8> SurfaceAzimuths = { 
-    //    0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4 
-    //};
     inline constexpr std::array<double, 8> SurfaceAzimuths = {
         0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4
     };

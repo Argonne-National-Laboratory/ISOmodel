@@ -35,12 +35,13 @@
 
 #include "Simulation.hpp"
 
-namespace openstudio {
-
-    class EndUses;
-}
+// namespace openstudio {
+//     // class EndUses;
+// }c
 namespace openstudio::isomodel {
 
+
+    class EndUses;
     class ISOMODEL_API MonthlyModel : public Simulation
     {
     public:
