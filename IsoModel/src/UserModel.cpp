@@ -67,9 +67,6 @@ namespace {
         return std::nullopt;
     }
 
-    // bool getParameterAsVector(const YAML::Node& params,
-    //     const std::string& paramName, Vector& vec) 
-        
     bool getParameterAsVector(const YAML::Node& params,
                           const std::string& paramName,
                           openstudio::Vector& vec)
@@ -128,6 +125,23 @@ namespace {
     }
     
 
+    bool fileExists(const std::string& path) {
+        return std::filesystem::exists(path);
+    }
+
+    // removed as part of code refactoring for C++17 improvements
+    // bool fileExistsOrInvalidate(openstudio::isomodel::UserModel& self,
+    //                           const std::string& path,
+    //                           const char* label)
+    // {
+    //     if (std::filesystem::exists(path)) {
+    //     return true;
+    //     }
+    //     std::cerr << label << " Not Found: " << path << "\n";
+    //     self.setValid(false);
+    //     return false;
+    // }
+
 } // namespace
 
 
@@ -151,7 +165,8 @@ HourlyModel UserModel::toHourlyModel() const
 {
     HourlyModel sim = HourlyModel();
     if (!_valid) {
-        return *((HourlyModel*)NULL);
+        // return *((HourlyModel*)NULL);
+        return HourlyModel();
     }
 
     setCoreSimulationProperties(sim);
@@ -165,7 +180,8 @@ MonthlyModel UserModel::toMonthlyModel() const
 
     if (!valid()) {
         std::cout << "Invalid" << std::endl;
-        return *((MonthlyModel*)NULL);
+        // return *((MonthlyModel*)NULL);
+        return MonthlyModel();
     }
 
     setCoreSimulationProperties(sim);
@@ -492,11 +508,18 @@ void UserModel::load(std::string buildingFile)
 {
     dataFile = buildingFile;
     _valid = true;
-    if (!std::filesystem::exists(buildingFile)) {
-        std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
-        _valid = false;
-        return;
+    // if (!std::filesystem::exists(buildingFile)) {
+    //     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    //     _valid = false;
+    //     return;
+    // }
+    if (!fileExists(buildingFile)) {
+    std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    _valid = false;
+    return;
     }
+
+
     if (DEBUG_ISO_MODEL_SIMULATION)
         std::cout << "Loading Building File: " << buildingFile << std::endl;
     loadBuilding(buildingFile);
@@ -505,6 +528,10 @@ void UserModel::load(std::string buildingFile)
     loadWeather();
     if (DEBUG_ISO_MODEL_SIMULATION)
         std::cout << "Weather File Loaded" << std::endl;
+
+    // if (!fileExistsOrInvalidate(*this, buildingFile, "ISO Model File")) {
+    // return;
+    // }
 }
 
 void UserModel::load(std::string buildingFile, std::string defaultsFile)
@@ -512,16 +539,28 @@ void UserModel::load(std::string buildingFile, std::string defaultsFile)
     dataFile = buildingFile;
     _valid = true;
 
-    if (!std::filesystem::exists(buildingFile)) {
-        std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
-        _valid = false;
-        return;
+    // if (!std::filesystem::exists(buildingFile)) {
+    //     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    //     _valid = false;
+    //     return;
+    // }
+
+    if (!fileExists(buildingFile)) {
+    std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
+    _valid = false;
+    return;
     }
 
-    if (!std::filesystem::exists(defaultsFile)) {
-        std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
-        _valid = false;
-        return;
+    // if (!std::filesystem::exists(defaultsFile)) {
+    //     std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
+    //     _valid = false;
+    //     return;
+    // }
+
+    if (!fileExists(defaultsFile)) {
+    std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
+    _valid = false;
+    return;
     }
 
     if (DEBUG_ISO_MODEL_SIMULATION)
