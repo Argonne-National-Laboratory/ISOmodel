@@ -95,25 +95,25 @@ namespace {
         return false;
     }
 
-     YAML::Node loadLowercasedYamlMapFromFile(const std::string& filename) {
-    YAML::Node src = YAML::LoadFile(filename);
-    YAML::Node dst = YAML::Load("{}");
+    YAML::Node loadLowercasedYamlMapFromFile(const std::string& filename) {
+        YAML::Node src = YAML::LoadFile(filename);
+        YAML::Node dst = YAML::Load("{}");
 
-    for (const auto& kv : src) {
-      std::string key = kv.first.as<std::string>();
-      std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-      dst[key] = kv.second;
-    }
-    return dst;
-  }
-
-    // Merge keys from `overlay` into `base` (overlay wins), both assumed to be maps
-    void mergeYamlMapInto(YAML::Node& base, const YAML::Node& overlay) {
-    for (const auto& kv : overlay) {
+        for (const auto& kv : src) {
         std::string key = kv.first.as<std::string>();
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        base[key] = kv.second;
+        dst[key] = kv.second;
+        }
+        return dst;
     }
+
+    // Merge keys from `overlay` into `base` (overlay wins), both assumed to be maps
+    // Precondition: `overlay` keys are already lowercased (see loadLowercasedYamlMapFromFile)
+    void mergeYamlMapInto(YAML::Node& base, const YAML::Node& overlay) {
+        for (const auto& kv : overlay) {
+            const std::string key = kv.first.as<std::string>();
+            base[key] = kv.second;
+        }
     }
 
     void throwIfEmptyYamlMap(const YAML::Node& node, const std::string& filename) {
@@ -124,23 +124,9 @@ namespace {
     }
     }
     
-
     bool fileExists(const std::string& path) {
         return std::filesystem::exists(path);
     }
-
-    // removed as part of code refactoring for C++17 improvements
-    // bool fileExistsOrInvalidate(openstudio::isomodel::UserModel& self,
-    //                           const std::string& path,
-    //                           const char* label)
-    // {
-    //     if (std::filesystem::exists(path)) {
-    //     return true;
-    //     }
-    //     std::cerr << label << " Not Found: " << path << "\n";
-    //     self.setValid(false);
-    //     return false;
-    // }
 
 } // namespace
 
@@ -413,13 +399,11 @@ void UserModel::loadBuilding(std::string buildingFile)
 
 void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 {
- 
     YAML::Node buildingParams = loadLowercasedYamlMapFromFile(defaultsFile);
     throwIfEmptyYamlMap(buildingParams, defaultsFile);
 
-    YAML::Node overlay = YAML::LoadFile(buildingFile);
+    YAML::Node overlay = loadLowercasedYamlMapFromFile(buildingFile);
     throwIfEmptyYamlMap(overlay, buildingFile);
-
     mergeYamlMapInto(buildingParams, overlay);
 
     initializeParameters(buildingParams);
@@ -441,12 +425,16 @@ std::string UserModel::resolveFilename(std::string baseFile, std::string relativ
 void UserModel::loadWeather()
 {
     std::string weatherFilename;
-    if (std::filesystem::exists(_weatherFilePath)) {
+    // if (std::filesystem::exists(_weatherFilePath)) 
+    if (fileExists(_weatherFilePath))
+    {
         weatherFilename = _weatherFilePath;
     }
     else {
         weatherFilename = resolveFilename(dataFile, _weatherFilePath);
-        if (!std::filesystem::exists(weatherFilename)) {
+        // if (!std::filesystem::exists(weatherFilename)) 
+        if (!fileExists(weatherFilename))
+        {
             std::cout << "Weather File Not Found: " << _weatherFilePath << std::endl;
             _valid = false;
         }
@@ -481,7 +469,6 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     auto iter = _weather_cache.find(latlon);
     if (iter == _weather_cache.end()) {
         _weather = std::make_shared<WeatherData>();
-        // _weather_cache.insert(make_pair(latlon, _weather));
         _weather_cache.emplace(latlon, _weather);
         _edata->loadData(block_size, weather_data);
         initializeSolar();
@@ -508,11 +495,7 @@ void UserModel::load(std::string buildingFile)
 {
     dataFile = buildingFile;
     _valid = true;
-    // if (!std::filesystem::exists(buildingFile)) {
-    //     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
-    //     _valid = false;
-    //     return;
-    // }
+
     if (!fileExists(buildingFile)) {
     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
     _valid = false;
@@ -539,25 +522,13 @@ void UserModel::load(std::string buildingFile, std::string defaultsFile)
     dataFile = buildingFile;
     _valid = true;
 
-    // if (!std::filesystem::exists(buildingFile)) {
-    //     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
-    //     _valid = false;
-    //     return;
-    // }
-
     if (!fileExists(buildingFile)) {
     std::cout << "ISO Model File Not Found: " << buildingFile << std::endl;
     _valid = false;
     return;
     }
 
-    // if (!std::filesystem::exists(defaultsFile)) {
-    //     std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
-    //     _valid = false;
-    //     return;
-    // }
-
-    if (!fileExists(defaultsFile)) {
+     if (!fileExists(defaultsFile)) {
     std::cout << "ISO Model File Not Found: " << defaultsFile << std::endl;
     _valid = false;
     return;
