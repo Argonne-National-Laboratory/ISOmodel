@@ -4,7 +4,7 @@
 #include <limits>
 #include <array>
 
-/namespace openstudio::isomodel {
+namespace openstudio::isomodel {
 
 
     //flag to turn on debug printing of many intermediate variables to stdout
@@ -45,8 +45,8 @@
     constexpr double veryHeavy = 370.0;
     constexpr double heavy = 260.0;
     constexpr double medium = 165.0;
-    constexpr double Light = 110.0;
-    constexpr double VeryLight = 80.0;
+    constexpr double light = 110.0;
+    constexpr double veryLight = 80.0;
 
     // from usermodel.hpp
     // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
@@ -102,7 +102,7 @@
 
     // --- Geometry & Directions ---
     // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
-    constexpr int numCompassDIrections = 8;
+    constexpr int numCompassDirections = 8;
     // 8 Compass directions + 1 Roof/Horizontal = 9 (Used often in loops)
     constexpr int numTotalSurfaces = 9;
     constexpr int numVerticalSurfaces = 8;
@@ -133,7 +133,7 @@
     constexpr double defaultGroundReflectance = 0.14;
 
     // Shading device factors (1=None, 2=Internal, 3=External)
-    constexpr double winSDFTable[] = { 0.5, 0.35, 1.0 };;
+    constexpr double winSDFTable[] = { 0.5, 0.35, 1.0 };
     // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
     constexpr double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
 

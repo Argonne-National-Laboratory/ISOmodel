@@ -859,8 +859,6 @@ namespace openstudio::isomodel {
         printVector("v_qv_ht_max", v_qv_ht_max);
         printVector("v_qv_cl_max", v_qv_cl_max);
 
-        // double n_sw_coeff = 0.14;
-
         Vector v_qv_sw_ht = sum(v_qv_ht_max, div(mult(mult(v_qv_stack_ht, v_qv_wind_ht), n_sw_coeff), v_Q4pa)); // m3/h/m2
         Vector v_qv_sw_cl = sum(v_qv_cl_max, div(mult(mult(v_qv_stack_cl, v_qv_wind_cl), n_sw_coeff), v_Q4pa)); // m3/h/m2
         printVector("v_qv_sw_ht", v_qv_sw_ht);
