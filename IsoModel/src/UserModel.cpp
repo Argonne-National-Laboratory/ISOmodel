@@ -345,17 +345,18 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
 }
 
-
+// NOTE: YAML keys are lowercased by loadLowercasedYamlMapFromFile.
+// This avoids repeated string allocations and transformations in each getParameter call.
 void UserModel::initializeParameter(void(UserModel::* setProp)(double), 
                                 const YAML::Node& params, 
                                 std::string paramName, 
                                 bool required) 
 {
-    // Keys are expected to be lowercased by loadLowercasedYamlMapFromFile.
+    
     // Keep this for readability/contract clarity, but use `paramName` for YAML lookup
     // to avoid any std::string construction in a string_view wrapper.
-    const std::string_view key = paramName;
-    (void)key;
+    // const std::string_view key = paramName;
+    // (void)key;
 
     if (auto prop = getParameter<double>(params, paramName)) {
     (this->*setProp)(*prop);
@@ -369,8 +370,8 @@ void UserModel::initializeParameter(void(UserModel::* setProp)(int),
                                     std::string paramName, 
                                     bool required) 
 {
-  const std::string_view key = paramName;
-  (void)key;
+//   const std::string_view key = paramName;
+//   (void)key;
   if (auto prop = getParameter<int>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
@@ -383,8 +384,8 @@ void UserModel::initializeParameter(void(UserModel::* setProp)(int),
 void UserModel::initializeParameter(void(UserModel::* setProp)(bool), 
 const YAML::Node& params, std::string paramName, bool required) {
 
-    const std::string_view key = paramName;
-    (void)key;
+    // const std::string_view key = paramName;
+    // (void)key;
     if (auto prop = getParameter<bool>(params, paramName)) {
         (this->*setProp)(*prop);
     } else if (required) {
@@ -400,8 +401,8 @@ void UserModel::initializeParameter(void(UserModel::* setProp)(const Vector&),
 {
 
     Vector vec;
-    const std::string_view key = paramName;
-    (void)key;
+    // const std::string_view key = paramName;
+    // (void)key;
     if (getParameterAsVector(params, paramName, vec)) {
         northToSouth(vec);
         (this->*setProp)(vec);
@@ -421,8 +422,8 @@ void UserModel::initializeParameter(void(UserModel::* setProp)(std::string),
     // else if (required) {
     //     throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
     // }
-  const std::string_view key = paramName;
-  (void)key;
+//   const std::string_view key = paramName;
+//   (void)key;
   if (auto prop = getParameter<std::string>(params, paramName)) {
     (this->*setProp)(*prop);
   } else if (required) {
