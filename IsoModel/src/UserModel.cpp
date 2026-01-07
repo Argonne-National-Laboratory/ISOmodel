@@ -8,8 +8,129 @@
 #include <iostream> 
 #include <filesystem>
 #include <algorithm> // Required for std::transform in loadBuilding
+#include <string_view> 
 
-using namespace std;
+namespace {
+  std::string resolveFilenameImpl(std::string_view baseFile, std::string_view relativeFile) {
+    unsigned int lastSeparator = 0;
+    unsigned int i = 0;
+    const char separatorChar = '/';
+    const char winSeparatorChar = '\\';
+    std::string result;
+
+    for (; i < baseFile.size(); i++) {
+      result += (baseFile[i] == winSeparatorChar) ? separatorChar : baseFile[i];
+      if (result[i] == separatorChar) {
+        lastSeparator = i;
+      }
+    }
+    result = result.substr(0, lastSeparator + 1);
+
+    unsigned int j = 0;
+    if (!relativeFile.empty()) {
+      if (relativeFile[0] == separatorChar || relativeFile[0] == winSeparatorChar) {
+        j++;
+      }
+    }
+    for (; j < relativeFile.size(); j++, i++) {
+      result += (relativeFile[j] == winSeparatorChar) ? separatorChar : relativeFile[j];
+    }
+    return result;
+  }
+
+  int weatherStateImpl(std::string_view header) {
+    // Preserve exact existing behavior (case-sensitive comparisons)
+    if (header == "solar") return 1;
+    if (header == "hdbt") return 2;
+    if (header == "hEgh") return 3;
+    if (header == "mEgh") return 4;
+    if (header == "mdbt") return 5;
+    if (header == "mwind") return 6;
+    return -1;
+  }
+
+
+    template <typename T>
+    std::optional<T> getParameter(const YAML::Node& params,
+        const std::string& paramName) {
+        
+        // Direct access to map avoids string allocation and transformation
+        // params map is already lowercased by loadBuilding
+        if (params[paramName]) {
+            try {
+                return params[paramName].as<T>();
+            }
+            catch (const YAML::TypedBadConversion<T>&) {
+                return std::nullopt;
+            }
+        }
+        return std::nullopt;
+    }
+
+    // bool getParameterAsVector(const YAML::Node& params,
+    //     const std::string& paramName, Vector& vec) 
+        
+    bool getParameterAsVector(const YAML::Node& params,
+                          const std::string& paramName,
+                          openstudio::Vector& vec)
+        {
+
+        // Direct access to map avoids string allocation and transformation
+        if (params[paramName]) {
+            vec.clear();
+            auto param = params[paramName];
+            size_t n = std::distance(param.begin(), param.end());
+            if (vec.size() != n) {
+                vec.resize(n);
+            }
+            try {
+                size_t index = 0;
+                for (const auto& v : param) {
+                    vec[index] = v.as<double>();
+                    ++index;
+                }
+                return true;
+            }
+            catch (const YAML::TypedBadConversion<double>&) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+     YAML::Node loadLowercasedYamlMapFromFile(const std::string& filename) {
+    YAML::Node src = YAML::LoadFile(filename);
+    YAML::Node dst = YAML::Load("{}");
+
+    for (const auto& kv : src) {
+      std::string key = kv.first.as<std::string>();
+      std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+      dst[key] = kv.second;
+    }
+    return dst;
+  }
+
+    // Merge keys from `overlay` into `base` (overlay wins), both assumed to be maps
+    void mergeYamlMapInto(YAML::Node& base, const YAML::Node& overlay) {
+    for (const auto& kv : overlay) {
+        std::string key = kv.first.as<std::string>();
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+        base[key] = kv.second;
+    }
+    }
+
+    void throwIfEmptyYamlMap(const YAML::Node& node, const std::string& filename) {
+    const auto n = static_cast<size_t>(std::distance(node.begin(), node.end()));
+    if (n == 0) {
+        throw std::invalid_argument(
+        "No parameters found in building file " + filename + ". Is this a YAML format file?");
+    }
+    }
+    
+
+} // namespace
+
+
 namespace openstudio::isomodel {
 
 void UserModel::setCoreSimulationProperties(Simulation& sim) const {
@@ -211,57 +332,6 @@ void UserModel::initializeParameters(const YAML::Node& buildingParams)
     initializeParameter(&UserModel::setH_ve, buildingParams, "h_ve", false);
 }
 
-// OPTIMIZATION ITEM 4: Removed std::transform and string copy
-template <typename T>
-std::optional<T> getParameter(const YAML::Node& params,
-    const std::string& paramName) {
-    
-    // Direct access to map avoids string allocation and transformation
-    // params map is already lowercased by loadBuilding
-    if (params[paramName]) {
-        try {
-            return params[paramName].as<T>();
-        }
-        // catch (YAML::TypedBadConversion<T>& ex) {
-        //     return std::nullopt;
-        // }
-        catch (const YAML::TypedBadConversion<T>&) {
-            return std::nullopt;
-        }
-    }
-    return std::nullopt;
-}
-
-// OPTIMIZATION ITEM 4: Removed std::transform and string copy
-bool getParameterAsVector(const YAML::Node& params,
-    const std::string& paramName, Vector& vec) {
-
-    // Direct access to map avoids string allocation and transformation
-    if (params[paramName]) {
-        vec.clear();
-        auto param = params[paramName];
-        size_t n = std::distance(param.begin(), param.end());
-        if (vec.size() != n) {
-            vec.resize(n);
-        }
-        try {
-            size_t index = 0;
-            for (const auto& v : param) {
-                vec[index] = v.as<double>();
-                ++index;
-            }
-            return true;
-        }
-        // catch (YAML::TypedBadConversion<double>& ex) {
-        //     return false;
-        // }
-
-        catch (const YAML::TypedBadConversion<double>&) {
-            return false;
-        }
-    }
-    return false;
-}
 
 void UserModel::initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& params, std::string paramName, bool required) {
     if (auto prop = getParameter<double>(params, paramName)) {
@@ -311,113 +381,45 @@ void UserModel::initializeParameter(void(UserModel::* setProp)(std::string), con
 }
 
 void UserModel::northToSouth(Vector& vec) {
-    double temp;
-    temp = vec[0];
-    vec[0] = vec[4];
-    vec[4] = temp;
-
-    temp = vec[1];
-    vec[1] = vec[3];
-    vec[3] = temp;
-
-    temp = vec[5];
-    vec[5] = vec[7];
-    vec[7] = temp;
-};
+    std::swap(vec[0], vec[4]);
+    std::swap(vec[1], vec[3]);
+    std::swap(vec[5], vec[7]);
+}
 
 void UserModel::loadBuilding(std::string buildingFile)
 {
-    YAML::Node tmp = YAML::LoadFile(buildingFile);
-    YAML::Node buildingParams = YAML::Load("{}");
+        YAML::Node buildingParams = loadLowercasedYamlMapFromFile(buildingFile);
+    throwIfEmptyYamlMap(buildingParams, buildingFile);
 
-    for (auto iter : tmp) {
-        std::string key = iter.first.as<std::string>();
-        // Key transformation happens ONCE here, enabling direct lookup elsewhere
-        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        buildingParams[key] = iter.second;
-    }
-    size_t n_param = std::distance(buildingParams.begin(), buildingParams.end());
-    if (n_param == 0) {
-        throw std::invalid_argument("No parameters found in building file " + buildingFile + ". Is this a YAML format file?");
-    }
     initializeParameters(buildingParams);
     initializeStructure(buildingParams);
 }
 
 void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
 {
-    YAML::Node bf = YAML::LoadFile(buildingFile);
-    size_t n_param = std::distance(bf.begin(), bf.end());
-    if (n_param == 0) {
-        throw std::invalid_argument("No parameters found in building file " + buildingFile + ". Is this a YAML format file?");
-    }
+ 
+    YAML::Node buildingParams = loadLowercasedYamlMapFromFile(defaultsFile);
+    throwIfEmptyYamlMap(buildingParams, defaultsFile);
 
-    YAML::Node df = YAML::LoadFile(defaultsFile);
-    n_param = std::distance(df.begin(), df.end());
-    if (n_param == 0) {
-        throw std::invalid_argument("No parameters found in building file " + defaultsFile + ". Is this a YAML format file?");
-    }
+    YAML::Node overlay = YAML::LoadFile(buildingFile);
+    throwIfEmptyYamlMap(overlay, buildingFile);
 
-    YAML::Node buildingParams = YAML::Load("{}");
-    for (auto iter : df) {
-        std::string key = iter.first.as<std::string>();
-        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        buildingParams[key] = iter.second;
-    }
-
-    for (auto iter : bf) {
-        std::string key = iter.first.as<std::string>();
-        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        buildingParams[key] = iter.second;
-    }
+    mergeYamlMapInto(buildingParams, overlay);
 
     initializeParameters(buildingParams);
     initializeStructure(buildingParams);
 }
 
+
 int UserModel::weatherState(std::string header)
 {
-    // Unused in optimized solar initialization, but kept for ABI compatibility
-    if (!header.compare("solar"))
-        return 1;
-    else if (!header.compare("hdbt"))
-        return 2;
-    else if (!header.compare("hEgh"))
-        return 3;
-    else if (!header.compare("mEgh"))
-        return 4;
-    else if (!header.compare("mdbt"))
-        return 5;
-    else if (!header.compare("mwind"))
-        return 6;
-    else
-        return -1;
+  return weatherStateImpl(header);
 }
+
 
 std::string UserModel::resolveFilename(std::string baseFile, std::string relativeFile)
 {
-    unsigned int lastSeparator = 0;
-    unsigned int i = 0;
-    const char separatorChar = '/';
-    const char winSeparatorChar = '\\';
-    std::string result;
-    for (; i < baseFile.length(); i++) {
-        result += (baseFile[i] == winSeparatorChar) ? separatorChar : baseFile[i];
-        if (result[i] == separatorChar) {
-            lastSeparator = i;
-        }
-    }
-    result = result.substr(0, lastSeparator + 1);
-    unsigned int j = 0;
-    if (relativeFile.length() > 0) {
-        //if first char is a separator, skip it
-        if (relativeFile[0] == separatorChar || relativeFile[0] == winSeparatorChar)
-            j++;
-    }
-    for (; j < relativeFile.length(); j++, i++) {
-        result += (relativeFile[j] == winSeparatorChar) ? separatorChar : relativeFile[j];
-    }
-    return result;
+  return resolveFilenameImpl(baseFile, relativeFile);
 }
 
 void UserModel::loadWeather()
@@ -462,8 +464,9 @@ void UserModel::loadWeather(int block_size, double* weather_data)
     LatLon latlon = { lat, lon };
     auto iter = _weather_cache.find(latlon);
     if (iter == _weather_cache.end()) {
-        _weather = make_shared<WeatherData>();
-        _weather_cache.insert(make_pair(latlon, _weather));
+        _weather = std::make_shared<WeatherData>();
+        // _weather_cache.insert(make_pair(latlon, _weather));
+        _weather_cache.emplace(latlon, _weather);
         _edata->loadData(block_size, weather_data);
         initializeSolar();
     }
