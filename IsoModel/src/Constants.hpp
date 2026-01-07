@@ -13,12 +13,12 @@ namespace openstudio::isomodel {
     constexpr bool debugIsoModelSimulation = false;
 
     // Replaces #define maxDouble and minDouble
-    constexpr double maxDouble = std::numeric_limits<double>::max();
-    constexpr double minDouble = std::numeric_limits<double>::min();   
+    // constexpr double maxDouble = std::numeric_limits<double>::max();
+    // constexpr double minDouble = std::numeric_limits<double>::min();   
 
     //// --- Math & Physics ---
     constexpr double PI = 3.14159265358979323846;
-    constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
+    // constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
 
 
     // Pyhsical Constants
