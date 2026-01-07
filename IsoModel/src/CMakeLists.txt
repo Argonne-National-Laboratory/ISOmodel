@@ -180,10 +180,16 @@ add_custom_command(TARGET ${exec_name}
                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
                      $<TARGET_FILE_DIR:${exec_name}>/test_bldg.yaml
+                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg_schedules.yaml
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg_schedules.yaml
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_schedules.csv
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_schedules.csv
                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${CMAKE_SOURCE_DIR}/../test_data/test.epw
                      $<TARGET_FILE_DIR:${exec_name}>/test.epw
-                   COMMENT "Copying test_bldg.yaml and test.epw to standalone binary directory"
+                   COMMENT "Copying test files to standalone binary directory"
 )
 
 # 2. Unit Tests Executable
@@ -214,9 +220,15 @@ add_custom_command(TARGET isomodel_benchmark
                      ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
                      $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg.yaml
                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg_schedules.yaml
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg_schedules.yaml
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${CMAKE_SOURCE_DIR}/../test_data/test_schedules.csv
+                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_schedules.csv
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${CMAKE_SOURCE_DIR}/../test_data/test.epw
                      $<TARGET_FILE_DIR:isomodel_benchmark>/test.epw
-                   COMMENT "Copying test_bldg.yaml and test.epw to benchmark binary directory"
+                   COMMENT "Copying testfiles to benchmark binary directory"
 )
 
 
