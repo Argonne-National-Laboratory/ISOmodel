@@ -315,7 +315,7 @@ namespace openstudio::isomodel {
 
         // Window external radiative heat xfer coeff.
         // ISO 13790 11.4.6 says use hr=5 as a first approx.
-        v_win_hr = mult(v_wall_emiss, 5.0);
+        v_win_hr = mult(v_wall_emiss, ISO_WIN_EXT_RAD_COEFF);
 
         v_wall_A_sol = mult(mult(mult(v_wall_alpha_sc, v_wall_R_sc), v_wall_U), v_wall_A);
     }
@@ -382,7 +382,7 @@ namespace openstudio::isomodel {
             // ISO 13790 11.4.6 says take \Theta_er=9k in sub polar zones, 13 K in tropical or 11 K in intermediate
             // TODO: Does the .epw file contain the sky temperature? If not, use the weather file's lat/lon to
             // determine which default value to use for theta_er. BAA@2015-07-13.
-            theta_er[i] = 11.0;
+            theta_er[i] = ISO_SKY_TEMP_DIFF;
         }
 
         Vector v_wall_phi_r = mult(mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
@@ -419,12 +419,12 @@ namespace openstudio::isomodel {
         // Internal heat gains from people (W/m2).
         double phi_int_occ = pop.heatGainPerPerson() / pop.densityOccupied();
         double phi_int_unocc = pop.heatGainPerPerson() / pop.densityUnoccupied();
-        phi_int_avg = frac_hrs_wk_day * phi_int_occ + (1 - frac_hrs_wk_day) * phi_int_unocc;
+        phi_int_avg = std::lerp(phi_int_unocc, phi_int_occ, frac_hrs_wk_day);
 
         // Internal heat gain from appliances (W/m2).
         double phi_plug_occ = building.electricApplianceHeatGainOccupied() + building.gasApplianceHeatGainOccupied();
         double phi_plug_unocc = building.electricApplianceHeatGainUnoccupied() + building.gasApplianceHeatGainUnoccupied();
-        phi_plug_avg = phi_plug_occ * frac_hrs_wk_day + phi_plug_unocc * (1 - frac_hrs_wk_day);
+        phi_plug_avg = std::lerp(phi_plug_unocc, phi_plug_occ, frac_hrs_wk_day);
 
         // Internal heat gain from illumination (W/m2).
         double phi_illum_occ = Q_illum_occ / structure.floorArea() / hoursInYear / frac_hrs_wk_day * 1000;
@@ -778,13 +778,13 @@ namespace openstudio::isomodel {
     void MonthlyModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, double frac_hrs_wk_day, Vector& v_Hve_ht, Vector& v_Hve_cl) const
     {
         // Ventilation Zone Height (m) with a minimum of 0.1 m.
-        double vent_zone_height = std::max(0.1, structure.buildingHeight());
+        double vent_zone_height = std::max(MIN_VENT_ZONE_HEIGHT, structure.buildingHeight());
 
         // Vent supply rate m3/h/m2 (input is in in L/s).
-        double qv_supp = ventilation.supplyRate() / structure.floorArea() / 3.6;
+        double qv_supp = ventilation.supplyRate() / structure.floorArea() / LPS_TO_M3H;
 
         // Vent exhaust rate m3/h/m2, negative indicates out of building.
-        double qv_ext = -(qv_supp - ventilation.supplyDifference() / structure.floorArea() / 3.6);
+        double qv_ext = -(qv_supp - ventilation.supplyDifference() / structure.floorArea() / LPS_TO_M3H);
 
         // Combustion appliance ventilation rate - not implemented yet but will be impt for restaurants.
         double qv_comb = 0;
@@ -889,7 +889,7 @@ namespace openstudio::isomodel {
             vent_op_frac = frac_hrs_wk_day;
             break;
         default:
-            vent_op_frac = frac_hrs_wk_day + (1 - frac_hrs_wk_day) * pop.densityOccupied() / pop.densityUnoccupied();
+            vent_op_frac = std::lerp(pop.densityOccupied() / pop.densityUnoccupied(), 1.0, frac_hrs_wk_day);
             break;
         }
 

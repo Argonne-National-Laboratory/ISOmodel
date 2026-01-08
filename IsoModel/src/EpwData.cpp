@@ -92,13 +92,13 @@ namespace openstudio::isomodel {
             int dataIndex = -1;
 
             switch (colIdx) {
-                case 6:  dataIndex = 0; break;
-                case 7:  dataIndex = 1; break;
-                case 8:  dataIndex = 2; break;
-                case 13: dataIndex = 3; break;
-                case 14: dataIndex = 4; break;
-                case 15: dataIndex = 5; break;
-                case 21: dataIndex = 6; break;
+                case EPW_COL_DBT:  dataIndex = DBT; break;
+                case EPW_COL_DPT:  dataIndex = DPT; break;
+                case EPW_COL_RH:   dataIndex = RH; break;
+                case EPW_COL_EGH:  dataIndex = EGH; break;
+                case EPW_COL_EB:   dataIndex = EB; break;
+                case EPW_COL_ED:   dataIndex = ED; break;
+                case EPW_COL_WSPD: dataIndex = WSPD; break;
             }
 
             if (dataIndex != -1) {

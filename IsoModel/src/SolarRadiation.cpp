@@ -26,7 +26,7 @@ namespace openstudio::isomodel {
         m_cosTilt = std::cos(m_surfaceTilt);
         
         m_longitude = wdata->longitude() * (PI / 180.0);
-        m_localMeridian = wdata->timezone() * 15.0 * (PI / 180.0);
+        m_localMeridian = wdata->timezone() * DEGREES_PER_HOUR * (PI / 180.0);
         m_latitude = wdata->latitude() * (PI / 180.0);
         
         // Hoist latitude trig for loop performance

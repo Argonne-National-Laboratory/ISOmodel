@@ -1,4 +1,5 @@
 #include "TimeFrame.hpp"
+#include "Constants.hpp"
 
 namespace openstudio::isomodel {
 
@@ -31,17 +32,8 @@ TimeFrame::~TimeFrame() = default;
 
 int TimeFrame::monthLength(int month)
 {
-  switch (month) {
-  case 2:
-    return 28;
-  case 9:
-  case 4:
-  case 6:
-  case 11:
-    return 30;
-  default:
-    return 31;
-  }
+  if (month < 1 || month > 12) return 0;
+  return static_cast<int>(daysInMonth[month - 1]);
 }
 
 } // namespace openstudio::isomodel

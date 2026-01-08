@@ -39,8 +39,8 @@ namespace openstudio::isomodel {
     {
         initialize(); // Builds schedules and pre-calculates physics
 
-        double theta_m_prev = 20.0; // T_m,t-1
-        double theta_air = 20.0;    // Theta_air
+        double theta_m_prev = DEFAULT_INITIAL_TEMP; // T_m,t-1
+        double theta_air = DEFAULT_INITIAL_TEMP;    // Theta_air
 
         // -----------------------------------------------------------
         // OPTIMIZATION: SOLAR CACHING
@@ -398,7 +398,7 @@ namespace openstudio::isomodel {
         }
 
         f_A_nat = std::max(0.0001, lights.naturallyLightedArea()) * invFloorArea;
-        m_A_nat_inv = (f_A_nat > 0) ? (53.0 / f_A_nat) : 0.0;
+        m_A_nat_inv = (f_A_nat > 0) ? (LIGHTING_LEVEL_COEFF / f_A_nat) : 0.0;
 
         // Optimization: Solar Geometry Ratio
         // Using pre-calculated inverse floor area
@@ -427,7 +427,7 @@ namespace openstudio::isomodel {
 
         q_ve_4Pa = std::max(0.000001, (n50ToQ4 * (ventilation.n50() * (floorArea * structure.buildingHeight()))) * invFloorArea);
 
-        h_ms = simSettings.hci() + simSettings.hri() * 1.2;
+        h_ms = simSettings.hci() + simSettings.hri() * H_MS_FACTOR;
         h_is = 1.0 / (1.0 / simSettings.hci() - 1.0 / h_ms);
         H_tr_is = h_is * structure.totalAreaPerFloorArea();
 
@@ -439,8 +439,8 @@ namespace openstudio::isomodel {
         // OPTIMIZATION 2: Mass Area (A_m) Interpolation
         // Moved out of hourly loop because C_m is constant.
         if (C_m > veryHeavy) A_m = 3.5;
-        else if (C_m > heavy) A_m = 3.0 + 0.5 * ((C_m - heavy) / (veryHeavy - heavy));
-        else if (C_m > medium) A_m = 2.5 + 0.5 * ((C_m - medium) / (heavy - medium));
+        else if (C_m > heavy) A_m = std::lerp(3.0, 3.5, (C_m - heavy) / (veryHeavy - heavy));
+        else if (C_m > medium) A_m = std::lerp(2.5, 3.0, (C_m - medium) / (heavy - medium));
         else A_m = 2.5;
 
         double H_win_sum = 0.0, H_wall_sum_total = 0.0;
@@ -522,7 +522,7 @@ namespace openstudio::isomodel {
             double q_ve = c.sched_q_ve_mech * kWh2MJ * invFloorArea;
             c.q_ve_mech_sup = (float)(q_ve * f_ve_mech_sup);
             c.q_ve_diff = (float)(-(c.q_ve_mech_sup - q_ve));
-            c.theta_sup = (float)(std::max(m_theta_ve_preheat, (1.0 - m_eta_ve_rec) * temp[i] + m_eta_ve_rec * 20.0));
+            c.theta_sup = (float)(std::max(m_theta_ve_preheat, std::lerp(temp[i], DEFAULT_INITIAL_TEMP, m_eta_ve_rec)));
         }
     }
 

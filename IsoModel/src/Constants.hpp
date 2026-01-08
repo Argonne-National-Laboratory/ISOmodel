@@ -119,6 +119,8 @@ namespace openstudio::isomodel {
     constexpr double MJ2kWh = 1.0 / 3.6;
     constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
     constexpr double W2kW = 0.001;
+    constexpr double LPS_TO_M3H = 3.6; // Liters/sec to m3/h
+    constexpr double DEGREES_PER_HOUR = 15.0; // Earth rotation
 
     // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
     //0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to Constants.hpp 
@@ -141,16 +143,22 @@ namespace openstudio::isomodel {
 
     constexpr double SHGCClearGlass = 0.87;
 
+    // Simulation Defaults
+    constexpr double DEFAULT_INITIAL_TEMP = 20.0; // Degrees C
+    constexpr double ISO_SKY_TEMP_DIFF = 11.0; // K (Intermediate zones)
+    constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // W/m2K
+    constexpr double LIGHTING_LEVEL_COEFF = 53.0; // Empirical constant for daylighting
+    constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
+    constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
+
     //// --- EPW Data Indices (for internal storage vectors) ---
-    //enum EpwIndex {
-    //    IDX_DBT = 0, // Dry Bulb Temp
-    //    IDX_DPT = 1, // Dew Point Temp
-    //    IDX_RH = 2, // Relative Humidity
-    //    IDX_EGH = 3, // Global Horizontal Radiation
-    //    IDX_EB = 4, // Direct Normal/Beam Radiation
-    //    IDX_ED = 5, // Diffuse Radiation
-    //    IDX_WSPD = 6  // Wind Speed
-    //};
+    constexpr int EPW_COL_DBT = 6;
+    constexpr int EPW_COL_DPT = 7;
+    constexpr int EPW_COL_RH = 8;
+    constexpr int EPW_COL_EGH = 13;
+    constexpr int EPW_COL_EB = 14;
+    constexpr int EPW_COL_ED = 15;
+    constexpr int EPW_COL_WSPD = 21;
 
 } // namespace openstudio::isomodel 
 
