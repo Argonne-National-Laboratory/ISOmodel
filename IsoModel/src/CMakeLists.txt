@@ -56,16 +56,12 @@ set(${target_name}_solar_debug
 )
 
 set(${target_name}_src
-  # Building.cpp
   Building.hpp
   Constants.hpp
-  # Cooling.cpp
-
   Cooling.hpp
   EndUses.hpp
   EpwData.cpp
   EpwData.hpp
-  # Heating.cpp
   Heating.hpp
   HourlyModel.cpp
   HourlyModel.hpp
@@ -73,21 +69,13 @@ set(${target_name}_src
   ISOResults.cpp
   ISOResults.hpp
   # 
-  # Lighting.cpp  <-- COMMENTED OUT TO FIX BUILD ERROR
   Lighting.hpp
-  # Location.cpp
   Location.hpp
-  # Matrix.hpp
   MonthlyModel.cpp
   MonthlyModel.hpp
   MathHelpers.hpp
-  # PhysicalQuantities.cpp
-  # PhysicalQuantities.hpp
-  # Population.cpp
   Population.hpp
-  # Simulation.cpp
   Simulation.hpp
-  # SimulationSettings.cpp
   SimulationSettings.hpp
   SolarRadiation.cpp
   SolarRadiation.hpp
@@ -97,10 +85,7 @@ set(${target_name}_src
   TimeFrame.hpp
   UserModel.cpp
   UserModel.hpp
-  # Vector.hpp
-  # Ventilation.cpp
   Ventilation.hpp
-  # WeatherData.cpp
   WeatherData.hpp
 )
 
