@@ -127,7 +127,7 @@ namespace openstudio::isomodel {
 
         std::vector<EndUses> processResults(bool aggregateByMonth);
 
-        void structureCalculations(double SHGC, double A_wall, double A_win,
+        inline void structureCalculations(double SHGC, double A_wall, double A_win,
             double U_wall, double U_win,
             double alpha_wall, double F_sh_with,
             double F_sh_without, int direction);
@@ -173,8 +173,6 @@ namespace openstudio::isomodel {
         // Cache Locality Vector
         std::vector<HourlyCache> m_hourlyData;
 
-        std::vector<double> sumHoursByMonth(const std::vector<double>& hourlyData);
-
         // Helpers
         struct WeeklyScheduleData final {
             double q_ve[24][7];
@@ -185,7 +183,7 @@ namespace openstudio::isomodel {
             double theta_H[24][7]; // Heating setpoint
             double theta_C[24][7]; // Cooling setpoint
         };
-        void buildWeeklySchedules(WeeklyScheduleData& sched);
+        inline void buildWeeklySchedules(WeeklyScheduleData& sched);
         bool loadSchedulesFromFile(const std::string& path, std::vector<LoadedScheduleData>& data);
 
 

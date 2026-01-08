@@ -11,10 +11,10 @@
 #include "Constants.hpp"
 #include "HourlyModel.hpp"
 #include "SolarRadiation.hpp" 
+#include "EpwData.hpp"
 #include <algorithm>
 #include <numeric>
 #include <cmath>
-#include <cfloat> 
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -59,7 +59,7 @@ namespace openstudio::isomodel {
         const std::vector<double>& eglobeFlat = m_cachedSolarRadiation;
         // -----------------------------------------------------------
 
-        const auto& data = epwData->data();
+        const auto& data = epwData->dataRef();
         const std::vector<double>& egh = data[EGH];
 
         // OPTIMIZATION: Reuse Member Vectors (No Allocation)
@@ -71,7 +71,7 @@ namespace openstudio::isomodel {
             m_phi_dhw.assign(hoursInYear, 0.0);
         }
         else {
-            std::fill(m_phi_dhw.begin(), m_phi_dhw.end(), 0.0);
+            std::ranges::fill(m_phi_dhw, 0.0);
         }
 
         // Cache loop constants
@@ -161,14 +161,14 @@ namespace openstudio::isomodel {
         for (int k = 0; k < 8; ++k) {
             double I_k = curSolar[k];
             // Optimized min check
-            double I_cl = (I_k < I_max) ? I_k : I_max;
+            double I_cl = std::min(I_k, I_max);
             lightingLevelSum += I_k * (f_light_ratio[k] + precalc_nla_shading[k] * I_cl);
             res.phi_sol += I_k * (f_sol_ratio[k] + precalc_solar_shading[k] * I_cl);
         }
         {
             // Roof (EGH) - Use I_sol_gh from cache
             double I_k = cache.I_sol_gh;
-            double I_cl = (I_k < I_max) ? I_k : I_max;
+            double I_cl = std::min(I_k, I_max);
             lightingLevelSum += I_k * (f_light_ratio[8] + precalc_nla_shading[8] * I_cl);
             res.phi_sol += I_k * (f_sol_ratio[8] + precalc_solar_shading[8] * I_cl);
         }
@@ -191,7 +191,7 @@ namespace openstudio::isomodel {
 
         AirFlowResult res;
         double theta_e = cache.theta_e;
-        double absDT = std::max(std::fabs(theta_e - theta_air), 1e-5);
+        double absDT = std::max(std::abs(theta_e - theta_air), 1e-5);
 
         // ISO 15242 6.7.1 Step 1: q_{stack} (Stack effect)
         double q_ve_stack = stackFactor * q_ve_4Pa * fastPow23(effectiveStackHeightFraction * H_z * absDT);
@@ -203,14 +203,14 @@ namespace openstudio::isomodel {
         // ISO 15242 6.7.1 Step 2: q_{exfiltration}
         // Protection needed here: stack and wind could both be zero
         double q_ve_sw = q_ve_stack + q_ve_wind + std::numeric_limits<double>::epsilon(); // Use epsilon for small additive factor
-        double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::fabs(q_ve_diff) * (qInfilStackFraction * q_ve_stack + qInfilWindFraction * q_ve_wind / q_ve_sw));
+        double q_ve_exf = std::max(0.0, std::max(q_ve_stack, q_ve_wind) - std::abs(q_ve_diff) * (qInfilStackFraction * q_ve_stack + qInfilWindFraction * q_ve_wind / q_ve_sw));
 
         // ISO 15242 6.7.2: q_{ent} (Total entering air)
-        double q_ve_ent = (q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf + cache.q_ve_mech_sup;
+        double q_ve_ent = std::max(0.0, (double)q_ve_diff) + q_ve_exf + cache.q_ve_mech_sup;
 
         // ISO 13790 9.3: \theta_{sup} (Supply temperature)
         // Protection needed here: q_ve_ent can be zero
-        res.theta_ent = (theta_e * ((q_ve_diff > 0 ? q_ve_diff : 0.0) + q_ve_exf) + cache.theta_sup * cache.q_ve_mech_sup) / (q_ve_ent + std::numeric_limits<double>::epsilon()); // Use epsilon for small additive factor
+        res.theta_ent = (theta_e * (std::max(0.0, (double)q_ve_diff) + q_ve_exf) + cache.theta_sup * cache.q_ve_mech_sup) / (q_ve_ent + std::numeric_limits<double>::epsilon()); // Use epsilon for small additive factor
 
         // ISO 13790 9.3.1 eq. 21: H_{ve} (Ventilation heat transfer coefficient)
         res.H_ve = rhoCpAirWh * q_ve_ent;
@@ -308,8 +308,8 @@ namespace openstudio::isomodel {
         double phi_C_tot = std::accumulate(m_phi_C_nd.begin(), m_phi_C_nd.end(), 0.0); // Total cooling need
         double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot + std::numeric_limits<double>::epsilon()), 0.1); // Use epsilon for small additive factor
 
-        double s_ht = (1.0 / (1.0 / (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_H))) / heating.efficiency();
-        double s_cl = (1.0 / (1.0 / (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_H)))) / cooling.cop();
+        double s_ht = (1.0 + heating.hvacLossFactor() + heating.hotcoldWasteFactor() / f_H) / heating.efficiency();
+        double s_cl = (1.0 + cooling.hvacLossFactor() + heating.hotcoldWasteFactor() / (1.0 - f_H)) / cooling.cop();
 
         bool electricHeat = (heating.energyType() == 1);
         std::vector<EndUses> results;
@@ -468,7 +468,7 @@ namespace openstudio::isomodel {
         // Try to load from file if path is present and not "false"
         if (!m_hourlySchedulePath.empty()) {
             std::string lowerPath = m_hourlySchedulePath;
-            std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+            std::ranges::transform(lowerPath, lowerPath.begin(), [](unsigned char c){ return std::tolower(c); });
             if (lowerPath != "false") {
                 useFile = loadSchedulesFromFile(m_hourlySchedulePath, fileData);
             }
@@ -480,7 +480,7 @@ namespace openstudio::isomodel {
 
         m_hourlyData.resize(hoursInYear);
 
-        const auto& data = epwData->data();
+        const auto& data = epwData->dataRef();
         const std::vector<double>& wind = data[WSPD];
         const std::vector<double>& temp = data[DBT];
         const std::vector<double>& egh = data[EGH];
@@ -573,7 +573,7 @@ namespace openstudio::isomodel {
         return true;
     }
 
-    void HourlyModel::buildWeeklySchedules(WeeklyScheduleData& sched) {
+    inline void HourlyModel::buildWeeklySchedules(WeeklyScheduleData& sched) {
         const int dayStart = static_cast<int>(pop.daysStart()), dayEnd = static_cast<int>(pop.daysEnd());
         const int hourStart = static_cast<int>(pop.hoursStart()), hourEnd = static_cast<int>(pop.hoursEnd());
         const double ventRate = ventilation.supplyRate(), extEquip = building.externalEquipment();
@@ -597,7 +597,7 @@ namespace openstudio::isomodel {
         }
     }
 
-    void HourlyModel::structureCalculations(double SHGC, double A_wall, double A_win,
+    inline void HourlyModel::structureCalculations(double SHGC, double A_wall, double A_win,
         double U_wall, double U_win, double alpha_wall,
         double F_sh_with, double F_sh_without, int direction) {
 
@@ -609,6 +609,4 @@ namespace openstudio::isomodel {
         H_tot[direction] = A_wall * U_wall + A_win * U_win;
         H_win[direction] = A_win * U_win;
     }
-
-    std::vector<double> HourlyModel::sumHoursByMonth(const std::vector<double>& hourlyData) { return {}; }
 } // namespace openstudio::isomodel

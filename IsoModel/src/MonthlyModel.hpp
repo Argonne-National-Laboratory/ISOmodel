@@ -35,9 +35,6 @@
 
 #include "Simulation.hpp"
 
-// namespace openstudio {
-//     // class EndUses;
-// }c
 namespace openstudio::isomodel {
 
 
@@ -49,7 +46,7 @@ namespace openstudio::isomodel {
         * Creates an empty MonthlyModel. Generally, the MonthlyModel should be created using the UserModel::toMonthlyModel() method.
         */
     MonthlyModel();
-    virtual ~MonthlyModel();
+    ~MonthlyModel() override;
 
     /**
         * Runs the ISO Model cacluations using the ISO 13790 monthly method for the given set of input parameters.

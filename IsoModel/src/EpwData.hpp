@@ -66,6 +66,9 @@ namespace openstudio::isomodel {
         // ideally this would return const reference, but we must preserve ABI.
         std::vector<std::vector<double>> data() const { return m_data; }
 
+        // Optimization: Return const reference to avoid copy
+        const std::vector<std::vector<double>>& dataRef() const { return m_data; }
+
         // new structure for streaming weather data into WeatherData object
         void populateWeatherData(std::shared_ptr<class WeatherData> wd);
     };

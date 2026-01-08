@@ -25,15 +25,12 @@
 
 #include <cmath>
 #include <algorithm>
-#include <cfloat>
 #include <iostream>
 
 namespace openstudio::isomodel {
 
-    // TODO: All member variables initialized in the constructor should eventually be initialized
-    // by the .ism file or a default initialization of some sort.
-    MonthlyModel::MonthlyModel() {}
-    MonthlyModel::~MonthlyModel() {}
+    MonthlyModel::MonthlyModel() = default;
+    MonthlyModel::~MonthlyModel() = default;
 
     //Solver functions
     void MonthlyModel::scheduleAndOccupancy(Vector& weekdayOccupiedMegaseconds, Vector& weekdayUnoccupiedMegaseconds, Vector& weekendOccupiedMegaseconds,
@@ -97,8 +94,9 @@ namespace openstudio::isomodel {
         Vector& v_Tdbt_nt, Vector& v_Tdbt_Day) const
     {
         // Copy to a new variables so matrix nature is clear.
-        Matrix m_mhEgh = location.weather()->mhEgh();
-        Matrix m_mhdbt = location.weather()->mhdbt();
+        // Optimization: Use references to avoid copying matrices
+        const Matrix& m_mhEgh = location.weather()->mhEghRef();
+        const Matrix& m_mhdbt = location.weather()->mhdbtRef();
 
         // Note, these are matrix multiplies (matrix*vector) resulting in a vector.
 
@@ -349,11 +347,16 @@ namespace openstudio::isomodel {
 
         // Combine vertical surface radiation (mosolar) and horizontal radiation (mEgh) into one matrix (W/m2).
         Matrix m_I_sol(monthsInYear, 9); // monthsInYear months, 8 directions + 1 roof.
+        
+        // Optimization: Access weather data via reference to avoid copy in loop
+        const Matrix& m_solar = location.weather()->msolarRef();
+        const Vector& v_mEgh = location.weather()->mEghRef();
+
         for (unsigned int r = 0; r < m_I_sol.size1(); r++) {
             for (unsigned int c = 0; c < m_I_sol.size2() - 1; c++) {
-                m_I_sol(r, c) = location.weather()->msolar()(r, c);
+                m_I_sol(r, c) = m_solar(r, c);
             }
-            m_I_sol(r, m_I_sol.size2() - 1) = location.weather()->mEgh()[r];
+            m_I_sol(r, m_I_sol.size2() - 1) = v_mEgh[r];
         }
         printMatrix("m_I_sol", m_I_sol);
 
@@ -531,14 +534,8 @@ namespace openstudio::isomodel {
         double ht_tset_unocc = heating.temperatureSetPointUnoccupied();
         double cl_tset_unocc = cooling.temperatureSetPointUnoccupied();
 
-        Vector v_ht_tset_ctrl(monthsInYear);
-        Vector v_cl_tset_ctrl(monthsInYear);
-
-        // Create vectors of the adjusted heating set points.
-        for (unsigned int i = 0; i < v_cl_tset_ctrl.size(); i++) {
-            v_cl_tset_ctrl[i] = cl_tset_ctrl;
-            v_ht_tset_ctrl[i] = ht_tset_ctrl;
-        }
+        Vector v_ht_tset_ctrl(monthsInYear, ht_tset_ctrl);
+        Vector v_cl_tset_ctrl(monthsInYear, cl_tset_ctrl);
 
         if (DEBUG_ISO_MODEL_SIMULATION) {
             printVector("v_cl_tset_ctrl", v_cl_tset_ctrl);
@@ -777,6 +774,10 @@ namespace openstudio::isomodel {
         */
     void MonthlyModel::ventilationCalc(const Vector& v_Th_avg, const Vector& v_Tc_avg, double frac_hrs_wk_day, Vector& v_Hve_ht, Vector& v_Hve_cl) const
     {
+        // Optimization: Cache weather references
+        const Vector& v_mdbt = location.weather()->mdbtRef();
+        const Vector& v_mwind = location.weather()->mwindRef();
+
         // Ventilation Zone Height (m) with a minimum of 0.1 m.
         double vent_zone_height = std::max(MIN_VENT_ZONE_HEIGHT, structure.buildingHeight());
 
@@ -814,7 +815,7 @@ namespace openstudio::isomodel {
         // Effective stack height.
         double h_stack = ventilation.zone_frac() * vent_zone_height;
 
-        Vector dbtDiff = dif(location.weather()->mdbt(), v_Th_avg);
+        Vector dbtDiff = dif(v_mdbt, v_Th_avg);
         printVector("dbtDiff", dbtDiff);
         Vector dbtDiffAbs = abs(dbtDiff);
         printVector("dbtDiffAbs", dbtDiffAbs);
@@ -829,7 +830,7 @@ namespace openstudio::isomodel {
         Vector v_qv_stack_ht = maximum(dbtMultQ4, 0.001);
 
         // Recalculate for cooling.
-        dbtDiff = dif(location.weather()->mdbt(), v_Tc_avg);
+        dbtDiff = dif(v_mdbt, v_Tc_avg);
         printVector("dbtDiff", dbtDiff);
         dbtDiffAbs = abs(dbtDiff);
         printVector("dbtDiffAbs", dbtDiffAbs);
@@ -845,9 +846,9 @@ namespace openstudio::isomodel {
         printVector("v_qv_stack_ht", v_qv_stack_ht);
         printVector("v_qv_stack_cl", v_qv_stack_cl);
 
-        Vector v_qv_wind_ht = mult(mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()),
+        Vector v_qv_wind_ht = mult(mult(pow(mult(mult(v_mwind, v_mwind), ventilation.dCp() * location.terrain()),
             ventilation.wind_exp()), v_Q4pa), ventilation.wind_coeff());
-        Vector v_qv_wind_cl = mult(mult(pow(mult(mult(location.weather()->mwind(), location.weather()->mwind()), ventilation.dCp() * location.terrain()),
+        Vector v_qv_wind_cl = mult(mult(pow(mult(mult(v_mwind, v_mwind), ventilation.dCp() * location.terrain()),
             ventilation.wind_exp()), v_Q4pa), ventilation.wind_coeff());
         printVector("v_qv_wind_ht", v_qv_wind_ht);
         printVector("v_qv_wind_cl", v_qv_wind_cl);
@@ -917,6 +918,9 @@ namespace openstudio::isomodel {
         const Vector& v_Hve_cl, double tau, double H_tr, double phi_I_tot, double frac_hrs_wk_day, Vector& v_Qfan_tot, Vector& v_Qneed_ht,
         Vector& v_Qneed_cl, double& Qneed_ht_yr, double& Qneed_cl_yr) const
     {
+        // Optimization: Cache weather reference
+        const Vector& v_mdbt = location.weather()->mdbtRef();
+
         // Convert internal heat gains from W to MJ.
         Vector temp = mult(megasecondsInMonth, phi_I_tot, monthsInYear);
 
@@ -927,9 +931,9 @@ namespace openstudio::isomodel {
         double a_H = heating.a_H0() + tau / heating.tau_H0();
 
         // Heat transfer (loss) by transmission, heating (MJ).
-        Vector v_QT_ht = mult(mult(dif(v_Th_avg, location.weather()->mdbt()), megasecondsInMonth), H_tr);
+        Vector v_QT_ht = mult(mult(dif(v_Th_avg, v_mdbt), megasecondsInMonth), H_tr);
         // Heat transfer (loss) by ventilation, heating (MJ).
-        Vector v_QV_ht = mult(mult(mult(v_Hve_ht, structure.floorArea()), dif(v_Th_avg, location.weather()->mdbt())), megasecondsInMonth);
+        Vector v_QV_ht = mult(mult(mult(v_Hve_ht, structure.floorArea()), dif(v_Th_avg, v_mdbt)), megasecondsInMonth);
         // Total heat transfer (loss) (MJ). ISO 13790 7.2.1.3 eq. 7.
         Vector v_Qtot_ht = sum(v_QT_ht, v_QV_ht);
 
@@ -941,8 +945,13 @@ namespace openstudio::isomodel {
 
         // For each month, set the check the heat gain ratio and set the heating utlization factor accordingly.
         for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
-            v_eta_g_H[i] =
-                v_gamma_H_ht[i] > 0 ? (1 - std::pow(v_gamma_H_ht[i], a_H)) / (1 - std::pow(v_gamma_H_ht[i], (a_H + 1))) : 1 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
+            if (v_gamma_H_ht[i] > 0) {
+                // Optimization: x^(a+1) = x^a * x
+                double num = std::pow(v_gamma_H_ht[i], a_H);
+                v_eta_g_H[i] = (1.0 - num) / (1.0 - num * v_gamma_H_ht[i]);
+            } else {
+                v_eta_g_H[i] = 1.0 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
+            }
         }
 
         // Total heating need (MJ).
@@ -950,9 +959,9 @@ namespace openstudio::isomodel {
         Qneed_ht_yr = sum(v_Qneed_ht);
 
         // Heat transfer (loss) by transmission, cooling (MJ).
-        Vector v_QT_cl = mult(mult(dif(v_Tc_avg, location.weather()->mdbt()), H_tr), megasecondsInMonth);
+        Vector v_QT_cl = mult(mult(dif(v_Tc_avg, v_mdbt), H_tr), megasecondsInMonth);
         // Heat transfer (loss) by ventilation, cooling (MJ).
-        Vector v_QV_cl = mult(mult(mult(v_Hve_cl, structure.floorArea()), dif(v_Tc_avg, location.weather()->mdbt())), megasecondsInMonth);
+        Vector v_QV_cl = mult(mult(mult(v_Hve_cl, structure.floorArea()), dif(v_Tc_avg, v_mdbt)), megasecondsInMonth);
         // Total heat transfer (loss), cooling (MJ). ISO 13790 7.2.1.3 eq. 7.
         Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl);
 
@@ -968,7 +977,13 @@ namespace openstudio::isomodel {
                 std::cout << numer << " = 1.0 - " << v_gamma_H_cl[i] << "^" << a_H << std::endl;
                 std::cout << denom << " = 1.0 - " << v_gamma_H_cl[i] << "^" << (a_H + 1.0) << std::endl;
             }
-            v_eta_g_CL[i] = v_gamma_H_cl[i] > 0.0 ? (1.0 - std::pow(v_gamma_H_cl[i], a_H)) / (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0))) : 1.0;
+            if (v_gamma_H_cl[i] > 0.0) {
+                // Optimization: x^(a+1) = x^a * x
+                double num = std::pow(v_gamma_H_cl[i], a_H);
+                v_eta_g_CL[i] = (1.0 - num) / (1.0 - num * v_gamma_H_cl[i]);
+            } else {
+                v_eta_g_CL[i] = 1.0;
+            }
         }
 
         // Total cooling need (MJ).
@@ -1124,8 +1139,7 @@ namespace openstudio::isomodel {
             v_Qgas_ht = v_Qht_DH_total;
         }
         else {
-            v_Qelec_ht = Vector(monthsInYear);
-            zero(v_Qelec_ht);
+            v_Qelec_ht.assign(monthsInYear, 0.0);
             v_Qgas_ht = sum(v_Qht_sys, v_Qht_DH_total);
         }
         printVector("v_Qelec_ht", v_Qelec_ht);
@@ -1217,8 +1231,7 @@ namespace openstudio::isomodel {
     void MonthlyModel::heatedWater(Vector& v_Q_dhw_elec, Vector& v_Q_dhw_gas) const
     {
         // Energy from solar energy hot water collectors - not included yet
-        Vector v_Q_dhw_solar(monthsInYear);
-        zero(v_Q_dhw_solar);
+        Vector v_Q_dhw_solar(monthsInYear, 0.0);
 
         // Total annual energy demand required for heating DHW (MJ/yr).
         double Q_dhw_yr = heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * rhoCpWater;
@@ -1295,8 +1308,6 @@ namespace openstudio::isomodel {
         Vector v_Qneed_ht, v_Qneed_cl;
 
         Vector v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot, v_Q_illum_ext_tot, v_Qfan_tot, v_Q_pump_tot, v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot, v_Q_dhw_gas;
-
-        frac_hrs_wk_day = hoursUnoccupiedPerDay = hoursOccupiedPerDay = frac_hrs_wk_nt = frac_hrs_wke_tot = 1;
 
         //openstudio::isomodel::loadDefaults(monthlyModel);
 
@@ -1506,41 +1517,45 @@ namespace openstudio::isomodel {
         Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
         Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
 
-        EndUses results[monthsInYear];
+        allResults.reserve(monthsInYear);
+
         for (int i = 0; i < monthsInYear; i++) {
 
 #ifdef ISOMODEL_STANDALONE
+            EndUses eu;
             int euse = 0;
-            results[i].addEndUse(euse++, Eelec_ht[i]);
-            results[i].addEndUse(euse++, Eelec_cl[i]);
-            results[i].addEndUse(euse++, Eelec_int_lt[i]);
-            results[i].addEndUse(euse++, Eelec_ext_lt[i]);
-            results[i].addEndUse(euse++, Eelec_fan[i]);
-            results[i].addEndUse(euse++, Eelec_pump[i]);
-            results[i].addEndUse(euse++, Eelec_plug[i]);
-            results[i].addEndUse(euse++, 0); // Exterior Equipment
-            results[i].addEndUse(euse++, Eelec_dhw[i]);
-            results[i].addEndUse(euse++, Egas_ht[i]);
-            results[i].addEndUse(euse++, Egas_cl[i]);
-            results[i].addEndUse(euse++, Egas_plug[i]);
-            results[i].addEndUse(euse++, Egas_dhw[i]);
+            eu.addEndUse(euse++, Eelec_ht[i]);
+            eu.addEndUse(euse++, Eelec_cl[i]);
+            eu.addEndUse(euse++, Eelec_int_lt[i]);
+            eu.addEndUse(euse++, Eelec_ext_lt[i]);
+            eu.addEndUse(euse++, Eelec_fan[i]);
+            eu.addEndUse(euse++, Eelec_pump[i]);
+            eu.addEndUse(euse++, Eelec_plug[i]);
+            eu.addEndUse(euse++, 0); // Exterior Equipment
+            eu.addEndUse(euse++, Eelec_dhw[i]);
+            eu.addEndUse(euse++, Egas_ht[i]);
+            eu.addEndUse(euse++, Egas_cl[i]);
+            eu.addEndUse(euse++, Egas_plug[i]);
+            eu.addEndUse(euse++, Egas_dhw[i]);
+            allResults.push_back(eu);
 #else
-            results[i].addEndUse(Eelec_ht[i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-            results[i].addEndUse(Eelec_cl[i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-            results[i].addEndUse(Eelec_int_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-            results[i].addEndUse(Eelec_ext_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-            results[i].addEndUse(Eelec_fan[i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-            results[i].addEndUse(Eelec_pump[i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-            results[i].addEndUse(Eelec_plug[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-            results[i].addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-            results[i].addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
+            EndUses eu;
+            eu.addEndUse(Eelec_ht[i], EndUseFuelType::Electricity, EndUseCategoryType::Heating);
+            eu.addEndUse(Eelec_cl[i], EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
+            eu.addEndUse(Eelec_int_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
+            eu.addEndUse(Eelec_ext_lt[i], EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
+            eu.addEndUse(Eelec_fan[i], EndUseFuelType::Electricity, EndUseCategoryType::Fans);
+            eu.addEndUse(Eelec_pump[i], EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
+            eu.addEndUse(Eelec_plug[i], EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
+            eu.addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
+            eu.addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
 
-            results[i].addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-            results[i].addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-            results[i].addEndUse(Egas_plug[i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-            results[i].addEndUse(Egas_dhw[i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+            eu.addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
+            eu.addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+            eu.addEndUse(Egas_plug[i], EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
+            eu.addEndUse(Egas_dhw[i], EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
+            allResults.push_back(eu);
 #endif
-            allResults.push_back(results[i]);
         }
         return allResults;
 
