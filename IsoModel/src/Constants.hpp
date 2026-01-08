@@ -153,15 +153,6 @@ constexpr double LIGHTING_LEVEL_COEFF =
 constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
 constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
 
-//// --- EPW Data Indices (for internal storage vectors) ---
-constexpr int EPW_COL_DBT = 6;
-constexpr int EPW_COL_DPT = 7;
-constexpr int EPW_COL_RH = 8;
-constexpr int EPW_COL_EGH = 13;
-constexpr int EPW_COL_EB = 14;
-constexpr int EPW_COL_ED = 15;
-constexpr int EPW_COL_WSPD = 21;
-
 } // namespace openstudio::isomodel
 
 #endif // ISOMODEL_CONSTANTS_HPP

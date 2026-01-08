@@ -18,14 +18,27 @@ class SolarRadiation;
 
 namespace openstudio::isomodel {
 
-// Column constants
-constexpr int DBT = 0;
-constexpr int DPT = 1;
-constexpr int RH = 2;
-constexpr int EGH = 3;
-constexpr int EB = 4;
-constexpr int ED = 5;
-constexpr int WSPD = 6;
+// Column constants using enum class for better type safety
+enum class EpwDataCol : int {
+  DBT = 0,
+  DPT = 1,
+  RH = 2,
+  EGH = 3,
+  EB = 4,
+  ED = 5,
+  WSPD = 6,
+};
+
+constexpr int toIndex(EpwDataCol c) noexcept {
+  return static_cast<int>(c);
+}
+constexpr int DBT  = toIndex(EpwDataCol::DBT);
+constexpr int DPT  = toIndex(EpwDataCol::DPT);
+constexpr int RH   = toIndex(EpwDataCol::RH);
+constexpr int EGH  = toIndex(EpwDataCol::EGH);
+constexpr int EB   = toIndex(EpwDataCol::EB);
+constexpr int ED   = toIndex(EpwDataCol::ED);
+constexpr int WSPD = toIndex(EpwDataCol::WSPD);
 
 class ISOMODEL_API EpwData {
 protected:
@@ -76,3 +89,8 @@ public:
 } // namespace openstudio::isomodel
 
 #endif // ISOMODEL_EPW_DATA_HPP
+
+
+
+
+
