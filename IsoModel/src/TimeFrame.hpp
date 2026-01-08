@@ -12,15 +12,14 @@ namespace openstudio::isomodel {
 #define TIMESLICES 8760
 
 /**
-* Simple data structure that allows conversion from the hour of the year 
-* to a variety of useful times (day of week, month, etc.).
-*/
-class ISOMODEL_API TimeFrame
-{
+ * Simple data structure that allows conversion from the hour of the year
+ * to a variety of useful times (day of week, month, etc.).
+ */
+class ISOMODEL_API TimeFrame {
 public:
   // Constructor keeps implementation in cpp to populate arrays
   TimeFrame();
-  
+
   // Fix: Declare destructor here, define in cpp to ensure symbol export
   ~TimeFrame();
 

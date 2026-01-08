@@ -6,7 +6,7 @@
 #ifdef openstudio_isomodel_EXPORTS
 #define ISOMODEL_API __declspec(dllexport)
 #else
-//#define ISOMODEL_API __declspec(dllimport)
+// #define ISOMODEL_API __declspec(dllimport)
 #define ISOMODEL_API
 #endif
 #else

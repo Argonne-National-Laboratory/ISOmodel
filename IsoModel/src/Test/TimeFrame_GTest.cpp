@@ -16,18 +16,18 @@ using namespace openstudio::isomodel;
 TEST_F(ISOModelFixture, TimeFrameMonthLengthTest) {
   openstudio::isomodel::TimeFrame frame;
   std::vector<int> monthLengths = {
-    31, // January
-    28, // February
-    31, // March
-    30, // April
-    31, // May
-    30, // June
-    31, // July
-    31, // August
-    30, // September
-    31, // October
-    30, // November
-    31 // December
+      31, // January
+      28, // February
+      31, // March
+      30, // April
+      31, // May
+      30, // June
+      31, // July
+      31, // August
+      30, // September
+      31, // October
+      30, // November
+      31  // December
   };
 
   for (auto i = 1; i != 13; ++i) {

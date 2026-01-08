@@ -5,8 +5,7 @@
 
 namespace openstudio::isomodel {
 
-class ISOMODEL_API Lighting
-{
+class ISOMODEL_API Lighting {
 public:
   // Use compiler-generated default constructor/destructor
   Lighting() = default;
@@ -16,7 +15,9 @@ public:
   void setPowerDensityOccupied(double value) { m_powerDensityOccupied = value; }
 
   double powerDensityUnoccupied() const { return m_powerDensityUnoccupied; }
-  void setPowerDensityUnoccupied(double value) { m_powerDensityUnoccupied = value; }
+  void setPowerDensityUnoccupied(double value) {
+    m_powerDensityUnoccupied = value;
+  }
 
   double dimmingFraction() const { return m_dimmingFraction; }
   void setDimmingFraction(double value) { m_dimmingFraction = value; }
@@ -37,7 +38,9 @@ public:
   void setElecInternalGains(double value) { m_elecInternalGains = value; }
 
   double permLightPowerDensity() const { return m_permLightPowerDensity; }
-  void setPermLightPowerDensity(double value) { m_permLightPowerDensity = value; }
+  void setPermLightPowerDensity(double value) {
+    m_permLightPowerDensity = value;
+  }
 
   double presenceSensorAd() const { return m_presenceSensorAd; }
   void setPresenceSensorAd(double value) { m_presenceSensorAd = value; }
@@ -66,11 +69,19 @@ public:
   double naturallyLightedArea() const { return m_naturallyLightedArea; }
   void setNaturallyLightedArea(double value) { m_naturallyLightedArea = value; }
 
-  double lightingPowerFixedOccupied() const { return m_lightingPowerFixedOccupied; }
-  void setLightingPowerFixedOccupied(double value) { m_lightingPowerFixedOccupied = value; }
+  double lightingPowerFixedOccupied() const {
+    return m_lightingPowerFixedOccupied;
+  }
+  void setLightingPowerFixedOccupied(double value) {
+    m_lightingPowerFixedOccupied = value;
+  }
 
-  double lightingPowerFixedUnoccupied() const { return m_lightingPowerFixedUnoccupied; }
-  void setLightingPowerFixedUnoccupied(double value) { m_lightingPowerFixedUnoccupied = value; }
+  double lightingPowerFixedUnoccupied() const {
+    return m_lightingPowerFixedUnoccupied;
+  }
+  void setLightingPowerFixedUnoccupied(double value) {
+    m_lightingPowerFixedUnoccupied = value;
+  }
 
 private:
   // In-class initialization for safety
@@ -78,14 +89,14 @@ private:
   double m_powerDensityUnoccupied = 0.0;
   double m_dimmingFraction = 0.0;
   double m_exteriorEnergy = 0.0;
-  
+
   // Default values moved from constructor
-  double m_n_day_start = 7.0; 
-  double m_n_day_end = 18.0; 
+  double m_n_day_start = 7.0;
+  double m_n_day_end = 18.0;
   double m_n_weeks = 50.0;
   double m_elecInternalGains = 1.0;
   double m_permLightPowerDensity = 0.0;
-  
+
   // Automatic lighting control defaults:
   double m_presenceSensorAd = 0.6;
   double m_automaticAd = 0.8;

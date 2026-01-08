@@ -1,0 +1,11 @@
+Checks: >-
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-use-nullptr
+WarningsAsErrors: ''
+HeaderFilterRegex: 'Isomodel/src/.*'
+FormatStyle: none
+

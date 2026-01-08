@@ -15,16 +15,13 @@ using namespace openstudio::isomodel;
 
 /*
  * weatherFilePath = ORD.epw
- # Terrain class urban/city = 0.8, suburban/some shielding = 0.9, country/open = 1.0
- terrainClass = 0.8
- # building height is in m,  floor area is in m^2, people density is m2/person
- buildingHeight = 6.33
- occupancyHourEnd = 18
- wallU = 2.1, 234.3, 12.3
+ # Terrain class urban/city = 0.8, suburban/some shielding = 0.9, country/open
+ = 1.0 terrainClass = 0.8 # building height is in m,  floor area is in m^2,
+ people density is m2/person buildingHeight = 6.33 occupancyHourEnd = 18 wallU
+ = 2.1, 234.3, 12.3
  */
 
-TEST_F(ISOModelFixture, PropsKeyValueTests)
-{
+TEST_F(ISOModelFixture, PropsKeyValueTests) {
   Properties props(test_data_path + "/test_properties.props");
   ASSERT_EQ(5, props.size());
 
@@ -52,18 +49,22 @@ TEST_F(ISOModelFixture, PropsKeyValueTests)
 
 TEST_F(ISOModelFixture, PropsMissingValueTests) {
   Properties props(test_data_path + "/test_properties.props");
-  
+
   // Test methods that return boost::optional:
-  // Cast to bool to force boost::optional to return a bool like when you do "if (some_optional_val) {..."
+  // Cast to bool to force boost::optional to return a bool like when you do "if
+  // (some_optional_val) {..."
   EXPECT_TRUE(bool(props.getProperty("weatherFilePath")));
   EXPECT_TRUE(bool(props.getPropertyAsDouble("buildingHeight")));
-  EXPECT_FALSE(bool(props.getProperty("aMissingProperty"))); // Missing.
+  EXPECT_FALSE(bool(props.getProperty("aMissingProperty")));         // Missing.
   EXPECT_FALSE(bool(props.getPropertyAsDouble("aMissingProperty"))); // Missing.
-  EXPECT_FALSE(bool(props.getPropertyAsDouble("weatherFilePath"))); // Cannot convert to double.
+  EXPECT_FALSE(bool(props.getPropertyAsDouble(
+      "weatherFilePath"))); // Cannot convert to double.
 
   // Test methods that return bool
   std::vector<double> vec;
   EXPECT_TRUE(props.getPropertyAsDoubleVector("wallU", vec));
-  EXPECT_FALSE(props.getPropertyAsDoubleVector("aMissingProperty", vec)); // Mising
-  EXPECT_FALSE(props.getPropertyAsDoubleVector("weatherFilePath", vec)); // Cannot convert to double.
+  EXPECT_FALSE(
+      props.getPropertyAsDoubleVector("aMissingProperty", vec)); // Mising
+  EXPECT_FALSE(props.getPropertyAsDoubleVector(
+      "weatherFilePath", vec)); // Cannot convert to double.
 }

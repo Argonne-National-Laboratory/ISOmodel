@@ -17,8 +17,9 @@
 
 namespace openstudio::isomodel {
 
-/// Sums the energy use from the results of an ISOModel simulation across all timesteps and EndUses.
-ISOMODEL_API double totalEnergyUse(const std::vector<EndUses>& results);
+/// Sums the energy use from the results of an ISOModel simulation across all
+/// timesteps and EndUses.
+ISOMODEL_API double totalEnergyUse(const std::vector<EndUses> &results);
 
 } // namespace openstudio::isomodel
 

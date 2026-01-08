@@ -6,19 +6,19 @@
 #ifndef ISOMODEL_USERMODEL_HPP
 #define ISOMODEL_USERMODEL_HPP
 
-#include "ISOModelAPI.hpp"
 #include "Constants.hpp" // Added to access ConfigStrings and Physics constants
 #include "EpwData.hpp"
-#include "MonthlyModel.hpp"
 #include "HourlyModel.hpp"
+#include "ISOModelAPI.hpp"
+#include "MonthlyModel.hpp"
 
-#include <string>
-#include <string_view>
-#include <filesystem>
 #include <algorithm>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 #include "yaml-cpp/yaml.h"
 
@@ -32,54 +32,54 @@ class WeatherData;
 
 struct ISOMODEL_API LatLon {
   double lat, lon;
-  bool operator<(const LatLon& rhs) const;
+  bool operator<(const LatLon &rhs) const;
 };
 
-class ISOMODEL_API UserModel
-{
+class ISOMODEL_API UserModel {
 public:
   // Use compiler-generated default constructor/destructor
   UserModel() = default;
   virtual ~UserModel() = default;
 
   /**
-    * Loads an ISO model from the specified .ism file
-    */
+   * Loads an ISO model from the specified .ism file
+   */
   void load(std::string buildingFile);
 
   /**
-  * Loads an ISO model file from the specified .ism file and defaults properties from the specified .ism.
-  */
+   * Loads an ISO model file from the specified .ism file and defaults
+   * properties from the specified .ism.
+   */
   void load(std::string buildingFile, std::string defaultsFile);
 
   /**
-    * Loads the specified weather data from disk.
-    * Exposed to allow for separate loading from Ruby Scripts
-    * Call setWeatherFilePath(path) then loadWeather() to update
-    * the UserModel with a new set of weather data
-    */
+   * Loads the specified weather data from disk.
+   * Exposed to allow for separate loading from Ruby Scripts
+   * Call setWeatherFilePath(path) then loadWeather() to update
+   * the UserModel with a new set of weather data
+   */
   void loadWeather();
 
   /**
-    * Loads the weather from the specified array of doubles.
-    */
-  void loadWeather(int block_size, double* weather_data);
+   * Loads the weather from the specified array of doubles.
+   */
+  void loadWeather(int block_size, double *weather_data);
 
   void loadAndSetWeather();
 
   /**
-    * Generates a MonthlyModel from the properties of the UserModel.
-    */
+   * Generates a MonthlyModel from the properties of the UserModel.
+   */
   [[nodiscard]] MonthlyModel toMonthlyModel() const;
 
   /**
-    * Generates an HourlyModel from the properties of the UserModel.
-    */
+   * Generates an HourlyModel from the properties of the UserModel.
+   */
   [[nodiscard]] HourlyModel toHourlyModel() const;
 
   /**
-    * Indicates whether or not the user model loaded in correctly.
-    */
+   * Indicates whether or not the user model loaded in correctly.
+   */
   [[nodiscard]] bool valid() const { return _valid; }
 
   // Validation
@@ -93,13 +93,19 @@ public:
   [[nodiscard]] const std::shared_ptr<EpwData> epwData() { return _edata; }
 
   /// Gets a WeatherData property.
-  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() { return _weather; }
+  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() {
+    return _weather;
+  }
 
-  /// Gets a WeatherData property. Property name in .ism file: "weatherfilepath". Property is required.
+  /// Gets a WeatherData property. Property name in .ism file:
+  /// "weatherfilepath". Property is required.
   [[nodiscard]] std::string weatherFilePath() const { return _weatherFilePath; }
 
-  /// Sets a WeatherData property. Property name in .ism file: "weatherfilepath". Property is required.
-  void setWeatherFilePath(std::string val) { _weatherFilePath = std::move(val); }
+  /// Sets a WeatherData property. Property name in .ism file:
+  /// "weatherfilepath". Property is required.
+  void setWeatherFilePath(std::string val) {
+    _weatherFilePath = std::move(val);
+  }
 
   /// Gets a Building property.
   double bemType() const { return building.buildingEnergyManagement(); }
@@ -115,7 +121,8 @@ public:
     else if (type == ADVANCED)
       building.setBuildingEnergyManagement(3.0);
     else
-      throw std::invalid_argument("bemType parameter must be one of 'none', 'simple', or 'advanced'");
+      throw std::invalid_argument(
+          "bemType parameter must be one of 'none', 'simple', or 'advanced'");
   }
 
   /// Gets a Building property.
@@ -131,90 +138,137 @@ public:
   double buildingOccupancyTo() const { return pop.daysEnd(); }
 
   /// Gets a Building property.
-  double constantIlluminationControl() const { return building.constantIllumination(); }
+  double constantIlluminationControl() const {
+    return building.constantIllumination();
+  }
 
   /// Sets a Building property.
-  void setConstantIlluminationControl(double val) { building.setConstantIllumination(val); }
-
-  /// Gets a Building property.
-  double elecPowerAppliancesOccupied() const { return building.electricApplianceHeatGainOccupied(); }
-
-  /// Sets a Building property.
-  void setElecPowerAppliancesOccupied(double val) { building.setElectricApplianceHeatGainOccupied(val); }
-
-  /// Gets a Building property.
-  double elecPowerAppliancesUnoccupied() const { return building.electricApplianceHeatGainUnoccupied(); }
-
-  /// Sets a Building property.
-  void setElecPowerAppliancesUnoccupied(double val) { building.setElectricApplianceHeatGainUnoccupied(val); }
-
-  /// Gets a Building property.
-  double electricAppliancePowerFixedOccupied() const { return building.electricAppliancePowerFixedOccupied(); }
-
-  /// Sets a Building property.
-  void setElectricAppliancePowerFixedOccupied(double electricAppliancePowerFixedOccupied) {
-    building.setElectricAppliancePowerFixedOccupied(electricAppliancePowerFixedOccupied);
+  void setConstantIlluminationControl(double val) {
+    building.setConstantIllumination(val);
   }
 
   /// Gets a Building property.
-  double electricAppliancePowerFixedUnoccupied() const { return building.electricAppliancePowerFixedUnoccupied(); }
+  double elecPowerAppliancesOccupied() const {
+    return building.electricApplianceHeatGainOccupied();
+  }
 
   /// Sets a Building property.
-  void setElectricAppliancePowerFixedUnoccupied(double electricAppliancePowerFixedUnoccupied) {
-    building.setElectricAppliancePowerFixedUnoccupied(electricAppliancePowerFixedUnoccupied);
+  void setElecPowerAppliancesOccupied(double val) {
+    building.setElectricApplianceHeatGainOccupied(val);
+  }
+
+  /// Gets a Building property.
+  double elecPowerAppliancesUnoccupied() const {
+    return building.electricApplianceHeatGainUnoccupied();
+  }
+
+  /// Sets a Building property.
+  void setElecPowerAppliancesUnoccupied(double val) {
+    building.setElectricApplianceHeatGainUnoccupied(val);
+  }
+
+  /// Gets a Building property.
+  double electricAppliancePowerFixedOccupied() const {
+    return building.electricAppliancePowerFixedOccupied();
+  }
+
+  /// Sets a Building property.
+  void setElectricAppliancePowerFixedOccupied(
+      double electricAppliancePowerFixedOccupied) {
+    building.setElectricAppliancePowerFixedOccupied(
+        electricAppliancePowerFixedOccupied);
+  }
+
+  /// Gets a Building property.
+  double electricAppliancePowerFixedUnoccupied() const {
+    return building.electricAppliancePowerFixedUnoccupied();
+  }
+
+  /// Sets a Building property.
+  void setElectricAppliancePowerFixedUnoccupied(
+      double electricAppliancePowerFixedUnoccupied) {
+    building.setElectricAppliancePowerFixedUnoccupied(
+        electricAppliancePowerFixedUnoccupied);
   }
 
   /// Gets a Building property.
   double externalEquipment() const { return building.externalEquipment(); }
 
   /// Sets a Building property.
-  void setExternalEquipment(double externalEquipment) { building.setExternalEquipment(externalEquipment); }
+  void setExternalEquipment(double externalEquipment) {
+    building.setExternalEquipment(externalEquipment);
+  }
 
   /// Gets a Building property.
-  double gasAppliancePowerFixedOccupied() const { return building.gasAppliancePowerFixedOccupied(); }
+  double gasAppliancePowerFixedOccupied() const {
+    return building.gasAppliancePowerFixedOccupied();
+  }
 
   /// Sets a Building property.
-  void setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied) {
+  void
+  setGasAppliancePowerFixedOccupied(double gasAppliancePowerFixedOccupied) {
     building.setGasAppliancePowerFixedOccupied(gasAppliancePowerFixedOccupied);
   }
 
   /// Gets a Building property.
-  double gasAppliancePowerFixedUnoccupied() const { return building.gasAppliancePowerFixedUnoccupied(); }
+  double gasAppliancePowerFixedUnoccupied() const {
+    return building.gasAppliancePowerFixedUnoccupied();
+  }
 
   /// Sets a Building property.
-  void setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied) {
-    building.setGasAppliancePowerFixedUnoccupied(gasAppliancePowerFixedUnoccupied);
+  void
+  setGasAppliancePowerFixedUnoccupied(double gasAppliancePowerFixedUnoccupied) {
+    building.setGasAppliancePowerFixedUnoccupied(
+        gasAppliancePowerFixedUnoccupied);
   }
 
   /// Gets a Building property.
-  double gasPowerAppliancesOccupied() const { return building.gasApplianceHeatGainOccupied(); }
+  double gasPowerAppliancesOccupied() const {
+    return building.gasApplianceHeatGainOccupied();
+  }
 
   /// Sets a Building property.
-  void setGasPowerAppliancesOccupied(double val) { building.setGasApplianceHeatGainOccupied(val); }
+  void setGasPowerAppliancesOccupied(double val) {
+    building.setGasApplianceHeatGainOccupied(val);
+  }
 
   /// Gets a Building property.
-  double gasPowerAppliancesUnoccupied() const { return building.gasApplianceHeatGainUnoccupied(); }
+  double gasPowerAppliancesUnoccupied() const {
+    return building.gasApplianceHeatGainUnoccupied();
+  }
 
   /// Sets a Building property.
-  void setGasPowerAppliancesUnoccupied(double val) { building.setGasApplianceHeatGainUnoccupied(val); }
+  void setGasPowerAppliancesUnoccupied(double val) {
+    building.setGasApplianceHeatGainUnoccupied(val);
+  }
 
   /// Gets a Building property.
-  double lightingOccupancySensorSystem() const { return building.lightingOccupancySensor(); }
+  double lightingOccupancySensorSystem() const {
+    return building.lightingOccupancySensor();
+  }
 
   /// Sets a Building property.
-  void setLightingOccupancySensorSystem(double val) { building.setLightingOccupancySensor(val); }
+  void setLightingOccupancySensorSystem(double val) {
+    building.setLightingOccupancySensor(val);
+  }
 
   /// Gets a Cooling property.
-  double coolingOccupiedSetpoint() const { return cooling.temperatureSetPointOccupied(); }
+  double coolingOccupiedSetpoint() const {
+    return cooling.temperatureSetPointOccupied();
+  }
 
   /// Sets a Cooling property.
-  void setCoolingOccupiedSetpoint(double val) { cooling.setTemperatureSetPointOccupied(val); }
+  void setCoolingOccupiedSetpoint(double val) {
+    cooling.setTemperatureSetPointOccupied(val);
+  }
 
   /// Gets a Cooling property.
   double coolingPumpControl() { return cooling.pumpControlReduction(); }
 
   /// Sets a Cooling property.
-  void setCoolingPumpControl(double val) { cooling.setPumpControlReduction(val); }
+  void setCoolingPumpControl(double val) {
+    cooling.setPumpControlReduction(val);
+  }
 
   /// Gets a Cooling property.
   double coolingSystemCOP() const { return cooling.cop(); }
@@ -223,16 +277,24 @@ public:
   void setCoolingSystemCOP(double val) { cooling.setCop(val); }
 
   /// Gets a Cooling property.
-  double coolingSystemIPLVToCOPRatio() const { return cooling.partialLoadValue(); }
+  double coolingSystemIPLVToCOPRatio() const {
+    return cooling.partialLoadValue();
+  }
 
   /// Sets a Cooling property.
-  void setCoolingSystemIPLVToCOPRatio(double val) { cooling.setPartialLoadValue(val); }
+  void setCoolingSystemIPLVToCOPRatio(double val) {
+    cooling.setPartialLoadValue(val);
+  }
 
   /// Gets a Cooling property.
-  double coolingUnoccupiedSetpoint() const { return cooling.temperatureSetPointUnoccupied(); }
+  double coolingUnoccupiedSetpoint() const {
+    return cooling.temperatureSetPointUnoccupied();
+  }
 
   /// Sets a Cooling property.
-  void setCoolingUnoccupiedSetpoint(double val) { cooling.setTemperatureSetPointUnoccupied(val); }
+  void setCoolingUnoccupiedSetpoint(double val) {
+    cooling.setTemperatureSetPointUnoccupied(val);
+  }
 
   /// Gets a Cooling property.
   double DC_YesNo() const { return cooling.DC_YesNo(); }
@@ -256,7 +318,9 @@ public:
   double eta_DC_COP_abs() const { return cooling.eta_DC_COP_abs(); }
 
   /// Sets a Cooling property.
-  void setEta_DC_COP_abs(double eta_DC_COP_abs) { cooling.setEta_DC_COP_abs(eta_DC_COP_abs); }
+  void setEta_DC_COP_abs(double eta_DC_COP_abs) {
+    cooling.setEta_DC_COP_abs(eta_DC_COP_abs);
+  }
 
   /// Gets a Cooling property.
   double eta_DC_COP() const { return cooling.eta_DC_COP(); }
@@ -268,25 +332,33 @@ public:
   double eta_DC_frac_abs() const { return cooling.eta_DC_frac_abs(); }
 
   /// Sets a Cooling property.
-  void setEta_DC_frac_abs(double eta_DC_frac_abs) { cooling.setEta_DC_frac_abs(eta_DC_frac_abs); }
+  void setEta_DC_frac_abs(double eta_DC_frac_abs) {
+    cooling.setEta_DC_frac_abs(eta_DC_frac_abs);
+  }
 
   /// Gets a Cooling property.
   double eta_DC_network() const { return cooling.eta_DC_network(); }
 
   /// Sets a Cooling property.
-  void setEta_DC_network(double eta_DC_network) { cooling.setEta_DC_network(eta_DC_network); }
+  void setEta_DC_network(double eta_DC_network) {
+    cooling.setEta_DC_network(eta_DC_network);
+  }
 
   /// Gets a Cooling property.
   bool forcedAirCooling() const { return cooling.forcedAirCooling(); }
 
   /// Sets a Cooling property.
-  void setForcedAirCooling(bool forcedAirCooling) { cooling.setForcedAirCooling(forcedAirCooling); }
+  void setForcedAirCooling(bool forcedAirCooling) {
+    cooling.setForcedAirCooling(forcedAirCooling);
+  }
 
   /// Gets a Cooling property.
   double frac_DC_free() const { return cooling.frac_DC_free(); }
 
   /// Sets a Cooling property.
-  void setFrac_DC_free(double frac_DC_free) { cooling.setFrac_DC_free(frac_DC_free); }
+  void setFrac_DC_free(double frac_DC_free) {
+    cooling.setFrac_DC_free(frac_DC_free);
+  }
 
   /// Gets a Cooling property.
   double hvacCoolingLossFactor() { return cooling.hvacLossFactor(); }
@@ -298,7 +370,9 @@ public:
   double T_cl_ctrl_flag() const { return cooling.T_cl_ctrl_flag(); }
 
   /// Sets a Cooling property.
-  void setT_cl_ctrl_flag(double T_cl_ctrl_flag) { cooling.setT_cl_ctrl_flag(T_cl_ctrl_flag); }
+  void setT_cl_ctrl_flag(double T_cl_ctrl_flag) {
+    cooling.setT_cl_ctrl_flag(T_cl_ctrl_flag);
+  }
 
   /// Gets a Heating property.
   double a_H0() const { return heating.a_H0(); }
@@ -322,7 +396,9 @@ public:
   double dhw_tsupply() const { return heating.dhw_tsupply(); }
 
   /// Sets a Heating property.
-  void setDhw_tsupply(double dhw_tsupply) { heating.setDhw_tsupply(dhw_tsupply); }
+  void setDhw_tsupply(double dhw_tsupply) {
+    heating.setDhw_tsupply(dhw_tsupply);
+  }
 
   /// Gets a Heating property.
   double dhwDemand() const { return heating.hotWaterDemand(); }
@@ -331,19 +407,27 @@ public:
   void setDhwDemand(double val) { heating.setHotWaterDemand(val); }
 
   /// Gets a Heating property.
-  double dhwDistributionEfficiency() { return heating.hotWaterDistributionEfficiency(); }
+  double dhwDistributionEfficiency() {
+    return heating.hotWaterDistributionEfficiency();
+  }
 
   /// Sets a Heating property.
-  void setDhwDistributionEfficiency(double val) { heating.setHotWaterDistributionEfficiency(val); }
+  void setDhwDistributionEfficiency(double val) {
+    heating.setHotWaterDistributionEfficiency(val);
+  }
 
   /// Sets a Heating property.
-  void setDhwDistributionSystem(double val) { heating.setHotWaterDistributionEfficiency(val); }
+  void setDhwDistributionSystem(double val) {
+    heating.setHotWaterDistributionEfficiency(val);
+  }
 
   /// Gets a Heating property.
   double dhwEfficiency() const { return heating.hotWaterSystemEfficiency(); }
 
   /// Sets a Heating property.
-  void setDhwEfficiency(double val) { heating.setHotWaterSystemEfficiency(val); }
+  void setDhwEfficiency(double val) {
+    heating.setHotWaterSystemEfficiency(val);
+  }
 
   /// Gets a Heating property.
   double dhwEnergyCarrier() const { return heating.hotWaterEnergyType(); }
@@ -356,7 +440,8 @@ public:
     else if (type == GAS)
       heating.setHotWaterEnergyType(2.0);
     else
-      throw std::invalid_argument("dhwFuelType parameter must be one of 'gas' or 'electric'");
+      throw std::invalid_argument(
+          "dhwFuelType parameter must be one of 'gas' or 'electric'");
   }
 
   /// Gets a Heating property.
@@ -375,7 +460,9 @@ public:
   double eta_DH_network() const { return heating.eta_DH_network(); }
 
   /// Sets a Heating property.
-  void setEta_DH_network(double eta_DH_network) { heating.setEta_DH_network(eta_DH_network); }
+  void setEta_DH_network(double eta_DH_network) {
+    heating.setEta_DH_network(eta_DH_network);
+  }
 
   /// Gets a Heating property.
   double eta_DH_sys() const { return heating.eta_DH_sys(); }
@@ -387,13 +474,17 @@ public:
   bool forcedAirHeating() const { return heating.forcedAirHeating(); }
 
   /// Sets a Heating property.
-  void setForcedAirHeating(bool forcedAirHeating) { heating.setForcedAirHeating(forcedAirHeating); }
+  void setForcedAirHeating(bool forcedAirHeating) {
+    heating.setForcedAirHeating(forcedAirHeating);
+  }
 
   /// Gets a Heating property.
   double frac_DH_free() const { return heating.frac_DH_free(); }
 
   /// Sets a Heating property.
-  void setFrac_DH_free(double frac_DH_free) { heating.setFrac_DH_free(frac_DH_free); }
+  void setFrac_DH_free(double frac_DH_free) {
+    heating.setFrac_DH_free(frac_DH_free);
+  }
 
   /// Gets a Heating property.
   double heatingEnergyCarrier() const { return heating.energyType(); }
@@ -406,20 +497,27 @@ public:
     else if (type == GAS)
       heating.setEnergyType(2.0);
     else
-      throw std::invalid_argument("heatingFuelType parameter must be one of 'gas' or 'electric'");
+      throw std::invalid_argument(
+          "heatingFuelType parameter must be one of 'gas' or 'electric'");
   }
 
   /// Gets a Heating property.
-  double heatingOccupiedSetpoint() const { return heating.temperatureSetPointOccupied(); }
+  double heatingOccupiedSetpoint() const {
+    return heating.temperatureSetPointOccupied();
+  }
 
   /// Sets a Heating property.
-  void setHeatingOccupiedSetpoint(double val) { heating.setTemperatureSetPointOccupied(val); }
+  void setHeatingOccupiedSetpoint(double val) {
+    heating.setTemperatureSetPointOccupied(val);
+  }
 
   /// Gets a Heating property.
   double heatingPumpControl() { return heating.pumpControlReduction(); }
 
   /// Sets a Heating property.
-  void setHeatingPumpControl(double val) { heating.setPumpControlReduction(val); }
+  void setHeatingPumpControl(double val) {
+    heating.setPumpControlReduction(val);
+  }
 
   /// Gets a Heating property.
   double heatingSystemEfficiency() const { return heating.efficiency(); }
@@ -428,10 +526,14 @@ public:
   void setHeatingSystemEfficiency(double val) { heating.setEfficiency(val); }
 
   /// Gets a Heating property.
-  double heatingUnoccupiedSetpoint() const { return heating.temperatureSetPointUnoccupied(); }
+  double heatingUnoccupiedSetpoint() const {
+    return heating.temperatureSetPointUnoccupied();
+  }
 
   /// Sets a Heating property.
-  void setHeatingUnoccupiedSetpoint(double val) { heating.setTemperatureSetPointUnoccupied(val); }
+  void setHeatingUnoccupiedSetpoint(double val) {
+    heating.setTemperatureSetPointUnoccupied(val);
+  }
 
   /// Gets a Heating property.
   double hvacHeatingLossFactor() { return heating.hvacLossFactor(); }
@@ -449,7 +551,9 @@ public:
   double T_ht_ctrl_flag() const { return heating.T_ht_ctrl_flag(); }
 
   /// Sets a Heating property.
-  void setT_ht_ctrl_flag(double T_ht_ctrl_flag) { heating.setT_ht_ctrl_flag(T_ht_ctrl_flag); }
+  void setT_ht_ctrl_flag(double T_ht_ctrl_flag) {
+    heating.setT_ht_ctrl_flag(T_ht_ctrl_flag);
+  }
 
   /// Gets a Heating property.
   double tau_H0() const { return heating.tau_H0(); }
@@ -461,13 +565,17 @@ public:
   double automaticAd() const { return lights.automaticAd(); }
 
   /// Sets a Lights property.
-  void setAutomaticAd(double automaticAd) { lights.setAutomaticAd(automaticAd); }
+  void setAutomaticAd(double automaticAd) {
+    lights.setAutomaticAd(automaticAd);
+  }
 
   /// Gets a Lights property.
   double automaticLux() const { return lights.automaticLux(); }
 
   /// Sets a Lights property.
-  void setAutomaticLux(double automaticLux) { lights.setAutomaticLux(automaticLux); }
+  void setAutomaticLux(double automaticLux) {
+    lights.setAutomaticLux(automaticLux);
+  }
 
   /// Gets a Lights property.
   double daylightSensorSystem() const { return lights.dimmingFraction(); }
@@ -479,7 +587,9 @@ public:
   double elecInternalGains() const { return lights.elecInternalGains(); }
 
   /// Sets a Lights property.
-  void setElecInternalGains(double elecInternalGains) { lights.setElecInternalGains(elecInternalGains); }
+  void setElecInternalGains(double elecInternalGains) {
+    lights.setElecInternalGains(elecInternalGains);
+  }
 
   /// Gets a Lights property.
   double exteriorLightingPower() const { return lights.exteriorEnergy(); }
@@ -488,7 +598,9 @@ public:
   void setExteriorLightingPower(double val) { lights.setExteriorEnergy(val); }
 
   /// Gets a Lights property.
-  double lightingPowerFixedOccupied() const { return lights.lightingPowerFixedOccupied(); }
+  double lightingPowerFixedOccupied() const {
+    return lights.lightingPowerFixedOccupied();
+  }
 
   /// Sets a Lights property.
   void setLightingPowerFixedOccupied(double lightingPowerFixedOccupied) {
@@ -496,7 +608,9 @@ public:
   }
 
   /// Gets a Lights property.
-  double lightingPowerFixedUnoccupied() const { return lights.lightingPowerFixedUnoccupied(); }
+  double lightingPowerFixedUnoccupied() const {
+    return lights.lightingPowerFixedUnoccupied();
+  }
 
   /// Sets a Lights property.
   void setLightingPowerFixedUnoccupied(double lightingPowerFixedUnoccupied) {
@@ -504,28 +618,40 @@ public:
   }
 
   /// Gets a Lights property.
-  double lightingPowerIntensityOccupied() const { return lights.powerDensityOccupied(); }
+  double lightingPowerIntensityOccupied() const {
+    return lights.powerDensityOccupied();
+  }
 
   /// Sets a Lights property.
-  void setLightingPowerIntensityOccupied(double val) { lights.setPowerDensityOccupied(val); }
+  void setLightingPowerIntensityOccupied(double val) {
+    lights.setPowerDensityOccupied(val);
+  }
 
   /// Gets a Lights property.
-  double lightingPowerIntensityUnoccupied() const { return lights.powerDensityUnoccupied(); }
+  double lightingPowerIntensityUnoccupied() const {
+    return lights.powerDensityUnoccupied();
+  }
 
   /// Sets a Lights property.
-  void setLightingPowerIntensityUnoccupied(double val) { lights.setPowerDensityUnoccupied(val); }
+  void setLightingPowerIntensityUnoccupied(double val) {
+    lights.setPowerDensityUnoccupied(val);
+  }
 
   /// Gets a Lights property.
   double manualSwitchAd() const { return lights.manualSwitchAd(); }
 
   /// Sets a Lights property.
-  void setManualSwitchAd(double manualSwitchAd) { lights.setManualSwitchAd(manualSwitchAd); }
+  void setManualSwitchAd(double manualSwitchAd) {
+    lights.setManualSwitchAd(manualSwitchAd);
+  }
 
   /// Gets a Lights property.
   double manualSwitchLux() const { return lights.manualSwitchLux(); }
 
   /// Sets a Lights property.
-  void setManualSwitchLux(double manualSwitchLux) { lights.setManualSwitchLux(manualSwitchLux); }
+  void setManualSwitchLux(double manualSwitchLux) {
+    lights.setManualSwitchLux(manualSwitchLux);
+  }
 
   /// Gets a Lights property.
   double n_day_end() const { return lights.n_day_end(); }
@@ -537,7 +663,9 @@ public:
   double n_day_start() const { return lights.n_day_start(); }
 
   /// Sets a Lights property.
-  void setN_day_start(double n_day_start) { lights.setN_day_start(n_day_start); }
+  void setN_day_start(double n_day_start) {
+    lights.setN_day_start(n_day_start);
+  }
 
   /// Gets a Lights property.
   double n_weeks() const { return lights.n_weeks(); }
@@ -549,10 +677,14 @@ public:
   double naturallyLightedArea() const { return lights.naturallyLightedArea(); }
 
   /// Sets a Lights property.
-  void setNaturallyLightedArea(double naturallyLightedArea) { lights.setNaturallyLightedArea(naturallyLightedArea); }
+  void setNaturallyLightedArea(double naturallyLightedArea) {
+    lights.setNaturallyLightedArea(naturallyLightedArea);
+  }
 
   /// Gets a Lights property.
-  double permLightPowerDensity() const { return lights.permLightPowerDensity(); }
+  double permLightPowerDensity() const {
+    return lights.permLightPowerDensity();
+  }
 
   /// Sets a Lights property.
   void setPermLightPowerDensity(double permLightPowerDensity) {
@@ -563,25 +695,33 @@ public:
   double presenceAutoAd() const { return lights.presenceAutoAd(); }
 
   /// Sets a Lights property.
-  void setPresenceAutoAd(double presenceAutoAd) { lights.setPresenceAutoAd(presenceAutoAd); }
+  void setPresenceAutoAd(double presenceAutoAd) {
+    lights.setPresenceAutoAd(presenceAutoAd);
+  }
 
   /// Gets a Lights property.
   double presenceAutoLux() const { return lights.presenceAutoLux(); }
 
   /// Sets a Lights property.
-  void setPresenceAutoLux(double presenceAutoLux) { lights.setPresenceAutoLux(presenceAutoLux); }
+  void setPresenceAutoLux(double presenceAutoLux) {
+    lights.setPresenceAutoLux(presenceAutoLux);
+  }
 
   /// Gets a Lights property.
   double presenceSensorAd() const { return lights.presenceSensorAd(); }
 
   /// Sets a Lights property.
-  void setPresenceSensorAd(double presenceSensorAd) { lights.setPresenceSensorAd(presenceSensorAd); }
+  void setPresenceSensorAd(double presenceSensorAd) {
+    lights.setPresenceSensorAd(presenceSensorAd);
+  }
 
   /// Gets a Lights property.
   double presenceSensorLux() const { return lights.presenceSensorLux(); }
 
   /// Sets a Lights property.
-  void setPresenceSensorLux(double presenceSensorLux) { lights.setPresenceSensorLux(presenceSensorLux); }
+  void setPresenceSensorLux(double presenceSensorLux) {
+    lights.setPresenceSensorLux(presenceSensorLux);
+  }
 
   /// Gets a Location property.
   double terrainClass() const { return location.terrain(); }
@@ -632,13 +772,17 @@ public:
   std::string scheduleFilePath() const { return pop.scheduleFilePath(); }
 
   /// Sets a Population property.
-  void setScheduleFilePath(std::string scheduleFilePath) { pop.setScheduleFilePath(std::move(scheduleFilePath)); }
+  void setScheduleFilePath(std::string scheduleFilePath) {
+    pop.setScheduleFilePath(std::move(scheduleFilePath));
+  }
 
   /// Gets a Population property.
   std::string hourlySchedulePath() const { return _hourlySchedulePath; }
 
   /// Sets a Population property.
-  void setHourlySchedulePath(std::string hourlySchedulePath) { _hourlySchedulePath = std::move(hourlySchedulePath); }
+  void setHourlySchedulePath(std::string hourlySchedulePath) {
+    _hourlySchedulePath = std::move(hourlySchedulePath);
+  }
 
   /// Gets a SimulationSettings property.
   double hci() const { return simSettings.hci(); }
@@ -653,7 +797,9 @@ public:
   void setHri(double hri) { simSettings.setHri(hri); }
 
   /// Gets a SimulationSettings property.
-  double phiIntFractionToAirNode() const { return simSettings.phiIntFractionToAirNode(); }
+  double phiIntFractionToAirNode() const {
+    return simSettings.phiIntFractionToAirNode();
+  }
 
   /// Sets a SimulationSettings property.
   void setPhiIntFractionToAirNode(double phiIntFractionToAirNode) {
@@ -661,7 +807,9 @@ public:
   }
 
   /// Gets a SimulationSettings property.
-  double phiSolFractionToAirNode() const { return simSettings.phiSolFractionToAirNode(); }
+  double phiSolFractionToAirNode() const {
+    return simSettings.phiSolFractionToAirNode();
+  }
 
   /// Sets a SimulationSettings property.
   void setPhiSolFractionToAirNode(double phiSolFractionToAirNode) {
@@ -678,7 +826,9 @@ public:
   double exteriorHeatCapacity() { return structure.wallHeatCapacity(); }
 
   /// Sets a Structure property.
-  void setExteriorHeatCapacity(double val) { structure.setWallHeatCapacity(val); }
+  void setExteriorHeatCapacity(double val) {
+    structure.setWallHeatCapacity(val);
+  }
 
   /// Gets a Structure property.
   double floorArea() const { return structure.floorArea(); }
@@ -687,13 +837,19 @@ public:
   void setFloorArea(double val) { structure.setFloorArea(val); }
 
   /// Gets a Structure property.
-  double interiorHeatCapacity() const { return structure.interiorHeatCapacity(); }
+  double interiorHeatCapacity() const {
+    return structure.interiorHeatCapacity();
+  }
 
   /// Sets a Structure property.
-  void setInteriorHeatCapacity(double val) { structure.setInteriorHeatCapacity(val); }
+  void setInteriorHeatCapacity(double val) {
+    structure.setInteriorHeatCapacity(val);
+  }
 
   /// Gets a Structure property.
-  double irradianceForMaxShadingUse() const { return structure.irradianceForMaxShadingUse(); }
+  double irradianceForMaxShadingUse() const {
+    return structure.irradianceForMaxShadingUse();
+  }
 
   /// Sets a Structure property.
   void setIrradianceForMaxShadingUse(double irradianceForMaxShadingUse) {
@@ -719,16 +875,24 @@ public:
   void setRoofArea(double val) { structure.setWallArea(8, val); }
 
   /// Gets a Structure property.
-  double roofSolarAbsorption() const { return structure.wallSolarAbsorption()[8]; }
+  double roofSolarAbsorption() const {
+    return structure.wallSolarAbsorption()[8];
+  }
 
   /// Sets a Structure property.
-  void setRoofSolarAbsorption(double val) { structure.setWallSolarAbsorption(8, val); }
+  void setRoofSolarAbsorption(double val) {
+    structure.setWallSolarAbsorption(8, val);
+  }
 
   /// Gets a Structure property.
-  double roofThermalEmissivity() const { return structure.wallThermalEmissivity()[8]; }
+  double roofThermalEmissivity() const {
+    return structure.wallThermalEmissivity()[8];
+  }
 
   /// Sets a Structure property.
-  void setRoofThermalEmissivity(double val) { structure.setWallThermalEmissivity(8, val); }
+  void setRoofThermalEmissivity(double val) {
+    structure.setWallThermalEmissivity(8, val);
+  }
 
   /// Gets a Structure property.
   double roofUValue() const { return structure.wallUniform()[8]; }
@@ -737,7 +901,9 @@ public:
   void setRoofUValue(double val) { structure.setWallUniform(8, val); }
 
   /// Gets a Structure property.
-  double shadingFactorAtMaxUse() const { return structure.shadingFactorAtMaxUse(); }
+  double shadingFactorAtMaxUse() const {
+    return structure.shadingFactorAtMaxUse();
+  }
 
   /// Sets a Structure property.
   void setShadingFactorAtMaxUse(double shadingFactorAtMaxUse) {
@@ -754,7 +920,9 @@ public:
   double skylightSCF() { return structure.windowShadingCorrectionFactor()[8]; }
 
   /// Sets a Structure property.
-  void setSkylightSCF(double val) { structure.setWindowShadingCorrectionFactor(8, val); }
+  void setSkylightSCF(double val) {
+    structure.setWindowShadingCorrectionFactor(8, val);
+  }
 
   /// Gets a Structure property.
   double skylightSDF() const { return structure.windowShadingDevice()[8]; }
@@ -763,10 +931,14 @@ public:
   void setSkylightSDF(double val) { structure.setWindowShadingDevice(8, val); }
 
   /// Gets a Structure property.
-  double skylightSHGC() { return structure.windowNormalIncidenceSolarEnergyTransmittance()[8]; }
+  double skylightSHGC() {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[8];
+  }
 
   /// Sets a Structure property.
-  void setSkylightSHGC(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(8, val); }
+  void setSkylightSHGC(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(8, val);
+  }
 
   /// Gets a Structure property.
   double skylightUvalue() { return structure.windowUniform()[8]; }
@@ -775,7 +947,9 @@ public:
   void setSkylightUvalue(double val) { structure.setWindowUniform(8, val); }
 
   /// Gets a Structure property.
-  double totalAreaPerFloorArea() const { return structure.totalAreaPerFloorArea(); }
+  double totalAreaPerFloorArea() const {
+    return structure.totalAreaPerFloorArea();
+  }
 
   /// Sets a Structure property.
   void setTotalAreaPerFloorArea(double totalAreaPerFloorArea) {
@@ -783,9 +957,10 @@ public:
   }
 
   /// Sets a Structure property.
-  void setWallArea(const Vector& vec) {
+  void setWallArea(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WallArea parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WallArea parameter. It must have 9.");
     }
     structure.setWallArea(vec);
   }
@@ -839,121 +1014,190 @@ public:
   void setWallAreaW(double val) { structure.setWallArea(6, val); }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorption(const Vector& vec) {
+  void setWallSolarAbsorption(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WallSolarAbsorption parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WallSolarAbsorption parameter. It must "
+          "have 9.");
     }
     structure.setWallSolarAbsorption(vec);
   }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionE() const { return structure.wallSolarAbsorption()[2]; }
+  double wallSolarAbsorptionE() const {
+    return structure.wallSolarAbsorption()[2];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionE(double val) { structure.setWallSolarAbsorption(2, val); }
+  void setWallSolarAbsorptionE(double val) {
+    structure.setWallSolarAbsorption(2, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionN() const { return structure.wallSolarAbsorption()[4]; }
+  double wallSolarAbsorptionN() const {
+    return structure.wallSolarAbsorption()[4];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionN(double val) { structure.setWallSolarAbsorption(4, val); }
+  void setWallSolarAbsorptionN(double val) {
+    structure.setWallSolarAbsorption(4, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionNE() const { return structure.wallSolarAbsorption()[3]; }
+  double wallSolarAbsorptionNE() const {
+    return structure.wallSolarAbsorption()[3];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionNE(double val) { structure.setWallSolarAbsorption(3, val); }
+  void setWallSolarAbsorptionNE(double val) {
+    structure.setWallSolarAbsorption(3, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionNW() const { return structure.wallSolarAbsorption()[5]; }
+  double wallSolarAbsorptionNW() const {
+    return structure.wallSolarAbsorption()[5];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionNW(double val) { structure.setWallSolarAbsorption(5, val); }
+  void setWallSolarAbsorptionNW(double val) {
+    structure.setWallSolarAbsorption(5, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionS() const { return structure.wallSolarAbsorption()[0]; }
+  double wallSolarAbsorptionS() const {
+    return structure.wallSolarAbsorption()[0];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionS(double val) { structure.setWallSolarAbsorption(0, val); }
+  void setWallSolarAbsorptionS(double val) {
+    structure.setWallSolarAbsorption(0, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionSE() const { return structure.wallSolarAbsorption()[1]; }
+  double wallSolarAbsorptionSE() const {
+    return structure.wallSolarAbsorption()[1];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionSE(double val) { structure.setWallSolarAbsorption(1, val); }
+  void setWallSolarAbsorptionSE(double val) {
+    structure.setWallSolarAbsorption(1, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionSW() const { return structure.wallSolarAbsorption()[7]; }
+  double wallSolarAbsorptionSW() const {
+    return structure.wallSolarAbsorption()[7];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionSW(double val) { structure.setWallSolarAbsorption(7, val); }
+  void setWallSolarAbsorptionSW(double val) {
+    structure.setWallSolarAbsorption(7, val);
+  }
 
   /// Gets a Structure property.
-  double wallSolarAbsorptionW() const { return structure.wallSolarAbsorption()[6]; }
+  double wallSolarAbsorptionW() const {
+    return structure.wallSolarAbsorption()[6];
+  }
 
   /// Sets a Structure property.
-  void setWallSolarAbsorptionW(double val) { structure.setWallSolarAbsorption(6, val); }
+  void setWallSolarAbsorptionW(double val) {
+    structure.setWallSolarAbsorption(6, val);
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivity(const Vector& vec) {
+  void setWallThermalEmissivity(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WallThermalEmissivity parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WallThermalEmissivity parameter. It "
+          "must have 9.");
     }
     structure.setWallThermalEmissivity(vec);
   }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityE() const { return structure.wallThermalEmissivity()[2]; }
+  double wallThermalEmissivityE() const {
+    return structure.wallThermalEmissivity()[2];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityE(double val) { structure.setWallThermalEmissivity(2, val); }
+  void setWallThermalEmissivityE(double val) {
+    structure.setWallThermalEmissivity(2, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityN() const { return structure.wallThermalEmissivity()[4]; }
+  double wallThermalEmissivityN() const {
+    return structure.wallThermalEmissivity()[4];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityN(double val) { structure.setWallThermalEmissivity(4, val); }
+  void setWallThermalEmissivityN(double val) {
+    structure.setWallThermalEmissivity(4, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityNE() const { return structure.wallThermalEmissivity()[3]; }
+  double wallThermalEmissivityNE() const {
+    return structure.wallThermalEmissivity()[3];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityNE(double val) { structure.setWallThermalEmissivity(3, val); }
+  void setWallThermalEmissivityNE(double val) {
+    structure.setWallThermalEmissivity(3, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityNW() const { return structure.wallThermalEmissivity()[5]; }
+  double wallThermalEmissivityNW() const {
+    return structure.wallThermalEmissivity()[5];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityNW(double val) { structure.setWallThermalEmissivity(5, val); }
+  void setWallThermalEmissivityNW(double val) {
+    structure.setWallThermalEmissivity(5, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityS() const { return structure.wallThermalEmissivity()[0]; }
+  double wallThermalEmissivityS() const {
+    return structure.wallThermalEmissivity()[0];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityS(double val) { structure.setWallThermalEmissivity(0, val); }
+  void setWallThermalEmissivityS(double val) {
+    structure.setWallThermalEmissivity(0, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivitySE() const { return structure.wallThermalEmissivity()[1]; }
+  double wallThermalEmissivitySE() const {
+    return structure.wallThermalEmissivity()[1];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivitySE(double val) { structure.setWallThermalEmissivity(1, val); }
+  void setWallThermalEmissivitySE(double val) {
+    structure.setWallThermalEmissivity(1, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivitySW() const { return structure.wallThermalEmissivity()[7]; }
+  double wallThermalEmissivitySW() const {
+    return structure.wallThermalEmissivity()[7];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivitySW(double val) { structure.setWallThermalEmissivity(7, val); }
+  void setWallThermalEmissivitySW(double val) {
+    structure.setWallThermalEmissivity(7, val);
+  }
 
   /// Gets a Structure property.
-  double wallThermalEmissivityW() const { return structure.wallThermalEmissivity()[6]; }
+  double wallThermalEmissivityW() const {
+    return structure.wallThermalEmissivity()[6];
+  }
 
   /// Sets a Structure property.
-  void setWallThermalEmissivityW(double val) { structure.setWallThermalEmissivity(6, val); }
+  void setWallThermalEmissivityW(double val) {
+    structure.setWallThermalEmissivity(6, val);
+  }
 
   /// Sets a Structure property.
-  void setWallU(const Vector& vec) {
+  void setWallU(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WallU parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WallU parameter. It must have 9.");
     }
     structure.setWallUniform(vec);
   }
@@ -1019,9 +1263,10 @@ public:
   void setWin_ff(double win_ff) { structure.setWin_ff(win_ff); }
 
   /// Sets a Structure property.
-  void setWindowArea(const Vector& vec) {
+  void setWindowArea(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WindowArea parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WindowArea parameter. It must have 9.");
     }
     structure.setWindowArea(vec);
   }
@@ -1075,65 +1320,99 @@ public:
   void setWindowAreaW(double val) { structure.setWindowArea(6, val); }
 
   /// Sets a Structure property.
-  void setWindowSCF(const Vector& vec) {
+  void setWindowSCF(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WindowSCF parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WindowSCF parameter. It must have 9.");
     }
     structure.setWindowShadingCorrectionFactor(vec);
   }
 
   /// Gets a Structure property.
-  double windowSCFE() const { return structure.windowShadingCorrectionFactor()[2]; }
+  double windowSCFE() const {
+    return structure.windowShadingCorrectionFactor()[2];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFE(double val) { structure.setWindowShadingCorrectionFactor(2, val); }
+  void setWindowSCFE(double val) {
+    structure.setWindowShadingCorrectionFactor(2, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFN() const { return structure.windowShadingCorrectionFactor()[4]; }
+  double windowSCFN() const {
+    return structure.windowShadingCorrectionFactor()[4];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFN(double val) { structure.setWindowShadingCorrectionFactor(4, val); }
+  void setWindowSCFN(double val) {
+    structure.setWindowShadingCorrectionFactor(4, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFNE() const { return structure.windowShadingCorrectionFactor()[3]; }
+  double windowSCFNE() const {
+    return structure.windowShadingCorrectionFactor()[3];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFNE(double val) { structure.setWindowShadingCorrectionFactor(3, val); }
+  void setWindowSCFNE(double val) {
+    structure.setWindowShadingCorrectionFactor(3, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFNW() const { return structure.windowShadingCorrectionFactor()[5]; }
+  double windowSCFNW() const {
+    return structure.windowShadingCorrectionFactor()[5];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFNW(double val) { structure.setWindowShadingCorrectionFactor(5, val); }
+  void setWindowSCFNW(double val) {
+    structure.setWindowShadingCorrectionFactor(5, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFS() const { return structure.windowShadingCorrectionFactor()[0]; }
+  double windowSCFS() const {
+    return structure.windowShadingCorrectionFactor()[0];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFS(double val) { structure.setWindowShadingCorrectionFactor(0, val); }
+  void setWindowSCFS(double val) {
+    structure.setWindowShadingCorrectionFactor(0, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFSE() const { return structure.windowShadingCorrectionFactor()[1]; }
+  double windowSCFSE() const {
+    return structure.windowShadingCorrectionFactor()[1];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFSE(double val) { structure.setWindowShadingCorrectionFactor(1, val); }
+  void setWindowSCFSE(double val) {
+    structure.setWindowShadingCorrectionFactor(1, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFSW() const { return structure.windowShadingCorrectionFactor()[7]; }
+  double windowSCFSW() const {
+    return structure.windowShadingCorrectionFactor()[7];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFSW(double val) { structure.setWindowShadingCorrectionFactor(7, val); }
+  void setWindowSCFSW(double val) {
+    structure.setWindowShadingCorrectionFactor(7, val);
+  }
 
   /// Gets a Structure property.
-  double windowSCFW() const { return structure.windowShadingCorrectionFactor()[6]; }
+  double windowSCFW() const {
+    return structure.windowShadingCorrectionFactor()[6];
+  }
 
   /// Sets a Structure property.
-  void setWindowSCFW(double val) { structure.setWindowShadingCorrectionFactor(6, val); }
+  void setWindowSCFW(double val) {
+    structure.setWindowShadingCorrectionFactor(6, val);
+  }
 
   /// Sets a Structure property.
-  void setWindowSDF(const Vector& vec) {
+  void setWindowSDF(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WindowSDF parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WindowSDF parameter. It must have 9.");
     }
     structure.setWindowShadingDevice(vec);
   }
@@ -1187,65 +1466,99 @@ public:
   void setWindowSDFW(double val) { structure.setWindowShadingDevice(6, val); }
 
   /// Sets a Structure property.
-  void setWindowSHGC(const Vector& vec) {
+  void setWindowSHGC(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WindowSHGC parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WindowSHGC parameter. It must have 9.");
     }
     structure.setWindowNormalIncidenceSolarEnergyTransmittance(vec);
   }
 
   /// Gets a Structure property.
-  double windowSHGCE() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[2]; }
+  double windowSHGCE() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[2];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCE(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(2, val); }
+  void setWindowSHGCE(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(2, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCN() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[4]; }
+  double windowSHGCN() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[4];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCN(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(4, val); }
+  void setWindowSHGCN(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(4, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCNE() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[3]; }
+  double windowSHGCNE() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[3];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCNE(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(3, val); }
+  void setWindowSHGCNE(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(3, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCNW() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[5]; }
+  double windowSHGCNW() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[5];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCNW(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(5, val); }
+  void setWindowSHGCNW(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(5, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCS() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[0]; }
+  double windowSHGCS() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[0];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCS(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(0, val); }
+  void setWindowSHGCS(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(0, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCSE() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[1]; }
+  double windowSHGCSE() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[1];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCSE(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(1, val); }
+  void setWindowSHGCSE(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(1, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCSW() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[7]; }
+  double windowSHGCSW() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[7];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCSW(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(7, val); }
+  void setWindowSHGCSW(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(7, val);
+  }
 
   /// Gets a Structure property.
-  double windowSHGCW() const { return structure.windowNormalIncidenceSolarEnergyTransmittance()[6]; }
+  double windowSHGCW() const {
+    return structure.windowNormalIncidenceSolarEnergyTransmittance()[6];
+  }
 
   /// Sets a Structure property.
-  void setWindowSHGCW(double val) { structure.setWindowNormalIncidenceSolarEnergyTransmittance(6, val); }
+  void setWindowSHGCW(double val) {
+    structure.setWindowNormalIncidenceSolarEnergyTransmittance(6, val);
+  }
 
   /// Sets a Structure property.
-  void setWindowU(const Vector& vec) {
+  void setWindowU(const Vector &vec) {
     if (vec.size() != 9) {
-      throw std::invalid_argument("Invalid number of values for WindowU parameter. It must have 9.");
+      throw std::invalid_argument(
+          "Invalid number of values for WindowU parameter. It must have 9.");
     }
     structure.setWindowUniform(vec);
   }
@@ -1305,16 +1618,22 @@ public:
   void setDCp(double dCp) { ventilation.setDCp(dCp); }
 
   /// Gets a Ventilation property.
-  double exhaustAirRecirclation() const { return ventilation.exhaustAirRecirculated(); }
+  double exhaustAirRecirclation() const {
+    return ventilation.exhaustAirRecirculated();
+  }
 
   /// Sets a Ventilation property.
-  void setExhaustAirRecirclation(double val) { ventilation.setExhaustAirRecirculated(val); }
+  void setExhaustAirRecirclation(double val) {
+    ventilation.setExhaustAirRecirculated(val);
+  }
 
   /// Gets a Ventilation property.
   double fanFlowControlFactor() const { return ventilation.fanControlFactor(); }
 
   /// Sets a Ventilation property.
-  void setFanFlowControlFactor(double val) { ventilation.setFanControlFactor(val); }
+  void setFanFlowControlFactor(double val) {
+    ventilation.setFanControlFactor(val);
+  }
 
   /// Gets a Ventilation property.
   double freshAirFlowRate() const { return ventilation.supplyRate(); }
@@ -1332,7 +1651,9 @@ public:
   double heatRecovery() const { return ventilation.heatRecoveryEfficiency(); }
 
   /// Sets a Ventilation property.
-  void setHeatRecovery(double val) { ventilation.setHeatRecoveryEfficiency(val); }
+  void setHeatRecovery(double val) {
+    ventilation.setHeatRecoveryEfficiency(val);
+  }
 
   /// Gets a Ventilation property.
   double hzone() const { return ventilation.hzone(); }
@@ -1341,7 +1662,9 @@ public:
   void setHzone(double hzone) { ventilation.setHzone(hzone); }
 
   /// Gets a Ventilation property.
-  double infiltrationRateUnoccupied() const { return ventilation.infiltrationRateUnoccupied(); }
+  double infiltrationRateUnoccupied() const {
+    return ventilation.infiltrationRateUnoccupied();
+  }
 
   /// Sets a Ventilation property.
   void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied) {
@@ -1370,7 +1693,9 @@ public:
   double stack_coeff() const { return ventilation.stack_coeff(); }
 
   /// Sets a Ventilation property.
-  void setStack_coeff(double stack_coeff) { ventilation.setStack_coeff(stack_coeff); }
+  void setStack_coeff(double stack_coeff) {
+    ventilation.setStack_coeff(stack_coeff);
+  }
 
   /// Gets a Ventilation property.
   double stack_exp() const { return ventilation.stack_exp(); }
@@ -1382,28 +1707,40 @@ public:
   double supplyExhaustRate() const { return ventilation.supplyDifference(); }
 
   /// Sets a Ventilation property.
-  void setSupplyExhaustRate(double val) { ventilation.setSupplyDifference(val); }
+  void setSupplyExhaustRate(double val) {
+    ventilation.setSupplyDifference(val);
+  }
 
   /// Gets a Ventilation property.
   double vent_rate_flag() const { return ventilation.vent_rate_flag(); }
 
   /// Sets a Ventilation property.
-  void setVent_rate_flag(int vent_rate_flag) { ventilation.setVent_rate_flag(vent_rate_flag); }
-
-  /// Gets a Ventilation property.
-  double ventilationExhaustRateUnoccupied() const { return ventilation.ventilationExhaustRateUnoccupied(); }
-
-  /// Sets a Ventilation property.
-  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
-    ventilation.setVentilationExhaustRateUnoccupied(ventilationExhaustRateUnoccupied);
+  void setVent_rate_flag(int vent_rate_flag) {
+    ventilation.setVent_rate_flag(vent_rate_flag);
   }
 
   /// Gets a Ventilation property.
-  double ventilationIntakeRateUnoccupied() const { return ventilation.ventilationIntakeRateUnoccupied(); }
+  double ventilationExhaustRateUnoccupied() const {
+    return ventilation.ventilationExhaustRateUnoccupied();
+  }
 
   /// Sets a Ventilation property.
-  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
-    ventilation.setVentilationIntakeRateUnoccupied(ventilationIntakeRateUnoccupied);
+  void
+  setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
+    ventilation.setVentilationExhaustRateUnoccupied(
+        ventilationExhaustRateUnoccupied);
+  }
+
+  /// Gets a Ventilation property.
+  double ventilationIntakeRateUnoccupied() const {
+    return ventilation.ventilationIntakeRateUnoccupied();
+  }
+
+  /// Sets a Ventilation property.
+  void
+  setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
+    ventilation.setVentilationIntakeRateUnoccupied(
+        ventilationIntakeRateUnoccupied);
   }
 
   /// Gets a Ventilation property.
@@ -1419,20 +1756,25 @@ public:
     else if (type == NATURAL)
       ventilation.setVentType(3.0);
     else
-      throw std::invalid_argument("ventilationType parameter must be one of 'mechanical', 'natural', or 'combined'");
+      throw std::invalid_argument("ventilationType parameter must be one of "
+                                  "'mechanical', 'natural', or 'combined'");
   }
 
   /// Gets a Ventilation property.
   double ventPreheatDegC() const { return ventilation.ventPreheatDegC(); }
 
   /// Sets a Ventilation property.
-  void setVentPreheatDegC(double ventPreheatDegC) { ventilation.setVentPreheatDegC(ventPreheatDegC); }
+  void setVentPreheatDegC(double ventPreheatDegC) {
+    ventilation.setVentPreheatDegC(ventPreheatDegC);
+  }
 
   /// Gets a Ventilation property.
   double wind_coeff() const { return ventilation.wind_coeff(); }
 
   /// Sets a Ventilation property.
-  void setWind_coeff(double wind_coeff) { ventilation.setWind_coeff(wind_coeff); }
+  void setWind_coeff(double wind_coeff) {
+    ventilation.setWind_coeff(wind_coeff);
+  }
 
   /// Gets a Ventilation property.
   double wind_exp() const { return ventilation.wind_exp(); }
@@ -1447,10 +1789,11 @@ public:
   void setZone_frac(double zone_frac) { ventilation.setZone_frac(zone_frac); }
 
 private:
-  void setCoreSimulationProperties(Simulation& sim) const;
+  void setCoreSimulationProperties(Simulation &sim) const;
 
-  std::string resolveFilename(std::string_view baseFile, std::string_view relativeFile);
-  void initializeStructure(const YAML::Node& params);
+  std::string resolveFilename(std::string_view baseFile,
+                              std::string_view relativeFile);
+  void initializeStructure(const YAML::Node &params);
 
   std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
 
@@ -1474,18 +1817,29 @@ private:
   std::string _weatherFilePath, _scheduleFilePath, _hourlySchedulePath;
   std::string dataFile;
 
-  void initializeParameters(const YAML::Node& params);
+  void initializeParameters(const YAML::Node &params);
 
-  void initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(int), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(bool), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(const Vector&), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(std::string), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
+  void initializeParameter(void (UserModel::*setProp)(double),
+                           const YAML::Node &buildingParams,
+                           std::string_view propertyName, bool required);
+  void initializeParameter(void (UserModel::*setProp)(int),
+                           const YAML::Node &buildingParams,
+                           std::string_view propertyName, bool required);
+  void initializeParameter(void (UserModel::*setProp)(bool),
+                           const YAML::Node &buildingParams,
+                           std::string_view propertyName, bool required);
+  void initializeParameter(void (UserModel::*setProp)(const Vector &),
+                           const YAML::Node &buildingParams,
+                           std::string_view propertyName, bool required);
+  void initializeParameter(void (UserModel::*setProp)(std::string),
+                           const YAML::Node &buildingParams,
+                           std::string_view propertyName, bool required);
 
-  void northToSouth(Vector& vec);
+  void northToSouth(Vector &vec);
 
-  void loadBuilding(const std::string& buildingFile);
-  void loadBuilding(const std::string& buildingFile, const std::string& defaultsFile);
+  void loadBuilding(const std::string &buildingFile);
+  void loadBuilding(const std::string &buildingFile,
+                    const std::string &defaultsFile);
   int weatherState(std::string_view header);
   void initializeSolar();
 };

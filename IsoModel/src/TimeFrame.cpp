@@ -3,8 +3,7 @@
 
 namespace openstudio::isomodel {
 
-TimeFrame::TimeFrame()
-{
+TimeFrame::TimeFrame() {
   int hourOfYear = 0;
   int dayOfYear = 0;
   int dayOfWeek = 0;
@@ -30,9 +29,9 @@ TimeFrame::TimeFrame()
 // Fix: Explicitly define the destructor here
 TimeFrame::~TimeFrame() = default;
 
-int TimeFrame::monthLength(int month)
-{
-  if (month < 1 || month > 12) return 0;
+int TimeFrame::monthLength(int month) {
+  if (month < 1 || month > 12)
+    return 0;
   return static_cast<int>(daysInMonth[month - 1]);
 }
 

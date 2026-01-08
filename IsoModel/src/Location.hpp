@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  **********************************************************************/
 #ifndef ISOMODEL_LOCATION_HPP
 #define ISOMODEL_LOCATION_HPP
@@ -25,34 +25,26 @@
 
 namespace openstudio::isomodel {
 
-class ISOMODEL_API Location
-{
+class ISOMODEL_API Location {
 public:
   // Use compiler-generated default constructor/destructor
   Location() = default;
   ~Location() = default;
 
   /**
-  * Terrain class (urban/city = 0.8, suburban/some shielding = 0.9, country/open = 1.0).
-  */
-  double terrain() const {
-    return m_terrain;
-  }
-  
-  void setTerrain(double value) {
-    m_terrain = value;
-  }
+   * Terrain class (urban/city = 0.8, suburban/some shielding = 0.9,
+   * country/open = 1.0).
+   */
+  double terrain() const { return m_terrain; }
+
+  void setTerrain(double value) { m_terrain = value; }
 
   /**
-  * Pointer to weather data. Contains data extracted/computed from .epw file.
-  */
-  std::shared_ptr<WeatherData> weather() const {
-    return m_weather;
-  }
+   * Pointer to weather data. Contains data extracted/computed from .epw file.
+   */
+  std::shared_ptr<WeatherData> weather() const { return m_weather; }
 
-  void setWeatherData(std::shared_ptr<WeatherData> value) {
-    m_weather = value;
-  }
+  void setWeatherData(std::shared_ptr<WeatherData> value) { m_weather = value; }
 
 private:
   // In-class initialization

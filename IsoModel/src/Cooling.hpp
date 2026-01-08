@@ -5,18 +5,25 @@
 
 namespace openstudio::isomodel {
 
-class ISOMODEL_API Cooling
-{
+class ISOMODEL_API Cooling {
 public:
   // Use compiler-generated default constructor/destructor
   Cooling() = default;
   ~Cooling() = default;
 
-  double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
-  void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
+  double temperatureSetPointOccupied() const {
+    return m_temperatureSetPointOccupied;
+  }
+  void setTemperatureSetPointOccupied(double value) {
+    m_temperatureSetPointOccupied = value;
+  }
 
-  double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
-  void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
+  double temperatureSetPointUnoccupied() const {
+    return m_temperatureSetPointUnoccupied;
+  }
+  void setTemperatureSetPointUnoccupied(double value) {
+    m_temperatureSetPointUnoccupied = value;
+  }
 
   double cop() const { return m_cop; }
   void setCop(double value) { m_cop = value; }
