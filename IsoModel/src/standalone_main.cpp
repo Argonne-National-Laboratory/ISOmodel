@@ -64,7 +64,7 @@ void runHourlySimulation(const UserModel& umodel, bool aggregateByMonth) {
 void printSchedules(const UserModel& umodel) {
     openstudio::isomodel::HourlyModel hourly = umodel.toHourlyModel();
     // Run simulate to ensure initialize() populates the cache
-    hourly.simulate(false); 
+    (void)hourly.simulate(false); 
     
     const auto& schedules = hourly.getCachedSchedules();
     

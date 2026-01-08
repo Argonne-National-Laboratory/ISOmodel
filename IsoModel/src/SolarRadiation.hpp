@@ -82,7 +82,7 @@ namespace openstudio::isomodel {
         // Calculates the revolution angle in radians of the earth around the sun.
         // Ref: Duffie & Beckman Eq 1.4.2 (approx)
         double calculateRevolutionAngle(int dayOfYear) { 
-            return 2.0 * PI * dayOfYear / 365.0; 
+            return 2.0 * PI * dayOfYear / daysInYear; 
         }
         
         // Calculates the equation of time (EOT) in minutes.
@@ -97,7 +97,7 @@ namespace openstudio::isomodel {
         // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 3
         // Ref: Duffie & Beckman Eq 1.5.2
         double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
-            return localStandardTime + equationOfTime / 60.0 + (m_longitude - m_localMeridian) * 3.8197186342; // (1 / (PI/12))
+            return localStandardTime + equationOfTime / 60.0 + (m_longitude - m_localMeridian) * (12.0 / PI);
         }
 
         // Calculates the solar declination (delta) in radians.
@@ -113,7 +113,7 @@ namespace openstudio::isomodel {
         // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 4
         // Ref: Duffie & Beckman Eq 1.6.4 (15 degrees per hour from solar noon)
         double calculateSolarHourAngle(double ast) { 
-            return (ast - 12) * 0.261799387799; // 15 * PI / 180
+            return (ast - 12) * (PI / 12.0);
         }
 
         // Calculates the solar altitude angle (beta) in radians.

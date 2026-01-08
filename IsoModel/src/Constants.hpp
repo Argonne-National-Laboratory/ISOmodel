@@ -3,6 +3,8 @@
 
 #include <limits>
 #include <array>
+#include <numbers>
+#include <string_view>
 
 namespace openstudio::isomodel {
 
@@ -14,11 +16,11 @@ namespace openstudio::isomodel {
     // using e.g. std::numeric_limits<double>::epsilon() and std::numeric_limits<double>::infinity()
      
     //// --- Math & Physics ---
-    constexpr double PI = 3.14159265358979323846;
+    inline constexpr double PI = std::numbers::pi;
     // constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding zero
 
 
-    // Pyhsical Constants
+    // Physical Constants
     // Volumetric heat capacity of air (MJ/m3/K)
     // Derived from: rho (1.22521 kg/m3) * cp (1.012 kJ/kg*K) / 1000 kJ/MJ
     constexpr double rhoCpAir = 1.22521 * 0.001012; // = 0.001239 MJ/m3/K
@@ -50,14 +52,14 @@ namespace openstudio::isomodel {
 
     // from usermodel.hpp
     // Defined as const char* for efficiency, but fully compatible with std::string comparisons.
-    constexpr const char* GAS = "gas";
-    constexpr const char* ELECTRIC = "electric";
-    constexpr const char* MECHANICAL = "mechanical";
-    constexpr const char* NATURAL = "natural";
-    constexpr const char* COMBINED = "combined";
-    constexpr const char* NONE = "none";
-    constexpr const char* SIMPLE = "simple";
-    constexpr const char* ADVANCED = "advanced";
+    inline constexpr std::string_view GAS = "gas";
+    inline constexpr std::string_view ELECTRIC = "electric";
+    inline constexpr std::string_view MECHANICAL = "mechanical";
+    inline constexpr std::string_view NATURAL = "natural";
+    inline constexpr std::string_view COMBINED = "combined";
+    inline constexpr std::string_view NONE = "none";
+    inline constexpr std::string_view SIMPLE = "simple";
+    inline constexpr std::string_view ADVANCED = "advanced";
 
 
     // --- Time Constants ---
@@ -133,9 +135,9 @@ namespace openstudio::isomodel {
     constexpr double defaultGroundReflectance = 0.14;
 
     // Shading device factors (1=None, 2=Internal, 3=External)
-    constexpr double winSDFTable[] = { 0.5, 0.35, 1.0 };
+    inline constexpr std::array<double, 3> winSDFTable = { 0.5, 0.35, 1.0 };
     // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
-    constexpr double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
+    inline constexpr std::array<double, 9> envFormFactors = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0 };
 
     constexpr double SHGCClearGlass = 0.87;
 

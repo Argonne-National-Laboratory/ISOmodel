@@ -40,6 +40,7 @@ set(${target_name}_test
   Test/SolarRadiation_GTest.cpp
   Test/TimeFrame_GTest.cpp
   Test/UserModel_GTest.cpp
+  Test/OptimizationCoverage_GTest.cpp
 )
 
 set(${target_name}_benchmark

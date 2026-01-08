@@ -73,11 +73,11 @@ namespace openstudio::isomodel {
         // OPTIMIZATION: Pre-calculate daily solar geometry for all 365 days.
         // This removes the "if (newDay)" branch and math from the 8760 loop.
         // We initialize 0-366 to safely handle both 0-based and 1-based YTD indices.
-        std::array<double, 367> dailyEqTime = {};
-        std::array<double, 367> dailySinDec = {};
-        std::array<double, 367> dailyCosDec = {};
+        std::array<double, daysInYear + 2> dailyEqTime = {};
+        std::array<double, daysInYear + 2> dailySinDec = {};
+        std::array<double, daysInYear + 2> dailyCosDec = {};
 
-        for (int d = 0; d <= 366; ++d) { 
+        for (int d = 0; d <= daysInYear + 1; ++d) { 
              // Revolution Angle (B): Duffie & Beckman Eq 1.4.2
              double rev = calculateRevolutionAngle(d);
              // Equation of Time: ASHRAE Fundamentals 2013 Ch 14 Eq 1

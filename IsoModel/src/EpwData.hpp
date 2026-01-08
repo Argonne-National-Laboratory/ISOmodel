@@ -31,8 +31,8 @@ namespace openstudio::isomodel {
     {
     protected:
         // Internal helpers - implementation details can change as long as signature matches
-        void parseHeader(std::string line);
-        void parseData(std::string line, int row);
+        void parseHeader(const std::string& line);
+        void parseData(const std::string& line, int row);
 
         std::string m_location;
         std::string m_stationid;
@@ -52,7 +52,7 @@ namespace openstudio::isomodel {
         // number of values are the values for a column
         // (e.g. dry bulb temp, etc.)
         void loadData(int block_size, double* data);
-        void loadData(std::string fn);
+        void loadData(const std::string& fn);
         std::string toISOData();
 
         // Getters

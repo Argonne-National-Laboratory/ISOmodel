@@ -52,11 +52,12 @@ namespace {
 
     template <typename T>
     std::optional<T> getParameter(const YAML::Node& params,
-        const std::string& paramName) {
+        std::string_view paramName) {
         // Direct access to map avoids string allocation and transformation
-        if (params[paramName]) {
+        // Note: yaml-cpp 0.8.0 supports string_view keys, or implicit conversion
+        if (params[std::string(paramName)]) {
             try {
-                return params[paramName].as<T>();
+                return params[std::string(paramName)].as<T>();
             }
             catch (const YAML::TypedBadConversion<T>&) {
                 return std::nullopt;
@@ -66,14 +67,14 @@ namespace {
     }
 
     bool getParameterAsVector(const YAML::Node& params,
-                          const std::string& paramName,
+                          std::string_view paramName,
                           openstudio::Vector& vec)
         {
 
         // Direct access to map avoids string allocation and transformation
-        if (params[paramName]) {
+        if (params[std::string(paramName)]) {
             vec.clear();
-            auto param = params[paramName];
+            auto param = params[std::string(paramName)];
             size_t n = std::distance(param.begin(), param.end());
             if (vec.size() != n) {
                 vec.resize(n);
@@ -344,46 +345,46 @@ namespace openstudio::isomodel {
     // This avoids repeated string allocations and transformations in each getParameter call.
     void UserModel::initializeParameter(void(UserModel::* setProp)(double), 
                                     const YAML::Node& params, 
-                                    std::string paramName, 
+                                    std::string_view paramName, 
                                     bool required) 
     {
         
         if (auto prop = getParameter<double>(params, paramName)) {
         (this->*setProp)(*prop);
         } else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+        throw std::invalid_argument("Required property " + std::string(paramName) + " missing in .ism file.");
         }
     }
 
     void UserModel::initializeParameter(void(UserModel::* setProp)(int), 
                                         const YAML::Node& params, 
-                                        std::string paramName, 
+                                        std::string_view paramName, 
                                         bool required) 
     {
 
     if (auto prop = getParameter<int>(params, paramName)) {
         (this->*setProp)(*prop);
     } else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+        throw std::invalid_argument("Required property " + std::string(paramName) + " missing in .ism file.");
     }
 
     }
 
     void UserModel::initializeParameter(void(UserModel::* setProp)(bool), 
-    const YAML::Node& params, std::string paramName, bool required) 
+    const YAML::Node& params, std::string_view paramName, bool required) 
     {
 
         if (auto prop = getParameter<bool>(params, paramName)) {
             (this->*setProp)(*prop);
         } else if (required) {
-            throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+            throw std::invalid_argument("Required property " + std::string(paramName) + " missing in .ism file.");
         }
 
     }
 
     void UserModel::initializeParameter(void(UserModel::* setProp)(const Vector&), 
                                     const YAML::Node& params, 
-                                    std::string paramName, 
+                                    std::string_view paramName, 
                                     bool required) 
     {
 
@@ -392,19 +393,19 @@ namespace openstudio::isomodel {
             northToSouth(vec);
             (this->*setProp)(vec);
         } else if (required) {
-            throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+            throw std::invalid_argument("Required property " + std::string(paramName) + " missing in .ism file.");
         }
     }
 
     void UserModel::initializeParameter(void(UserModel::* setProp)(std::string), 
                                                             const YAML::Node& params, 
-                                                            std::string paramName, 
+                                                            std::string_view paramName, 
                                                             bool required) 
     {
     if (auto prop = getParameter<std::string>(params, paramName)) {
         (this->*setProp)(*prop);
     } else if (required) {
-        throw std::invalid_argument("Required property " + paramName + " missing in .ism file.");
+        throw std::invalid_argument("Required property " + std::string(paramName) + " missing in .ism file.");
     }
     }
 
@@ -414,7 +415,7 @@ namespace openstudio::isomodel {
         std::swap(vec[5], vec[7]);
     }
 
-    void UserModel::loadBuilding(std::string buildingFile)
+    void UserModel::loadBuilding(const std::string& buildingFile)
     {
         YAML::Node buildingParams = loadLowercasedYamlMapFromFile(buildingFile);
         throwIfEmptyYamlMap(buildingParams, buildingFile);
@@ -423,7 +424,7 @@ namespace openstudio::isomodel {
         initializeStructure(buildingParams);
     }
 
-    void UserModel::loadBuilding(std::string buildingFile, std::string defaultsFile)
+    void UserModel::loadBuilding(const std::string& buildingFile, const std::string& defaultsFile)
     {
         YAML::Node buildingParams = loadLowercasedYamlMapFromFile(defaultsFile);
         throwIfEmptyYamlMap(buildingParams, defaultsFile);
@@ -437,13 +438,13 @@ namespace openstudio::isomodel {
     }
 
 
-    int UserModel::weatherState(std::string header)
+    int UserModel::weatherState(std::string_view header)
     {
     return weatherStateImpl(header);
     }
 
 
-    std::string UserModel::resolveFilename(std::string baseFile, std::string relativeFile)
+    std::string UserModel::resolveFilename(std::string_view baseFile, std::string_view relativeFile)
     {
     return resolveFilenameImpl(baseFile, relativeFile);
     }

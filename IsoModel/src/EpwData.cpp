@@ -45,10 +45,10 @@ namespace openstudio::isomodel {
         wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), monthsInYear, hoursInDay));
         
         // Solar radiation is 12 months x 8 surfaces
-        wd->setMsolar(toMatrix(pos.monthlySolarRadiation(), monthsInYear, 8));
+        wd->setMsolar(toMatrix(pos.monthlySolarRadiation(), monthsInYear, numVerticalSurfaces));
     }
 
-    void EpwData::parseHeader(std::string line)
+    void EpwData::parseHeader(const std::string& line)
     {
         std::stringstream linestream(line);
         std::string segment;
@@ -76,7 +76,7 @@ namespace openstudio::isomodel {
         }
     }
 
-    void EpwData::parseData(std::string line, int row)
+    void EpwData::parseData(const std::string& line, int row)
     {
         // Use pointer arithmetic and strtod directly on the buffer 
         // to avoid creating substring allocations for every field.
@@ -161,7 +161,7 @@ namespace openstudio::isomodel {
         const auto& msolar = pos.monthlySolarRadiation();
         for (int i = 0; i < monthsInYear; ++i) {
             sstream << i;
-            for (int s = 0; s < 8; ++s) sstream << "," << msolar[i][s]; // NUM_SURFACES = 8
+            for (int s = 0; s < numVerticalSurfaces; ++s) sstream << "," << msolar[i][s]; 
             sstream << "\n";
         }
 
@@ -187,7 +187,7 @@ namespace openstudio::isomodel {
         }
     }
 
-    void EpwData::loadData(std::string fn)
+    void EpwData::loadData(const std::string& fn)
     {
         std::ifstream myfile(fn); // c_str() not needed in modern C++
 

@@ -384,8 +384,6 @@ namespace openstudio::isomodel {
             // determine which default value to use for theta_er. BAA@2015-07-13.
             theta_er[i] = 11.0;
         }
-        double envFormFactors[] =
-        { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1 };
 
         Vector v_wall_phi_r = mult(mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
 

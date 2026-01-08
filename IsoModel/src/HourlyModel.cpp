@@ -84,7 +84,7 @@ namespace openstudio::isomodel {
         const double cool_E_pumps = cooling.E_pumps();
         const double cool_pumpRed = cooling.pumpControlReduction();
         const double lights_extEnergy = lights.exteriorEnergy();
-        const double fan_power_factor = m_phi_fan_spec * 0.277778; // Convert to W/(m^3/h)
+        const double fan_power_factor = m_phi_fan_spec * (1.0 / 3.6); // Convert to W/(m^3/h)
 
         // Optimization: Pre-calculate pump powers for efficiency in loop
         const double pump_cool_power_active = cool_E_pumps * cool_pumpRed;
@@ -439,8 +439,8 @@ namespace openstudio::isomodel {
         // OPTIMIZATION 2: Mass Area (A_m) Interpolation
         // Moved out of hourly loop because C_m is constant.
         if (C_m > veryHeavy) A_m = 3.5;
-        else if (C_m > heavy) A_m = 3.0 + 0.5 * ((C_m - heavy) / 110.0);
-        else if (C_m > medium) A_m = 2.5 + 0.5 * ((C_m - medium) / 95.0);
+        else if (C_m > heavy) A_m = 3.0 + 0.5 * ((C_m - heavy) / (veryHeavy - heavy));
+        else if (C_m > medium) A_m = 2.5 + 0.5 * ((C_m - medium) / (heavy - medium));
         else A_m = 2.5;
 
         double H_win_sum = 0.0, H_wall_sum_total = 0.0;

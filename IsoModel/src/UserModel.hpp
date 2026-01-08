@@ -13,6 +13,7 @@
 #include "HourlyModel.hpp"
 
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <algorithm>
 #include <map>
@@ -69,17 +70,17 @@ public:
   /**
     * Generates a MonthlyModel from the properties of the UserModel.
     */
-  MonthlyModel toMonthlyModel() const;
+  [[nodiscard]] MonthlyModel toMonthlyModel() const;
 
   /**
     * Generates an HourlyModel from the properties of the UserModel.
     */
-  HourlyModel toHourlyModel() const;
+  [[nodiscard]] HourlyModel toHourlyModel() const;
 
   /**
     * Indicates whether or not the user model loaded in correctly.
     */
-  bool valid() const { return _valid; }
+  [[nodiscard]] bool valid() const { return _valid; }
 
   // Validation
   void setValid(bool val) { _valid = val; }
@@ -89,16 +90,16 @@ public:
   // ------------------------------------------------ //
 
   /// Gets a EpwData property.
-  const std::shared_ptr<EpwData> epwData() { return _edata; }
+  [[nodiscard]] const std::shared_ptr<EpwData> epwData() { return _edata; }
 
   /// Gets a WeatherData property.
-  const std::shared_ptr<WeatherData> weatherData() { return _weather; }
+  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() { return _weather; }
 
   /// Gets a WeatherData property. Property name in .ism file: "weatherfilepath". Property is required.
-  std::string weatherFilePath() const { return _weatherFilePath; }
+  [[nodiscard]] std::string weatherFilePath() const { return _weatherFilePath; }
 
   /// Sets a WeatherData property. Property name in .ism file: "weatherfilepath". Property is required.
-  void setWeatherFilePath(std::string val) { _weatherFilePath = val; }
+  void setWeatherFilePath(std::string val) { _weatherFilePath = std::move(val); }
 
   /// Gets a Building property.
   double bemType() const { return building.buildingEnergyManagement(); }
@@ -631,13 +632,13 @@ public:
   std::string scheduleFilePath() const { return pop.scheduleFilePath(); }
 
   /// Sets a Population property.
-  void setScheduleFilePath(std::string scheduleFilePath) { pop.setScheduleFilePath(scheduleFilePath); }
+  void setScheduleFilePath(std::string scheduleFilePath) { pop.setScheduleFilePath(std::move(scheduleFilePath)); }
 
   /// Gets a Population property.
   std::string hourlySchedulePath() const { return _hourlySchedulePath; }
 
   /// Sets a Population property.
-  void setHourlySchedulePath(std::string hourlySchedulePath) { _hourlySchedulePath = hourlySchedulePath; }
+  void setHourlySchedulePath(std::string hourlySchedulePath) { _hourlySchedulePath = std::move(hourlySchedulePath); }
 
   /// Gets a SimulationSettings property.
   double hci() const { return simSettings.hci(); }
@@ -1448,7 +1449,7 @@ public:
 private:
   void setCoreSimulationProperties(Simulation& sim) const;
 
-  std::string resolveFilename(std::string baseFile, std::string relativeFile);
+  std::string resolveFilename(std::string_view baseFile, std::string_view relativeFile);
   void initializeStructure(const YAML::Node& params);
 
   std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
@@ -1475,17 +1476,17 @@ private:
 
   void initializeParameters(const YAML::Node& params);
 
-  void initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& buildingParams, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(int), const YAML::Node& buildingParams, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(bool), const YAML::Node& buildingParams, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(const Vector&), const YAML::Node& buildingParams, std::string propertyName, bool required);
-  void initializeParameter(void(UserModel::* setProp)(std::string), const YAML::Node& buildingParams, std::string propertyName, bool required);
+  void initializeParameter(void(UserModel::* setProp)(double), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
+  void initializeParameter(void(UserModel::* setProp)(int), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
+  void initializeParameter(void(UserModel::* setProp)(bool), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
+  void initializeParameter(void(UserModel::* setProp)(const Vector&), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
+  void initializeParameter(void(UserModel::* setProp)(std::string), const YAML::Node& buildingParams, std::string_view propertyName, bool required);
 
   void northToSouth(Vector& vec);
 
-  void loadBuilding(std::string buildingFile);
-  void loadBuilding(std::string buildingFile, std::string defaultsFile);
-  int weatherState(std::string header);
+  void loadBuilding(const std::string& buildingFile);
+  void loadBuilding(const std::string& buildingFile, const std::string& defaultsFile);
+  int weatherState(std::string_view header);
   void initializeSolar();
 };
 
