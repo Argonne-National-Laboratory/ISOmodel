@@ -24,6 +24,7 @@
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
+#include "Schedules.hpp"
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -57,14 +58,6 @@ public:
 
 private:
   // Simulation functions.
-  void scheduleAndOccupancy(
-      Vector &weekdayOccupiedMegaseconds, Vector &weekdayUnoccupiedMegaseconds,
-      Vector &weekendOccupiedMegaseconds, Vector &weekendUnoccupiedMegaseconds,
-      Vector &clockHourOccupied, Vector &clockHourUnoccupied,
-      double &frac_hrs_wk_day, double &hoursUnoccupiedPerDay,
-      double &hoursOccupiedPerDay, double &frac_hrs_wk_nt,
-      double &frac_hrs_wke_tot) const;
-
   void solarRadiationBreakdown(const Vector &weekdayOccupiedMegaseconds,
                                const Vector &weekdayUnoccupiedMegaseconds,
                                const Vector &weekendOccupiedMegaseconds,

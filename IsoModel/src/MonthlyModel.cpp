@@ -32,64 +32,6 @@ namespace openstudio::isomodel {
 MonthlyModel::MonthlyModel() = default;
 MonthlyModel::~MonthlyModel() = default;
 
-// Solver functions
-void MonthlyModel::scheduleAndOccupancy(
-    Vector &weekdayOccupiedMegaseconds, Vector &weekdayUnoccupiedMegaseconds,
-    Vector &weekendOccupiedMegaseconds, Vector &weekendUnoccupiedMegaseconds,
-    Vector &clockHourOccupied, Vector &clockHourUnoccupied,
-    double &frac_hrs_wk_day, double &hoursUnoccupiedPerDay,
-    double &hoursOccupiedPerDay, double &frac_hrs_wk_nt,
-    double &frac_hrs_wke_tot) const {
-  hoursOccupiedPerDay = pop.hoursEnd() - pop.hoursStart();
-  if (hoursOccupiedPerDay < 0) {
-    hoursOccupiedPerDay += hoursInDay;
-  }
-  double daysOccupiedPerWeek = pop.daysEnd() - pop.daysStart() + 1;
-  if (daysOccupiedPerWeek < 0) {
-    daysOccupiedPerWeek += daysInWeek;
-  }
-
-  double hoursOccupiedDuringWeek = hoursOccupiedPerDay * daysOccupiedPerWeek;
-  frac_hrs_wk_day = hoursOccupiedDuringWeek / hoursInWeek;
-
-  hoursUnoccupiedPerDay = 24 - hoursOccupiedPerDay;
-  double hoursUnoccupiedDuringWeek =
-      (daysOccupiedPerWeek - 1) * hoursUnoccupiedPerDay;
-  frac_hrs_wk_nt = hoursUnoccupiedDuringWeek / hoursInWeek;
-
-  double occupationDensity = pop.densityOccupied();
-  double unoccupiedDensity = pop.densityUnoccupied();
-  double densityRatio = occupationDensity / unoccupiedDensity;
-
-  double totalWeekendHours =
-      hoursInWeek - hoursOccupiedDuringWeek - hoursUnoccupiedDuringWeek;
-  frac_hrs_wke_tot = totalWeekendHours / hoursInWeek;
-
-  double weekendHoursOccupied =
-      (daysInWeek - daysOccupiedPerWeek) * hoursOccupiedPerDay;
-  double frac_hrs_wke_day = weekendHoursOccupied / hoursInWeek;
-
-  double weekendHoursUnoccupied = totalWeekendHours - weekendHoursOccupied;
-  double frac_hrs_wke_nt = weekendHoursUnoccupied / hoursInWeek;
-
-  for (int m = 0; m < monthsInYear; m++) {
-    weekdayOccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wk_day;
-    weekdayUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wk_nt;
-    weekendOccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_day;
-    weekendUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_nt;
-  }
-  for (int h = 0; h < hoursInDay; h++) {
-    if (h - eecalcWeekdayStart >= 0 &&
-        h - eecalcWeekdayStart < hoursOccupiedPerDay) {
-      clockHourOccupied[h] = 1;
-      clockHourUnoccupied[h] = 0;
-    } else {
-      clockHourOccupied[h] = 0;
-      clockHourUnoccupied[h] = 1;
-    }
-  }
-}
-
 /**
  * Breaks down the solar radiation and temperature data into day, night,
  * weekday and weekend vectors, as appropriate.
@@ -1454,18 +1396,6 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 }
 
 std::vector<EndUses> MonthlyModel::simulate() const {
-  Vector weekdayOccupiedMegaseconds(monthsInYear);
-  Vector weekdayUnoccupiedMegaseconds(monthsInYear);
-  Vector weekendOccupiedMegaseconds(monthsInYear);
-  Vector weekendUnoccupiedMegaseconds(monthsInYear);
-  Vector clockHourOccupied(24);
-  Vector clockHourUnoccupied(24);
-  double frac_hrs_wk_day = 0;
-  double hoursUnoccupiedPerDay = 0;
-  double hoursOccupiedPerDay = 0;
-  double frac_hrs_wk_nt = 0;
-  double frac_hrs_wke_tot = 0;
-
   // Solor Radiation Breakdown Results
   Vector v_hrs_sun_down_mo(monthsInYear), v_Tdbt_nt, v_Tdbt_day;
   Vector frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt;
@@ -1498,36 +1428,33 @@ std::vector<EndUses> MonthlyModel::simulate() const {
 
   // openstudio::isomodel::loadDefaults(monthlyModel);
 
-  if (DEBUG_ISO_MODEL_SIMULATION)
+  if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << std::endl << "scheduleAndOccupancy: " << std::endl;
-  scheduleAndOccupancy(weekdayOccupiedMegaseconds, weekdayUnoccupiedMegaseconds,
-                       weekendOccupiedMegaseconds, weekendUnoccupiedMegaseconds,
-                       clockHourOccupied, clockHourUnoccupied, frac_hrs_wk_day,
-                       hoursUnoccupiedPerDay, hoursOccupiedPerDay,
-                       frac_hrs_wk_nt, frac_hrs_wke_tot);
+  }
+  schedules::MonthlyScheduleData scheduleData = schedules::getMonthlySchedules(pop);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "frac_hrs_wk_day: " << frac_hrs_wk_day << std::endl;
-    std::cout << "hoursUnoccupiedPerDay: " << hoursUnoccupiedPerDay
+    std::cout << "frac_hrs_wk_day: " << scheduleData.frac_hrs_wk_day << std::endl;
+    std::cout << "hoursUnoccupiedPerDay: " << scheduleData.hoursUnoccupiedPerDay
               << std::endl;
-    std::cout << "hoursOccupiedPerDay: " << hoursOccupiedPerDay << std::endl;
-    std::cout << "frac_hrs_wk_nt: " << frac_hrs_wk_nt << std::endl;
-    std::cout << "frac_hrs_wke_tot: " << frac_hrs_wke_tot << std::endl;
+    std::cout << "hoursOccupiedPerDay: " << scheduleData.hoursOccupiedPerDay << std::endl;
+    std::cout << "frac_hrs_wk_nt: " << scheduleData.frac_hrs_wk_nt << std::endl;
+    std::cout << "frac_hrs_wke_tot: " << scheduleData.frac_hrs_wke_tot << std::endl;
 
-    printVector("weekdayOccupiedMegaseconds", weekdayOccupiedMegaseconds);
-    printVector("weekdayUnoccupiedMegaseconds", weekdayUnoccupiedMegaseconds);
-    printVector("weekendOccupiedMegaseconds", weekendOccupiedMegaseconds);
-    printVector("weekendUnoccupiedMegaseconds", weekendUnoccupiedMegaseconds);
-    printVector("clockHourOccupied", clockHourOccupied);
-    printVector("clockHourUnoccupied", clockHourUnoccupied);
+    printVector("weekdayOccupiedMegaseconds", scheduleData.weekdayOccupiedMegaseconds);
+    printVector("weekdayUnoccupiedMegaseconds", scheduleData.weekdayUnoccupiedMegaseconds);
+    printVector("weekendOccupiedMegaseconds", scheduleData.weekendOccupiedMegaseconds);
+    printVector("weekendUnoccupiedMegaseconds", scheduleData.weekendUnoccupiedMegaseconds);
+    printVector("clockHourOccupied", scheduleData.clockHourOccupied);
+    printVector("clockHourUnoccupied", scheduleData.clockHourUnoccupied);
 
     std::cout << std::endl << "solarRadiationBreakdown: " << std::endl;
   }
   solarRadiationBreakdown(
-      weekdayOccupiedMegaseconds, weekdayUnoccupiedMegaseconds,
-      weekendOccupiedMegaseconds, weekendUnoccupiedMegaseconds,
-      clockHourOccupied, clockHourUnoccupied, v_hrs_sun_down_mo, frac_Pgh_wk_nt,
-      frac_Pgh_wke_day, frac_Pgh_wke_nt, v_Tdbt_nt, v_Tdbt_day);
+      scheduleData.weekdayOccupiedMegaseconds, scheduleData.weekdayUnoccupiedMegaseconds,
+      scheduleData.weekendOccupiedMegaseconds, scheduleData.weekendUnoccupiedMegaseconds,
+      scheduleData.clockHourOccupied, scheduleData.clockHourUnoccupied, v_hrs_sun_down_mo,
+      frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt, v_Tdbt_nt, v_Tdbt_day);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_hrs_sun_down_mo", v_hrs_sun_down_mo);
@@ -1590,9 +1517,9 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "heatGainsAndLosses: " << std::endl;
   }
-  heatGainsAndLosses(frac_hrs_wk_day, Q_illum_occ, Q_illum_unocc,
-                     Q_illum_tot_yr, phi_int_avg, phi_plug_avg, phi_illum_avg,
-                     phi_int_wke_nt, phi_int_wke_day, phi_int_wk_nt);
+  heatGainsAndLosses(scheduleData.frac_hrs_wk_day, Q_illum_occ, Q_illum_unocc,
+                     Q_illum_tot_yr, phi_int_avg, phi_plug_avg,
+                     phi_illum_avg, phi_int_wke_nt, phi_int_wke_day, phi_int_wk_nt);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "phi_int_avg: " << phi_int_avg << std::endl;
     std::cout << "phi_plug_avg: " << phi_plug_avg << std::endl;
@@ -1610,10 +1537,10 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
   unoccupiedHeatGain(phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt,
-                     weekdayUnoccupiedMegaseconds, weekendOccupiedMegaseconds,
-                     weekendUnoccupiedMegaseconds, frac_Pgh_wk_nt,
-                     frac_Pgh_wke_day, frac_Pgh_wke_nt, v_E_sol,
-                     v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt);
+                     scheduleData.weekdayUnoccupiedMegaseconds,
+                     scheduleData.weekendOccupiedMegaseconds,
+                     scheduleData.weekendUnoccupiedMegaseconds, frac_Pgh_wk_nt,
+                     frac_Pgh_wke_day, frac_Pgh_wke_nt, v_E_sol, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_P_tot_wke_day", v_P_tot_wke_day);
     printVector("v_P_tot_wk_nt", v_P_tot_wk_nt);
@@ -1622,9 +1549,9 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
   interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt,
-               v_Tdbt_nt, v_Tdbt_day, H_tr, hoursUnoccupiedPerDay,
-               hoursOccupiedPerDay, frac_hrs_wk_day, frac_hrs_wk_nt,
-               frac_hrs_wke_tot, v_Th_avg, v_Tc_avg, tau);
+               v_Tdbt_nt, v_Tdbt_day, H_tr, scheduleData.hoursUnoccupiedPerDay,
+               scheduleData.hoursOccupiedPerDay, scheduleData.frac_hrs_wk_day,
+               scheduleData.frac_hrs_wk_nt, scheduleData.frac_hrs_wke_tot, v_Th_avg, v_Tc_avg, tau);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "tau: " << tau << std::endl;
     printVector("v_Th_avg", v_Th_avg);
@@ -1632,7 +1559,7 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "ventilationCalc: " << std::endl;
   }
-  ventilationCalc(v_Th_avg, v_Tc_avg, frac_hrs_wk_day, v_Hve_ht, v_Hve_cl);
+  ventilationCalc(v_Th_avg, v_Tc_avg, scheduleData.frac_hrs_wk_day, v_Hve_ht, v_Hve_cl);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Hve_ht", v_Hve_ht);
     printVector("v_Hve_cl", v_Hve_cl);
@@ -1640,8 +1567,8 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "heatingAndCooling: " << std::endl;
   }
   heatingAndCooling(v_E_sol, v_Th_avg, v_Hve_ht, v_Tc_avg, v_Hve_cl, tau, H_tr,
-                    phi_I_tot, frac_hrs_wk_day, v_Qfan_tot, v_Qneed_ht,
-                    v_Qneed_cl, Qneed_ht_yr, Qneed_cl_yr);
+                    phi_I_tot, scheduleData.frac_hrs_wk_day, v_Qfan_tot,
+                    v_Qneed_ht, v_Qneed_cl, Qneed_ht_yr, Qneed_cl_yr);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Qneed_ht_yr: " << Qneed_ht_yr << std::endl;
     std::cout << "Qneed_cl_yr: " << Qneed_cl_yr << std::endl;
@@ -1677,8 +1604,8 @@ Vector v_win_U = structure.windowUniform();*/
 
   return outputGeneration(v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot,
                           v_Q_illum_ext_tot, v_Qfan_tot, v_Q_pump_tot,
-                          v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot, v_Q_dhw_gas,
-                          frac_hrs_wk_day);
+                          v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot,
+                          v_Q_dhw_gas, scheduleData.frac_hrs_wk_day);
 }
 std::vector<EndUses> MonthlyModel::outputGeneration(
     const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,

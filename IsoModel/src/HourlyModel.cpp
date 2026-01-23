@@ -581,27 +581,10 @@ void HourlyModel::initialize() {
   H_z = std::max(0.1, ventilation.hzone());
   f_ve_mech_sup = std::max(0.00001, ventilation.fanControlFactor());
 
-  WeeklyScheduleData weekly;
-  std::vector<LoadedScheduleData> fileData;
-  bool useFile = false;
-
-  // Try to load from file if path is present and not "false"
-  if (!m_hourlySchedulePath.empty()) {
-    std::string lowerPath = m_hourlySchedulePath;
-    std::ranges::transform(lowerPath, lowerPath.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
-    if (lowerPath != "false") {
-      useFile = loadSchedulesFromFile(m_hourlySchedulePath, fileData);
-    }
-  }
-
-  if (!useFile) {
-    buildWeeklySchedules(weekly);
-  }
-
-  m_hourlyData.resize(hoursInYear);
+  m_hourlyData.resize(hoursInYear); // Ensure m_hourlyData is sized
 
   const auto &data = epwData->dataRef();
+
   const std::vector<double> &wind = data[WSPD];
   const std::vector<double> &temp = data[DBT];
   const std::vector<double> &egh = data[EGH];
@@ -612,30 +595,14 @@ void HourlyModel::initialize() {
     int d = frame.DayOfWeek[i];
     HourlyCache &c = m_hourlyData[i];
 
-    if (useFile) {
-      const auto &row = fileData[i];
-      c.sched_q_ve_mech =
-          (float)row.MechVent; // Assumed to be in same units as weekly (L/s?)
-                               // or is it directly used?
-      // Note: file values are used directly. If file contains raw flow, ensure
-      // it matches expectations. However, in existing code: c.sched_q_ve_mech =
-      // weekly.q_ve[h][d] = ventRate.
-
-      c.sched_ext_equip = (float)row.ExtEquip; // Using as double/float directly
-      c.sched_phi_int_App = (float)row.IntApp;
-      c.sched_ext_light = (float)row.ExtLight;
-      c.sched_phi_int_L = (float)row.IntLight;
-      c.sched_theta_H_set = (float)row.HeatSet;
-      c.sched_theta_C_set = (float)row.CoolSet;
-    } else {
-      c.sched_q_ve_mech = (float)weekly.q_ve[h][d];
-      c.sched_ext_equip = (float)weekly.ext_App[h][d];
-      c.sched_phi_int_App = (float)weekly.int_App[h][d];
-      c.sched_ext_light = (float)weekly.ext_L[h][d];
-      c.sched_phi_int_L = (float)weekly.int_L[h][d];
-      c.sched_theta_H_set = (float)weekly.theta_H[h][d];
-      c.sched_theta_C_set = (float)weekly.theta_C[h][d];
-    }
+    // Populate schedule-related fields from the returned scheduleData
+    c.sched_q_ve_mech = m_preloadedScheduleData[i].sched_q_ve_mech;
+    c.sched_ext_equip = m_preloadedScheduleData[i].sched_ext_equip;
+    c.sched_phi_int_App = m_preloadedScheduleData[i].sched_phi_int_App;
+    c.sched_ext_light = m_preloadedScheduleData[i].sched_ext_light;
+    c.sched_phi_int_L = m_preloadedScheduleData[i].sched_phi_int_L;
+    c.sched_theta_H_set = m_preloadedScheduleData[i].sched_theta_H_set;
+    c.sched_theta_C_set = m_preloadedScheduleData[i].sched_theta_C_set;
 
     c.theta_e = (float)temp[i];
     c.I_sol_gh = (float)egh[i];
@@ -652,93 +619,9 @@ void HourlyModel::initialize() {
   }
 }
 
-bool HourlyModel::loadSchedulesFromFile(const std::string &path,
-                                        std::vector<LoadedScheduleData> &data) {
-  std::ifstream file(path);
-  if (!file.is_open()) {
-    std::cerr << "Error: Could not open schedule file: " << path << std::endl;
-    return false;
-  }
-
-  std::string line;
-  std::getline(file, line); // Skip header
-
-  data.clear();
-  data.reserve(8760);
-
-  while (std::getline(file, line)) {
-    std::stringstream ss(line);
-    std::string cell;
-    LoadedScheduleData row;
-
-    try {
-      // Expected format:
-      // Hour,MechVent,IntApp,IntLight,ExtLight,ExtEquip,HeatSet,CoolSet
-      std::getline(ss, cell, ',');
-      row.Hour = std::stoi(cell);
-      std::getline(ss, cell, ',');
-      row.MechVent = std::stod(cell);
-      std::getline(ss, cell, ',');
-      row.IntApp = std::stod(cell);
-      std::getline(ss, cell, ',');
-      row.IntLight = std::stod(cell);
-      std::getline(ss, cell, ',');
-      row.ExtLight = std::stoi(cell);
-      std::getline(ss, cell, ',');
-      row.ExtEquip = std::stoi(cell);
-      std::getline(ss, cell, ',');
-      row.HeatSet = std::stoi(cell);
-      std::getline(ss, cell, ',');
-      row.CoolSet = std::stoi(cell);
-      data.push_back(row);
-    } catch (...) {
-      std::cerr << "Error parsing line in schedule file: " << line << std::endl;
-      return false;
-    }
-  }
-
-  if (data.size() < 8760) {
-    std::cerr << "Warning: Schedule file has fewer than 8760 rows ("
-              << data.size() << ")" << std::endl;
-    // Could fill remainder or fail. For now, let's warn.
-    // To prevent crash in loop, resize with defaults or last value
-    if (data.empty())
-      return false;
-    data.resize(8760, data.back());
-  }
-
-  return true;
-}
-
-inline void HourlyModel::buildWeeklySchedules(WeeklyScheduleData &sched) {
-  const int dayStart = static_cast<int>(pop.daysStart()),
-            dayEnd = static_cast<int>(pop.daysEnd());
-  const int hourStart = static_cast<int>(pop.hoursStart()),
-            hourEnd = static_cast<int>(pop.hoursEnd());
-  const double ventRate = ventilation.supplyRate(),
-               extEquip = building.externalEquipment();
-  const double intOcc = building.electricApplianceHeatGainOccupied(),
-               intUnocc = building.electricApplianceHeatGainUnoccupied();
-  const double intLtOcc = lights.powerDensityOccupied(),
-               intLtUnocc = lights.powerDensityUnoccupied();
-  const double htOcc = heating.temperatureSetPointOccupied(),
-               htUnocc = heating.temperatureSetPointUnoccupied();
-  const double clOcc = cooling.temperatureSetPointOccupied(),
-               clUnocc = cooling.temperatureSetPointUnoccupied();
-
-  for (int h = 0; h < hoursInDay; ++h) {
-    bool hoccupied = (h >= hourStart && h <= hourEnd);
-    for (int d = 0; d < daysInWeek; ++d) {
-      bool popoccupied = hoccupied && (d >= dayStart && d <= dayEnd);
-      sched.q_ve[h][d] = hoccupied ? ventRate : 0.0;
-      sched.ext_App[h][d] = extEquip;
-      sched.int_App[h][d] = popoccupied ? intOcc : intUnocc;
-      sched.ext_L[h][d] = 1.0;
-      sched.int_L[h][d] = popoccupied ? intLtOcc : intLtUnocc;
-      sched.theta_H[h][d] = popoccupied ? htOcc : htUnocc;
-      sched.theta_C[h][d] = popoccupied ? clOcc : clUnocc;
-    }
-  }
+void HourlyModel::setPreloadedScheduleData(
+    std::vector<schedules::ScheduleDataForHourlyCache> data) {
+  m_preloadedScheduleData = std::move(data);
 }
 
 inline void HourlyModel::structureCalculations(

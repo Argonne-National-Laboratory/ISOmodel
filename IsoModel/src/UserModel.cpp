@@ -163,7 +163,13 @@ HourlyModel UserModel::toHourlyModel() const {
   }
 
   setCoreSimulationProperties(sim);
-  sim.setHourlySchedulePath(_hourlySchedulePath);
+
+  // Orchestrate schedule loading and pass the prepared data to HourlyModel
+  std::vector<schedules::ScheduleDataForHourlyCache> scheduleData =
+      schedules::getHourlySchedules(_hourlySchedulePath, pop, ventilation,
+                                    building, lights, heating, cooling);
+  sim.setPreloadedScheduleData(std::move(scheduleData));
+
   return sim;
 }
 

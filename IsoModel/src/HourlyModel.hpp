@@ -15,6 +15,7 @@
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
 #include "MonthlyModel.hpp"
+#include "Schedules.hpp"
 #include "Simulation.hpp"
 #include "TimeFrame.hpp"
 #include <array>
@@ -70,21 +71,10 @@ struct AirFlowResult final {
   double H_tr_1 = 0.0;    // Coupling conductance 1
 };
 
-// Struct to hold raw CSV schedule data
-struct LoadedScheduleData final {
-  int Hour;
-  double MechVent;
-  double IntApp;
-  double IntLight;
-  int ExtLight;
-  int ExtEquip;
-  int HeatSet;
-  int CoolSet;
-};
-
 class ISOMODEL_API HourlyModel : public Simulation {
 public:
   HourlyModel() noexcept;
+
   ~HourlyModel() override = default;
 
   // Original Interface preserved
@@ -95,13 +85,12 @@ public:
     return m_hourlyData;
   }
 
-  // Set the path for the hourly schedule file
-  void setHourlySchedulePath(const std::string &path) {
-    m_hourlySchedulePath = path;
-  }
-
 private:
   void initialize();
+
+public: // Changed from private to public
+  // Setter for pre-loaded schedule data, called by UserModel
+  void setPreloadedScheduleData(std::vector<schedules::ScheduleDataForHourlyCache> data);
 
   // Solar Caching Members
   std::shared_ptr<EpwData> m_lastEpwData;
@@ -159,8 +148,6 @@ private:
   double m_f_phi_sol_air;
   double m_f_phi_int_air;
 
-  std::string m_hourlySchedulePath;
-
   // Arrays (std::array)
   std::array<double, 9> A_nla_ms;
   std::array<double, 9> A_nla;
@@ -180,19 +167,8 @@ private:
   // Cache Locality Vector
   std::vector<HourlyCache> m_hourlyData;
 
-  // Helpers
-  struct WeeklyScheduleData final {
-    double q_ve[24][7];
-    double ext_App[24][7];
-    double int_App[24][7];
-    double ext_L[24][7];
-    double int_L[24][7];
-    double theta_H[24][7]; // Heating setpoint
-    double theta_C[24][7]; // Cooling setpoint
-  };
-  inline void buildWeeklySchedules(WeeklyScheduleData &sched);
-  bool loadSchedulesFromFile(const std::string &path,
-                             std::vector<LoadedScheduleData> &data);
+  // NEW: Member to store schedule data passed from UserModel
+  std::vector<schedules::ScheduleDataForHourlyCache> m_preloadedScheduleData;
 
   // Virtuals (kept for interface compliance)
   virtual double ventilationSchedule(int, int, int) { return 0; }

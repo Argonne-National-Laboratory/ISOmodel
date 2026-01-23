@@ -77,6 +77,8 @@ set(${target_name}_src
   MonthlyModel.hpp
   MathHelpers.hpp
   Population.hpp
+  Schedules.cpp
+  Schedules.hpp
   Simulation.hpp
   SimulationSettings.hpp
   SolarRadiation.cpp
