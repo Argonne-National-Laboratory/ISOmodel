@@ -41,6 +41,7 @@ set(${target_name}_test
   Test/TimeFrame_GTest.cpp
   Test/UserModel_GTest.cpp
   Test/OptimizationCoverage_GTest.cpp
+  Test/HourlySchedules_GTest.cpp
 )
 
 set(${target_name}_benchmark
@@ -58,6 +59,7 @@ set(${target_name}_solar_debug
 set(${target_name}_src
   Building.hpp
   Constants.hpp
+
   Cooling.hpp
   EndUses.hpp
   EpwData.cpp
@@ -201,20 +203,24 @@ target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(isomodel_benchmark PRIVATE ${PERF_FLAGS})
 
 add_custom_command(TARGET isomodel_benchmark
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
-                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg.yaml
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${CMAKE_SOURCE_DIR}/../test_data/test_bldg_schedules.yaml
-                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg_schedules.yaml
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${CMAKE_SOURCE_DIR}/../test_data/test_schedules.csv
-                     $<TARGET_FILE_DIR:isomodel_benchmark>/test_schedules.csv
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${CMAKE_SOURCE_DIR}/../test_data/test.epw
-                     $<TARGET_FILE_DIR:isomodel_benchmark>/test.epw
-                   COMMENT "Copying testfiles to benchmark binary directory"
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/../test_data/test_bldg.yaml
+    $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg.yaml
+
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/../test_data/test_bldg_schedules.yaml
+    $<TARGET_FILE_DIR:isomodel_benchmark>/test_bldg_schedules.yaml
+
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/../test_data/test_schedules.csv
+    $<TARGET_FILE_DIR:isomodel_benchmark>/test_schedules.csv
+
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/../test_data/test.epw
+    $<TARGET_FILE_DIR:isomodel_benchmark>/test.epw
+
+  COMMENT "Copying testfiles to benchmark binary directory"
 )
 
 
