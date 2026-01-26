@@ -126,6 +126,12 @@ private:
     Vector v_Qneed_cl = Vector(monthsInYear);
     double Qneed_ht_yr = 0.0;
     double Qneed_cl_yr = 0.0;
+
+    // From hvac
+    Vector v_Qelec_ht = Vector(monthsInYear);
+    Vector v_Qgas_ht = Vector(monthsInYear);
+    Vector v_Qcl_elec_tot = Vector(monthsInYear);
+    Vector v_Qcl_gas_tot = Vector(monthsInYear);
   };
 
 private:
@@ -165,12 +171,7 @@ private:
 
   void ventilationCalc(MonthlySimulationData &simData) const;
   void heatingAndCooling(MonthlySimulationData &simData) const;
-
-  void hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-            double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Qelec_ht,
-            Vector &v_Qgas_ht, Vector &v_Qcl_elec_tot,
-            Vector &v_Qcl_gas_tot) const; // Original function signature
-
+  void hvac(MonthlySimulationData &simData) const;
   // Helper functions for hvac
   void calculateHeatingSystemLoads(const Vector &v_Qneed_ht, const Vector &v_Qloss_ht_dist,
                                    Vector &v_Qht_sys, Vector &v_Qht_DH) const;

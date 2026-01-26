@@ -1208,10 +1208,7 @@ void MonthlyModel::calculateCoolingSystemLoads(const Vector &v_Qneed_cl,
 /**
  * HVAC systems calculations.
  */
-void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-                        double Qneed_ht_yr, double Qneed_cl_yr,
-                        Vector &v_Qelec_ht, Vector &v_Qgas_ht,
-                        Vector &v_Qcl_elec_tot, Vector &v_Qcl_gas_tot) const {
+void MonthlyModel::hvac(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: Implement (or remove) all the district heating/cooling stuff that is
   // currently commented out. BAA@2015-07-15.
@@ -1250,7 +1247,7 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
 
   // Fraction of yearly heating demand with regard to total heating + cooling
   // demand.
-  double f_dem_ht = std::max(Qneed_ht_yr / (Qneed_cl_yr + Qneed_ht_yr), MIN_DEMAND_FRACTION);
+  double f_dem_ht = std::max(simData.Qneed_ht_yr / (simData.Qneed_cl_yr + simData.Qneed_ht_yr), MIN_DEMAND_FRACTION);
   // Fraction of yearly cooling demand.
   double f_dem_cl = std::max((1.0 - f_dem_ht), MIN_DEMAND_FRACTION);
 
@@ -1261,10 +1258,10 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
 
   // Losses from HVAC distributuion, heating.
   Vector v_Qloss_ht_dist =
-      div(mult(v_Qneed_ht, (1 - eta_dist_ht)), eta_dist_ht);
+      div(mult(simData.v_Qneed_ht, (1 - eta_dist_ht)), eta_dist_ht);
   // Losses from HVAC distributuion, cooling.
   Vector v_Qloss_cl_dist =
-      div(mult(v_Qneed_cl, (1 - eta_dist_cl)), eta_dist_cl);
+      div(mult(simData.v_Qneed_cl, (1 - eta_dist_cl)), eta_dist_cl);
   printVector("v_Qloss_ht_dist", v_Qloss_ht_dist);
   printVector("v_Qloss_cl_dist", v_Qloss_cl_dist);
 
@@ -1273,8 +1270,8 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
   Vector v_Qcl_sys(monthsInYear, 0.0);
   Vector v_Qcool_DC(monthsInYear, 0.0);
 
-  calculateHeatingSystemLoads(v_Qneed_ht, v_Qloss_ht_dist, v_Qht_sys, v_Qht_DH);
-  calculateCoolingSystemLoads(v_Qneed_cl, v_Qloss_cl_dist, IEER, v_Qcl_sys, v_Qcool_DC);
+  calculateHeatingSystemLoads(simData.v_Qneed_ht, v_Qloss_ht_dist, v_Qht_sys, v_Qht_DH);
+  calculateCoolingSystemLoads(simData.v_Qneed_cl, v_Qloss_cl_dist, IEER, v_Qcl_sys, v_Qcool_DC);
 
   printVector("v_Qht_sys", v_Qht_sys);
   printVector("v_Qht_DH", v_Qht_DH);
@@ -1289,23 +1286,23 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
 
   Vector v_Qht_DH_total = div(mult(v_Qht_DH, 1 - heating.frac_DH_free()),
                               heating.eta_DH_sys() * heating.eta_DH_network());
-  v_Qcl_elec_tot = sum(v_Qcl_sys, v_Qcl_DC_elec);
-  v_Qcl_gas_tot = v_Qcl_DC_abs;
+  simData.v_Qcl_elec_tot = sum(v_Qcl_sys, v_Qcl_DC_elec);
+  simData.v_Qcl_gas_tot = v_Qcl_DC_abs;
   printVector("v_Qht_DH_total", v_Qht_DH_total);
-  printVector("v_Qcl_elec_tot", v_Qcl_elec_tot);
-  printVector("v_Qcl_gas_tot", v_Qcl_gas_tot);
+  printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
+  printVector("v_Qcl_gas_tot", simData.v_Qcl_gas_tot);
 
   // Vector v_Qelec_ht,v_Qgas_ht;
 
   if (heating.energyType() == 1) {
-    v_Qelec_ht = v_Qht_sys;
-    v_Qgas_ht = v_Qht_DH_total;
+    simData.v_Qelec_ht = v_Qht_sys;
+    simData.v_Qgas_ht = v_Qht_DH_total;
   } else {
-    v_Qelec_ht.assign(monthsInYear, 0.0);
-    v_Qgas_ht = sum(v_Qht_sys, v_Qht_DH_total);
+    simData.v_Qelec_ht.assign(monthsInYear, 0.0);
+    simData.v_Qgas_ht = sum(v_Qht_sys, v_Qht_DH_total);
   }
-  printVector("v_Qelec_ht", v_Qelec_ht);
-  printVector("v_Qgas_ht", v_Qgas_ht);
+  printVector("v_Qelec_ht", simData.v_Qelec_ht);
+  printVector("v_Qgas_ht", simData.v_Qgas_ht);
 }
 
 Vector MonthlyModel::calculatePumpEnergyForMode(
@@ -1435,12 +1432,8 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_Qelec_ht, v_Qcl_elec_tot,
-      v_Qfan_tot, v_Q_pump_tot, v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot,
-      v_Q_dhw_gas;
-
-  // openstudio::isomodel::loadDefaults(monthlyModel);
-
+  Vector v_Q_pump_tot, v_Q_dhw_elec, v_Q_dhw_gas;
+  
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << std::endl << "scheduleAndOccupancy: " << std::endl;
   }
@@ -1592,20 +1585,18 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "hvac: " << std::endl;
   }
-  hvac(simData.v_Qneed_ht, simData.v_Qneed_cl, simData.Qneed_ht_yr, simData.Qneed_cl_yr, v_Qelec_ht, v_Qgas_ht,
-       v_Qcl_elec_tot, v_Qcl_gas_tot);
+  hvac(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Qelec_ht", v_Qelec_ht);
-    printVector("v_Qgas_ht", v_Qgas_ht);
-    printVector("v_Qcl_elec_tot", v_Qcl_elec_tot);
-    printVector("v_Qcl_gas_tot", v_Qcl_gas_tot);
+    printVector("v_Qelec_ht", simData.v_Qelec_ht);
+    printVector("v_Qgas_ht", simData.v_Qgas_ht);
+    printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
+    printVector("v_Qcl_gas_tot", simData.v_Qcl_gas_tot);
 
     std::cout << std::endl << "pump: " << std::endl;
   }
   pump(simData.v_Qneed_ht, simData.v_Qneed_cl, simData.Qneed_ht_yr, simData.Qneed_cl_yr, v_Q_pump_tot);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Q_pump_tot", v_Q_pump_tot);
-
     std::cout << std::endl << "energyGeneration: " << std::endl;
   }
   energyGeneration();
@@ -1618,9 +1609,9 @@ Vector v_win_U = structure.windowUniform();*/
     printVector("v_Q_dhw_gas", v_Q_dhw_gas);
   }
 
-  return outputGeneration(v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot,
+  return outputGeneration(simData.v_Qelec_ht, simData.v_Qcl_elec_tot, v_Q_illum_tot,
                           v_Q_illum_ext_tot, simData.v_Qfan_tot, v_Q_pump_tot,
-                          v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot,
+                          v_Q_dhw_elec, simData.v_Qgas_ht, simData.v_Qcl_gas_tot,
                           v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
 }
 std::vector<EndUses> MonthlyModel::outputGeneration(
