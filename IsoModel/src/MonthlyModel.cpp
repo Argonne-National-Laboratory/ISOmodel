@@ -515,11 +515,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
 /**
  * Calculate solar heat gain. ISO 13790 11.3.2.
  */
-void MonthlyModel::solarHeatGain(const Vector &v_win_A_sol,
-                                 const Vector &v_wall_R_sc,
-                                 const Vector &v_wall_U, const Vector &v_wall_A,
-                                 const Vector &v_win_hr, const Vector &v_wall_A_sol,
-                                 Vector &v_E_sol) const {
+void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // EN ISO 13790 11.3.2 eq. 43.
   // \Phi_sol,k = F_sh,ob,k * A_sol,k * I_sol,k - F_r,k * \Phi_r,k
@@ -545,7 +541,7 @@ void MonthlyModel::solarHeatGain(const Vector &v_win_A_sol,
   printMatrix("m_I_sol", m_I_sol);
 
   // Compute the total solar heat gain for the glazing area.
-  Vector v_win_phi_sol = calculateGlazingSolarHeatGain(m_I_sol, v_win_A_sol);
+  Vector v_win_phi_sol = calculateGlazingSolarHeatGain(m_I_sol, simData.v_win_A_sol);
 
   // Compute opaque area thermal radiation to the sky from EN ISO 13790 11.3.5
   // \Phi_r,k = R_se * U_c  * A_c * h_h * \delta\theta_er (46)
@@ -569,10 +565,10 @@ void MonthlyModel::solarHeatGain(const Vector &v_win_A_sol,
   } */
 
   Vector v_wall_phi_r = mult(
-      mult(mult(mult(v_wall_R_sc, v_wall_U), v_wall_A), v_win_hr), theta_er);
+      mult(mult(mult(simData.v_wall_R_sc, simData.v_wall_U), simData.v_wall_A), simData.v_win_hr), theta_er);
 
   // Total solar heat gain for opaque area.
-  Vector v_wall_phi_sol = calculateOpaqueSolarHeatGain(m_I_sol, v_wall_A_sol, v_wall_phi_r);
+  Vector v_wall_phi_sol = calculateOpaqueSolarHeatGain(m_I_sol, simData.v_wall_A_sol, v_wall_phi_r);
 
   printVector("v_wall_phi_r", v_wall_phi_r);
   printVector("v_win_phi_sol", v_win_phi_sol);
@@ -583,7 +579,7 @@ void MonthlyModel::solarHeatGain(const Vector &v_win_A_sol,
   printVector("v_phi_sol", v_phi_sol);
 
   // Total envelope solar heat gain (MJ).
-  v_E_sol = mult(v_phi_sol, megasecondsInMonth);
+  simData.v_E_sol = mult(v_phi_sol, megasecondsInMonth);
 }
 
 /**
@@ -1469,7 +1465,6 @@ std::vector<EndUses> MonthlyModel::simulate() const {
   double phi_int_avg, phi_plug_avg, phi_illum_avg;
 
   double phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt;
-  Vector v_E_sol;
 
   Vector v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt;
 
@@ -1573,21 +1568,17 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "windowSolarGain: " << std::endl;
   }
   windowSolarGain(simData);
-  const Vector& v_wall_A_sol = simData.v_wall_A_sol;
-  const Vector& v_win_hr = simData.v_win_hr;
-  const Vector& v_wall_R_sc = simData.v_wall_R_sc;
-  const Vector& v_win_A_sol = simData.v_win_A_sol;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_wall_A_sol", v_wall_A_sol);
-    printVector("v_win_hr", v_win_hr);
-    printVector("v_wall_R_sc", v_wall_R_sc);
-    printVector("v_win_A_sol", v_win_A_sol);
+    printVector("v_wall_A_sol", simData.v_wall_A_sol);
+    printVector("v_win_hr", simData.v_win_hr);
+    printVector("v_wall_R_sc", simData.v_wall_R_sc);
+    printVector("v_win_A_sol", simData.v_win_A_sol);
 
     std::cout << std::endl << "solarHeatGain: " << std::endl;
   }
-  solarHeatGain(v_win_A_sol, v_wall_R_sc, v_wall_U, v_wall_A, v_win_hr,
-                v_wall_A_sol, v_E_sol);
+  solarHeatGain(simData);
+  const Vector& v_E_sol = simData.v_E_sol;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_E_sol", v_E_sol);

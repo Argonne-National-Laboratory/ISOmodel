@@ -91,6 +91,9 @@ private:
     Vector v_win_hr = Vector(numTotalSurfaces);
     Vector v_wall_R_sc = Vector(numTotalSurfaces);
     Vector v_win_A_sol = Vector(numTotalSurfaces);
+
+    // From solarHeatGain
+    Vector v_E_sol = Vector(monthsInYear);
   };
 
 private:
@@ -99,11 +102,7 @@ private:
   void lightingEnergyUse(MonthlySimulationData &simData) const;
   void envelopCalculations(MonthlySimulationData &simData) const;
   void windowSolarGain(MonthlySimulationData &simData) const;
-
-  void solarHeatGain(const Vector &v_win_A_sol, const Vector &v_wall_R_sc,
-                     const Vector &v_wall_U, const Vector &v_wall_A,
-                     const Vector &v_win_hr, const Vector &v_wall_A_sol,
-                     Vector &v_E_sol) const;
+  void solarHeatGain(MonthlySimulationData &simData) const;
 
   void heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ,
                           double Q_illum_unocc, double Q_illum_tot_yr,
