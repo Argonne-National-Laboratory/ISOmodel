@@ -268,7 +268,7 @@ Vector MonthlyModel::convertEnergyToKWhPerSqM(const Vector &energy_MJ,
 
 
 MonthlyModel::WindowShadingComponents
-MonthlyModel::calculateWindowShadingComponents() const {
+MonthlyModel::calculateWindowShadingComponents(const Structure& structure) {
   PROFILE_FUNCTION();
   WindowShadingComponents result;
   result.v_win_ff.resize(numTotalSurfaces);
@@ -479,7 +479,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
 
 
   // Calculate window shading components
-  WindowShadingComponents shadingComponents = calculateWindowShadingComponents();
+  WindowShadingComponents shadingComponents = calculateWindowShadingComponents(structure);
   const Vector &v_win_ff = shadingComponents.v_win_ff;
   const Vector &v_win_F_shgl = shadingComponents.v_win_F_shgl;
 

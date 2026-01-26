@@ -177,7 +177,7 @@ private:
     Vector v_win_ff;
     Vector v_win_F_shgl;
   };
-  WindowShadingComponents calculateWindowShadingComponents() const;
+  static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
 
   struct AnnualLightingHours {
     double t_lt_D;
