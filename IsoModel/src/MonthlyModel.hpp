@@ -85,6 +85,12 @@ private:
     Vector v_wall_U = Vector(numTotalSurfaces);
     Vector v_wall_A = Vector(numTotalSurfaces);
     double H_tr = 0.0;
+
+    // From windowSolarGain
+    Vector v_wall_A_sol = Vector(numTotalSurfaces);
+    Vector v_win_hr = Vector(numTotalSurfaces);
+    Vector v_wall_R_sc = Vector(numTotalSurfaces);
+    Vector v_win_A_sol = Vector(numTotalSurfaces);
   };
 
 private:
@@ -92,12 +98,7 @@ private:
   void solarRadiationBreakdown(MonthlySimulationData &simData) const;
   void lightingEnergyUse(MonthlySimulationData &simData) const;
   void envelopCalculations(MonthlySimulationData &simData) const;
-
-  void windowSolarGain(const Vector &v_win_A, const Vector &v_wall_emiss,
-                       const Vector &v_wall_alpha_sc, const Vector &v_wall_U,
-                       const Vector &v_wall_A, Vector &v_wall_A_sol,
-                       Vector &v_win_hr, Vector &v_wall_R_sc,
-                       Vector &v_win_A_sol) const;
+  void windowSolarGain(MonthlySimulationData &simData) const;
 
   void solarHeatGain(const Vector &v_win_A_sol, const Vector &v_wall_R_sc,
                      const Vector &v_wall_U, const Vector &v_wall_A,

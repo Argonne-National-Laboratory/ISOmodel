@@ -447,13 +447,7 @@ void MonthlyModel::envelopCalculations(MonthlySimulationData &simData) const {
 /*
  * Compute window solar gain per ISO 13790 11.3.
  */
-void MonthlyModel::windowSolarGain(const Vector &v_win_A,
-                                   const Vector &v_wall_emiss,
-                                   const Vector &v_wall_alpha_sc,
-                                   const Vector &v_wall_U,
-                                   const Vector &v_wall_A, Vector &v_wall_A_sol,
-                                   Vector &v_win_hr, Vector &v_wall_R_sc, Vector &v_win_A_sol)
-    const {
+void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: The solar heat gain could be improved
   // better understand SCF and SDF and how they map to F_sh
@@ -501,21 +495,21 @@ void MonthlyModel::windowSolarGain(const Vector &v_win_A,
   // Solar energy transmittance of glazing as per ISO 13790 11.4.2.
   Vector v_g_gl = mult(v_g_gln, structure.win_F_W());
 
-  v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), v_win_A);
+  simData.v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), simData.v_win_A);
 
   // // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for
   // unshaded roof double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
   // 0.5, 0.5, 1 };
 
   // Vertical wall external convective surface heat resistances (simplified).
-  v_wall_R_sc.assign(numTotalSurfaces, structure.R_sc_ext());
+  simData.v_wall_R_sc.assign(numTotalSurfaces, structure.R_sc_ext());
 
   // Window external radiative heat xfer coeff.
   // ISO 13790 11.4.6 says use hr=5 as a first approx.
-  v_win_hr = mult(v_wall_emiss, ISO_WIN_EXT_RAD_COEFF);
+  simData.v_win_hr = mult(simData.v_wall_emiss, ISO_WIN_EXT_RAD_COEFF);
 
-  v_wall_A_sol =
-      mult(mult(mult(v_wall_alpha_sc, v_wall_R_sc), v_wall_U), v_wall_A);
+  simData.v_wall_A_sol =
+      mult(mult(mult(simData.v_wall_alpha_sc, simData.v_wall_R_sc), simData.v_wall_U), simData.v_wall_A);
 }
 
 /**
@@ -1472,8 +1466,6 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_wall_A_sol, v_win_hr, v_wall_R_sc, v_win_A_sol;
-
   double phi_int_avg, phi_plug_avg, phi_illum_avg;
 
   double phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt;
@@ -1566,25 +1558,25 @@ Vector v_win_U = structure.windowUniform();*/
   }
   envelopCalculations(simData);
   // Bridge variables for downstream functions
-  const Vector& v_win_A = simData.v_win_A;
-  const Vector& v_wall_emiss = simData.v_wall_emiss;
-  const Vector& v_wall_alpha_sc = simData.v_wall_alpha_sc;
   const Vector& v_wall_U = simData.v_wall_U;
   const Vector& v_wall_A = simData.v_wall_A;
   double H_tr = simData.H_tr;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "H_tr: " << H_tr << std::endl;
-    printVector("v_win_A", v_win_A);
-    printVector("v_wall_emiss", v_wall_emiss);
-    printVector("v_wall_alpha_sc", v_wall_alpha_sc);
+    printVector("v_win_A", simData.v_win_A);
+    printVector("v_wall_emiss", simData.v_wall_emiss);
+    printVector("v_wall_alpha_sc", simData.v_wall_alpha_sc);
     printVector("v_wall_U", v_wall_U);
     printVector("v_wall_A", v_wall_A);
 
     std::cout << std::endl << "windowSolarGain: " << std::endl;
   }
-  windowSolarGain(v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U, v_wall_A,
-                  v_wall_A_sol, v_win_hr, v_wall_R_sc, v_win_A_sol);
+  windowSolarGain(simData);
+  const Vector& v_wall_A_sol = simData.v_wall_A_sol;
+  const Vector& v_win_hr = simData.v_win_hr;
+  const Vector& v_wall_R_sc = simData.v_wall_R_sc;
+  const Vector& v_win_A_sol = simData.v_win_A_sol;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_wall_A_sol", v_wall_A_sol);
