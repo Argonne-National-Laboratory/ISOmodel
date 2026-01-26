@@ -113,13 +113,15 @@ void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
           UNITY_FRACTION)); // UNITY_FRACTION is 1.0, just for consistency
 }
 
-Vector MonthlyModel::calculateFanEnergy(const Vector &Vair_tot) const {
+void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Fan power (MJ)
   // ventilation.fanPower is in W/(L/s) which is J/L, also kJ/m3. Divide by
   // KJ_TO_MJ for MJ/m3 to get fanEnergy in MJ.
-  Vector fanEnergy = mult(Vair_tot, ventilation.fanPower() / KJ_TO_MJ);
-  return fanEnergy;
+  Vector fanEnergy = mult(simData.v_Vair_tot, ventilation.fanPower() / KJ_TO_MJ);
+
+  // Calculate fan EUI (kWh/m2).
+  simData.v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), kWh2MJ);
 }
 
 Matrix MonthlyModel::buildSolarIrradianceMatrix() const {
@@ -1140,20 +1142,16 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   printVector("v_Vair_tot", simData.v_Vair_tot);
 
   // Calculate fan energy
-  Vector fanEnergy = calculateFanEnergy(simData.v_Vair_tot);
-  printVector("fanEnergy", fanEnergy);
-
+  calculateFanEnergy(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
+    // Note: fanEnergy is no longer available here, but we can print the inputs and output
+    printVector("v_Vair_tot (input to fan calc)", simData.v_Vair_tot);
     std::cout << "ventilation.fanPower() = " << ventilation.fanPower()
               << std::endl;
-    std::cout << "ventilation.fanControlFactor() = "
-              << ventilation.fanControlFactor() << std::endl;
     std::cout << "structure.floorArea() = " << structure.floorArea()
               << std::endl;
+    printVector("v_Qfan_tot (output from fan calc)", simData.v_Qfan_tot);
   }
-
-  // Calculate fan EUI (kWh/m2).
-  simData.v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), kWh2MJ);
 }
 
 void MonthlyModel::calculateHeatingSystemLoads(const Vector &v_Qneed_ht,

@@ -208,7 +208,7 @@ private:
   Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
   void calculateAirVolumes(MonthlySimulationData &simData) const;
   void calculateTotalAirFlow(MonthlySimulationData &simData) const;
-  Vector calculateFanEnergy(const Vector &Vair_tot) const;
+  void calculateFanEnergy(MonthlySimulationData &simData) const;
   Matrix buildSolarIrradianceMatrix() const;
   Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol,
                                        const Vector &v_win_A_sol) const;
