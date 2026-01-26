@@ -132,6 +132,9 @@ private:
     Vector v_Qgas_ht = Vector(monthsInYear);
     Vector v_Qcl_elec_tot = Vector(monthsInYear);
     Vector v_Qcl_gas_tot = Vector(monthsInYear);
+
+    // From pump
+    Vector v_Q_pump_tot = Vector(monthsInYear);
   };
 
 private:
@@ -177,8 +180,7 @@ private:
                                    Vector &v_Qht_sys, Vector &v_Qht_DH) const;
   void calculateCoolingSystemLoads(const Vector &v_Qneed_cl, const Vector &v_Qloss_cl_dist,
                                    double IEER, Vector &v_Qcl_sys, Vector &v_Qcool_DC) const;
-  void pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-            double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Q_pump_tot) const;
+  void pump(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation
   Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,

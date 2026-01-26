@@ -1333,9 +1333,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
  * Calculate energy for pumps used in the heating/cooling systems.
  * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
  */
-void MonthlyModel::pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-                        double Qneed_ht_yr, double Qneed_cl_yr,
-                        Vector &v_Q_pump_tot) const {
+void MonthlyModel::pump(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: The current implementation is wrong. It either needs to be revised to
   // be more like the hourly implementation where the pump energy is multiplied
@@ -1347,30 +1345,30 @@ void MonthlyModel::pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
   // the monthly pump values unreliable. BAA@2015-07-15.
 
   // Total monthly heating and cooling need (MJ).
-  Vector v_Qneed_total = sum(v_Qneed_ht, v_Qneed_cl);
+  Vector v_Qneed_total = sum(simData.v_Qneed_ht, simData.v_Qneed_cl);
 
   // Calculate monthly pump energy for heating mode.
   Vector v_Q_pumps_ht = calculatePumpEnergyForMode(
-      v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction());
+      simData.v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction());
 
   // Calculate monthly pump energy for cooling mode.
   Vector v_Q_pumps_cl = calculatePumpEnergyForMode(
-      v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction());
+      simData.v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction());
 
   // Total pump operational factor.
   Vector v_frac_tot =
-      div(sum(v_Qneed_ht, v_Qneed_cl), Qneed_ht_yr + Qneed_cl_yr);
+      div(sum(simData.v_Qneed_ht, simData.v_Qneed_cl), simData.Qneed_ht_yr + simData.Qneed_cl_yr);
   double frac_total = sum(v_frac_tot);
   double Q_pumps_tot = sum(v_Q_pumps_ht) + sum(v_Q_pumps_cl);
 
   if (sum(v_Q_pumps_ht) == 0.0 || sum(v_Q_pumps_cl) == 0.0) {
     // If there is just heating or just cooling, use the individual heating or
     // cooling pump energy vector.
-    v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
+    simData.v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
   } else {
     // Otherwise, distribut the combined pump energy proportional to the
     // combined heating/cooling load.
-    v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot),
+    simData.v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot),
                        frac_total + std::numeric_limits<double>::epsilon());
   }
 }
@@ -1432,11 +1430,8 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_Q_pump_tot, v_Q_dhw_elec, v_Q_dhw_gas;
+  Vector v_Q_dhw_elec, v_Q_dhw_gas;
   
-  if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << std::endl << "scheduleAndOccupancy: " << std::endl;
-  }
   MonthlySimulationData simData; // Declare the new struct
   simData.scheduleData = schedules::getMonthlySchedules(pop);
 
@@ -1594,9 +1589,9 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "pump: " << std::endl;
   }
-  pump(simData.v_Qneed_ht, simData.v_Qneed_cl, simData.Qneed_ht_yr, simData.Qneed_cl_yr, v_Q_pump_tot);
+  pump(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Q_pump_tot", v_Q_pump_tot);
+    printVector("v_Q_pump_tot", simData.v_Q_pump_tot);
     std::cout << std::endl << "energyGeneration: " << std::endl;
   }
   energyGeneration();
@@ -1610,7 +1605,7 @@ Vector v_win_U = structure.windowUniform();*/
   }
 
   return outputGeneration(simData.v_Qelec_ht, simData.v_Qcl_elec_tot, v_Q_illum_tot,
-                          v_Q_illum_ext_tot, simData.v_Qfan_tot, v_Q_pump_tot,
+                          v_Q_illum_ext_tot, simData.v_Qfan_tot, simData.v_Q_pump_tot,
                           v_Q_dhw_elec, simData.v_Qgas_ht, simData.v_Qcl_gas_tot,
                           v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
 }
