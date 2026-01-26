@@ -135,6 +135,10 @@ private:
 
     // From pump
     Vector v_Q_pump_tot = Vector(monthsInYear);
+
+    // From heatedWater
+    Vector v_Q_dhw_elec = Vector(monthsInYear);
+    Vector v_Q_dhw_gas = Vector(monthsInYear);
   };
 
 private:
@@ -193,7 +197,7 @@ private:
 
   void energyGeneration() const;
 
-  void heatedWater(Vector &v_Q_dhw_elec, Vector &v_Q_dhw_gas) const;
+  void heatedWater(MonthlySimulationData &simData) const;
 
   // Helper for solarHeatGain
   Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;

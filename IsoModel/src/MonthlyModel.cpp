@@ -1383,8 +1383,7 @@ void MonthlyModel::energyGeneration() const { PROFILE_FUNCTION(); }
  * Calculate domestic hot water (DHW).
  * References: NEN 2916 12.2
  */
-void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
-                               Vector &v_Q_dhw_gas) const {
+void MonthlyModel::heatedWater(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Energy from solar energy hot water collectors - not included yet
   Vector v_Q_dhw_solar(monthsInYear, 0.0);
@@ -1414,24 +1413,22 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
   }
 
   if (heating.hotWaterEnergyType() == 1) {
-    v_Q_dhw_elec = v_Q_dhw_need;
-    v_Q_dhw_gas.assign(v_Q_dhw_need.size(), 0.0);
+    simData.v_Q_dhw_elec = v_Q_dhw_need;
+    simData.v_Q_dhw_gas.assign(v_Q_dhw_need.size(), 0.0);
   } else {
-    v_Q_dhw_gas = v_Q_dhw_need;
-    v_Q_dhw_elec.assign(v_Q_dhw_need.size(), 0.0);
+    simData.v_Q_dhw_gas = v_Q_dhw_need;
+    simData.v_Q_dhw_elec.assign(v_Q_dhw_need.size(), 0.0);
   }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Q_dhw_gas", v_Q_dhw_gas);
-    printVector("v_Q_dhw_elec", v_Q_dhw_elec);
+    printVector("v_Q_dhw_gas", simData.v_Q_dhw_gas);
+    printVector("v_Q_dhw_elec", simData.v_Q_dhw_elec);
   }
 }
 
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_Q_dhw_elec, v_Q_dhw_gas;
-  
   MonthlySimulationData simData; // Declare the new struct
   simData.scheduleData = schedules::getMonthlySchedules(pop);
 
@@ -1598,16 +1595,16 @@ Vector v_win_U = structure.windowUniform();*/
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << std::endl << "heatedWater: " << std::endl;
   }
-  heatedWater(v_Q_dhw_elec, v_Q_dhw_gas);
+  heatedWater(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Q_dhw_elec", v_Q_dhw_elec);
-    printVector("v_Q_dhw_gas", v_Q_dhw_gas);
+    printVector("v_Q_dhw_elec", simData.v_Q_dhw_elec);
+    printVector("v_Q_dhw_gas", simData.v_Q_dhw_gas);
   }
 
   return outputGeneration(simData.v_Qelec_ht, simData.v_Qcl_elec_tot, v_Q_illum_tot,
                           v_Q_illum_ext_tot, simData.v_Qfan_tot, simData.v_Q_pump_tot,
-                          v_Q_dhw_elec, simData.v_Qgas_ht, simData.v_Qcl_gas_tot,
-                          v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
+                          simData.v_Q_dhw_elec, simData.v_Qgas_ht, simData.v_Qcl_gas_tot,
+                          simData.v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
 }
 std::vector<EndUses> MonthlyModel::outputGeneration(
     const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,
