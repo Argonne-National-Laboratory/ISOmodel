@@ -7,6 +7,7 @@
 #include "Heating.hpp"
 #include "TimeFrame.hpp" // Needed for TimeFrame to map weekly to hourly
 #include "Cooling.hpp"
+#include "Profiler.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -17,6 +18,7 @@ namespace openstudio::isomodel::schedules {
 
 bool loadHourlySchedulesFromFile(const std::string &path,
                                  std::vector<LoadedScheduleData> &data) {
+  PROFILE_FUNCTION();
   std::ifstream file(path);
   if (!file.is_open()) {
     std::cerr << "Error: Could not open schedule file: " << path << std::endl;
@@ -80,6 +82,7 @@ void buildWeeklySchedules(const openstudio::isomodel::Population &pop,
                           const openstudio::isomodel::Heating &heating,
                           const openstudio::isomodel::Cooling &cooling,
                           WeeklyScheduleData &sched) {
+  PROFILE_FUNCTION();
   const int dayStart = static_cast<int>(pop.daysStart()),
             dayEnd = static_cast<int>(pop.daysEnd());
   const int hourStart = static_cast<int>(pop.hoursStart()),
@@ -118,6 +121,7 @@ std::vector<ScheduleDataForHourlyCache> getHourlySchedules(
     const openstudio::isomodel::Lighting &lights,
     const openstudio::isomodel::Heating &heating,
     const openstudio::isomodel::Cooling &cooling) {
+  PROFILE_FUNCTION();
 
   std::vector<ScheduleDataForHourlyCache> hourlyScheduleData(hoursInYear);
   std::vector<LoadedScheduleData> fileData;
@@ -168,6 +172,7 @@ std::vector<ScheduleDataForHourlyCache> getHourlySchedules(
 }
 
 MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &pop) {
+  PROFILE_FUNCTION();
   MonthlyScheduleData data;
 
   // Initialize vectors

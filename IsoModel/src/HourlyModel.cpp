@@ -12,6 +12,7 @@
 #include "HourlyModel.hpp"
 #include "Constants.hpp"
 #include "EpwData.hpp"
+#include "Profiler.hpp"
 #include "SolarRadiation.hpp"
 #include <algorithm>
 #include <cmath>
@@ -49,6 +50,7 @@ HourlyModel::HourlyModel() noexcept
 // Destructor is defaulted in header
 
 std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
+  PROFILE_FUNCTION();
   initialize(); // Builds schedules and pre-calculates physics
 
   double theta_m_prev = DEFAULT_INITIAL_TEMP; // T_m,t-1
@@ -180,6 +182,7 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
 inline GainsResult HourlyModel::calculateGains(std::span<const double> curSolar,
                                                const HourlyCache &cache,
                                                double phi_int_App) noexcept {
+  PROFILE_FUNCTION();
 
   GainsResult res;
   double lightingLevelSum = 0.0;
@@ -230,6 +233,7 @@ inline GainsResult HourlyModel::calculateGains(std::span<const double> curSolar,
 inline AirFlowResult
 HourlyModel::calculateAirFlows(double theta_air,
                                const HourlyCache &cache) noexcept {
+  PROFILE_FUNCTION();
 
   AirFlowResult res;
   double theta_e = cache.theta_e;
@@ -284,6 +288,7 @@ inline double HourlyModel::solveThermalBalance(
     double theta_e, double theta_ent, double phi_ia, double phi_int,
     double phi_sol, double H_ve, double H_tr_1, double theta_H_set,
     double theta_C_set, double &theta_m_prev, double &theta_air) noexcept {
+  PROFILE_FUNCTION();
 
   // ISO 13790 C.3 eq. C.7: H_{tr,2}
   double H_tr_2 = H_tr_1 + H_tr_w;
@@ -370,6 +375,7 @@ inline double HourlyModel::solveThermalBalance(
 }
 
 std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
+  PROFILE_FUNCTION();
 
   double phi_H_tot = std::accumulate(m_phi_H_nd.begin(), m_phi_H_nd.end(), 0.0);
   double phi_C_tot = std::accumulate(m_phi_C_nd.begin(), m_phi_C_nd.end(),
@@ -462,6 +468,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
 }
 
 void HourlyModel::initialize() {
+  PROFILE_FUNCTION();
   double floorArea = structure.floorArea();
 
   // OPTIMIZATION 1: Inverse Floor Area
@@ -627,6 +634,7 @@ void HourlyModel::setPreloadedScheduleData(
 inline void HourlyModel::structureCalculations(
     double SHGC, double A_wall, double A_win, double U_wall, double U_win,
     double alpha_wall, double F_sh_with, double F_sh_without, int direction) {
+  PROFILE_FUNCTION();
 
   double WindowT = SHGC / SHGCClearGlass;
   A_nla_ms[direction] = A_win * WindowT;

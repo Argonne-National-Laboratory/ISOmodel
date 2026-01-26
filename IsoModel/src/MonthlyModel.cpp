@@ -22,6 +22,7 @@
 // [Refactor] Include the helpers for vector/matrix math
 #include "Constants.hpp"
 #include "MathHelpers.hpp"
+#include "Profiler.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -42,8 +43,9 @@ void MonthlyModel::solarRadiationBreakdown(
     const Vector &weekendOccupiedMegaseconds,
     const Vector &weekendUnoccupiedMegaseconds, const Vector &clockHourOccupied,
     const Vector &clockHourUnoccupied, Vector &v_hrs_sun_down_mo,
-    Vector &frac_Pgh_wk_nt, Vector &frac_Pgh_wke_day, Vector &frac_Pgh_wke_nt,
-    Vector &v_Tdbt_nt, Vector &v_Tdbt_Day) const {
+    Vector &frac_Pgh_wk_nt, Vector &frac_Pgh_wke_day,
+    Vector &frac_Pgh_wke_nt, Vector &v_Tdbt_nt, Vector &v_Tdbt_Day) const {
+  PROFILE_FUNCTION();
   // Copy to a new variables so matrix nature is clear.
   // Optimization: Use references to avoid copying matrices
   const Matrix &m_mhEgh = location.weather()->mhEghRef();
@@ -135,8 +137,9 @@ void MonthlyModel::solarRadiationBreakdown(
 void MonthlyModel::lightingEnergyUse(const Vector &v_hrs_sun_down_mo,
                                      double &Q_illum_occ, double &Q_illum_unocc,
                                      double &Q_illum_tot_yr,
-                                     Vector &v_Q_illum_tot,
-                                     Vector &v_Q_illum_ext_tot) const {
+                                     Vector &v_Q_illum_tot, Vector &v_Q_illum_ext_tot)
+    const {
+  PROFILE_FUNCTION();
   double lpd_occ = lights.powerDensityOccupied();
   double lpd_unocc = lights.powerDensityUnoccupied();
 
@@ -194,6 +197,7 @@ void MonthlyModel::envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
                                        Vector &v_wall_alpha_sc,
                                        Vector &v_wall_U, Vector &v_wall_A,
                                        double &H_tr) const {
+  PROFILE_FUNCTION();
   // TODO: Copying the various structure values to new variables (e.g. v_wall_A)
   // is not necessary. BAA@2015-07-13.
   v_wall_A = structure.wallArea();
@@ -232,8 +236,9 @@ void MonthlyModel::windowSolarGain(const Vector &v_win_A,
                                    const Vector &v_wall_alpha_sc,
                                    const Vector &v_wall_U,
                                    const Vector &v_wall_A, Vector &v_wall_A_sol,
-                                   Vector &v_win_hr, Vector &v_wall_R_sc,
-                                   Vector &v_win_A_sol) const {
+                                   Vector &v_win_hr, Vector &v_wall_R_sc, Vector &v_win_A_sol)
+    const {
+  PROFILE_FUNCTION();
   // TODO: The solar heat gain could be improved
   // better understand SCF and SDF and how they map to F_sh
   // calculate effective sky temp so we can better estimate theta_er and
@@ -298,9 +303,9 @@ void MonthlyModel::windowSolarGain(const Vector &v_win_A,
 void MonthlyModel::solarHeatGain(const Vector &v_win_A_sol,
                                  const Vector &v_wall_R_sc,
                                  const Vector &v_wall_U, const Vector &v_wall_A,
-                                 const Vector &v_win_hr,
-                                 const Vector &v_wall_A_sol,
+                                 const Vector &v_win_hr, const Vector &v_wall_A_sol,
                                  Vector &v_E_sol) const {
+  PROFILE_FUNCTION();
   // EN ISO 13790 11.3.2 eq. 43.
   // \Phi_sol,k = F_sh,ob,k * A_sol,k * I_sol,k - F_r,k * \Phi_r,k
 
@@ -407,6 +412,7 @@ void MonthlyModel::heatGainsAndLosses(
     double Q_illum_tot_yr, double &phi_int_avg, double &phi_plug_avg,
     double &phi_illum_avg, double &phi_int_wke_nt, double &phi_int_wke_day,
     double &phi_int_wk_nt) const {
+  PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
   double phi_int_occ = pop.heatGainPerPerson() / pop.densityOccupied();
   double phi_int_unocc = pop.heatGainPerPerson() / pop.densityUnoccupied();
@@ -446,6 +452,7 @@ void MonthlyModel::heatGainsAndLosses(
 void MonthlyModel::internalHeatGain(double phi_int_avg, double phi_plug_avg,
                                     double phi_illum_avg,
                                     double &phi_I_tot) const {
+  PROFILE_FUNCTION();
   // Total occupant internal heat gain per year (W).
   double phi_I_occ = phi_int_avg * structure.floorArea();
 
@@ -468,8 +475,9 @@ void MonthlyModel::unoccupiedHeatGain(
     const Vector &weekendOccupiedMegaseconds,
     const Vector &weekendUnoccupiedMegaseconds, const Vector &frac_Pgh_wk_nt,
     const Vector &frac_Pgh_wke_day, const Vector &frac_Pgh_wke_nt,
-    const Vector &v_E_sol, Vector &v_P_tot_wke_day, Vector &v_P_tot_wk_nt,
-    Vector &v_P_tot_wke_nt) const {
+    const Vector &v_E_sol, Vector &v_P_tot_wke_day,
+    Vector &v_P_tot_wk_nt, Vector &v_P_tot_wke_nt) const {
+  PROFILE_FUNCTION();
   // Internal heat gain for unoccupied times (MJ).
   Vector v_W_int_wk_nt =
       mult(weekdayUnoccupiedMegaseconds, phi_int_wk_nt * structure.floorArea());
@@ -508,6 +516,7 @@ void MonthlyModel::interiorTemp(
     double hoursUnoccupiedPerDay, double hoursOccupiedPerDay,
     double frac_hrs_wk_day, double frac_hrs_wk_nt, double frac_hrs_wke_tot,
     Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const {
+  PROFILE_FUNCTION();
   // Set the temp differential from the interior heating/cooling setpoint
   // based on the BEM type. An advanced BEM has the effect of reducing the
   // effective heating temp and raising the effective cooling temp during
@@ -798,8 +807,9 @@ void MonthlyModel::interiorTemp(
  */
 void MonthlyModel::ventilationCalc(const Vector &v_Th_avg,
                                    const Vector &v_Tc_avg,
-                                   double frac_hrs_wk_day, Vector &v_Hve_ht,
-                                   Vector &v_Hve_cl) const {
+                                   double frac_hrs_wk_day,
+                                   Vector &v_Hve_ht, Vector &v_Hve_cl) const {
+  PROFILE_FUNCTION();
   // Optimization: Cache weather references
   const Vector &v_mdbt = location.weather()->mdbtRef();
   const Vector &v_mwind = location.weather()->mwindRef();
@@ -976,9 +986,10 @@ void MonthlyModel::ventilationCalc(const Vector &v_Th_avg,
 void MonthlyModel::heatingAndCooling(
     const Vector &v_E_sol, const Vector &v_Th_avg, const Vector &v_Hve_ht,
     const Vector &v_Tc_avg, const Vector &v_Hve_cl, double tau, double H_tr,
-    double phi_I_tot, double frac_hrs_wk_day, Vector &v_Qfan_tot,
-    Vector &v_Qneed_ht, Vector &v_Qneed_cl, double &Qneed_ht_yr,
-    double &Qneed_cl_yr) const {
+    double phi_I_tot, double frac_hrs_wk_day,
+    Vector &v_Qfan_tot, Vector &v_Qneed_ht, Vector &v_Qneed_cl,
+    double &Qneed_ht_yr, double &Qneed_cl_yr) const {
+  PROFILE_FUNCTION();
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
 
@@ -1124,6 +1135,7 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
                         double Qneed_ht_yr, double Qneed_cl_yr,
                         Vector &v_Qelec_ht, Vector &v_Qgas_ht,
                         Vector &v_Qcl_elec_tot, Vector &v_Qcl_gas_tot) const {
+  PROFILE_FUNCTION();
   // TODO: Implement (or remove) all the district heating/cooling stuff that is
   // currently commented out. BAA@2015-07-15.
 
@@ -1284,6 +1296,7 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
 void MonthlyModel::pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
                         double Qneed_ht_yr, double Qneed_cl_yr,
                         Vector &v_Q_pump_tot) const {
+  PROFILE_FUNCTION();
   // TODO: The current implementation is wrong. It either needs to be revised to
   // be more like the hourly implementation where the pump energy is multiplied
   // by the amount of time the pumps are actually on or
@@ -1347,7 +1360,7 @@ void MonthlyModel::pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
  * Energy Generation
  * NOT INCLUDED YET
  */
-void MonthlyModel::energyGeneration() const {}
+void MonthlyModel::energyGeneration() const { PROFILE_FUNCTION(); }
 
 /**
  * Calculate domestic hot water (DHW).
@@ -1355,6 +1368,7 @@ void MonthlyModel::energyGeneration() const {}
  */
 void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
                                Vector &v_Q_dhw_gas) const {
+  PROFILE_FUNCTION();
   // Energy from solar energy hot water collectors - not included yet
   Vector v_Q_dhw_solar(monthsInYear, 0.0);
 
@@ -1396,6 +1410,7 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 }
 
 std::vector<EndUses> MonthlyModel::simulate() const {
+  PROFILE_FUNCTION();
   // Solor Radiation Breakdown Results
   Vector v_hrs_sun_down_mo(monthsInYear), v_Tdbt_nt, v_Tdbt_day;
   Vector frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt;
@@ -1612,8 +1627,9 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
     const Vector &v_Q_illum_tot, const Vector &v_Q_illum_ext_tot,
     const Vector &v_Qfan_tot, const Vector &v_Q_pump_tot,
     const Vector &v_Q_dhw_elec, const Vector &v_Qgas_ht,
-    const Vector &v_Qcl_gas_tot, const Vector &v_Q_dhw_gas,
-    double frac_hrs_wk_day) const {
+    const Vector &v_Qcl_gas_tot, const Vector &v_Q_dhw_gas, double frac_hrs_wk_day)
+    const {
+  PROFILE_FUNCTION();
   std::vector<EndUses> allResults;
 
   // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15

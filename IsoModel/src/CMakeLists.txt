@@ -15,6 +15,9 @@ include(FetchContent)
 project(isomodel_project)
 set(target_name isomodel)
 
+# Option to control profiling
+option(PROFILING "Enable performance profiling for benchmark target" OFF)
+
 # ---------------------------------------------------------------------------
 # OPTIMIZATION: Set Default Build Type to Release
 # ---------------------------------------------------------------------------
@@ -203,6 +206,9 @@ add_custom_command(TARGET isomodel_unit_tests
 add_executable(isomodel_benchmark ${${target_name}_src} ${${target_name}_benchmark})
 target_link_libraries(isomodel_benchmark PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(isomodel_benchmark PRIVATE ${PERF_FLAGS})
+if(PROFILING)
+  target_compile_definitions(isomodel_benchmark PRIVATE PROFILING_ENABLED=1)
+endif()
 
 add_custom_command(TARGET isomodel_benchmark
   POST_BUILD
@@ -238,3 +244,18 @@ target_compile_options(${library_name} PRIVATE ${PERF_FLAGS})
 if (MSVC)
  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
 endif()
+
+# Custom targets to easily re-configure profiling
+add_custom_target(profiling_on
+  COMMAND ${CMAKE_COMMAND} -DPROFILING:BOOL=ON .
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Re-configuring build with profiling ON. Run 'make' again to build."
+  VERBATIM
+)
+
+add_custom_target(profiling_off
+  COMMAND ${CMAKE_COMMAND} -DPROFILING:BOOL=OFF .
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Re-configuring build with profiling OFF. Run 'make' again to build."
+  VERBATIM
+)
