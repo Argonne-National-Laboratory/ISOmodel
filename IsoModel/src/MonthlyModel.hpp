@@ -110,6 +110,11 @@ private:
     Vector v_P_tot_wke_day = Vector(monthsInYear);
     Vector v_P_tot_wk_nt = Vector(monthsInYear);
     Vector v_P_tot_wke_nt = Vector(monthsInYear);
+
+    // From interiorTemp
+    Vector v_Th_avg = Vector(monthsInYear);
+    Vector v_Tc_avg = Vector(monthsInYear);
+    double tau = 0.0;
   };
 
 private:
@@ -126,13 +131,7 @@ private:
 
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
 
-  void interiorTemp(const Vector &v_wall_A, const Vector &v_P_tot_wke_day,
-                    const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_nt,
-                    const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day,
-                    double H_tr, double hoursUnoccupiedPerDay,
-                    double hoursOccupiedPerDay, double frac_hrs_wk_day,
-                    double frac_hrs_wk_nt, double frac_hrs_wke_tot,
-                    Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const;
+  void interiorTemp(MonthlySimulationData &simData) const;
 
   double calculateBEMAdjustment() const;
 

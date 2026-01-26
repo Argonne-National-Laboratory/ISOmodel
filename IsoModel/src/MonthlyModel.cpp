@@ -727,13 +727,7 @@ void MonthlyModel::calculateWeekendTemperatures(
 /*
  * Calculate interior temp.
  */
-void MonthlyModel::interiorTemp(
-    const Vector &v_wall_A, const Vector &v_P_tot_wke_day,
-    const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_nt,
-    const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day, double H_tr,
-    double hoursUnoccupiedPerDay, double hoursOccupiedPerDay,
-    double frac_hrs_wk_day, double frac_hrs_wk_nt, double frac_hrs_wke_tot,
-    Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const {
+void MonthlyModel::interiorTemp(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Set the temp differential from the interior heating/cooling setpoint
   // based on the BEM type. An advanced BEM has the effect of reducing the
@@ -768,16 +762,16 @@ void MonthlyModel::interiorTemp(
   double Cm_int = structure.interiorHeatCapacity() * structure.floorArea();
 
   // Envelope heat capacity (J/k).
-  double Cm_env = structure.wallHeatCapacity() * sum(v_wall_A);
+  double Cm_env = structure.wallHeatCapacity() * sum(simData.v_wall_A);
 
   // Total heat capacity (J/k).
   double Cm = Cm_int + Cm_env;
 
   // Total heat transfer coefficient.
-  double H_tot = H_tr + ventilation.H_ve();
+  double H_tot = simData.H_tr + ventilation.H_ve();
 
   // Building time constant in hours as pwer ISO 13790 12.2.1.3 eq. 62.
-  tau = Cm / H_tot / 3600.0;
+  simData.tau = Cm / H_tot / 3600.0;
 
   // The following code computes the average weekend room temp using exponential
   // rise and decays as we switch between day and night temp settings.  It
@@ -793,8 +787,8 @@ void MonthlyModel::interiorTemp(
   // Create a vector of lengths of the periods of times between possible
   // temperature resets during the weekend.
   Vector v_ti(5);
-  v_ti[0] = v_ti[2] = v_ti[4] = hoursUnoccupiedPerDay;
-  v_ti[1] = v_ti[3] = hoursOccupiedPerDay;
+  v_ti[0] = v_ti[2] = v_ti[4] = simData.scheduleData.hoursUnoccupiedPerDay;
+  v_ti[1] = v_ti[3] = simData.scheduleData.hoursOccupiedPerDay;
 
   // Generate an effective delta T matrix from ratio of total interior gains to
   // heat transfer coefficient for each time period.
@@ -802,18 +796,18 @@ void MonthlyModel::interiorTemp(
   // This is a matrix where the columns are the vectors v_P_tot_wk_nt/H_tot, and
   // so on this is for a week night, weekend day, weekend night, weekend day,
   // weekend night sequence
-  Matrix M_dT(v_P_tot_wk_nt.size(), 5);
-  Matrix M_Te(v_Tdbt_nt.size(), 5);
+  Matrix M_dT(simData.v_P_tot_wk_nt.size(), 5);
+  Matrix M_Te(simData.v_Tdbt_nt.size(), 5);
 
-  for (unsigned int i = 0; i < v_P_tot_wk_nt.size(); ++i) {
-    M_dT(i, 0) = v_P_tot_wk_nt[i] / H_tot;
-    M_dT(i, 1) = M_dT(i, 3) = v_P_tot_wke_day[i] / H_tot;
-    M_dT(i, 2) = M_dT(i, 4) = v_P_tot_wke_nt[i] / H_tot;
+  for (unsigned int i = 0; i < simData.v_P_tot_wk_nt.size(); ++i) {
+    M_dT(i, 0) = simData.v_P_tot_wk_nt[i] / H_tot;
+    M_dT(i, 1) = M_dT(i, 3) = simData.v_P_tot_wke_day[i] / H_tot;
+    M_dT(i, 2) = M_dT(i, 4) = simData.v_P_tot_wke_nt[i] / H_tot;
   }
 
-  for (unsigned int i = 0; i < v_Tdbt_nt.size(); ++i) {
-    M_Te(i, 0) = M_Te(i, 2) = M_Te(i, 4) = v_Tdbt_nt[i];
-    M_Te(i, 1) = M_Te(i, 3) = v_Tdbt_day[i];
+  for (unsigned int i = 0; i < simData.v_Tdbt_nt.size(); ++i) {
+    M_Te(i, 0) = M_Te(i, 2) = M_Te(i, 4) = simData.v_Tdbt_nt[i];
+    M_Te(i, 1) = M_Te(i, 3) = simData.v_Tdbt_day[i];
   }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -837,7 +831,7 @@ void MonthlyModel::interiorTemp(
   if (heating.T_ht_ctrl_flag() ==
       1) { // If the HVAC heating controls are turned on.
     calculateWeekendTemperatures(v_ht_tset_ctrl, v_ht_tset_ctrl, ht_tset_unocc,
-                                 tau, v_ti, M_dT, M_Te, v_Th_wke_avg,
+                                 simData.tau, v_ti, M_dT, M_Te, v_Th_wke_avg,
                                  v_Th_wk_nt);
   }
 
@@ -851,7 +845,7 @@ void MonthlyModel::interiorTemp(
   if (cooling.T_cl_ctrl_flag() == 1) {
     Vector v_limit_start = minimum(v_ht_tset_ctrl, cl_tset_unocc);
     calculateWeekendTemperatures(v_cl_tset_ctrl, v_limit_start, cl_tset_unocc,
-                                 tau, v_ti, M_dT, M_Te, v_Tc_wke_avg,
+                                 simData.tau, v_ti, M_dT, M_Te, v_Tc_wke_avg,
                                  v_Tc_wk_nt);
   }
 
@@ -863,11 +857,11 @@ void MonthlyModel::interiorTemp(
 
   // Find the average temp for the whole week from the fractions of each period.
   Vector v_Th_wk_avg = sum(
-      sum(mult(v_Th_wk_day, frac_hrs_wk_day), mult(v_Th_wk_nt, frac_hrs_wk_nt)),
-      mult(v_Th_wke_avg, frac_hrs_wke_tot));
+      sum(mult(v_Th_wk_day, simData.scheduleData.frac_hrs_wk_day), mult(v_Th_wk_nt, simData.scheduleData.frac_hrs_wk_nt)),
+      mult(v_Th_wke_avg, simData.scheduleData.frac_hrs_wke_tot));
   Vector v_Tc_wk_avg = sum(
-      sum(mult(v_Tc_wk_day, frac_hrs_wk_day), mult(v_Tc_wk_nt, frac_hrs_wk_nt)),
-      mult(v_Tc_wke_avg, frac_hrs_wke_tot));
+      sum(mult(v_Tc_wk_day, simData.scheduleData.frac_hrs_wk_day), mult(v_Tc_wk_nt, simData.scheduleData.frac_hrs_wk_nt)),
+      mult(v_Tc_wke_avg, simData.scheduleData.frac_hrs_wke_tot));
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Tc_wk_avg", v_Tc_wk_avg);
@@ -877,8 +871,8 @@ void MonthlyModel::interiorTemp(
   // The final avg for monthly energy computations is the lesser of the avg
   // computed above and the heating set control.
   for (unsigned int i = 0; i < v_Tc_wk_avg.size(); i++) {
-    v_Th_avg[i] = std::min(v_Th_wk_avg[i], ht_tset_ctrl);
-    v_Tc_avg[i] = std::min(v_Tc_wk_avg[i], cl_tset_ctrl);
+    simData.v_Th_avg[i] = std::min(v_Th_wk_avg[i], ht_tset_ctrl);
+    simData.v_Tc_avg[i] = std::min(v_Tc_wk_avg[i], cl_tset_ctrl);
   }
 }
 
@@ -1449,9 +1443,6 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_Th_avg(monthsInYear), v_Tc_avg(monthsInYear);
-
-  double tau;
   Vector v_Hve_ht, v_Hve_cl;
 
   double Qneed_ht_yr, Qneed_cl_yr;
@@ -1599,14 +1590,11 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
-  interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt, // These are local variables
-               v_Tdbt_nt, v_Tdbt_day, H_tr, // These are local variables
-               simData.scheduleData.hoursUnoccupiedPerDay, // Use simData.scheduleData
-               simData.scheduleData.hoursOccupiedPerDay, // Use simData.scheduleData
-               simData.scheduleData.frac_hrs_wk_day, // Use simData.scheduleData
-               simData.scheduleData.frac_hrs_wk_nt, // Use simData.scheduleData
-               simData.scheduleData.frac_hrs_wke_tot, // Use simData.scheduleData
-               v_Th_avg, v_Tc_avg, tau); // These are local variables
+  interiorTemp(simData);
+  const Vector& v_Th_avg = simData.v_Th_avg;
+  const Vector& v_Tc_avg = simData.v_Tc_avg;
+  double tau = simData.tau;
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "tau: " << tau << std::endl;
     printVector("v_Th_avg", v_Th_avg);
