@@ -324,68 +324,59 @@ MonthlyModel::calculateAnnualLightingOperationalHours() const {
  * Breaks down the solar radiation and temperature data into day, night,
  * weekday and weekend vectors, as appropriate.
  */
-void MonthlyModel::solarRadiationBreakdown(
-    const Vector &weekdayOccupiedMegaseconds,
-    const Vector &weekdayUnoccupiedMegaseconds,
-    const Vector &weekendOccupiedMegaseconds,
-    const Vector &weekendUnoccupiedMegaseconds, const Vector &clockHourOccupied,
-    const Vector &clockHourUnoccupied, Vector &v_hrs_sun_down_mo,
-    Vector &frac_Pgh_wk_nt, Vector &frac_Pgh_wke_day,
-    Vector &frac_Pgh_wke_nt, Vector &v_Tdbt_nt, Vector &v_Tdbt_Day) const {
+void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Copy to a new variables so matrix nature is clear.
   // Optimization: Use references to avoid copying matrices
   const Matrix &m_mhEgh = location.weather()->mhEghRef();
   const Matrix &m_mhdbt = location.weather()->mhdbtRef();
 
+  const auto &scheduleData = simData.scheduleData;
+
   // Note, these are matrix multiplies (matrix*vector) resulting in a vector.
 
   // monthly average dry bulb temp (dbt) during the occupied hours of days
-  v_Tdbt_Day = prod(m_mhdbt, clockHourOccupied);
-  v_Tdbt_Day = div(v_Tdbt_Day, sum(clockHourOccupied));
+  simData.v_Tdbt_day = prod(m_mhdbt, scheduleData.clockHourOccupied);
+  simData.v_Tdbt_day = div(simData.v_Tdbt_day, sum(scheduleData.clockHourOccupied));
 
   // monthly avg dbt during the unoccupied hours of days
-  v_Tdbt_nt = prod(m_mhdbt, clockHourUnoccupied);
-  v_Tdbt_nt = div(v_Tdbt_nt, sum(clockHourUnoccupied));
+  simData.v_Tdbt_nt = prod(m_mhdbt, scheduleData.clockHourUnoccupied);
+  simData.v_Tdbt_nt = div(simData.v_Tdbt_nt, sum(scheduleData.clockHourUnoccupied));
 
   // monthly avg global horiz rad power (Egh)  during the "day" hours
-  Vector v_Egh_day = prod(m_mhEgh, clockHourOccupied);
-  v_Egh_day = div(v_Egh_day, sum(clockHourOccupied));
+  Vector v_Egh_day = prod(m_mhEgh, scheduleData.clockHourOccupied);
+  v_Egh_day = div(v_Egh_day, sum(scheduleData.clockHourOccupied));
 
   // monthly avg Egh during the "night" hours
-  Vector v_Egh_nt = prod(m_mhEgh, clockHourUnoccupied);
-  v_Egh_nt = div(v_Egh_nt, sum(clockHourUnoccupied));
+  Vector v_Egh_nt = prod(m_mhEgh, scheduleData.clockHourUnoccupied);
+  v_Egh_nt = div(v_Egh_nt, sum(scheduleData.clockHourUnoccupied));
 
   // Monthly avg Egh energy (Wgh) during the week days.
-  Vector v_Wgh_wk_day = mult(v_Egh_day, weekdayOccupiedMegaseconds);
+  Vector v_Wgh_wk_day = mult(v_Egh_day, scheduleData.weekdayOccupiedMegaseconds);
   // Monthly avg Wgh during week nights.
-  Vector v_Wgh_wk_nt = mult(v_Egh_nt, weekdayUnoccupiedMegaseconds);
+  Vector v_Wgh_wk_nt = mult(v_Egh_nt, scheduleData.weekdayUnoccupiedMegaseconds);
   // Monthly avg Wgh during weekend days.
-  Vector v_Wgh_wke_day = mult(v_Egh_day, weekendOccupiedMegaseconds);
+  Vector v_Wgh_wke_day = mult(v_Egh_day, scheduleData.weekendOccupiedMegaseconds);
   // Monthly avg Wgh during weekend nights.
-  Vector v_Wgh_wke_nt = mult(v_Egh_nt, weekendUnoccupiedMegaseconds);
+  Vector v_Wgh_wke_nt = mult(v_Egh_nt, scheduleData.weekendUnoccupiedMegaseconds);
   // Egh_avg_total MJ/m2.
   Vector v_Wgh_tot =
       sum(sum(v_Wgh_wk_day, v_Wgh_wk_nt), sum(v_Wgh_wke_day, v_Wgh_wke_nt));
 
   // frac_Egh_unocc_weekday_night
-  frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
+  simData.frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
   // frac_Egh_unocc_weekend_day
-  frac_Pgh_wke_day = div(v_Wgh_wke_day, v_Wgh_tot);
+  simData.frac_Pgh_wke_day = div(v_Wgh_wke_day, v_Wgh_tot);
   // frac_Egh_unocc_weekend_night
-  frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
+  simData.frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
 
-  calculateSunHours(m_mhEgh, v_hrs_sun_down_mo);
+  calculateSunHours(m_mhEgh, simData.v_hrs_sun_down_mo);
 }
 
 /**
  * Compute lighting energy use as per prEN 15193:2006.
  */
-void MonthlyModel::lightingEnergyUse(const Vector &v_hrs_sun_down_mo,
-                                     double &Q_illum_occ, double &Q_illum_unocc,
-                                     double &Q_illum_tot_yr,
-                                     Vector &v_Q_illum_tot, Vector &v_Q_illum_ext_tot)
-    const {
+void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   double lpd_occ = lights.powerDensityOccupied();
   double lpd_unocc = lights.powerDensityUnoccupied();
@@ -401,21 +392,21 @@ void MonthlyModel::lightingEnergyUse(const Vector &v_hrs_sun_down_mo,
   AnnualLightingHours annualHours = calculateAnnualLightingOperationalHours();
 
   // Total lighting energy for occupied times (kWh).
-  Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O *
+  simData.Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O *
                 (annualHours.t_lt_D * F_D + annualHours.t_lt_N) *
                 W2kW;
   // Total annual lighting energy for unnocupied times (kWh).
-  Q_illum_unocc =
+  simData.Q_illum_unocc =
       structure.floorArea() * lpd_unocc * annualHours.t_unocc * W2kW;
   // Total annual lighting energy (kWh).
-  Q_illum_tot_yr = Q_illum_occ + Q_illum_unocc;
+  simData.Q_illum_tot_yr = simData.Q_illum_occ + simData.Q_illum_unocc;
 
   // Split annual lighting energy into monthly lighting energy via the month
   // fraction of the year (kWh).
-  v_Q_illum_tot = mult(monthFractionOfYear, Q_illum_tot_yr, monthsInYear);
+  simData.v_Q_illum_tot = mult(monthFractionOfYear, simData.Q_illum_tot_yr, monthsInYear);
   // Total exterior lighting (kWh).
-  v_Q_illum_ext_tot =
-      mult(v_hrs_sun_down_mo, lights.exteriorEnergy() * W2kW);
+  simData.v_Q_illum_ext_tot =
+      mult(simData.v_hrs_sun_down_mo, lights.exteriorEnergy() * W2kW);
 }
 
 /**
@@ -1483,15 +1474,10 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
-  // Solor Radiation Breakdown Results
-  Vector v_hrs_sun_down_mo(monthsInYear), v_Tdbt_nt, v_Tdbt_day;
-  Vector frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt;
-  // Envelop Calculations Results
+  // Envelop Calculations Results (existing local declarations)
   Vector v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U, v_wall_A;
 
   Vector v_wall_A_sol, v_win_hr, v_wall_R_sc, v_win_A_sol;
-
-  double Q_illum_occ, Q_illum_unocc, Q_illum_tot_yr;
 
   double phi_int_avg, phi_plug_avg, phi_illum_avg;
 
@@ -1509,7 +1495,7 @@ std::vector<EndUses> MonthlyModel::simulate() const {
   double Qneed_ht_yr, Qneed_cl_yr;
   Vector v_Qneed_ht, v_Qneed_cl;
 
-  Vector v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot, v_Q_illum_ext_tot,
+  Vector v_Qelec_ht, v_Qcl_elec_tot,
       v_Qfan_tot, v_Q_pump_tot, v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot,
       v_Q_dhw_gas;
 
@@ -1518,7 +1504,7 @@ std::vector<EndUses> MonthlyModel::simulate() const {
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << std::endl << "scheduleAndOccupancy: " << std::endl;
   }
-  MonthlySimulationData simData;
+  MonthlySimulationData simData; // Declare the new struct
   simData.scheduleData = schedules::getMonthlySchedules(pop);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1538,11 +1524,15 @@ std::vector<EndUses> MonthlyModel::simulate() const {
 
     std::cout << std::endl << "solarRadiationBreakdown: " << std::endl;
   }
-  solarRadiationBreakdown(
-      simData.scheduleData.weekdayOccupiedMegaseconds, simData.scheduleData.weekdayUnoccupiedMegaseconds,
-      simData.scheduleData.weekendOccupiedMegaseconds, simData.scheduleData.weekendUnoccupiedMegaseconds,
-      simData.scheduleData.clockHourOccupied, simData.scheduleData.clockHourUnoccupied, v_hrs_sun_down_mo,
-      frac_Pgh_wk_nt, frac_Pgh_wke_day, frac_Pgh_wke_nt, v_Tdbt_nt, v_Tdbt_day);
+  solarRadiationBreakdown(simData);
+
+  // Bridge variables for downstream functions
+  const Vector& v_hrs_sun_down_mo = simData.v_hrs_sun_down_mo;
+  const Vector& frac_Pgh_wk_nt = simData.frac_Pgh_wk_nt;
+  const Vector& frac_Pgh_wke_day = simData.frac_Pgh_wke_day;
+  const Vector& frac_Pgh_wke_nt = simData.frac_Pgh_wke_nt;
+  const Vector& v_Tdbt_nt = simData.v_Tdbt_nt;
+  const Vector& v_Tdbt_day = simData.v_Tdbt_day;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_hrs_sun_down_mo", v_hrs_sun_down_mo);
@@ -1554,8 +1544,14 @@ std::vector<EndUses> MonthlyModel::simulate() const {
 
     std::cout << std::endl << "lightingEnergyUse: " << std::endl;
   }
-  lightingEnergyUse(v_hrs_sun_down_mo, Q_illum_occ, Q_illum_unocc,
-                    Q_illum_tot_yr, v_Q_illum_tot, v_Q_illum_ext_tot);
+  lightingEnergyUse(simData);
+  // Bridge variables for downstream functions
+  double Q_illum_occ = simData.Q_illum_occ;
+  double Q_illum_unocc = simData.Q_illum_unocc;
+  double Q_illum_tot_yr = simData.Q_illum_tot_yr;
+  const Vector& v_Q_illum_tot = simData.v_Q_illum_tot;
+  const Vector& v_Q_illum_ext_tot = simData.v_Q_illum_ext_tot;
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Q_illum_occ: " << Q_illum_occ << std::endl;
     std::cout << "Q_illum_unocc: " << Q_illum_unocc << std::endl;
@@ -1624,10 +1620,11 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
-  unoccupiedHeatGain(phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt,
-                     simData.scheduleData.weekdayUnoccupiedMegaseconds,
-                     simData.scheduleData.weekendOccupiedMegaseconds,
-                     simData.scheduleData.weekendUnoccupiedMegaseconds, frac_Pgh_wk_nt,
+  unoccupiedHeatGain(phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt, // These are local variables
+                     simData.scheduleData.weekdayUnoccupiedMegaseconds, // Use simData.scheduleData
+                     simData.scheduleData.weekendOccupiedMegaseconds, // Use simData.scheduleData
+                     simData.scheduleData.weekendUnoccupiedMegaseconds, // Use simData.scheduleData
+                     frac_Pgh_wk_nt, // These are local variables
                      frac_Pgh_wke_day, frac_Pgh_wke_nt, v_E_sol, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_P_tot_wke_day", v_P_tot_wke_day);
@@ -1636,10 +1633,14 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
-  interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt,
-               v_Tdbt_nt, v_Tdbt_day, H_tr, simData.scheduleData.hoursUnoccupiedPerDay,
-               simData.scheduleData.hoursOccupiedPerDay, simData.scheduleData.frac_hrs_wk_day,
-               simData.scheduleData.frac_hrs_wk_nt, simData.scheduleData.frac_hrs_wke_tot, v_Th_avg, v_Tc_avg, tau);
+  interiorTemp(v_wall_A, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt, // These are local variables
+               v_Tdbt_nt, v_Tdbt_day, H_tr, // These are local variables
+               simData.scheduleData.hoursUnoccupiedPerDay, // Use simData.scheduleData
+               simData.scheduleData.hoursOccupiedPerDay, // Use simData.scheduleData
+               simData.scheduleData.frac_hrs_wk_day, // Use simData.scheduleData
+               simData.scheduleData.frac_hrs_wk_nt, // Use simData.scheduleData
+               simData.scheduleData.frac_hrs_wke_tot, // Use simData.scheduleData
+               v_Th_avg, v_Tc_avg, tau); // These are local variables
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "tau: " << tau << std::endl;
     printVector("v_Th_avg", v_Th_avg);
@@ -1647,7 +1648,7 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "ventilationCalc: " << std::endl;
   }
-  ventilationCalc(v_Th_avg, v_Tc_avg, simData.scheduleData.frac_hrs_wk_day, v_Hve_ht, v_Hve_cl);
+  ventilationCalc(v_Th_avg, v_Tc_avg, simData.scheduleData.frac_hrs_wk_day, v_Hve_ht, v_Hve_cl); // Use simData.scheduleData
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Hve_ht", v_Hve_ht);
     printVector("v_Hve_cl", v_Hve_cl);
@@ -1655,7 +1656,7 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "heatingAndCooling: " << std::endl;
   }
   heatingAndCooling(v_E_sol, v_Th_avg, v_Hve_ht, v_Tc_avg, v_Hve_cl, tau, H_tr,
-                    phi_I_tot, simData.scheduleData.frac_hrs_wk_day, v_Qfan_tot,
+                    phi_I_tot, simData.scheduleData.frac_hrs_wk_day, v_Qfan_tot, // Use simData.scheduleData
                     v_Qneed_ht, v_Qneed_cl, Qneed_ht_yr, Qneed_cl_yr);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Qneed_ht_yr: " << Qneed_ht_yr << std::endl;
@@ -1693,7 +1694,7 @@ Vector v_win_U = structure.windowUniform();*/
   return outputGeneration(v_Qelec_ht, v_Qcl_elec_tot, v_Q_illum_tot,
                           v_Q_illum_ext_tot, v_Qfan_tot, v_Q_pump_tot,
                           v_Q_dhw_elec, v_Qgas_ht, v_Qcl_gas_tot,
-                          v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day);
+                          v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
 }
 std::vector<EndUses> MonthlyModel::outputGeneration(
     const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,

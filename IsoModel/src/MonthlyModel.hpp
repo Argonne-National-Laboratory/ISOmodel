@@ -25,6 +25,7 @@
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
 #include "Schedules.hpp"
+#include "Constants.hpp"
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -61,24 +62,27 @@ private:
   struct MonthlySimulationData {
     // From schedules::getMonthlySchedules
     schedules::MonthlyScheduleData scheduleData{};
+
+    // From solarRadiationBreakdown
+    Vector v_hrs_sun_down_mo = Vector(monthsInYear);
+    Vector frac_Pgh_wk_nt = Vector(monthsInYear);
+    Vector frac_Pgh_wke_day = Vector(monthsInYear);
+    Vector frac_Pgh_wke_nt = Vector(monthsInYear);
+    Vector v_Tdbt_nt = Vector(monthsInYear);
+    Vector v_Tdbt_day = Vector(monthsInYear);
+
+    // From lightingEnergyUse
+    double Q_illum_occ = 0.0;
+    double Q_illum_unocc = 0.0;
+    double Q_illum_tot_yr = 0.0;
+    Vector v_Q_illum_tot = Vector(monthsInYear);
+    Vector v_Q_illum_ext_tot = Vector(monthsInYear);
   };
 
 private:
   // Simulation functions.
-  void solarRadiationBreakdown(const Vector &weekdayOccupiedMegaseconds,
-                               const Vector &weekdayUnoccupiedMegaseconds,
-                               const Vector &weekendOccupiedMegaseconds,
-                               const Vector &weekendUnoccupiedMegaseconds,
-                               const Vector &clockHourOccupied,
-                               const Vector &clockHourUnoccupied,
-                               Vector &v_hrs_sun_down_mo,
-                               Vector &frac_Pgh_wk_nt, Vector &frac_Pgh_wke_day,
-                               Vector &frac_Pgh_wke_nt, Vector &v_Tdbt_nt,
-                               Vector &v_Tdbt_Day) const;
-  void lightingEnergyUse(const Vector &v_hrs_sun_down_mo, double &Q_illum_occ,
-                         double &Q_illum_unocc, double &Q_illum_tot_yr,
-                         Vector &v_Q_illum_tot,
-                         Vector &v_Q_illum_ext_tot) const;
+  void solarRadiationBreakdown(MonthlySimulationData &simData) const;
+  void lightingEnergyUse(MonthlySimulationData &simData) const;
 
   void envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
                            Vector &v_wall_alpha_sc, Vector &v_wall_U,
