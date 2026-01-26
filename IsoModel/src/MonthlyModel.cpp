@@ -1108,11 +1108,6 @@ void MonthlyModel::heatingAndCooling(MonthlySimulationData &simData) const {
   simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
   simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
 
-
-  // Total heating need (MJ).
-  simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
-  simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
-
   // Heat transfer (loss) by transmission, cooling (MJ).
   Vector v_QT_cl = mult(mult(dif(simData.v_Tc_avg, v_mdbt), simData.H_tr), megasecondsInMonth);
   // Heat transfer (loss) by ventilation, cooling (MJ).
@@ -1450,22 +1445,13 @@ std::vector<EndUses> MonthlyModel::simulate() const {
     std::cout << std::endl << "solarRadiationBreakdown: " << std::endl;
   }
   solarRadiationBreakdown(simData);
-
-  // Bridge variables for downstream functions
-  const Vector& v_hrs_sun_down_mo = simData.v_hrs_sun_down_mo;
-  const Vector& frac_Pgh_wk_nt = simData.frac_Pgh_wk_nt;
-  const Vector& frac_Pgh_wke_day = simData.frac_Pgh_wke_day;
-  const Vector& frac_Pgh_wke_nt = simData.frac_Pgh_wke_nt;
-  const Vector& v_Tdbt_nt = simData.v_Tdbt_nt;
-  const Vector& v_Tdbt_day = simData.v_Tdbt_day;
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_hrs_sun_down_mo", v_hrs_sun_down_mo);
-    printVector("frac_Pgh_wk_nt", frac_Pgh_wk_nt);
-    printVector("frac_Pgh_wke_day", frac_Pgh_wke_day);
-    printVector("frac_Pgh_wke_nt", frac_Pgh_wke_nt);
-    printVector("v_Tdbt_nt", v_Tdbt_nt);
-    printVector("v_Tdbt_day", v_Tdbt_day);
+    printVector("v_hrs_sun_down_mo", simData.v_hrs_sun_down_mo);
+    printVector("frac_Pgh_wk_nt", simData.frac_Pgh_wk_nt);
+    printVector("frac_Pgh_wke_day", simData.frac_Pgh_wke_day);
+    printVector("frac_Pgh_wke_nt", simData.frac_Pgh_wke_nt);
+    printVector("v_Tdbt_nt", simData.v_Tdbt_nt);
+    printVector("v_Tdbt_day", simData.v_Tdbt_day);
 
     std::cout << std::endl << "lightingEnergyUse: " << std::endl;
   }
@@ -1490,23 +1476,17 @@ Vector v_win_U = structure.windowUniform();*/
     printVector("structure.windowUniform()", structure.windowUniform());
   }
   envelopCalculations(simData);
-  // Bridge variables for downstream functions
-  const Vector& v_wall_U = simData.v_wall_U;
-  const Vector& v_wall_A = simData.v_wall_A;
-  double H_tr = simData.H_tr;
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "H_tr: " << H_tr << std::endl;
+    std::cout << "H_tr: " << simData.H_tr << std::endl;
     printVector("v_win_A", simData.v_win_A);
     printVector("v_wall_emiss", simData.v_wall_emiss);
     printVector("v_wall_alpha_sc", simData.v_wall_alpha_sc);
-    printVector("v_wall_U", v_wall_U);
-    printVector("v_wall_A", v_wall_A);
+    printVector("v_wall_U", simData.v_wall_U);
+    printVector("v_wall_A", simData.v_wall_A);
 
     std::cout << std::endl << "windowSolarGain: " << std::endl;
   }
   windowSolarGain(simData);
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_wall_A_sol", simData.v_wall_A_sol);
     printVector("v_win_hr", simData.v_win_hr);
@@ -1516,10 +1496,8 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "solarHeatGain: " << std::endl;
   }
   solarHeatGain(simData);
-  const Vector& v_E_sol = simData.v_E_sol;
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_E_sol", v_E_sol);
+    printVector("v_E_sol", simData.v_E_sol);
 
     std::cout << std::endl << "heatGainsAndLosses: " << std::endl;
   }
@@ -1535,11 +1513,8 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "internalHeatGain: " << std::endl;
   }
   internalHeatGain(simData);
-  // Bridge variables for downstream functions
-  double phi_I_tot = simData.phi_I_tot;
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "phi_I_tot: " << phi_I_tot << std::endl;
+    std::cout << "phi_I_tot: " << simData.phi_I_tot << std::endl;
 
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
