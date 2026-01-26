@@ -33,8 +33,7 @@ namespace openstudio::isomodel {
 MonthlyModel::MonthlyModel() = default;
 MonthlyModel::~MonthlyModel() = default;
 
-void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh,
-                                     Vector &v_hrs_sun_down_mo) const {
+void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_down_mo) {
   // Find what time the sun comes up and goes down and the fraction of hours sun
   // is up and down.
   for (int i = 0; i < monthsInYear; i++) {
@@ -64,8 +63,7 @@ void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh,
   }
 }
 
-Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H,
-                                                double a_H) const {
+Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H, double a_H) {
   PROFILE_FUNCTION();
   Vector eta_g(monthsInYear);
   for (unsigned int i = 0; i < eta_g.size(); i++) {
@@ -661,7 +659,7 @@ double MonthlyModel::calculateBEMAdjustment(const Building& building) {
 void MonthlyModel::calculateWeekendTemperatures(
     const Vector &v_decay_start_base, const Vector &v_limit_start_col0,
     double tset_unocc, double tau, const Vector &v_ti, const Matrix &M_dT,
-    const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) const {
+    const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) {
 
   // 1. Calculate exponential decay (floating temperature)
   // M_Decay corresponds to M_Ta (heating) or M_Tc (cooling)

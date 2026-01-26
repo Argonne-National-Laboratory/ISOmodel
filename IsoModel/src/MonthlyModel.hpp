@@ -184,15 +184,14 @@ private:
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
   static double calculateBEMAdjustment(const Building& building);
 
-  void calculateWeekendTemperatures(
+  static void calculateWeekendTemperatures(
       const Vector &v_decay_start_base, const Vector &v_limit_start_col0,
       double tset_unocc, double tau, const Vector &v_ti, const Matrix &M_dT,
-      const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) const;
+      const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt);
 
   static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
 
-  void calculateSunHours(const Matrix &m_mhEgh,
-                         Vector &v_hrs_sun_down_mo) const;
+  static void calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_down_mo);
 
   void calculateVentilation(MonthlySimulationData &simData) const;
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
@@ -217,7 +216,7 @@ private:
   void calculateHeatedWaterEnergy(MonthlySimulationData &simData) const;
 
   // Helper for solarHeatGain
-  Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
+  static Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H);
   void calculateAirVolumes(MonthlySimulationData &simData) const;
   void calculateTotalAirFlow(MonthlySimulationData &simData) const;
   void calculateFanEnergy(MonthlySimulationData &simData) const;
