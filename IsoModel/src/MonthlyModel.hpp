@@ -127,11 +127,6 @@ private:
   void heatGainsAndLosses(MonthlySimulationData &simData) const;
 
   void internalHeatGain(MonthlySimulationData &simData) const;
-  void heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ,
-                          double Q_illum_unocc, double Q_illum_tot_yr,
-                          double &phi_int_avg, double &phi_plug_avg,
-                          double &phi_illum_avg, double &phi_int_wke_nt,
-                          double &phi_int_wke_day, double &phi_int_wk_nt) const;
 
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void internalHeatGain(double phi_int_avg, double phi_plug_avg,

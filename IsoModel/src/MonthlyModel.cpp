@@ -1558,7 +1558,6 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "heatGainsAndLosses: " << std::endl;
   }
   heatGainsAndLosses(simData);
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "phi_int_avg: " << simData.phi_int_avg << std::endl;
     std::cout << "phi_plug_avg: " << simData.phi_plug_avg << std::endl;
