@@ -412,7 +412,7 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
 /**
  * Compute envelope parameters as per ISO 13790 8.3.
  */
-void MonthlyModel::envelopCalculations(MonthlySimulationData &simData) const {
+void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: Copying the various structure values to new variables (e.g. v_wall_A)
   // is not necessary. BAA@2015-07-13.
@@ -585,7 +585,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
 /**
  * Compute internal heat gains and losses.
  */
-void MonthlyModel::heatGainsAndLosses(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
   double phi_int_occ = calculatePeopleHeatGain(true);
@@ -620,7 +620,7 @@ void MonthlyModel::heatGainsAndLosses(MonthlySimulationData &simData) const {
 /**
  * Compute total internal heat gain in W.
  */
-void MonthlyModel::internalHeatGain(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateTotalInternalGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Total internal heat gain (W).
   simData.phi_I_tot =
@@ -727,7 +727,7 @@ void MonthlyModel::calculateWeekendTemperatures(
 /*
  * Calculate interior temp.
  */
-void MonthlyModel::interiorTemp(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Set the temp differential from the interior heating/cooling setpoint
   // based on the BEM type. An advanced BEM has the effect of reducing the
@@ -880,7 +880,7 @@ void MonthlyModel::interiorTemp(MonthlySimulationData &simData) const {
  * Calculate required energy for mechanical ventilation based on source EN ISO
  * 13789 C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
  */
-void MonthlyModel::ventilationCalc(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather references
   const Vector &v_mdbt = location.weather()->mdbtRef();
@@ -1051,7 +1051,7 @@ void MonthlyModel::ventilationCalc(MonthlySimulationData &simData) const {
 /**
  * Compute monthly heating and cooling demand.
  */
-void MonthlyModel::heatingAndCooling(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
@@ -1203,7 +1203,7 @@ void MonthlyModel::calculateCoolingSystemLoads(const Vector &v_Qneed_cl,
 /**
  * HVAC systems calculations.
  */
-void MonthlyModel::hvac(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: Implement (or remove) all the district heating/cooling stuff that is
   // currently commented out. BAA@2015-07-15.
@@ -1328,7 +1328,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
  * Calculate energy for pumps used in the heating/cooling systems.
  * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
  */
-void MonthlyModel::pump(MonthlySimulationData &simData) const {
+void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: The current implementation is wrong. It either needs to be revised to
   // be more like the hourly implementation where the pump energy is multiplied
@@ -1378,7 +1378,7 @@ void MonthlyModel::energyGeneration() const { PROFILE_FUNCTION(); }
  * Calculate domestic hot water (DHW).
  * References: NEN 2916 12.2
  */
-void MonthlyModel::heatedWater(MonthlySimulationData &simData) const {
+void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Energy from solar energy hot water collectors - not included yet
   Vector v_Q_dhw_solar(monthsInYear, 0.0);
@@ -1465,7 +1465,7 @@ std::vector<EndUses> MonthlyModel::simulate() const {
     printVector("v_Q_illum_ext_tot", simData.v_Q_illum_ext_tot);
 
     std::cout << std::endl
-              << "envelopCalculations: " << std::endl; /*
+              << "envelopeCalculations: " << std::endl; /*
 v_wall_A = structure.wallArea();
 v_win_A = structure.windowArea();
 v_wall_U = structure.wallUniform();
@@ -1475,7 +1475,7 @@ Vector v_win_U = structure.windowUniform();*/
     printVector("structure.wallUniform()", structure.wallUniform());
     printVector("structure.windowUniform()", structure.windowUniform());
   }
-  envelopCalculations(simData);
+  envelopeCalculations(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "H_tr: " << simData.H_tr << std::endl;
     printVector("v_win_A", simData.v_win_A);
@@ -1499,9 +1499,9 @@ Vector v_win_U = structure.windowUniform();*/
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_E_sol", simData.v_E_sol);
 
-    std::cout << std::endl << "heatGainsAndLosses: " << std::endl;
+    std::cout << std::endl << "calculateInternalGainComponents: " << std::endl;
   }
-  heatGainsAndLosses(simData);
+  calculateInternalGainComponents(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "phi_int_avg: " << simData.phi_int_avg << std::endl;
     std::cout << "phi_plug_avg: " << simData.phi_plug_avg << std::endl;
@@ -1510,9 +1510,9 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << "phi_int_wke_day: " << simData.phi_int_wke_day << std::endl;
     std::cout << "phi_int_wk_nt: " << simData.phi_int_wk_nt << std::endl;
 
-    std::cout << std::endl << "internalHeatGain: " << std::endl;
+    std::cout << std::endl << "calculateTotalInternalGain: " << std::endl;
   }
-  internalHeatGain(simData);
+  calculateTotalInternalGain(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "phi_I_tot: " << simData.phi_I_tot << std::endl;
 
@@ -1520,51 +1520,51 @@ Vector v_win_U = structure.windowUniform();*/
   }
   unoccupiedHeatGain(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << std::endl << "interiorTemp: " << std::endl;
+    std::cout << std::endl << "calculateInteriorTemperatures: " << std::endl;
   }
-  interiorTemp(simData);
+  calculateInteriorTemperatures(simData);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "tau: " << simData.tau << std::endl;
     printVector("v_Th_avg", simData.v_Th_avg);
     printVector("v_Tc_avg", simData.v_Tc_avg);
 
-    std::cout << std::endl << "ventilationCalc: " << std::endl;
+    std::cout << std::endl << "calculateVentilation: " << std::endl;
   }
-  ventilationCalc(simData);
+  calculateVentilation(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Hve_ht", simData.v_Hve_ht);
     printVector("v_Hve_cl", simData.v_Hve_cl);
 
-    std::cout << std::endl << "heatingAndCooling: " << std::endl;
+    std::cout << std::endl << "calculateHeatingAndCoolingNeeds: " << std::endl;
   }
-  heatingAndCooling(simData);
+  calculateHeatingAndCoolingNeeds(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Qneed_ht_yr: " << simData.Qneed_ht_yr << std::endl;
     std::cout << "Qneed_cl_yr: " << simData.Qneed_cl_yr << std::endl;
     printVector("v_Qfan_tot", simData.v_Qfan_tot);
 
-    std::cout << std::endl << "hvac: " << std::endl;
+    std::cout << std::endl << "calculateHVACEnergyUse: " << std::endl;
   }
-  hvac(simData);
+  calculateHVACEnergyUse(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Qelec_ht", simData.v_Qelec_ht);
     printVector("v_Qgas_ht", simData.v_Qgas_ht);
     printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
     printVector("v_Qcl_gas_tot", simData.v_Qcl_gas_tot);
 
-    std::cout << std::endl << "pump: " << std::endl;
+    std::cout << std::endl << "calculatePumpEnergy: " << std::endl;
   }
-  pump(simData);
+  calculatePumpEnergy(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Q_pump_tot", simData.v_Q_pump_tot);
     std::cout << std::endl << "energyGeneration: " << std::endl;
   }
   energyGeneration();
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << std::endl << "heatedWater: " << std::endl;
+    std::cout << std::endl << "calculateHeatedWaterEnergy: " << std::endl;
   }
-  heatedWater(simData);
+  calculateHeatedWaterEnergy(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Q_dhw_elec", simData.v_Q_dhw_elec);
     printVector("v_Q_dhw_gas", simData.v_Q_dhw_gas);

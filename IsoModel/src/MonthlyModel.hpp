@@ -145,15 +145,13 @@ private:
   // Simulation functions.
   void solarRadiationBreakdown(MonthlySimulationData &simData) const;
   void lightingEnergyUse(MonthlySimulationData &simData) const;
-  void envelopCalculations(MonthlySimulationData &simData) const;
+  void envelopeCalculations(MonthlySimulationData &simData) const;
   void windowSolarGain(MonthlySimulationData &simData) const;
   void solarHeatGain(MonthlySimulationData &simData) const;
-  void heatGainsAndLosses(MonthlySimulationData &simData) const;
-
-  void internalHeatGain(MonthlySimulationData &simData) const;
-
+  void calculateInternalGainComponents(MonthlySimulationData &simData) const;
+  void calculateTotalInternalGain(MonthlySimulationData &simData) const;
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
-  void interiorTemp(MonthlySimulationData &simData) const;
+  void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
   double calculateBEMAdjustment() const;
 
   void calculateWeekendTemperatures(
@@ -176,15 +174,15 @@ private:
   void calculateSunHours(const Matrix &m_mhEgh,
                          Vector &v_hrs_sun_down_mo) const;
 
-  void ventilationCalc(MonthlySimulationData &simData) const;
-  void heatingAndCooling(MonthlySimulationData &simData) const;
-  void hvac(MonthlySimulationData &simData) const;
+  void calculateVentilation(MonthlySimulationData &simData) const;
+  void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
+  void calculateHVACEnergyUse(MonthlySimulationData &simData) const;
   // Helper functions for hvac
   void calculateHeatingSystemLoads(const Vector &v_Qneed_ht, const Vector &v_Qloss_ht_dist,
                                    Vector &v_Qht_sys, Vector &v_Qht_DH) const;
   void calculateCoolingSystemLoads(const Vector &v_Qneed_cl, const Vector &v_Qloss_cl_dist,
                                    double IEER, Vector &v_Qcl_sys, Vector &v_Qcool_DC) const;
-  void pump(MonthlySimulationData &simData) const;
+  void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation
   Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
@@ -197,7 +195,7 @@ private:
 
   void energyGeneration() const;
 
-  void heatedWater(MonthlySimulationData &simData) const;
+  void calculateHeatedWaterEnergy(MonthlySimulationData &simData) const;
 
   // Helper for solarHeatGain
   Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
