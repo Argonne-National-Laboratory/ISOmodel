@@ -64,6 +64,71 @@ void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh,
   }
 }
 
+Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H,
+                                                double a_H) const {
+  PROFILE_FUNCTION();
+  Vector eta_g(monthsInYear);
+  for (unsigned int i = 0; i < eta_g.size(); i++) {
+    if (gamma_H[i] > 0) {
+      double num = std::pow(gamma_H[i], a_H);
+      eta_g[i] = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H[i]);
+    } else {
+      eta_g[i] =
+          UNITY_FRACTION / (gamma_H[i] + std::numeric_limits<double>::epsilon());
+    }
+  }
+  return eta_g;
+}
+
+std::pair<Vector, Vector> MonthlyModel::calculateAirVolumes(
+    const Vector &Qneed_ht, const Vector &Qneed_cl, const Vector &Th_avg,
+    const Vector &Tc_avg) const {
+  PROFILE_FUNCTION();
+  // Hot air supply temperature (C).
+  double T_sup_ht =
+      heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
+  // Cool air supply temperature (C).
+  double T_sup_cl =
+      cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
+
+  // Volume of air moved for heating (m3).
+  Vector v_Vair_ht =
+      div(Qneed_ht, sum(mult(dif(T_sup_ht, Th_avg), rhoCpAir),
+                          std::numeric_limits<double>::epsilon()));
+  // Volume of air moved for cooling (m3).
+  Vector v_Vair_cl =
+      div(Qneed_cl, sum(mult(dif(Tc_avg, T_sup_cl), rhoCpAir),
+                          std::numeric_limits<double>::epsilon()));
+
+  return {v_Vair_ht, v_Vair_cl};
+}
+
+Vector MonthlyModel::calculateTotalAirFlow(const Vector &v_Vair_ht,
+                                           const Vector &v_Vair_cl,
+                                           double frac_hrs_wk_day) const {
+  PROFILE_FUNCTION();
+  // Total air flow (m3).
+  // Multiply by MEGASECONDS_TO_SECONDS to convert megaseconds to seconds.
+  // Divide by LITERS_TO_M3 to convert liters to m3.
+  Vector v_Vair_tot = maximum(
+      sum(v_Vair_ht, v_Vair_cl),
+      div(mult(megasecondsInMonth,
+               ventilation.supplyRate() * frac_hrs_wk_day *
+                   (MEGASECONDS_TO_SECONDS / LITERS_TO_M3),
+               monthsInYear),
+          UNITY_FRACTION)); // UNITY_FRACTION is 1.0, just for consistency
+  return v_Vair_tot;
+}
+
+Vector MonthlyModel::calculateFanEnergy(const Vector &Vair_tot) const {
+  PROFILE_FUNCTION();
+  // Fan power (MJ)
+  // ventilation.fanPower is in W/(L/s) which is J/L, also kJ/m3. Divide by
+  // KJ_TO_MJ for MJ/m3 to get fanEnergy in MJ.
+  Vector fanEnergy = mult(Vair_tot, ventilation.fanPower() / KJ_TO_MJ);
+  return fanEnergy;
+}
+
 Matrix MonthlyModel::buildSolarIrradianceMatrix() const {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
@@ -120,6 +185,92 @@ Vector MonthlyModel::calculateOpaqueSolarHeatGain(
   }
   return v_wall_phi_sol;
 }
+
+double MonthlyModel::calculatePeopleHeatGain(bool occupied) const {
+  PROFILE_FUNCTION();
+  if (occupied) {
+    return pop.heatGainPerPerson() / pop.densityOccupied();
+  } else {
+    return pop.heatGainPerPerson() / pop.densityUnoccupied();
+  }
+}
+
+double MonthlyModel::calculateApplianceHeatGain(bool occupied) const {
+  PROFILE_FUNCTION();
+  if (occupied) {
+    return building.electricApplianceHeatGainOccupied() +
+           building.gasApplianceHeatGainOccupied();
+  } else {
+    return building.electricApplianceHeatGainUnoccupied() +
+           building.gasApplianceHeatGainUnoccupied();
+  }
+}
+
+double MonthlyModel::calculateIlluminationHeatGain(double Q_illum_val,
+                                                  double hours_fraction) const {
+  PROFILE_FUNCTION();
+  // Q_illum_val is in kWh, structure.floorArea() in m2, hoursInYear in hours.
+  // Result should be in W/m2.
+  return Q_illum_val / structure.floorArea() / hoursInYear / hours_fraction *
+         KWATTS_TO_WATTS;
+}
+
+double MonthlyModel::calculateAverageIlluminationHeatGain(
+    double Q_illum_tot_yr) const {
+  PROFILE_FUNCTION();
+  return Q_illum_tot_yr / structure.floorArea() / hoursInYear *
+         KWATTS_TO_WATTS;
+}
+
+Vector MonthlyModel::calculatePeriodHeatGain(
+    double phi_int_period, const Vector &megaseconds_period,
+    const Vector &frac_Pgh_period, const Vector &v_E_sol) const {
+  PROFILE_FUNCTION();
+  // Internal heat gain for the period (MJ).
+  Vector v_W_int_period =
+      mult(megaseconds_period, phi_int_period * structure.floorArea());
+  // Solar heat gain for the period (MJ).
+  Vector v_W_sol_period = mult(v_E_sol, frac_Pgh_period);
+  // Total heat gain for the period (W).
+  return div(sum(v_W_int_period, v_W_sol_period), megaseconds_period);
+}
+
+MonthlyModel::PlugLoads
+MonthlyModel::calculatePlugLoads(double frac_hrs_wk_day) const {
+  PROFILE_FUNCTION();
+  PlugLoads result;
+
+  // Average electric plug loads (W/m2).
+  double E_plug_elec_avg =
+      building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      building.electricApplianceHeatGainUnoccupied() *
+          (UNITY_FRACTION - frac_hrs_wk_day);
+  // Average gas plug loads (W/m2).
+  double E_plug_gas_avg =
+      building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      building.gasApplianceHeatGainUnoccupied() *
+          (UNITY_FRACTION - frac_hrs_wk_day);
+
+  // Electric plug load (kWh/m2).
+  result.v_Q_plug_elec =
+      mult(hoursInMonth, E_plug_elec_avg * W2kW, monthsInYear);
+  // Gas plug load (kWh/m2).
+  result.v_Q_plug_gas =
+      mult(hoursInMonth, E_plug_gas_avg * W2kW, monthsInYear);
+
+  return result;
+}
+
+Vector MonthlyModel::convertEnergyToKWhPerSqM(const Vector &energy_MJ,
+                                              double floor_area) const {
+  PROFILE_FUNCTION();
+  if (floor_area == 0.0) {
+    return Vector(energy_MJ.size(), 0.0); // Avoid division by zero
+  }
+  // Convert MJ to kWh, then divide by floor area
+  return div(div(energy_MJ, floor_area), kWh2MJ);
+}
+
 
 MonthlyModel::WindowShadingComponents
 MonthlyModel::calculateWindowShadingComponents() const {
@@ -463,23 +614,19 @@ void MonthlyModel::heatGainsAndLosses(
     double &phi_int_wk_nt) const {
   PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
-  double phi_int_occ = pop.heatGainPerPerson() / pop.densityOccupied();
-  double phi_int_unocc = pop.heatGainPerPerson() / pop.densityUnoccupied();
+  double phi_int_occ = calculatePeopleHeatGain(true);
+  double phi_int_unocc = calculatePeopleHeatGain(false);
   phi_int_avg = std::lerp(phi_int_unocc, phi_int_occ, frac_hrs_wk_day);
 
   // Internal heat gain from appliances (W/m2).
-  double phi_plug_occ = building.electricApplianceHeatGainOccupied() +
-                        building.gasApplianceHeatGainOccupied();
-  double phi_plug_unocc = building.electricApplianceHeatGainUnoccupied() +
-                          building.gasApplianceHeatGainUnoccupied();
+  double phi_plug_occ = calculateApplianceHeatGain(true);
+  double phi_plug_unocc = calculateApplianceHeatGain(false);
   phi_plug_avg = std::lerp(phi_plug_unocc, phi_plug_occ, frac_hrs_wk_day);
 
   // Internal heat gain from illumination (W/m2).
-  double phi_illum_occ = Q_illum_occ / structure.floorArea() / hoursInYear /
-                         frac_hrs_wk_day * 1000;
-  double phi_illum_unocc = Q_illum_unocc / structure.floorArea() / hoursInYear /
-                           (1 - frac_hrs_wk_day) * 1000;
-  phi_illum_avg = Q_illum_tot_yr / structure.floorArea() / hoursInYear * 1000;
+  double phi_illum_occ = calculateIlluminationHeatGain(Q_illum_occ, frac_hrs_wk_day);
+  double phi_illum_unocc = calculateIlluminationHeatGain(Q_illum_unocc, (UNITY_FRACTION - frac_hrs_wk_day));
+  phi_illum_avg = calculateAverageIlluminationHeatGain(Q_illum_tot_yr);
 
   // Original spreadsheet computed the approximate internal heat gain for week
   // nights, weekend days, and weekend nights assuming they scale as the occ.
@@ -490,9 +637,10 @@ void MonthlyModel::heatGainsAndLosses(
   // weekend days and weekend nights as it uses the unoccupied values rather
   // than just scaling occupied versions with the occupancy fraction
   // RTM 13-Nov-2012
-  phi_int_wk_nt = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
-  phi_int_wke_day = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
-  phi_int_wke_nt = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
+  double phi_unoccupied_total = (phi_int_unocc + phi_plug_unocc + phi_illum_unocc);
+  phi_int_wk_nt = phi_unoccupied_total;
+  phi_int_wke_day = phi_unoccupied_total;
+  phi_int_wke_nt = phi_unoccupied_total;
 }
 
 /**
@@ -502,17 +650,9 @@ void MonthlyModel::internalHeatGain(double phi_int_avg, double phi_plug_avg,
                                     double phi_illum_avg,
                                     double &phi_I_tot) const {
   PROFILE_FUNCTION();
-  // Total occupant internal heat gain per year (W).
-  double phi_I_occ = phi_int_avg * structure.floorArea();
-
-  // Total appliance internal heat gain per year (W).
-  double phi_I_app = phi_plug_avg * structure.floorArea();
-
-  // Total lighting internal heat gain per year (W).
-  double phi_I_lt = phi_illum_avg * structure.floorArea();
-
   // Total internal heat gain (W).
-  phi_I_tot = phi_I_occ + phi_I_app + phi_I_lt;
+  phi_I_tot =
+      (phi_int_avg + phi_plug_avg + phi_illum_avg) * structure.floorArea();
 }
 
 /**
@@ -524,35 +664,25 @@ void MonthlyModel::unoccupiedHeatGain(
     const Vector &weekendOccupiedMegaseconds,
     const Vector &weekendUnoccupiedMegaseconds, const Vector &frac_Pgh_wk_nt,
     const Vector &frac_Pgh_wke_day, const Vector &frac_Pgh_wke_nt,
-    const Vector &v_E_sol, Vector &v_P_tot_wke_day,
-    Vector &v_P_tot_wk_nt, Vector &v_P_tot_wke_nt) const {
+    const Vector &v_E_sol, Vector &v_P_tot_wk_nt, Vector &v_P_tot_wke_day,
+    Vector &v_P_tot_wke_nt) const {
   PROFILE_FUNCTION();
-  // Internal heat gain for unoccupied times (MJ).
-  Vector v_W_int_wk_nt =
-      mult(weekdayUnoccupiedMegaseconds, phi_int_wk_nt * structure.floorArea());
-  Vector v_W_int_wke_day =
-      mult(weekendOccupiedMegaseconds, phi_int_wke_day * structure.floorArea());
-  Vector v_W_int_wke_nt = mult(weekendUnoccupiedMegaseconds,
-                               phi_int_wke_nt * structure.floorArea());
-  printVector("v_W_int_wk_nt", v_W_int_wk_nt);
-  printVector("v_W_int_wke_day", v_W_int_wke_day);
-  printVector("v_W_int_wke_nt", v_W_int_wke_nt);
 
-  // Solar heat gain for unoccupied times (MJ).
-  Vector v_W_sol_wk_nt = mult(v_E_sol, frac_Pgh_wk_nt);
-  Vector v_W_sol_wke_day = mult(v_E_sol, frac_Pgh_wke_day);
-  Vector v_W_sol_wke_nt = mult(v_E_sol, frac_Pgh_wke_nt);
-  printVector("v_W_sol_wk_nt", v_W_sol_wk_nt);
-  printVector("v_W_sol_wke_day", v_W_sol_wke_day);
-  printVector("v_W_sol_wke_nt", v_W_sol_wke_nt);
+  v_P_tot_wk_nt = calculatePeriodHeatGain(phi_int_wk_nt,
+                                          weekdayUnoccupiedMegaseconds,
+                                          frac_Pgh_wk_nt, v_E_sol);
+  v_P_tot_wke_day = calculatePeriodHeatGain(phi_int_wke_day,
+                                            weekendOccupiedMegaseconds,
+                                            frac_Pgh_wke_day, v_E_sol);
+  v_P_tot_wke_nt = calculatePeriodHeatGain(phi_int_wke_nt,
+                                           weekendUnoccupiedMegaseconds,
+                                           frac_Pgh_wke_nt, v_E_sol);
 
-  // Total heat gain for unoccupied times (MJ).
-  v_P_tot_wk_nt =
-      div(sum(v_W_int_wk_nt, v_W_sol_wk_nt), weekdayUnoccupiedMegaseconds);
-  v_P_tot_wke_day =
-      div(sum(v_W_int_wke_day, v_W_sol_wke_day), weekendOccupiedMegaseconds);
-  v_P_tot_wke_nt =
-      div(sum(v_W_int_wke_nt, v_W_sol_wke_nt), weekendUnoccupiedMegaseconds);
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printVector("v_P_tot_wk_nt", v_P_tot_wk_nt);
+    printVector("v_P_tot_wke_day", v_P_tot_wke_day);
+    printVector("v_P_tot_wke_nt", v_P_tot_wke_nt);
+  }
 }
 
 double MonthlyModel::calculateBEMAdjustment() const {
@@ -917,7 +1047,7 @@ void MonthlyModel::ventilationCalc(const Vector &v_Th_avg,
   // equations is important. BAA@2015-07-14.
   //
   // source EN ISO 13789 C.5  There they use Vdot instead of Q
-  // Vdot = Vdot_f (1??_v) +Vdot_x
+  // Vdot = Vdot_f (1-eta_v) +Vdot_x
   // Vdot_f is the design airflow rate due to mechanical ventilation;
   // Vdot_x is the additional airflow rate with fans on, due to wind effects;
   // ?_v is the global heat recovery efficiency, taking account of the
@@ -956,14 +1086,10 @@ void MonthlyModel::ventilationCalc(const Vector &v_Th_avg,
   printVector("v_qve_ht", v_qve_ht);
   printVector("v_qve_cl", v_qve_cl);
 
-  // Hve heating (W/K/m2).
-  v_Hve_ht =
-      div(mult(v_qve_ht, rhoCpAir * 1000000),
-          3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
-  // Hve cooling (W/K/m2).
-  v_Hve_cl =
-      div(mult(v_qve_cl, rhoCpAir * 1000000),
-          3600.0); // Multiply rhoCpAir by 1000000 to convert from MJ to W.
+  // Hve heating (W/K).
+  v_Hve_ht = mult(v_qve_ht, rhoCpAirWh);
+  // Hve cooling (W/K).
+  v_Hve_cl = mult(v_qve_cl, rhoCpAirWh);
 }
 
 /**
@@ -1007,20 +1133,30 @@ void MonthlyModel::heatingAndCooling(
                                     // to avoid divide by zero.
 
   // Heating utilization factor.
-  Vector v_eta_g_H(monthsInYear);
+  // Vector v_eta_g_H(monthsInYear);
 
-  // For each month, set the check the heat gain ratio and set the heating
-  // utlization factor accordingly.
-  for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
-    if (v_gamma_H_ht[i] > 0) {
-      // Optimization: x^(a+1) = x^a * x
-      double num = std::pow(v_gamma_H_ht[i], a_H);
-      v_eta_g_H[i] = (1.0 - num) / (1.0 - num * v_gamma_H_ht[i]);
-    } else {
-      v_eta_g_H[i] =
-          1.0 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
-    }
-  }
+  // // For each month, set the check the heat gain ratio and set the heating
+  // // utlization factor accordingly.
+  // for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
+  //   if (v_gamma_H_ht[i] > 0) {
+  //     // Optimization: x^(a+1) = x^a * x
+  //     double num = std::pow(v_gamma_H_ht[i], a_H);
+  //     v_eta_g_H[i] = (1.0 - num) / (1.0 - num * v_gamma_H_ht[i]);
+  //   } else {
+  //     v_eta_g_H[i] =
+  //         1.0 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
+  //   }
+  // }
+
+
+  Vector v_eta_g_H = calculateUtilizationFactor(v_gamma_H_ht, a_H);
+
+  // Ensure v_Qneed_ht is initialized to the correct size before use
+  v_Qneed_ht.resize(monthsInYear);
+  // Total heating need (MJ).
+  v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
+  Qneed_ht_yr = sum(v_Qneed_ht);
+
 
   // Total heating need (MJ).
   v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
@@ -1040,25 +1176,10 @@ void MonthlyModel::heatingAndCooling(
       v_Qtot_cl, sum(v_tot_mo_ht_gain, std::numeric_limits<double>::epsilon()));
 
   // Compute the cooling gain utilization factor eta_g_cl
-  Vector v_eta_g_CL(monthsInYear);
-  for (unsigned int i = 0; i < v_eta_g_CL.size(); i++) {
-    if (DEBUG_ISO_MODEL_SIMULATION) {
-      double numer = (1.0 - std::pow(v_gamma_H_cl[i], a_H));
-      double denom = (1.0 - std::pow(v_gamma_H_cl[i], (a_H + 1.0)));
-      std::cout << numer << " = 1.0 - " << v_gamma_H_cl[i] << "^" << a_H
-                << std::endl;
-      std::cout << denom << " = 1.0 - " << v_gamma_H_cl[i] << "^" << (a_H + 1.0)
-                << std::endl;
-    }
-    if (v_gamma_H_cl[i] > 0.0) {
-      // Optimization: x^(a+1) = x^a * x
-      double num = std::pow(v_gamma_H_cl[i], a_H);
-      v_eta_g_CL[i] = (1.0 - num) / (1.0 - num * v_gamma_H_cl[i]);
-    } else {
-      v_eta_g_CL[i] = 1.0;
-    }
-  }
+  Vector v_eta_g_CL = calculateUtilizationFactor(v_gamma_H_cl, a_H);
 
+  // Ensure v_Qneed_cl is initialized to the correct size before use
+  v_Qneed_cl.resize(monthsInYear);
   // Total cooling need (MJ).
   v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl));
   Qneed_cl_yr = sum(v_Qneed_cl);
@@ -1070,35 +1191,19 @@ void MonthlyModel::heatingAndCooling(
   double T_sup_cl =
       cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
-  // Volume of air moved for heating (m3).
-  Vector v_Vair_ht =
-      div(v_Qneed_ht, sum(mult(dif(T_sup_ht, v_Th_avg), rhoCpAir),
-                          std::numeric_limits<double>::epsilon()));
-  // Volume of air moved for cooling (m3).
-  Vector v_Vair_cl =
-      div(v_Qneed_cl, sum(mult(dif(v_Tc_avg, T_sup_cl), rhoCpAir),
-                          std::numeric_limits<double>::epsilon()));
-
+  // Calculate air volumes for heating and cooling
+  auto [v_Vair_ht, v_Vair_cl] =
+      calculateAirVolumes(v_Qneed_ht, v_Qneed_cl, v_Th_avg, v_Tc_avg);
   printVector("v_Vair_ht", v_Vair_ht);
   printVector("v_Vair_cl", v_Vair_cl);
 
-  // Total air flow (m3).
-  // Multiply by 1000000 to convert megaseconds to seconds.
-  // Divide by 1000 to convert liters to m3.
+  // Calculate total air flow
   Vector v_Vair_tot =
-      maximum(sum(v_Vair_ht, v_Vair_cl),
-              div(mult(megasecondsInMonth,
-                       ventilation.supplyRate() * frac_hrs_wk_day * 1000000.0,
-                       monthsInYear),
-                  1000));
+      calculateTotalAirFlow(v_Vair_ht, v_Vair_cl, frac_hrs_wk_day);
   printVector("v_Vair_tot", v_Vair_tot);
 
-  // Fan power (MJ)
-  // ventilation.fanPower is in W/L/s is also J/L which is also kJ/m3. Divide by
-  // 1000 for MJ/m3 to get fanEnergy in MJ.
-  Vector fanEnergy =
-      mult(v_Vair_tot,
-           ventilation.fanPower() * ventilation.fanControlFactor() / 1000.0);
+  // Calculate fan energy
+  Vector fanEnergy = calculateFanEnergy(v_Vair_tot);
   printVector("fanEnergy", fanEnergy);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1111,7 +1216,7 @@ void MonthlyModel::heatingAndCooling(
   }
 
   // Calculate fan EUI (kWh/m2).
-  v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), 3.6);
+  v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), kWh2MJ);
 }
 
 void MonthlyModel::calculateHeatingSystemLoads(const Vector &v_Qneed_ht,
@@ -1596,43 +1701,61 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
   PROFILE_FUNCTION();
   std::vector<EndUses> allResults;
 
-  // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15
+  // // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15
 
-  // Average electric plug loads (W/m2).
-  double E_plug_elec =
-      building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.electricApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
-  // Average gas plug loads (W/m2).
-  double E_plug_gas =
-      building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.gasApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
+  // // Average electric plug loads (W/m2).
+  // double E_plug_elec =
+  //     building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
+  //     building.electricApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
+  // // Average gas plug loads (W/m2).
+  // double E_plug_gas =
+  //     building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
+  //     building.gasApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
 
-  // Electric plug load (kWh/m2).
-  Vector v_Q_plug_elec =
-      div(mult(hoursInMonth, E_plug_elec, monthsInYear), 1000.0);
-  // Gas plug load (kWh/m2).
-  Vector v_Q_plug_gas =
-      div(mult(hoursInMonth, E_plug_gas, monthsInYear), 1000.0);
-  printVector("v_Q_plug_elec", v_Q_plug_elec);
-  printVector("v_Q_plug_gas", v_Q_plug_gas);
+  // // Electric plug load (kWh/m2).
+  // Vector v_Q_plug_elec =
+  //     div(mult(hoursInMonth, E_plug_elec, monthsInYear), 1000.0);
+  // // Gas plug load (kWh/m2).
+  // Vector v_Q_plug_gas =
+  //     div(mult(hoursInMonth, E_plug_gas, monthsInYear), 1000.0);
+  // printVector("v_Q_plug_elec", v_Q_plug_elec);
+  // printVector("v_Q_plug_gas", v_Q_plug_gas);
 
-  // Electric loads (kWh/m2).
-  Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()),
-                        kWh2MJ); // Total monthly electric usage for heating.
-  Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()),
-                        kWh2MJ); // Total monthly electric usage for cooling.
-  Vector Eelec_int_lt = div(
-      v_Q_illum_tot, structure.floorArea()); // Total monthly electric usage
-                                             // density for interior lighting.
-  Vector Eelec_ext_lt = div(
-      v_Q_illum_ext_tot,
-      structure
-          .floorArea()); // Total monthly electric usage for exterior lights.
-  Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
-  Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()),
-                          kWh2MJ); // Total monthly elec usage for pumps.
-  Vector Eelec_plug =
-      v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
+
+
+  // Calculate plug loads
+  PlugLoads plugLoads = calculatePlugLoads(frac_hrs_wk_day);
+  const Vector &v_Q_plug_elec = plugLoads.v_Q_plug_elec;
+  const Vector &v_Q_plug_gas = plugLoads.v_Q_plug_gas;
+
+  if (DEBUG_ISO_MODEL_SIMULATION) {
+    printVector("v_Q_plug_elec", v_Q_plug_elec);
+    printVector("v_Q_plug_gas", v_Q_plug_gas);
+  }
+
+  // // Electric loads (kWh/m2).
+  // Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()),
+  //                       kWh2MJ); // Total monthly electric usage for heating.
+  // Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()),
+  //                       kWh2MJ); // Total monthly electric usage for cooling.
+
+  Vector Eelec_ht = convertEnergyToKWhPerSqM(v_Qelec_ht, structure.floorArea());
+  Vector Eelec_cl = convertEnergyToKWhPerSqM(v_Qcl_elec_tot, structure.floorArea());
+               
+  // Total monthly electric usage for interior and exterior lights.
+  Vector Eelec_int_lt = div(v_Q_illum_tot, structure.floorArea()); 
+  Vector Eelec_ext_lt = div(v_Q_illum_ext_tot,structure.floorArea()); 
+  
+  // Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
+  // Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()),
+  //                         kWh2MJ); // Total monthly elec usage for pumps.
+  // Vector Eelec_plug =
+  //     v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
+  
+  Vector Eelec_fan = v_Qfan_tot;                               // Total monthly elec usage for fans.
+  Vector Eelec_pump = convertEnergyToKWhPerSqM(v_Q_pump_tot, structure.floorArea()); // Total monthly elec usage for pumps.
+  Vector Eelec_plug = v_Q_plug_elec;                           // Total monthly elec usage for elec plugloads.
+  
   Vector Eelec_dhw = div(v_Q_dhw_elec, structure.floorArea());
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1644,13 +1767,19 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
   }
 
   // Gas loads (kWh/m2).
-  Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()),
-                       kWh2MJ); // Total monthly gas usage for heating.
-  Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()),
-                       kWh2MJ);    // Total monthly gas usage for cooling.
-  Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
-  Vector Egas_dhw = div(
-      v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
+  // Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()),
+  //                      kWh2MJ); // Total monthly gas usage for heating.
+  // Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()),
+  //                      kWh2MJ);    // Total monthly gas usage for cooling.
+  // Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
+  // Vector Egas_dhw = div(
+  //     v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
+  
+  // Gas loads (kWh/m2).
+  Vector Egas_ht = convertEnergyToKWhPerSqM(v_Qgas_ht, structure.floorArea());
+  Vector Egas_cl = convertEnergyToKWhPerSqM(v_Qcl_gas_tot, structure.floorArea());
+  Vector Egas_plug = v_Q_plug_gas;
+  Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea());
 
   allResults.reserve(monthsInYear);
 

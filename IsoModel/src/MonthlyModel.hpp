@@ -171,6 +171,14 @@ private:
   void heatedWater(Vector &v_Q_dhw_elec, Vector &v_Q_dhw_gas) const;
 
   // Helper for solarHeatGain
+  Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
+  std::pair<Vector, Vector>
+  calculateAirVolumes(const Vector &Qneed_ht, const Vector &Qneed_cl,
+                      const Vector &Th_avg, const Vector &Tc_avg) const;
+  Vector calculateTotalAirFlow(const Vector &v_Vair_ht,
+                               const Vector &v_Vair_cl,
+                               double frac_hrs_wk_day) const;
+  Vector calculateFanEnergy(const Vector &Vair_tot) const;
   Matrix buildSolarIrradianceMatrix() const;
   Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol,
                                        const Vector &v_win_A_sol) const;
@@ -178,6 +186,25 @@ private:
                                       const Vector &v_wall_A_sol,
                                       const Vector &v_wall_phi_r) const;
 
+  // Helper for heatGainsAndLosses
+  double calculatePeopleHeatGain(bool occupied) const;
+  double calculateApplianceHeatGain(bool occupied) const;
+  double calculateIlluminationHeatGain(double Q_illum_val, double hours_fraction) const;
+  double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr) const;
+
+  // Helper for unoccupiedHeatGain
+  Vector calculatePeriodHeatGain(double phi_int_period,
+                                 const Vector &megaseconds_period,
+                                 const Vector &frac_Pgh_period,
+                                 const Vector &v_E_sol) const;
+
+  // Helper for outputGeneration
+  struct PlugLoads {
+    Vector v_Q_plug_elec;
+    Vector v_Q_plug_gas;
+  };
+  PlugLoads calculatePlugLoads(double frac_hrs_wk_day) const;
+  Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area) const;
 
   std::vector<EndUses>
   outputGeneration(const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,
