@@ -116,6 +116,28 @@ private:
                     double frac_hrs_wk_nt, double frac_hrs_wke_tot,
                     Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const;
 
+  double calculateBEMAdjustment() const;
+
+  void calculateWeekendTemperatures(
+      const Vector &v_decay_start_base, const Vector &v_limit_start_col0,
+      double tset_unocc, double tau, const Vector &v_ti, const Matrix &M_dT,
+      const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) const;
+
+  // Helper struct for lighting operational hours
+  struct WindowShadingComponents {
+    Vector v_win_ff;
+    Vector v_win_F_shgl;
+  };
+  WindowShadingComponents calculateWindowShadingComponents() const;
+
+  struct AnnualLightingHours {
+    double t_lt_D;
+    double t_lt_N;
+    double t_unocc;
+  };
+  void calculateSunHours(const Matrix &m_mhEgh,
+                         Vector &v_hrs_sun_down_mo) const;
+
   void ventilationCalc(const Vector &v_Th_avg, const Vector &v_Tc_avg,
                        double frac_hrs_wk_day, Vector &v_Hve_ht,
                        Vector &v_Hve_cl) const;
@@ -131,13 +153,31 @@ private:
   void hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
             double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Qelec_ht,
             Vector &v_Qgas_ht, Vector &v_Qcl_elec_tot,
-            Vector &v_Qcl_gas_tot) const;
+            Vector &v_Qcl_gas_tot) const; // Original function signature
+
+  // Helper functions for hvac
+  void calculateHeatingSystemLoads(const Vector &v_Qneed_ht, const Vector &v_Qloss_ht_dist,
+                                   Vector &v_Qht_sys, Vector &v_Qht_DH) const;
+  void calculateCoolingSystemLoads(const Vector &v_Qneed_cl, const Vector &v_Qloss_cl_dist,
+                                   double IEER, Vector &v_Qcl_sys, Vector &v_Qcool_DC) const;
   void pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
             double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Q_pump_tot) const;
+
+  // Helper for lighting energy use
+  AnnualLightingHours calculateAnnualLightingOperationalHours() const;
 
   void energyGeneration() const;
 
   void heatedWater(Vector &v_Q_dhw_elec, Vector &v_Q_dhw_gas) const;
+
+  // Helper for solarHeatGain
+  Matrix buildSolarIrradianceMatrix() const;
+  Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol,
+                                       const Vector &v_win_A_sol) const;
+  Vector calculateOpaqueSolarHeatGain(const Matrix &m_I_sol,
+                                      const Vector &v_wall_A_sol,
+                                      const Vector &v_wall_phi_r) const;
+
 
   std::vector<EndUses>
   outputGeneration(const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,

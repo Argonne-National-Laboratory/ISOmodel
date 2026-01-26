@@ -117,6 +117,7 @@ inline constexpr std::array<double, 8> SurfaceAzimuths = {
 constexpr double kWh2MJ = 3.6; // 1 kWh = 3.6 MJ
 constexpr double MJ2kWh = 1.0 / 3.6;
 constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
+constexpr double KWATTS_TO_WATTS = 1000.0;
 constexpr double W2kW = 0.001;
 constexpr double LPS_TO_M3H = 3.6;        // Liters/sec to m3/h
 constexpr double DEGREES_PER_HOUR = 15.0; // Earth rotation
@@ -152,6 +153,16 @@ constexpr double LIGHTING_LEVEL_COEFF =
     53.0;                           // Empirical constant for daylighting
 constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
 constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
+
+// Monthly Model Constants
+constexpr double MIN_INFILTRATION_FLOW = 0.001; // m3/h/m2
+constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
+constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
+constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
+constexpr double UNITY_FRACTION = 1.0;          // Represents 1.0 for various fractional calculations
+constexpr double DEFAULT_DH_NETWORK_EFF = 0.9;
+constexpr double DEFAULT_DH_SYS_EFF = 0.87;
+constexpr double DEFAULT_DC_COP = 5.5;
 
 } // namespace openstudio::isomodel
 
