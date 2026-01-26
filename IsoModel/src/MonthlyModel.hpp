@@ -222,10 +222,10 @@ private:
                                       const Vector &v_wall_phi_r) const;
 
   // Helper for heatGainsAndLosses
-  double calculatePeopleHeatGain(bool occupied) const;
-  double calculateApplianceHeatGain(bool occupied) const;
-  double calculateIlluminationHeatGain(double Q_illum_val, double hours_fraction) const;
-  double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr) const;
+  static double calculatePeopleHeatGain(const Population &pop, bool occupied);
+  static double calculateApplianceHeatGain(const Building &building, bool occupied);
+  static double calculateIlluminationHeatGain(double Q_illum_val, double hours_fraction, double floor_area);
+  static double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr, double floor_area);
 
   // Helper for unoccupiedHeatGain
   Vector calculatePeriodHeatGain(double phi_int_period,

@@ -181,7 +181,7 @@ Vector MonthlyModel::calculateOpaqueSolarHeatGain(
   return v_wall_phi_sol;
 }
 
-double MonthlyModel::calculatePeopleHeatGain(bool occupied) const {
+double MonthlyModel::calculatePeopleHeatGain(const Population &pop, bool occupied) {
   PROFILE_FUNCTION();
   if (occupied) {
     return pop.heatGainPerPerson() / pop.densityOccupied();
@@ -190,7 +190,7 @@ double MonthlyModel::calculatePeopleHeatGain(bool occupied) const {
   }
 }
 
-double MonthlyModel::calculateApplianceHeatGain(bool occupied) const {
+double MonthlyModel::calculateApplianceHeatGain(const Building &building, bool occupied) {
   PROFILE_FUNCTION();
   if (occupied) {
     return building.electricApplianceHeatGainOccupied() +
@@ -202,18 +202,18 @@ double MonthlyModel::calculateApplianceHeatGain(bool occupied) const {
 }
 
 double MonthlyModel::calculateIlluminationHeatGain(double Q_illum_val,
-                                                  double hours_fraction) const {
+                                                  double hours_fraction, double floor_area) {
   PROFILE_FUNCTION();
   // Q_illum_val is in kWh, structure.floorArea() in m2, hoursInYear in hours.
   // Result should be in W/m2.
-  return Q_illum_val / structure.floorArea() / hoursInYear / hours_fraction *
+  return Q_illum_val / floor_area / hoursInYear / hours_fraction *
          KWATTS_TO_WATTS;
 }
 
 double MonthlyModel::calculateAverageIlluminationHeatGain(
-    double Q_illum_tot_yr) const {
+    double Q_illum_tot_yr, double floor_area) {
   PROFILE_FUNCTION();
-  return Q_illum_tot_yr / structure.floorArea() / hoursInYear *
+  return Q_illum_tot_yr / floor_area / hoursInYear *
          KWATTS_TO_WATTS;
 }
 
@@ -583,19 +583,19 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
 void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
-  double phi_int_occ = calculatePeopleHeatGain(true);
-  double phi_int_unocc = calculatePeopleHeatGain(false);
+  double phi_int_occ = calculatePeopleHeatGain(pop, true);
+  double phi_int_unocc = calculatePeopleHeatGain(pop, false);
   simData.phi_int_avg = std::lerp(phi_int_unocc, phi_int_occ, simData.scheduleData.frac_hrs_wk_day);
 
   // Internal heat gain from appliances (W/m2).
-  double phi_plug_occ = calculateApplianceHeatGain(true);
-  double phi_plug_unocc = calculateApplianceHeatGain(false);
+  double phi_plug_occ = calculateApplianceHeatGain(building, true);
+  double phi_plug_unocc = calculateApplianceHeatGain(building, false);
   simData.phi_plug_avg = std::lerp(phi_plug_unocc, phi_plug_occ, simData.scheduleData.frac_hrs_wk_day);
 
   // Internal heat gain from illumination (W/m2).
-  double phi_illum_occ = calculateIlluminationHeatGain(simData.Q_illum_occ, simData.scheduleData.frac_hrs_wk_day);
-  double phi_illum_unocc = calculateIlluminationHeatGain(simData.Q_illum_unocc, (UNITY_FRACTION - simData.scheduleData.frac_hrs_wk_day));
-  simData.phi_illum_avg = calculateAverageIlluminationHeatGain(simData.Q_illum_tot_yr);
+  double phi_illum_occ = calculateIlluminationHeatGain(simData.Q_illum_occ, simData.scheduleData.frac_hrs_wk_day, structure.floorArea());
+  double phi_illum_unocc = calculateIlluminationHeatGain(simData.Q_illum_unocc, (UNITY_FRACTION - simData.scheduleData.frac_hrs_wk_day), structure.floorArea());
+  simData.phi_illum_avg = calculateAverageIlluminationHeatGain(simData.Q_illum_tot_yr, structure.floorArea());
 
   // Original spreadsheet computed the approximate internal heat gain for week
   // nights, weekend days, and weekend nights assuming they scale as the occ.
