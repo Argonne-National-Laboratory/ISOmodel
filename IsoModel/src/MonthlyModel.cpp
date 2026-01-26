@@ -1582,26 +1582,23 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
   interiorTemp(simData);
-  const Vector& v_Th_avg = simData.v_Th_avg;
-  const Vector& v_Tc_avg = simData.v_Tc_avg;
-  double tau = simData.tau;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "tau: " << tau << std::endl;
-    printVector("v_Th_avg", v_Th_avg);
-    printVector("v_Tc_avg", v_Tc_avg);
+    std::cout << "tau: " << simData.tau << std::endl;
+    printVector("v_Th_avg", simData.v_Th_avg);
+    printVector("v_Tc_avg", simData.v_Tc_avg);
 
     std::cout << std::endl << "ventilationCalc: " << std::endl;
   }
-  ventilationCalc(v_Th_avg, v_Tc_avg, simData.scheduleData.frac_hrs_wk_day, v_Hve_ht, v_Hve_cl); // Use simData.scheduleData
+  ventilationCalc(simData.v_Th_avg, simData.v_Tc_avg, simData.scheduleData.frac_hrs_wk_day, v_Hve_ht, v_Hve_cl);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Hve_ht", v_Hve_ht);
     printVector("v_Hve_cl", v_Hve_cl);
 
     std::cout << std::endl << "heatingAndCooling: " << std::endl;
   }
-  heatingAndCooling(v_E_sol, v_Th_avg, v_Hve_ht, v_Tc_avg, v_Hve_cl, tau, H_tr,
-                    phi_I_tot, simData.scheduleData.frac_hrs_wk_day, v_Qfan_tot, // Use simData.scheduleData
+  heatingAndCooling(v_E_sol, simData.v_Th_avg, v_Hve_ht, simData.v_Tc_avg, v_Hve_cl, simData.tau, H_tr,
+                    phi_I_tot, simData.scheduleData.frac_hrs_wk_day, v_Qfan_tot,
                     v_Qneed_ht, v_Qneed_cl, Qneed_ht_yr, Qneed_cl_yr);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "Qneed_ht_yr: " << Qneed_ht_yr << std::endl;
