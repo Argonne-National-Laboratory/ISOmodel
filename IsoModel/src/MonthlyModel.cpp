@@ -1357,6 +1357,30 @@ void MonthlyModel::hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
   printVector("v_Qgas_ht", v_Qgas_ht);
 }
 
+Vector MonthlyModel::calculatePumpEnergyForMode(
+    const Vector &v_Qneed_mode, const Vector &v_Qneed_total,
+    double E_pumps_w_per_m2, double pump_control_reduction) const {
+  PROFILE_FUNCTION();
+
+  // Total annual pump energy for the mode if pumps run continuously (MJ/m2).
+  double Q_pumps_yr_mode_per_m2 =
+      sum(mult(megasecondsInMonth, E_pumps_w_per_m2, monthsInYear));
+
+  // Fraction of time the system is in this mode each month.
+  Vector v_frac_mode = div(v_Qneed_mode, v_Qneed_total);
+
+  // Total energy fraction for this mode over the year.
+  double frac_total = sum(v_frac_mode);
+
+  // Total yearly pump energy, adjusted by control factor and floor area (MJ).
+  double Q_pumps_mode =
+      Q_pumps_yr_mode_per_m2 * pump_control_reduction * structure.floorArea();
+
+  // Distribute the total annual pump energy for this mode across the months.
+  return div(mult(v_frac_mode, Q_pumps_mode),
+             frac_total + std::numeric_limits<double>::epsilon());
+}
+
 /**
  * Calculate energy for pumps used in the heating/cooling systems.
  * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
@@ -1374,53 +1398,32 @@ void MonthlyModel::pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
   // challenges, which is why they are not yet implements. Until then, consider
   // the monthly pump values unreliable. BAA@2015-07-15.
 
-  // Total annual pump energy for heating systems if the pumps are running
-  // continuously. NOTE: This assumption (that the annual pump energy is equal
-  // to the energy of the pumps running continuosly) is the source of the
-  // problems in the pump results. BAA@2015-07-15.
-  double Q_pumps_yr_ht =
-      sum(mult(megasecondsInMonth, heating.E_pumps(), monthsInYear));
-  // Total annual pump energy for cooling systems if the pumps are running
-  // continuously.
-  double Q_pumps_yr_cl =
-      sum(mult(megasecondsInMonth, cooling.E_pumps(), monthsInYear));
+  // Total monthly heating and cooling need (MJ).
+  Vector v_Qneed_total = sum(v_Qneed_ht, v_Qneed_cl);
 
-  // Fraction of time the system is in heating mode each month.
-  Vector v_frac_ht_mode = div(v_Qneed_ht, sum(v_Qneed_ht, v_Qneed_cl));
-  // Total heating energy fraction.
-  double frac_ht_total = sum(v_frac_ht_mode);
-  // Total yearly pump energy.
-  double Q_pumps_ht =
-      Q_pumps_yr_ht * heating.pumpControlReduction() * structure.floorArea();
-  // Distribute the total annual pump energy between the monthsInYear months
-  // proportional to the distribution of the heating
-  Vector v_Q_pumps_ht = div(mult(v_frac_ht_mode, Q_pumps_ht), frac_ht_total);
+  // Calculate monthly pump energy for heating mode.
+  Vector v_Q_pumps_ht = calculatePumpEnergyForMode(
+      v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction());
 
-  // Fraction of time the system is in cooling mode each month.
-  Vector v_frac_cl_mode = div(v_Qneed_cl, sum(v_Qneed_ht, v_Qneed_cl));
-  // Total cooling energy fraction.
-  double frac_cl_total = sum(v_frac_cl_mode);
-  // Total yearly pump energy.
-  double Q_pumps_cl =
-      Q_pumps_yr_cl * cooling.pumpControlReduction() * structure.floorArea();
-  // Distribute the total annual pump energy between the monthsInYear months
-  // proportional to the distribution of the cooling.
-  Vector v_Q_pumps_cl = div(mult(v_frac_cl_mode, Q_pumps_cl), frac_cl_total);
+  // Calculate monthly pump energy for cooling mode.
+  Vector v_Q_pumps_cl = calculatePumpEnergyForMode(
+      v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction());
 
   // Total pump operational factor.
   Vector v_frac_tot =
       div(sum(v_Qneed_ht, v_Qneed_cl), Qneed_ht_yr + Qneed_cl_yr);
   double frac_total = sum(v_frac_tot);
-  double Q_pumps_tot = Q_pumps_ht + Q_pumps_cl;
+  double Q_pumps_tot = sum(v_Q_pumps_ht) + sum(v_Q_pumps_cl);
 
-  if (Q_pumps_ht == 0 || Q_pumps_cl == 0) {
+  if (sum(v_Q_pumps_ht) == 0.0 || sum(v_Q_pumps_cl) == 0.0) {
     // If there is just heating or just cooling, use the individual heating or
     // cooling pump energy vector.
     v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
   } else {
     // Otherwise, distribut the combined pump energy proportional to the
     // combined heating/cooling load.
-    v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot), frac_total);
+    v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot),
+                       frac_total + std::numeric_limits<double>::epsilon());
   }
 }
 

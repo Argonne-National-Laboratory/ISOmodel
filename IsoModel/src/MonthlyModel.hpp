@@ -163,6 +163,12 @@ private:
   void pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
             double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Q_pump_tot) const;
 
+  // Helper for pump energy calculation
+  Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
+                                    const Vector &v_Qneed_total,
+                                    double E_pumps_w_per_m2,
+                                    double pump_control_reduction) const;
+
   // Helper for lighting energy use
   AnnualLightingHours calculateAnnualLightingOperationalHours() const;
 
