@@ -1283,7 +1283,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
 
 Vector MonthlyModel::calculatePumpEnergyForMode(
     const Vector &v_Qneed_mode, const Vector &v_Qneed_total,
-    double E_pumps_w_per_m2, double pump_control_reduction) const {
+    double E_pumps_w_per_m2, double pump_control_reduction, double floor_area) {
   PROFILE_FUNCTION();
 
   // Total annual pump energy for the mode if pumps run continuously (MJ/m2).
@@ -1297,8 +1297,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
   double frac_total = sum(v_frac_mode);
 
   // Total yearly pump energy, adjusted by control factor and floor area (MJ).
-  double Q_pumps_mode =
-      Q_pumps_yr_mode_per_m2 * pump_control_reduction * structure.floorArea();
+  double Q_pumps_mode = Q_pumps_yr_mode_per_m2 * pump_control_reduction * floor_area;
 
   // Distribute the total annual pump energy for this mode across the months.
   return div(mult(v_frac_mode, Q_pumps_mode),
@@ -1325,11 +1324,11 @@ void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
 
   // Calculate monthly pump energy for heating mode.
   Vector v_Q_pumps_ht = calculatePumpEnergyForMode(
-      simData.v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction());
+      simData.v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction(), structure.floorArea());
 
   // Calculate monthly pump energy for cooling mode.
   Vector v_Q_pumps_cl = calculatePumpEnergyForMode(
-      simData.v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction());
+      simData.v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction(), structure.floorArea());
 
   // Total pump operational factor.
   Vector v_frac_tot =

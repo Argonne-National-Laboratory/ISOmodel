@@ -196,10 +196,11 @@ private:
   void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation
-  Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
-                                    const Vector &v_Qneed_total,
-                                    double E_pumps_w_per_m2,
-                                    double pump_control_reduction) const;
+  static Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
+                                           const Vector &v_Qneed_total,
+                                           double E_pumps_w_per_m2,
+                                           double pump_control_reduction,
+                                           double floor_area);
 
   // Helper for lighting energy use
   AnnualLightingHours calculateAnnualLightingOperationalHours() const;
