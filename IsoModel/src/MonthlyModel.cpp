@@ -645,7 +645,7 @@ void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   }
 }
 
-double MonthlyModel::calculateBEMAdjustment() const {
+double MonthlyModel::calculateBEMAdjustment(const Building& building) {
   switch ((int)building.buildingEnergyManagement()) {
   case 1:
     return 0.0;
@@ -728,7 +728,7 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   // based on the BEM type. An advanced BEM has the effect of reducing the
   // effective heating temp and raising the effective cooling temp during
   // times of control (i.e. during occupancy).
-  double T_adj = calculateBEMAdjustment();
+  double T_adj = calculateBEMAdjustment(building);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "BEM: " << building.buildingEnergyManagement() << ", "

@@ -165,7 +165,7 @@ private:
   void calculateTotalInternalGain(MonthlySimulationData &simData) const;
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
-  double calculateBEMAdjustment() const;
+  static double calculateBEMAdjustment(const Building& building);
 
   void calculateWeekendTemperatures(
       const Vector &v_decay_start_base, const Vector &v_limit_start_col0,
