@@ -219,11 +219,11 @@ double MonthlyModel::calculateAverageIlluminationHeatGain(
 
 Vector MonthlyModel::calculatePeriodHeatGain(
     double phi_int_period, const Vector &megaseconds_period,
-    const Vector &frac_Pgh_period, const Vector &v_E_sol) const {
+    const Vector &frac_Pgh_period, const Vector &v_E_sol, double floor_area) {
   PROFILE_FUNCTION();
   // Internal heat gain for the period (MJ).
   Vector v_W_int_period =
-      mult(megaseconds_period, phi_int_period * structure.floorArea());
+      mult(megaseconds_period, phi_int_period * floor_area);
   // Solar heat gain for the period (MJ).
   Vector v_W_sol_period = mult(v_E_sol, frac_Pgh_period);
   // Total heat gain for the period (W).
@@ -630,13 +630,13 @@ void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
 
   simData.v_P_tot_wk_nt = calculatePeriodHeatGain(simData.phi_int_wk_nt,
                                           simData.scheduleData.weekdayUnoccupiedMegaseconds,
-                                          simData.frac_Pgh_wk_nt, simData.v_E_sol);
+                                          simData.frac_Pgh_wk_nt, simData.v_E_sol, structure.floorArea());
   simData.v_P_tot_wke_day = calculatePeriodHeatGain(simData.phi_int_wke_day,
                                             simData.scheduleData.weekendOccupiedMegaseconds,
-                                            simData.frac_Pgh_wke_day, simData.v_E_sol);
+                                            simData.frac_Pgh_wke_day, simData.v_E_sol, structure.floorArea());
   simData.v_P_tot_wke_nt = calculatePeriodHeatGain(simData.phi_int_wke_nt,
                                            simData.scheduleData.weekendUnoccupiedMegaseconds,
-                                           simData.frac_Pgh_wke_nt, simData.v_E_sol);
+                                           simData.frac_Pgh_wke_nt, simData.v_E_sol, structure.floorArea());
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_P_tot_wk_nt", simData.v_P_tot_wk_nt);

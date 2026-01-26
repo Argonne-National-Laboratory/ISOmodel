@@ -228,10 +228,10 @@ private:
   static double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr, double floor_area);
 
   // Helper for unoccupiedHeatGain
-  Vector calculatePeriodHeatGain(double phi_int_period,
-                                 const Vector &megaseconds_period,
-                                 const Vector &frac_Pgh_period,
-                                 const Vector &v_E_sol) const;
+  static Vector calculatePeriodHeatGain(double phi_int_period,
+                                        const Vector &megaseconds_period,
+                                        const Vector &frac_Pgh_period,
+                                        const Vector &v_E_sol, double floor_area);
 
   // Helper for outputGeneration
   struct PlugLoads {
