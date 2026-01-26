@@ -235,13 +235,7 @@ private:
   PlugLoads calculatePlugLoads(double frac_hrs_wk_day) const;
   Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area) const;
 
-  std::vector<EndUses>
-  outputGeneration(const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,
-                   const Vector &v_Q_illum_tot, const Vector &v_Q_illum_ext_tot,
-                   const Vector &v_Qfan_tot, const Vector &v_Q_pump_tot,
-                   const Vector &v_Q_dhw_elec, const Vector &v_Qgas_ht,
-                   const Vector &v_Qcl_gas_tot, const Vector &v_Q_dhw_gas,
-                   double frac_hrs_wk_day) const;
+  std::vector<EndUses> outputGeneration(const MonthlySimulationData &simData) const;
 
 #ifdef _OPENSTUDIOS
   REGISTER_LOGGER("openstudio.isomodel.MonthlyModel");

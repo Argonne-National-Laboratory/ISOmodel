@@ -1470,19 +1470,13 @@ std::vector<EndUses> MonthlyModel::simulate() const {
     std::cout << std::endl << "lightingEnergyUse: " << std::endl;
   }
   lightingEnergyUse(simData);
-  // Bridge variables for downstream functions
-  double Q_illum_occ = simData.Q_illum_occ;
-  double Q_illum_unocc = simData.Q_illum_unocc;
-  double Q_illum_tot_yr = simData.Q_illum_tot_yr;
-  const Vector& v_Q_illum_tot = simData.v_Q_illum_tot;
-  const Vector& v_Q_illum_ext_tot = simData.v_Q_illum_ext_tot;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "Q_illum_occ: " << Q_illum_occ << std::endl;
-    std::cout << "Q_illum_unocc: " << Q_illum_unocc << std::endl;
-    std::cout << "Q_illum_unocc: " << Q_illum_unocc << std::endl;
-    printVector("v_Q_illum_tot", v_Q_illum_tot);
-    printVector("v_Q_illum_ext_tot", v_Q_illum_ext_tot);
+    std::cout << "Q_illum_occ: " << simData.Q_illum_occ << std::endl;
+    std::cout << "Q_illum_unocc: " << simData.Q_illum_unocc << std::endl;
+    std::cout << "Q_illum_unocc: " << simData.Q_illum_unocc << std::endl;
+    printVector("v_Q_illum_tot", simData.v_Q_illum_tot);
+    printVector("v_Q_illum_ext_tot", simData.v_Q_illum_ext_tot);
 
     std::cout << std::endl
               << "envelopCalculations: " << std::endl; /*
@@ -1601,18 +1595,10 @@ Vector v_win_U = structure.windowUniform();*/
     printVector("v_Q_dhw_gas", simData.v_Q_dhw_gas);
   }
 
-  return outputGeneration(simData.v_Qelec_ht, simData.v_Qcl_elec_tot, v_Q_illum_tot,
-                          v_Q_illum_ext_tot, simData.v_Qfan_tot, simData.v_Q_pump_tot,
-                          simData.v_Q_dhw_elec, simData.v_Qgas_ht, simData.v_Qcl_gas_tot,
-                          simData.v_Q_dhw_gas, simData.scheduleData.frac_hrs_wk_day); // Use simData.scheduleData
+  return outputGeneration(simData);
 }
-std::vector<EndUses> MonthlyModel::outputGeneration(
-    const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,
-    const Vector &v_Q_illum_tot, const Vector &v_Q_illum_ext_tot,
-    const Vector &v_Qfan_tot, const Vector &v_Q_pump_tot,
-    const Vector &v_Q_dhw_elec, const Vector &v_Qgas_ht,
-    const Vector &v_Qcl_gas_tot, const Vector &v_Q_dhw_gas, double frac_hrs_wk_day)
-    const {
+std::vector<EndUses>
+MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   std::vector<EndUses> allResults;
 
@@ -1639,7 +1625,7 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
 
 
   // Calculate plug loads
-  PlugLoads plugLoads = calculatePlugLoads(frac_hrs_wk_day);
+  PlugLoads plugLoads = calculatePlugLoads(simData.scheduleData.frac_hrs_wk_day);
   const Vector &v_Q_plug_elec = plugLoads.v_Q_plug_elec;
   const Vector &v_Q_plug_gas = plugLoads.v_Q_plug_gas;
 
@@ -1654,12 +1640,12 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
   // Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()),
   //                       kWh2MJ); // Total monthly electric usage for cooling.
 
-  Vector Eelec_ht = convertEnergyToKWhPerSqM(v_Qelec_ht, structure.floorArea());
-  Vector Eelec_cl = convertEnergyToKWhPerSqM(v_Qcl_elec_tot, structure.floorArea());
+  Vector Eelec_ht = convertEnergyToKWhPerSqM(simData.v_Qelec_ht, structure.floorArea());
+  Vector Eelec_cl = convertEnergyToKWhPerSqM(simData.v_Qcl_elec_tot, structure.floorArea());
                
   // Total monthly electric usage for interior and exterior lights.
-  Vector Eelec_int_lt = div(v_Q_illum_tot, structure.floorArea()); 
-  Vector Eelec_ext_lt = div(v_Q_illum_ext_tot,structure.floorArea()); 
+  Vector Eelec_int_lt = div(simData.v_Q_illum_tot, structure.floorArea()); 
+  Vector Eelec_ext_lt = div(simData.v_Q_illum_ext_tot,structure.floorArea()); 
   
   // Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
   // Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()),
@@ -1667,34 +1653,33 @@ std::vector<EndUses> MonthlyModel::outputGeneration(
   // Vector Eelec_plug =
   //     v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
   
-  Vector Eelec_fan = v_Qfan_tot;                               // Total monthly elec usage for fans.
-  Vector Eelec_pump = convertEnergyToKWhPerSqM(v_Q_pump_tot, structure.floorArea()); // Total monthly elec usage for pumps.
+  Vector Eelec_fan = simData.v_Qfan_tot;                               // Total monthly elec usage for fans.
+  Vector Eelec_pump = convertEnergyToKWhPerSqM(simData.v_Q_pump_tot, structure.floorArea()); // Total monthly elec usage for pumps.
   Vector Eelec_plug = v_Q_plug_elec;                           // Total monthly elec usage for elec plugloads.
   
-  Vector Eelec_dhw = div(v_Q_dhw_elec, structure.floorArea());
+  Vector Eelec_dhw = div(simData.v_Q_dhw_elec, structure.floorArea());
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Qcl_elec_tot", v_Qcl_elec_tot);
-    printVector("v_Q_pump_tot", v_Q_pump_tot);
+    printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
+    printVector("v_Q_pump_tot", simData.v_Q_pump_tot);
     printVector("Eelec_cl", Eelec_cl);
     printVector("Eelec_pump", Eelec_pump);
     std::cout << "floorArea: " << structure.floorArea() << std::endl;
   }
 
   // Gas loads (kWh/m2).
-  // Vector Egas_ht = div(div(v_Qgas_ht, structure.floorArea()),
+  // Vector Egas_ht = div(div(simData.v_Qgas_ht, structure.floorArea()),
   //                      kWh2MJ); // Total monthly gas usage for heating.
-  // Vector Egas_cl = div(div(v_Qcl_gas_tot, structure.floorArea()),
+  // Vector Egas_cl = div(div(simData.v_Qcl_gas_tot, structure.floorArea()),
   //                      kWh2MJ);    // Total monthly gas usage for cooling.
   // Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
-  // Vector Egas_dhw = div(
-  //     v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
+  // Vector Egas_dhw = div(simData.v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
   
   // Gas loads (kWh/m2).
-  Vector Egas_ht = convertEnergyToKWhPerSqM(v_Qgas_ht, structure.floorArea());
-  Vector Egas_cl = convertEnergyToKWhPerSqM(v_Qcl_gas_tot, structure.floorArea());
+  Vector Egas_ht = convertEnergyToKWhPerSqM(simData.v_Qgas_ht, structure.floorArea());
+  Vector Egas_cl = convertEnergyToKWhPerSqM(simData.v_Qcl_gas_tot, structure.floorArea());
   Vector Egas_plug = v_Q_plug_gas;
-  Vector Egas_dhw = div(v_Q_dhw_gas, structure.floorArea());
+  Vector Egas_dhw = div(simData.v_Q_dhw_gas, structure.floorArea());
 
   allResults.reserve(monthsInYear);
 
