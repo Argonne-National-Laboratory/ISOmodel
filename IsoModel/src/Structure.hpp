@@ -93,6 +93,9 @@ public:
    * Window shading device factors.
    */
   Vector windowShadingDevice() const { return m_windowShadingDevice; }
+  const Vector& windowShadingDeviceRef() const {
+    return m_windowShadingDevice;
+  }
   void setWindowShadingDevice(const Vector &value) {
     m_windowShadingDevice = value;
   }
@@ -104,6 +107,9 @@ public:
    * Window solar heat gain coeficcient (0 to 1).
    */
   Vector windowNormalIncidenceSolarEnergyTransmittance() const {
+    return m_windowNormalIncidenceSolarEnergyTransmittance;
+  }
+  const Vector& windowNormalIncidenceSolarEnergyTransmittanceRef() const {
     return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
   void setWindowNormalIncidenceSolarEnergyTransmittance(const Vector &value) {
@@ -118,6 +124,9 @@ public:
    * Window solar control factor (external control) (0 to 1).
    */
   Vector windowShadingCorrectionFactor() const {
+    return m_windowShadingCorrectionFactor;
+  }
+  const Vector& windowShadingCorrectionFactorRef() const {
     return m_windowShadingCorrectionFactor;
   }
   void setWindowShadingCorrectionFactor(const Vector &value) {

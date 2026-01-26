@@ -124,15 +124,15 @@ void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
   simData.v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), kWh2MJ);
 }
 
-Matrix MonthlyModel::buildSolarIrradianceMatrix() const {
+Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
   // (mEgh) into one matrix (W/m2).
   Matrix m_I_sol(monthsInYear, numTotalSurfaces);
 
   // Access weather data via reference to avoid copy
-  const Matrix &m_solar = location.weather()->msolarRef();
-  const Vector &v_mEgh = location.weather()->mEghRef();
+  const Matrix &m_solar = weather.msolarRef();
+  const Vector &v_mEgh = weather.mEghRef();
 
   for (unsigned int r = 0; r < m_I_sol.size1(); r++) {
     for (unsigned int c = 0; c < numVerticalSurfaces; c++) { // Vertical surfaces
@@ -143,8 +143,8 @@ Matrix MonthlyModel::buildSolarIrradianceMatrix() const {
   return m_I_sol;
 }
 
-Vector MonthlyModel::calculateGlazingSolarHeatGain(
-    const Matrix &m_I_sol, const Vector &v_win_A_sol) const {
+Vector MonthlyModel::calculateGlazingSolarHeatGain(const Matrix &m_I_sol,
+                                                   const Vector &v_win_A_sol, const Structure& structure) {
   PROFILE_FUNCTION();
   Vector v_win_phi_sol(monthsInYear);
   Vector v_win_SCF_frac(numTotalSurfaces);
@@ -154,7 +154,7 @@ Vector MonthlyModel::calculateGlazingSolarHeatGain(
   for (unsigned int i = 0; i < monthsInYear; i++) {
     double monthlySum = 0.0;
     for (unsigned int j = 0; j < numTotalSurfaces; j++) {
-      monthlySum += structure.windowShadingCorrectionFactor()[j] *
+      monthlySum += structure.windowShadingCorrectionFactorRef()[j] *
                     v_win_SCF_frac[j] * v_win_A_sol[j] * m_I_sol(i, j);
     }
     v_win_phi_sol[i] = monthlySum;
@@ -162,9 +162,9 @@ Vector MonthlyModel::calculateGlazingSolarHeatGain(
   return v_win_phi_sol;
 }
 
-Vector MonthlyModel::calculateOpaqueSolarHeatGain(
-    const Matrix &m_I_sol, const Vector &v_wall_A_sol,
-    const Vector &v_wall_phi_r) const {
+Vector MonthlyModel::calculateOpaqueSolarHeatGain(const Matrix &m_I_sol,
+                                                  const Vector &v_wall_A_sol,
+                                                  const Vector &v_wall_phi_r) {
   PROFILE_FUNCTION();
   Vector v_wall_phi_sol(monthsInYear);
 
@@ -278,7 +278,7 @@ MonthlyModel::calculateWindowShadingComponents() const {
   for (int i = 0; i < numTotalSurfaces; i++) {
     result.v_win_ff[i] = UNITY_FRACTION - structure.win_ff();
     // Assign SDF based on pulldown value of 1, 2 or 3.
-    v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDevice()[i]) - 1];
+    v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
     // Set the SDF fractions which include heat transfer - set at 100% for now.
     v_win_SDF_frac[i] = UNITY_FRACTION;
   }
@@ -486,7 +486,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
 
   // Normal incidence solar energy transmittance which is SHGC in america.
   // Vector v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittance();
-  const Vector &v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittance();
+  const Vector &v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittanceRef();
   // Solar energy transmittance of glazing as per ISO 13790 11.4.2.
   Vector v_g_gl = mult(v_g_gln, structure.win_F_W());
 
@@ -529,14 +529,14 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   // theta_ss.
 
   // Build the combined solar irradiance matrix
-  const Matrix m_I_sol = buildSolarIrradianceMatrix();
+  const Matrix m_I_sol = buildSolarIrradianceMatrix(*location.weather());
 
   // Combine vertical surface radiation (mosolar) and horizontal radiation
   // (mEgh) into one matrix (W/m2).
   printMatrix("m_I_sol", m_I_sol);
 
   // Compute the total solar heat gain for the glazing area.
-  Vector v_win_phi_sol = calculateGlazingSolarHeatGain(m_I_sol, simData.v_win_A_sol);
+  Vector v_win_phi_sol = calculateGlazingSolarHeatGain(m_I_sol, simData.v_win_A_sol, structure);
 
   // Compute opaque area thermal radiation to the sky from EN ISO 13790 11.3.5
   // \Phi_r,k = R_se * U_c  * A_c * h_h * \delta\theta_er (46)
