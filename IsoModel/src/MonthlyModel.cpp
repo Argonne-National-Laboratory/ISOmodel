@@ -630,30 +630,23 @@ void MonthlyModel::internalHeatGain(MonthlySimulationData &simData) const {
 /**
  * Compute unoccupied heat gain.
  */
-void MonthlyModel::unoccupiedHeatGain(
-    double phi_int_wk_nt, double phi_int_wke_day, double phi_int_wke_nt,
-    const Vector &weekdayUnoccupiedMegaseconds,
-    const Vector &weekendOccupiedMegaseconds,
-    const Vector &weekendUnoccupiedMegaseconds, const Vector &frac_Pgh_wk_nt,
-    const Vector &frac_Pgh_wke_day, const Vector &frac_Pgh_wke_nt,
-    const Vector &v_E_sol, Vector &v_P_tot_wk_nt, Vector &v_P_tot_wke_day,
-    Vector &v_P_tot_wke_nt) const {
+void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
 
-  v_P_tot_wk_nt = calculatePeriodHeatGain(phi_int_wk_nt,
-                                          weekdayUnoccupiedMegaseconds,
-                                          frac_Pgh_wk_nt, v_E_sol);
-  v_P_tot_wke_day = calculatePeriodHeatGain(phi_int_wke_day,
-                                            weekendOccupiedMegaseconds,
-                                            frac_Pgh_wke_day, v_E_sol);
-  v_P_tot_wke_nt = calculatePeriodHeatGain(phi_int_wke_nt,
-                                           weekendUnoccupiedMegaseconds,
-                                           frac_Pgh_wke_nt, v_E_sol);
+  simData.v_P_tot_wk_nt = calculatePeriodHeatGain(simData.phi_int_wk_nt,
+                                          simData.scheduleData.weekdayUnoccupiedMegaseconds,
+                                          simData.frac_Pgh_wk_nt, simData.v_E_sol);
+  simData.v_P_tot_wke_day = calculatePeriodHeatGain(simData.phi_int_wke_day,
+                                            simData.scheduleData.weekendOccupiedMegaseconds,
+                                            simData.frac_Pgh_wke_day, simData.v_E_sol);
+  simData.v_P_tot_wke_nt = calculatePeriodHeatGain(simData.phi_int_wke_nt,
+                                           simData.scheduleData.weekendUnoccupiedMegaseconds,
+                                           simData.frac_Pgh_wke_nt, simData.v_E_sol);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_P_tot_wk_nt", v_P_tot_wk_nt);
-    printVector("v_P_tot_wke_day", v_P_tot_wke_day);
-    printVector("v_P_tot_wke_nt", v_P_tot_wke_nt);
+    printVector("v_P_tot_wk_nt", simData.v_P_tot_wk_nt);
+    printVector("v_P_tot_wke_day", simData.v_P_tot_wke_day);
+    printVector("v_P_tot_wke_nt", simData.v_P_tot_wke_nt);
   }
 }
 
@@ -1456,8 +1449,6 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
-  Vector v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt;
-
   Vector v_Th_avg(monthsInYear), v_Tc_avg(monthsInYear);
 
   double tau;
@@ -1576,21 +1567,14 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "heatGainsAndLosses: " << std::endl;
   }
   heatGainsAndLosses(simData);
-  // Bridge variables for downstream functions
-  double phi_int_avg = simData.phi_int_avg;
-  double phi_plug_avg = simData.phi_plug_avg;
-  double phi_illum_avg = simData.phi_illum_avg;
-  double phi_int_wke_nt = simData.phi_int_wke_nt;
-  double phi_int_wke_day = simData.phi_int_wke_day;
-  double phi_int_wk_nt = simData.phi_int_wk_nt;
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "phi_int_avg: " << phi_int_avg << std::endl;
-    std::cout << "phi_plug_avg: " << phi_plug_avg << std::endl;
-    std::cout << "phi_illum_avg: " << phi_illum_avg << std::endl;
-    std::cout << "phi_int_wke_nt: " << phi_int_wke_nt << std::endl;
-    std::cout << "phi_int_wke_day: " << phi_int_wke_day << std::endl;
-    std::cout << "phi_int_wk_nt: " << phi_int_wk_nt << std::endl;
+    std::cout << "phi_int_avg: " << simData.phi_int_avg << std::endl;
+    std::cout << "phi_plug_avg: " << simData.phi_plug_avg << std::endl;
+    std::cout << "phi_illum_avg: " << simData.phi_illum_avg << std::endl;
+    std::cout << "phi_int_wke_nt: " << simData.phi_int_wke_nt << std::endl;
+    std::cout << "phi_int_wke_day: " << simData.phi_int_wke_day << std::endl;
+    std::cout << "phi_int_wk_nt: " << simData.phi_int_wk_nt << std::endl;
 
     std::cout << std::endl << "internalHeatGain: " << std::endl;
   }
@@ -1603,12 +1587,11 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
-  unoccupiedHeatGain(phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt, // These are local variables
-                     simData.scheduleData.weekdayUnoccupiedMegaseconds, // Use simData.scheduleData
-                     simData.scheduleData.weekendOccupiedMegaseconds, // Use simData.scheduleData
-                     simData.scheduleData.weekendUnoccupiedMegaseconds, // Use simData.scheduleData
-                     frac_Pgh_wk_nt, // These are local variables
-                     frac_Pgh_wke_day, frac_Pgh_wke_nt, v_E_sol, v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt);
+  unoccupiedHeatGain(simData);
+  const Vector& v_P_tot_wke_day = simData.v_P_tot_wke_day;
+  const Vector& v_P_tot_wk_nt = simData.v_P_tot_wk_nt;
+  const Vector& v_P_tot_wke_nt = simData.v_P_tot_wke_nt;
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_P_tot_wke_day", v_P_tot_wke_day);
     printVector("v_P_tot_wk_nt", v_P_tot_wk_nt);

@@ -105,6 +105,11 @@ private:
 
     // From internalHeatGain
     double phi_I_tot = 0.0;
+
+    // From unoccupiedHeatGain
+    Vector v_P_tot_wke_day = Vector(monthsInYear);
+    Vector v_P_tot_wk_nt = Vector(monthsInYear);
+    Vector v_P_tot_wke_nt = Vector(monthsInYear);
   };
 
 private:
@@ -119,16 +124,7 @@ private:
 
   void internalHeatGain(MonthlySimulationData &simData) const;
 
-  void unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day,
-                          double phi_int_wke_nt,
-                          const Vector &weekdayUnoccupiedMegaseconds,
-                          const Vector &weekendOccupiedMegaseconds,
-                          const Vector &weekendUnoccupiedMegaseconds,
-                          const Vector &frac_Pgh_wk_nt,
-                          const Vector &frac_Pgh_wke_day,
-                          const Vector &frac_Pgh_wke_nt, const Vector &v_E_sol,
-                          Vector &v_P_tot_wke_day, Vector &v_P_tot_wk_nt,
-                          Vector &v_P_tot_wke_nt) const;
+  void unoccupiedHeatGain(MonthlySimulationData &simData) const;
 
   void interiorTemp(const Vector &v_wall_A, const Vector &v_P_tot_wke_day,
                     const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_nt,
