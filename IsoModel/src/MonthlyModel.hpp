@@ -124,14 +124,38 @@ private:
   void envelopCalculations(MonthlySimulationData &simData) const;
   void windowSolarGain(MonthlySimulationData &simData) const;
   void solarHeatGain(MonthlySimulationData &simData) const;
-
   void heatGainsAndLosses(MonthlySimulationData &simData) const;
 
   void internalHeatGain(MonthlySimulationData &simData) const;
+  void heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ,
+                          double Q_illum_unocc, double Q_illum_tot_yr,
+                          double &phi_int_avg, double &phi_plug_avg,
+                          double &phi_illum_avg, double &phi_int_wke_nt,
+                          double &phi_int_wke_day, double &phi_int_wk_nt) const;
 
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
+  void internalHeatGain(double phi_int_avg, double phi_plug_avg,
+                        double phi_illum_avg, double &phi_I_tot) const;
 
   void interiorTemp(MonthlySimulationData &simData) const;
+  void unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day,
+                          double phi_int_wke_nt,
+                          const Vector &weekdayUnoccupiedMegaseconds,
+                          const Vector &weekendOccupiedMegaseconds,
+                          const Vector &weekendUnoccupiedMegaseconds,
+                          const Vector &frac_Pgh_wk_nt,
+                          const Vector &frac_Pgh_wke_day,
+                          const Vector &frac_Pgh_wke_nt, const Vector &v_E_sol,
+                          Vector &v_P_tot_wke_day, Vector &v_P_tot_wk_nt,
+                          Vector &v_P_tot_wke_nt) const;
+
+  void interiorTemp(const Vector &v_wall_A, const Vector &v_P_tot_wke_day,
+                    const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_nt,
+                    const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day,
+                    double H_tr, double hoursUnoccupiedPerDay,
+                    double hoursOccupiedPerDay, double frac_hrs_wk_day,
+                    double frac_hrs_wk_nt, double frac_hrs_wke_tot,
+                    Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const;
 
   double calculateBEMAdjustment() const;
 
