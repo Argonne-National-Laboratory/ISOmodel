@@ -133,6 +133,12 @@ private:
     Vector v_Qcl_elec_tot = Vector(monthsInYear);
     Vector v_Qcl_gas_tot = Vector(monthsInYear);
 
+    // Intermediate HVAC loads
+    Vector v_Qht_sys = Vector(monthsInYear);
+    Vector v_Qht_DH = Vector(monthsInYear);
+    Vector v_Qcl_sys = Vector(monthsInYear);
+    Vector v_Qcool_DC = Vector(monthsInYear);
+
     // From pump
     Vector v_Q_pump_tot = Vector(monthsInYear);
 
@@ -185,10 +191,8 @@ private:
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
   void calculateHVACEnergyUse(MonthlySimulationData &simData) const;
   // Helper functions for hvac
-  void calculateHeatingSystemLoads(const Vector &v_Qneed_ht, const Vector &v_Qloss_ht_dist,
-                                   Vector &v_Qht_sys, Vector &v_Qht_DH) const;
-  void calculateCoolingSystemLoads(const Vector &v_Qneed_cl, const Vector &v_Qloss_cl_dist,
-                                   double IEER, Vector &v_Qcl_sys, Vector &v_Qcool_DC) const;
+  void calculateHeatingSystemLoads(MonthlySimulationData &simData, const Vector &v_Qloss_ht_dist) const;
+  void calculateCoolingSystemLoads(MonthlySimulationData &simData, const Vector &v_Qloss_cl_dist, double IEER) const;
   void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation

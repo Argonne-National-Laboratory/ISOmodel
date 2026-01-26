@@ -1154,38 +1154,35 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   }
 }
 
-void MonthlyModel::calculateHeatingSystemLoads(const Vector &v_Qneed_ht,
-                                               const Vector &v_Qloss_ht_dist,
-                                               Vector &v_Qht_sys,
-                                               Vector &v_Qht_DH) const {
+void MonthlyModel::calculateHeatingSystemLoads(MonthlySimulationData &simData,
+                                               const Vector &v_Qloss_ht_dist) const {
   PROFILE_FUNCTION();
   if (heating.DH_YesNo() == 1) {
     // If District Heating is enabled, the district heating system handles the load
-    v_Qht_DH = sum(v_Qneed_ht, v_Qloss_ht_dist);
-    v_Qht_sys.assign(monthsInYear, 0.0); // No local system load
+    simData.v_Qht_DH = sum(simData.v_Qneed_ht, v_Qloss_ht_dist);
+    simData.v_Qht_sys.assign(monthsInYear, 0.0); // No local system load
   } else {
     // Otherwise, the local system handles the load
-    v_Qht_sys =
-        div(sum(v_Qloss_ht_dist, v_Qneed_ht),
+    simData.v_Qht_sys =
+        div(sum(v_Qloss_ht_dist, simData.v_Qneed_ht),
             heating.efficiency() + std::numeric_limits<double>::epsilon());
-    v_Qht_DH.assign(monthsInYear, 0.0); // No district heating load
+    simData.v_Qht_DH.assign(monthsInYear, 0.0); // No district heating load
   }
 }
 
-void MonthlyModel::calculateCoolingSystemLoads(const Vector &v_Qneed_cl,
+void MonthlyModel::calculateCoolingSystemLoads(MonthlySimulationData &simData,
                                                const Vector &v_Qloss_cl_dist,
-                                               double IEER, Vector &v_Qcl_sys,
-                                               Vector &v_Qcool_DC) const {
+                                               double IEER) const {
   PROFILE_FUNCTION();
   if (cooling.DC_YesNo() == 1) {
     // If District Cooling is enabled, the district cooling system handles the load
-    v_Qcool_DC = sum(v_Qneed_cl, v_Qloss_cl_dist);
-    v_Qcl_sys.assign(monthsInYear, 0.0); // No local system load
+    simData.v_Qcool_DC = sum(simData.v_Qneed_cl, v_Qloss_cl_dist);
+    simData.v_Qcl_sys.assign(monthsInYear, 0.0); // No local system load
   } else {
     // Otherwise, the local system handles the load
-    v_Qcl_sys = div(sum(v_Qloss_cl_dist, v_Qneed_cl),
+    simData.v_Qcl_sys = div(sum(v_Qloss_cl_dist, simData.v_Qneed_cl),
                     IEER + std::numeric_limits<double>::epsilon());
-    v_Qcool_DC.assign(monthsInYear, 0.0); // No district cooling load
+    simData.v_Qcool_DC.assign(monthsInYear, 0.0); // No district cooling load
   }
 }
 
@@ -1249,28 +1246,23 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   printVector("v_Qloss_ht_dist", v_Qloss_ht_dist);
   printVector("v_Qloss_cl_dist", v_Qloss_cl_dist);
 
-  Vector v_Qht_sys(monthsInYear, 0.0);
-  Vector v_Qht_DH(monthsInYear, 0.0);
-  Vector v_Qcl_sys(monthsInYear, 0.0);
-  Vector v_Qcool_DC(monthsInYear, 0.0);
+  calculateHeatingSystemLoads(simData, v_Qloss_ht_dist);
+  calculateCoolingSystemLoads(simData, v_Qloss_cl_dist, IEER);
 
-  calculateHeatingSystemLoads(simData.v_Qneed_ht, v_Qloss_ht_dist, v_Qht_sys, v_Qht_DH);
-  calculateCoolingSystemLoads(simData.v_Qneed_cl, v_Qloss_cl_dist, IEER, v_Qcl_sys, v_Qcool_DC);
-
-  printVector("v_Qht_sys", v_Qht_sys);
-  printVector("v_Qht_DH", v_Qht_DH);
-  printVector("v_Qcl_sys", v_Qcl_sys);
-  printVector("v_Qcool_DC", v_Qcool_DC);
-  Vector v_Qcl_DC_elec = div(mult(v_Qcool_DC, 1 - cooling.eta_DC_frac_abs()),
+  printVector("v_Qht_sys", simData.v_Qht_sys);
+  printVector("v_Qht_DH", simData.v_Qht_DH);
+  printVector("v_Qcl_sys", simData.v_Qcl_sys);
+  printVector("v_Qcool_DC", simData.v_Qcool_DC);
+  Vector v_Qcl_DC_elec = div(mult(simData.v_Qcool_DC, 1 - cooling.eta_DC_frac_abs()),
                              cooling.eta_DC_COP() * cooling.eta_DC_network());
-  Vector v_Qcl_DC_abs = div(mult(v_Qcool_DC, 1 - cooling.frac_DC_free()),
+  Vector v_Qcl_DC_abs = div(mult(simData.v_Qcool_DC, 1 - cooling.frac_DC_free()),
                             cooling.eta_DC_COP_abs());
   printVector("v_Qcl_DC_elec", v_Qcl_DC_elec);
   printVector("v_Qcl_DC_abs", v_Qcl_DC_abs);
 
-  Vector v_Qht_DH_total = div(mult(v_Qht_DH, 1 - heating.frac_DH_free()),
+  Vector v_Qht_DH_total = div(mult(simData.v_Qht_DH, 1 - heating.frac_DH_free()),
                               heating.eta_DH_sys() * heating.eta_DH_network());
-  simData.v_Qcl_elec_tot = sum(v_Qcl_sys, v_Qcl_DC_elec);
+  simData.v_Qcl_elec_tot = sum(simData.v_Qcl_sys, v_Qcl_DC_elec);
   simData.v_Qcl_gas_tot = v_Qcl_DC_abs;
   printVector("v_Qht_DH_total", v_Qht_DH_total);
   printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
@@ -1279,11 +1271,11 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   // Vector v_Qelec_ht,v_Qgas_ht;
 
   if (heating.energyType() == 1) {
-    simData.v_Qelec_ht = v_Qht_sys;
+    simData.v_Qelec_ht = simData.v_Qht_sys;
     simData.v_Qgas_ht = v_Qht_DH_total;
   } else {
     simData.v_Qelec_ht.assign(monthsInYear, 0.0);
-    simData.v_Qgas_ht = sum(v_Qht_sys, v_Qht_DH_total);
+    simData.v_Qgas_ht = sum(simData.v_Qht_sys, v_Qht_DH_total);
   }
   printVector("v_Qelec_ht", simData.v_Qelec_ht);
   printVector("v_Qgas_ht", simData.v_Qgas_ht);
