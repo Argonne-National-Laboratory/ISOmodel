@@ -77,16 +77,21 @@ private:
     double Q_illum_tot_yr = 0.0;
     Vector v_Q_illum_tot = Vector(monthsInYear);
     Vector v_Q_illum_ext_tot = Vector(monthsInYear);
+
+    // From envelopCalculations
+    Vector v_win_A = Vector(numTotalSurfaces);
+    Vector v_wall_emiss = Vector(numTotalSurfaces);
+    Vector v_wall_alpha_sc = Vector(numTotalSurfaces);
+    Vector v_wall_U = Vector(numTotalSurfaces);
+    Vector v_wall_A = Vector(numTotalSurfaces);
+    double H_tr = 0.0;
   };
 
 private:
   // Simulation functions.
   void solarRadiationBreakdown(MonthlySimulationData &simData) const;
   void lightingEnergyUse(MonthlySimulationData &simData) const;
-
-  void envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
-                           Vector &v_wall_alpha_sc, Vector &v_wall_U,
-                           Vector &v_wall_A, double &H_tr) const;
+  void envelopCalculations(MonthlySimulationData &simData) const;
 
   void windowSolarGain(const Vector &v_win_A, const Vector &v_wall_emiss,
                        const Vector &v_wall_alpha_sc, const Vector &v_wall_U,

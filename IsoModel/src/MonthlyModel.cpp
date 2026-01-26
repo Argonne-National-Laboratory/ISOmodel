@@ -412,20 +412,17 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
 /**
  * Compute envelope parameters as per ISO 13790 8.3.
  */
-void MonthlyModel::envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
-                                       Vector &v_wall_alpha_sc,
-                                       Vector &v_wall_U, Vector &v_wall_A,
-                                       double &H_tr) const {
+void MonthlyModel::envelopCalculations(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: Copying the various structure values to new variables (e.g. v_wall_A)
   // is not necessary. BAA@2015-07-13.
-  v_wall_A = structure.wallAreaRef();
-  v_win_A = structure.windowAreaRef();
-  v_wall_U = structure.wallUniformRef();
+  simData.v_wall_A = structure.wallAreaRef();
+  simData.v_win_A = structure.windowAreaRef();
+  simData.v_wall_U = structure.wallUniformRef();
   const Vector &v_win_U = structure.windowUniformRef();
 
   // Compute total envelope U*A.
-  const Vector v_env_UA = sum(mult(v_wall_A, v_wall_U), mult(v_win_A, v_win_U));
+  const Vector v_env_UA = sum(mult(simData.v_wall_A, simData.v_wall_U), mult(simData.v_win_A, v_win_U));
 
   // Compute direct transmission heat transfer coefficient to exterior in as per
   // ISO 13790 8.3.1 (W/K). Ignore linear and point thermal bridges for now.
@@ -441,10 +438,10 @@ void MonthlyModel::envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
   double H_A = 0;
 
   // Total transmission heat transfer coefficient. ISO 13790 8.3.1 eq. 17.
-  H_tr = H_D + H_g + H_U + H_A;
+  simData.H_tr = H_D + H_g + H_U + H_A;
 
-  v_wall_emiss = structure.wallThermalEmissivityRef();
-  v_wall_alpha_sc = structure.wallSolarAbsorptionRef();
+  simData.v_wall_emiss = structure.wallThermalEmissivityRef();
+  simData.v_wall_alpha_sc = structure.wallSolarAbsorptionRef();
 }
 
 /*
@@ -1474,8 +1471,6 @@ void MonthlyModel::heatedWater(Vector &v_Q_dhw_elec,
 
 std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
-  // Envelop Calculations Results (existing local declarations)
-  Vector v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U, v_wall_A;
 
   Vector v_wall_A_sol, v_win_hr, v_wall_R_sc, v_win_A_sol;
 
@@ -1484,7 +1479,6 @@ std::vector<EndUses> MonthlyModel::simulate() const {
   double phi_int_wk_nt, phi_int_wke_day, phi_int_wke_nt;
   Vector v_E_sol;
 
-  double H_tr;
   Vector v_P_tot_wke_day, v_P_tot_wk_nt, v_P_tot_wke_nt;
 
   Vector v_Th_avg(monthsInYear), v_Tc_avg(monthsInYear);
@@ -1570,8 +1564,15 @@ Vector v_win_U = structure.windowUniform();*/
     printVector("structure.wallUniform()", structure.wallUniform());
     printVector("structure.windowUniform()", structure.windowUniform());
   }
-  envelopCalculations(v_win_A, v_wall_emiss, v_wall_alpha_sc, v_wall_U,
-                      v_wall_A, H_tr);
+  envelopCalculations(simData);
+  // Bridge variables for downstream functions
+  const Vector& v_win_A = simData.v_win_A;
+  const Vector& v_wall_emiss = simData.v_wall_emiss;
+  const Vector& v_wall_alpha_sc = simData.v_wall_alpha_sc;
+  const Vector& v_wall_U = simData.v_wall_U;
+  const Vector& v_wall_A = simData.v_wall_A;
+  double H_tr = simData.H_tr;
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "H_tr: " << H_tr << std::endl;
     printVector("v_win_A", v_win_A);
