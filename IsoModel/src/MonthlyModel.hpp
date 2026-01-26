@@ -102,6 +102,9 @@ private:
     double phi_int_wke_nt = 0.0;
     double phi_int_wke_day = 0.0;
     double phi_int_wk_nt = 0.0;
+
+    // From internalHeatGain
+    double phi_I_tot = 0.0;
   };
 
 private:
@@ -114,8 +117,7 @@ private:
 
   void heatGainsAndLosses(MonthlySimulationData &simData) const;
 
-  void internalHeatGain(double phi_int_avg, double phi_plug_avg,
-                        double phi_illum_avg, double &phi_I_tot) const;
+  void internalHeatGain(MonthlySimulationData &simData) const;
 
   void unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day,
                           double phi_int_wke_nt,

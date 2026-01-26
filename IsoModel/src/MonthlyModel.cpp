@@ -620,13 +620,11 @@ void MonthlyModel::heatGainsAndLosses(MonthlySimulationData &simData) const {
 /**
  * Compute total internal heat gain in W.
  */
-void MonthlyModel::internalHeatGain(double phi_int_avg, double phi_plug_avg,
-                                    double phi_illum_avg,
-                                    double &phi_I_tot) const {
+void MonthlyModel::internalHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Total internal heat gain (W).
-  phi_I_tot =
-      (phi_int_avg + phi_plug_avg + phi_illum_avg) * structure.floorArea();
+  simData.phi_I_tot =
+      (simData.phi_int_avg + simData.phi_plug_avg + simData.phi_illum_avg) * structure.floorArea();
 }
 
 /**
@@ -1462,7 +1460,7 @@ std::vector<EndUses> MonthlyModel::simulate() const {
 
   Vector v_Th_avg(monthsInYear), v_Tc_avg(monthsInYear);
 
-  double phi_I_tot, tau;
+  double tau;
   Vector v_Hve_ht, v_Hve_cl;
 
   double Qneed_ht_yr, Qneed_cl_yr;
@@ -1596,7 +1594,10 @@ Vector v_win_U = structure.windowUniform();*/
 
     std::cout << std::endl << "internalHeatGain: " << std::endl;
   }
-  internalHeatGain(phi_int_avg, phi_plug_avg, phi_illum_avg, phi_I_tot);
+  internalHeatGain(simData);
+  // Bridge variables for downstream functions
+  double phi_I_tot = simData.phi_I_tot;
+
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "phi_I_tot: " << phi_I_tot << std::endl;
 
