@@ -231,7 +231,7 @@ Vector MonthlyModel::calculatePeriodHeatGain(
 }
 
 MonthlyModel::PlugLoads
-MonthlyModel::calculatePlugLoads(double frac_hrs_wk_day) const {
+MonthlyModel::calculatePlugLoads(const Building& building, double frac_hrs_wk_day) {
   PROFILE_FUNCTION();
   PlugLoads result;
 
@@ -257,7 +257,7 @@ MonthlyModel::calculatePlugLoads(double frac_hrs_wk_day) const {
 }
 
 Vector MonthlyModel::convertEnergyToKWhPerSqM(const Vector &energy_MJ,
-                                              double floor_area) const {
+                                              double floor_area) {
   PROFILE_FUNCTION();
   if (floor_area == 0.0) {
     return Vector(energy_MJ.size(), 0.0); // Avoid division by zero
@@ -1580,7 +1580,7 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
 
 
   // Calculate plug loads
-  PlugLoads plugLoads = calculatePlugLoads(simData.scheduleData.frac_hrs_wk_day);
+  PlugLoads plugLoads = calculatePlugLoads(building, simData.scheduleData.frac_hrs_wk_day);
   const Vector &v_Q_plug_elec = plugLoads.v_Q_plug_elec;
   const Vector &v_Q_plug_gas = plugLoads.v_Q_plug_gas;
 

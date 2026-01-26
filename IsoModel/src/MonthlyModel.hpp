@@ -238,8 +238,8 @@ private:
     Vector v_Q_plug_elec;
     Vector v_Q_plug_gas;
   };
-  PlugLoads calculatePlugLoads(double frac_hrs_wk_day) const;
-  Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area) const;
+  static PlugLoads calculatePlugLoads(const Building& building, double frac_hrs_wk_day);
+  static Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area);
 
   std::vector<EndUses> outputGeneration(const MonthlySimulationData &simData) const;
 
