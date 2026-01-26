@@ -115,6 +115,17 @@ private:
     Vector v_Th_avg = Vector(monthsInYear);
     Vector v_Tc_avg = Vector(monthsInYear);
     double tau = 0.0;
+
+    // From ventilationCalc
+    Vector v_Hve_ht = Vector(monthsInYear);
+    Vector v_Hve_cl = Vector(monthsInYear);
+
+    // From heatingAndCooling
+    Vector v_Qfan_tot = Vector(monthsInYear);
+    Vector v_Qneed_ht = Vector(monthsInYear);
+    Vector v_Qneed_cl = Vector(monthsInYear);
+    double Qneed_ht_yr = 0.0;
+    double Qneed_cl_yr = 0.0;
   };
 
 private:
@@ -152,17 +163,8 @@ private:
   void calculateSunHours(const Matrix &m_mhEgh,
                          Vector &v_hrs_sun_down_mo) const;
 
-  void ventilationCalc(const Vector &v_Th_avg, const Vector &v_Tc_avg,
-                       double frac_hrs_wk_day, Vector &v_Hve_ht,
-                       Vector &v_Hve_cl) const;
-
-  void heatingAndCooling(const Vector &v_E_sol, const Vector &v_Th_avg,
-                         const Vector &v_Hve_ht, const Vector &v_Tc_avg,
-                         const Vector &v_Hve_cl, double tau, double H_tr,
-                         double phi_I_tot, double frac_hrs_wk_day,
-                         Vector &v_Qfan_tot, Vector &v_Qneed_ht,
-                         Vector &v_Qneed_cl, double &Qneed_ht_yr,
-                         double &Qneed_cl_yr) const;
+  void ventilationCalc(MonthlySimulationData &simData) const;
+  void heatingAndCooling(MonthlySimulationData &simData) const;
 
   void hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
             double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Qelec_ht,
