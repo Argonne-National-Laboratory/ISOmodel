@@ -1578,15 +1578,7 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
   unoccupiedHeatGain(simData);
-  const Vector& v_P_tot_wke_day = simData.v_P_tot_wke_day;
-  const Vector& v_P_tot_wk_nt = simData.v_P_tot_wk_nt;
-  const Vector& v_P_tot_wke_nt = simData.v_P_tot_wke_nt;
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_P_tot_wke_day", v_P_tot_wke_day);
-    printVector("v_P_tot_wk_nt", v_P_tot_wk_nt);
-    printVector("v_P_tot_wke_nt", v_P_tot_wke_nt);
-
     std::cout << std::endl << "interiorTemp: " << std::endl;
   }
   interiorTemp(simData);
