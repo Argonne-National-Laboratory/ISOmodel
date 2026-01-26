@@ -94,6 +94,14 @@ private:
 
     // From solarHeatGain
     Vector v_E_sol = Vector(monthsInYear);
+
+    // From heatGainsAndLosses
+    double phi_int_avg = 0.0;
+    double phi_plug_avg = 0.0;
+    double phi_illum_avg = 0.0;
+    double phi_int_wke_nt = 0.0;
+    double phi_int_wke_day = 0.0;
+    double phi_int_wk_nt = 0.0;
   };
 
 private:
@@ -104,11 +112,7 @@ private:
   void windowSolarGain(MonthlySimulationData &simData) const;
   void solarHeatGain(MonthlySimulationData &simData) const;
 
-  void heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ,
-                          double Q_illum_unocc, double Q_illum_tot_yr,
-                          double &phi_int_avg, double &phi_plug_avg,
-                          double &phi_illum_avg, double &phi_int_wke_nt,
-                          double &phi_int_wke_day, double &phi_int_wk_nt) const;
+  void heatGainsAndLosses(MonthlySimulationData &simData) const;
 
   void internalHeatGain(double phi_int_avg, double phi_plug_avg,
                         double phi_illum_avg, double &phi_I_tot) const;
