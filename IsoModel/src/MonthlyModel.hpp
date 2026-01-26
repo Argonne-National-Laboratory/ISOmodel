@@ -57,6 +57,13 @@ public:
   std::vector<EndUses> simulate() const;
 
 private:
+  // Struct to hold all intermediate simulation data for MonthlyModel::simulate
+  struct MonthlySimulationData {
+    // From schedules::getMonthlySchedules
+    schedules::MonthlyScheduleData scheduleData{};
+  };
+
+private:
   // Simulation functions.
   void solarRadiationBreakdown(const Vector &weekdayOccupiedMegaseconds,
                                const Vector &weekdayUnoccupiedMegaseconds,
