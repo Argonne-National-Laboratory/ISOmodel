@@ -287,7 +287,7 @@ MonthlyModel::calculateWindowShadingComponents(const Structure& structure) {
 }
 
 MonthlyModel::AnnualLightingHours
-MonthlyModel::calculateAnnualLightingOperationalHours() const {
+MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop) {
   PROFILE_FUNCTION();
 
   AnnualLightingHours result;
@@ -384,7 +384,7 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   double F_C = building.constantIllumination();
 
   // Calculate annual lighting operational hours using the new helper
-  AnnualLightingHours annualHours = calculateAnnualLightingOperationalHours();
+  AnnualLightingHours annualHours = calculateAnnualLightingOperationalHours(lights, pop);
 
   // Total lighting energy for occupied times (kWh).
   simData.Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O *

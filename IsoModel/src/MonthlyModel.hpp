@@ -57,6 +57,23 @@ public:
    */
   std::vector<EndUses> simulate() const;
 
+  // Public helper structs, moved from private for accessibility
+  struct WindowShadingComponents {
+    Vector v_win_ff;
+    Vector v_win_F_shgl;
+  };
+
+  struct AnnualLightingHours {
+    double t_lt_D;
+    double t_lt_N;
+    double t_unocc;
+  };
+
+  struct PlugLoads {
+    Vector v_Q_plug_elec;
+    Vector v_Q_plug_gas;
+  };
+
 private:
   // Struct to hold all intermediate simulation data for MonthlyModel::simulate
   struct MonthlySimulationData {
@@ -172,18 +189,8 @@ private:
       double tset_unocc, double tau, const Vector &v_ti, const Matrix &M_dT,
       const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) const;
 
-  // Helper struct for lighting operational hours
-  struct WindowShadingComponents {
-    Vector v_win_ff;
-    Vector v_win_F_shgl;
-  };
   static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
 
-  struct AnnualLightingHours {
-    double t_lt_D;
-    double t_lt_N;
-    double t_unocc;
-  };
   void calculateSunHours(const Matrix &m_mhEgh,
                          Vector &v_hrs_sun_down_mo) const;
 
@@ -203,7 +210,7 @@ private:
                                            double floor_area);
 
   // Helper for lighting energy use
-  AnnualLightingHours calculateAnnualLightingOperationalHours() const;
+  static AnnualLightingHours calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop);
 
   void energyGeneration() const;
 
@@ -231,10 +238,6 @@ private:
                                         const Vector &v_E_sol, double floor_area);
 
   // Helper for outputGeneration
-  struct PlugLoads {
-    Vector v_Q_plug_elec;
-    Vector v_Q_plug_gas;
-  };
   static PlugLoads calculatePlugLoads(const Building& building, double frac_hrs_wk_day);
   static Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area);
 
