@@ -80,9 +80,7 @@ Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H,
   return eta_g;
 }
 
-std::pair<Vector, Vector> MonthlyModel::calculateAirVolumes(
-    const Vector &Qneed_ht, const Vector &Qneed_cl, const Vector &Th_avg,
-    const Vector &Tc_avg) const {
+void MonthlyModel::calculateAirVolumes(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Hot air supply temperature (C).
   double T_sup_ht =
@@ -92,15 +90,13 @@ std::pair<Vector, Vector> MonthlyModel::calculateAirVolumes(
       cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
   // Volume of air moved for heating (m3).
-  Vector v_Vair_ht =
-      div(Qneed_ht, sum(mult(dif(T_sup_ht, Th_avg), rhoCpAir),
+  simData.v_Vair_ht =
+      div(simData.v_Qneed_ht, sum(mult(dif(T_sup_ht, simData.v_Th_avg), rhoCpAir),
                           std::numeric_limits<double>::epsilon()));
   // Volume of air moved for cooling (m3).
-  Vector v_Vair_cl =
-      div(Qneed_cl, sum(mult(dif(Tc_avg, T_sup_cl), rhoCpAir),
+  simData.v_Vair_cl =
+      div(simData.v_Qneed_cl, sum(mult(dif(simData.v_Tc_avg, T_sup_cl), rhoCpAir),
                           std::numeric_limits<double>::epsilon()));
-
-  return {v_Vair_ht, v_Vair_cl};
 }
 
 Vector MonthlyModel::calculateTotalAirFlow(const Vector &v_Vair_ht,
@@ -1138,14 +1134,13 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
       cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
   // Calculate air volumes for heating and cooling
-  auto [v_Vair_ht, v_Vair_cl] =
-      calculateAirVolumes(simData.v_Qneed_ht, simData.v_Qneed_cl, simData.v_Th_avg, simData.v_Tc_avg);
-  printVector("v_Vair_ht", v_Vair_ht);
-  printVector("v_Vair_cl", v_Vair_cl);
+  calculateAirVolumes(simData);
+  printVector("v_Vair_ht", simData.v_Vair_ht);
+  printVector("v_Vair_cl", simData.v_Vair_cl);
 
   // Calculate total air flow
   Vector v_Vair_tot =
-      calculateTotalAirFlow(v_Vair_ht, v_Vair_cl, simData.scheduleData.frac_hrs_wk_day);
+      calculateTotalAirFlow(simData.v_Vair_ht, simData.v_Vair_cl, simData.scheduleData.frac_hrs_wk_day);
   printVector("v_Vair_tot", v_Vair_tot);
 
   // Calculate fan energy

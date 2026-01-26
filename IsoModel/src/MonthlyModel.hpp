@@ -136,6 +136,10 @@ private:
     // From pump
     Vector v_Q_pump_tot = Vector(monthsInYear);
 
+    // From calculateAirVolumes
+    Vector v_Vair_ht = Vector(monthsInYear);
+    Vector v_Vair_cl = Vector(monthsInYear);
+
     // From heatedWater
     Vector v_Q_dhw_elec = Vector(monthsInYear);
     Vector v_Q_dhw_gas = Vector(monthsInYear);
@@ -199,9 +203,7 @@ private:
 
   // Helper for solarHeatGain
   Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
-  std::pair<Vector, Vector>
-  calculateAirVolumes(const Vector &Qneed_ht, const Vector &Qneed_cl,
-                      const Vector &Th_avg, const Vector &Tc_avg) const;
+  void calculateAirVolumes(MonthlySimulationData &simData) const;
   Vector calculateTotalAirFlow(const Vector &v_Vair_ht,
                                const Vector &v_Vair_cl,
                                double frac_hrs_wk_day) const;
