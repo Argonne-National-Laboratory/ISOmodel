@@ -140,6 +140,9 @@ private:
     Vector v_Vair_ht = Vector(monthsInYear);
     Vector v_Vair_cl = Vector(monthsInYear);
 
+    // From calculateTotalAirFlow
+    Vector v_Vair_tot = Vector(monthsInYear);
+
     // From heatedWater
     Vector v_Q_dhw_elec = Vector(monthsInYear);
     Vector v_Q_dhw_gas = Vector(monthsInYear);
@@ -204,9 +207,7 @@ private:
   // Helper for solarHeatGain
   Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H) const;
   void calculateAirVolumes(MonthlySimulationData &simData) const;
-  Vector calculateTotalAirFlow(const Vector &v_Vair_ht,
-                               const Vector &v_Vair_cl,
-                               double frac_hrs_wk_day) const;
+  void calculateTotalAirFlow(MonthlySimulationData &simData) const;
   Vector calculateFanEnergy(const Vector &Vair_tot) const;
   Matrix buildSolarIrradianceMatrix() const;
   Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol,

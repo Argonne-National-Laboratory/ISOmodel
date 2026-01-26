@@ -99,21 +99,18 @@ void MonthlyModel::calculateAirVolumes(MonthlySimulationData &simData) const {
                           std::numeric_limits<double>::epsilon()));
 }
 
-Vector MonthlyModel::calculateTotalAirFlow(const Vector &v_Vair_ht,
-                                           const Vector &v_Vair_cl,
-                                           double frac_hrs_wk_day) const {
+void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Total air flow (m3).
   // Multiply by MEGASECONDS_TO_SECONDS to convert megaseconds to seconds.
   // Divide by LITERS_TO_M3 to convert liters to m3.
-  Vector v_Vair_tot = maximum(
-      sum(v_Vair_ht, v_Vair_cl),
+  simData.v_Vair_tot = maximum(
+      sum(simData.v_Vair_ht, simData.v_Vair_cl),
       div(mult(megasecondsInMonth,
-               ventilation.supplyRate() * frac_hrs_wk_day *
+               ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day *
                    (MEGASECONDS_TO_SECONDS / LITERS_TO_M3),
                monthsInYear),
           UNITY_FRACTION)); // UNITY_FRACTION is 1.0, just for consistency
-  return v_Vair_tot;
 }
 
 Vector MonthlyModel::calculateFanEnergy(const Vector &Vair_tot) const {
@@ -1139,12 +1136,11 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   printVector("v_Vair_cl", simData.v_Vair_cl);
 
   // Calculate total air flow
-  Vector v_Vair_tot =
-      calculateTotalAirFlow(simData.v_Vair_ht, simData.v_Vair_cl, simData.scheduleData.frac_hrs_wk_day);
-  printVector("v_Vair_tot", v_Vair_tot);
+  calculateTotalAirFlow(simData);
+  printVector("v_Vair_tot", simData.v_Vair_tot);
 
   // Calculate fan energy
-  Vector fanEnergy = calculateFanEnergy(v_Vair_tot);
+  Vector fanEnergy = calculateFanEnergy(simData.v_Vair_tot);
   printVector("fanEnergy", fanEnergy);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
