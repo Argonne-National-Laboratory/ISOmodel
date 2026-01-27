@@ -37,7 +37,7 @@ Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
   // (mEgh) into one matrix (W/m2).
-  Matrix m_I_sol(monthsInYear, numTotalSurfaces);
+  Matrix m_I_sol(MONTHS_IN_YEAR, numTotalSurfaces);
 
   // Access weather data via reference to avoid copy
   const Matrix &m_solar = weather.msolarRef();
@@ -62,11 +62,11 @@ MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting& lights, co
   double hoursOccupied = std::min(lights.n_day_end(), pop.hoursEnd()) -
                          std::max(pop.hoursStart(), lights.n_day_start());
   if (hoursOccupied < 0) {
-    hoursOccupied += hoursInDay; // Use constant
+    hoursOccupied += HOURS_IN_DAY; // Use constant
   }
   double daysOccupied = pop.daysEnd() - pop.daysStart() + 1;
   if (daysOccupied < 0) {
-    daysOccupied += daysInWeek; // Use constant
+    daysOccupied += DAYS_IN_WEEK; // Use constant
   }
   result.t_lt_D = hoursOccupied * daysOccupied * lights.n_weeks();
 
@@ -76,7 +76,7 @@ MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting& lights, co
   result.t_lt_N = hoursOccupied * daysOccupied * lights.n_weeks();
 
   // Unoccupied hours.
-  result.t_unocc = hoursInYear - result.t_lt_D - result.t_lt_N;
+  result.t_unocc = HOURS_IN_YEAR - result.t_lt_D - result.t_lt_N;
 
   return result;
 }
@@ -94,7 +94,7 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
   double sum_occ = sum(sched.clockHourOccupied);
   double sum_unocc = sum(sched.clockHourUnoccupied);
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double Tdbt_day_sum = 0.0;
     double Tdbt_nt_sum = 0.0;
     double Egh_day_sum = 0.0;
@@ -180,7 +180,7 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
 
   double ext_energy_kW = lights.exteriorEnergy() * W2kW;
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     simData.v_Q_illum_tot[i] = monthFractionOfYear[i] * simData.Q_illum_tot_yr;
     simData.v_Q_illum_ext_tot[i] = simData.v_hrs_sun_down_mo[i] * ext_energy_kW;
   }
@@ -301,7 +301,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   const Vector& v_win_A_sol = simData.v_win_A_sol;
   const Vector& v_wall_A_sol = simData.v_wall_A_sol;
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double phi_sol = 0.0;
     for (int j = 0; j < numTotalSurfaces; ++j) {
       double I_sol = m_I_sol(i, j);
@@ -332,7 +332,7 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
 
   // Internal heat gain from illumination (W/m2).
   double floor_area = structure.floorArea();
-  double inv_area_hours = KWATTS_TO_WATTS / (floor_area * hoursInYear);
+  double inv_area_hours = KWATTS_TO_WATTS / (floor_area * HOURS_IN_YEAR);
   
   // phi_illum_occ is unused
   double phi_illum_unocc = (simData.Q_illum_unocc * inv_area_hours) / (UNITY_FRACTION - simData.scheduleData.frac_hrs_wk_day);
@@ -359,7 +359,7 @@ void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   double phi_int_wke_day = simData.phi_int_wke_day;
   double phi_int_wke_nt = simData.phi_int_wke_nt;
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
       // Week Night
       double ms_wk_nt = simData.scheduleData.weekdayUnoccupiedMegaseconds[i];
       double W_int_wk_nt = ms_wk_nt * phi_int_wk_nt * floor_area;
@@ -447,7 +447,7 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   bool do_heating = (heating.T_ht_ctrl_flag() == 1);
   bool do_cooling = (cooling.T_cl_ctrl_flag() == 1);
 
-  for (int m = 0; m < monthsInYear; ++m) {
+  for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     double Th_wk_nt_val = ht_tset_ctrl;
     double Th_wke_avg_val = ht_tset_ctrl;
     double Tc_wk_nt_val = cl_tset_ctrl;
@@ -602,7 +602,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   double wind_coeff = ventilation.wind_coeff();
   double dCp_terrain = ventilation.dCp() * location.terrain();
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
       // Stack Effect Heating
       double dbtDiff_ht = std::abs(v_mdbt[i] - simData.v_Th_avg[i]);
       double qv_stack_ht = std::max(std::pow(dbtDiff_ht * h_stack, stack_exp) * stack_coeff_Q4, MIN_INFILTRATION_FLOW);
@@ -664,7 +664,7 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
   double area_kWh_factor = floor_area * kWh2MJ;
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     // 1. Gains and Losses
     double tot_mo_ht_gain = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
 
@@ -791,7 +791,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   double cl_dc_cop_abs = cooling.eta_DC_COP_abs();
   bool is_ht_elec = (heating.energyType() == 1);
 
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double Qloss_ht_dist = simData.v_Qneed_ht[i] * (1.0 - eta_dist_ht) / eta_dist_ht;
     double Qloss_cl_dist = simData.v_Qneed_cl[i] * (1.0 - eta_dist_cl) / eta_dist_cl;
 
@@ -846,7 +846,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
 
   // Total annual pump energy for the mode if pumps run continuously (MJ/m2).
   double Q_pumps_yr_mode_per_m2 =
-      sum(mult(megasecondsInMonth, E_pumps_w_per_m2, monthsInYear));
+      sum(mult(megasecondsInMonth, E_pumps_w_per_m2, MONTHS_IN_YEAR));
 
   // Fraction of time the system is in this mode each month.
   Vector v_frac_mode = div(v_Qneed_mode, v_Qneed_total);
@@ -928,9 +928,9 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
   double inv_kWh2MJ = 1.0 / kWh2MJ;
   bool is_elec = (heating.hotWaterEnergyType() == 1);
 
-  for(int i=0; i<monthsInYear; ++i) {
+  for(int i=0; i<MONTHS_IN_YEAR; ++i) {
       double monthlyDemand = daysInMonth[i] * Q_dhw_yr;
-      double frac_MonthlyDemand_yr = monthlyDemand / daysInYear;
+      double frac_MonthlyDemand_yr = monthlyDemand / DAYS_IN_YEAR;
       double Qe_demand = frac_MonthlyDemand_yr * inv_dist_eff;
       double Q_dhw_demand = Qe_demand * inv_kWh2MJ;
       // v_Q_dhw_solar is zero, so we can ignore it in `dif`
@@ -1098,7 +1098,7 @@ std::vector<EndUses>
 MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   std::vector<EndUses> allResults;
-  allResults.reserve(monthsInYear);
+  allResults.reserve(MONTHS_IN_YEAR);
 
   double floor_area = structure.floorArea();
   double energy_factor = (floor_area > 0) ? (1.0 / (floor_area * kWh2MJ)) : 0.0;
@@ -1115,7 +1115,7 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
       building.gasApplianceHeatGainUnoccupied() *
           (UNITY_FRACTION - frac_hrs_wk_day);
 
-  for (int i = 0; i < monthsInYear; i++) {
+  for (int i = 0; i < MONTHS_IN_YEAR; i++) {
     double Eelec_ht = simData.v_Qelec_ht[i] * energy_factor;
     double Eelec_cl = simData.v_Qcl_elec_tot[i] * energy_factor;
     double Eelec_int_lt = simData.v_Q_illum_tot[i] * area_factor;

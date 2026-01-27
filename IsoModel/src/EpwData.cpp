@@ -44,7 +44,7 @@ EpwData::EpwData() {
   // m_data.resize(7);
   m_data.resize(kNumEpwDataCols);  // size based on last enum value
   for (auto &col : m_data) {
-    col.reserve(hoursInYear); // Optional optimization
+    col.reserve(HOURS_IN_YEAR); // Optional optimization
   }
 }
 
@@ -66,13 +66,13 @@ void EpwData::populateWeatherData(std::shared_ptr<WeatherData> wd) {
 
   // Convert and set matrices using helper from MathHelpers.hpp
   // Hourly data is 12 months x 24 hours
-  wd->setMhdbt(toMatrix(pos.hourlyDryBulbTemp(), monthsInYear, hoursInDay));
-  wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), monthsInYear,
-                        hoursInDay));
+  wd->setMhdbt(toMatrix(pos.hourlyDryBulbTemp(), MONTHS_IN_YEAR, HOURS_IN_DAY));
+  wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), MONTHS_IN_YEAR,
+                        HOURS_IN_DAY));
 
   // Solar radiation is 12 months x 8 surfaces
   wd->setMsolar(
-      toMatrix(pos.monthlySolarRadiation(), monthsInYear, numVerticalSurfaces));
+      toMatrix(pos.monthlySolarRadiation(), MONTHS_IN_YEAR, numVerticalSurfaces));
 }
 
 void EpwData::parseHeader(const std::string &line) {
@@ -191,31 +191,31 @@ std::string EpwData::toISOData() {
     }
   };
 
-  write_csv("mdbt", pos.monthlyDryBulbTemp(), monthsInYear);
-  write_csv("mwind", pos.monthlyWindspeed(), monthsInYear);
-  write_csv("mEgh", pos.monthlyGlobalHorizontalRadiation(), monthsInYear);
+  write_csv("mdbt", pos.monthlyDryBulbTemp(), MONTHS_IN_YEAR);
+  write_csv("mwind", pos.monthlyWindspeed(), MONTHS_IN_YEAR);
+  write_csv("mEgh", pos.monthlyGlobalHorizontalRadiation(), MONTHS_IN_YEAR);
 
   sstream << "hdbt\n";
   const auto &hdbt = pos.hourlyDryBulbTemp();
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     sstream << i;
-    for (int h = 0; h < hoursInDay; ++h)
+    for (int h = 0; h < HOURS_IN_DAY; ++h)
       sstream << "," << hdbt[i][h];
     sstream << "\n";
   }
 
   sstream << "hEgh\n";
   const auto &hegh = pos.hourlyGlobalHorizontalRadiation();
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     sstream << i;
-    for (int h = 0; h < hoursInDay; ++h)
+    for (int h = 0; h < HOURS_IN_DAY; ++h)
       sstream << "," << hegh[i][h];
     sstream << "\n";
   }
 
   sstream << "solar\n";
   const auto &msolar = pos.monthlySolarRadiation();
-  for (int i = 0; i < monthsInYear; ++i) {
+  for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     sstream << i;
     for (int s = 0; s < numVerticalSurfaces; ++s)
       sstream << "," << msolar[i][s];
@@ -235,11 +235,11 @@ void EpwData::loadData(int block_size, double *data) {
 
   double *ptr = data + 3;
   size_t rows = std::min(static_cast<size_t>(block_size),
-                         static_cast<size_t>(hoursInYear));
+                         static_cast<size_t>(HOURS_IN_YEAR));
 
   // for (int c = 0; c < 7; ++c)  remove hardcoded column numbers
   for (int c = 0; c < kNumEpwDataCols; ++c){
-    m_data[c].resize(hoursInYear); // Ensure size
+    m_data[c].resize(HOURS_IN_YEAR); // Ensure size
     for (size_t i = 0; i < rows; ++i) {
       m_data[c][i] = *ptr++;
     }
@@ -251,7 +251,7 @@ void EpwData::loadData(const std::string &fn) {
 
   // Ensure vectors are ready
   for (auto &col : m_data) {
-    col.assign(hoursInYear, 0.0);
+    col.assign(HOURS_IN_YEAR, 0.0);
   }
 
   if (myfile.is_open()) {
@@ -262,7 +262,7 @@ void EpwData::loadData(const std::string &fn) {
     int lineCount = 0;
     int row = 0;
 
-    while (std::getline(myfile, line) && row < hoursInYear) {
+    while (std::getline(myfile, line) && row < HOURS_IN_YEAR) {
       lineCount++;
       if (lineCount == 1) {
         parseHeader(line);

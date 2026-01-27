@@ -77,16 +77,16 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
   const std::vector<double> &egh = data[EGH];
 
   // OPTIMIZATION: Reuse Member Vectors (No Allocation)
-  if (m_phi_H_nd.size() != hoursInYear) {
-    m_phi_H_nd.resize(hoursInYear);
-    m_phi_C_nd.resize(hoursInYear);
-    m_phi_int_L.resize(hoursInYear);
-    m_phi_ext_L.resize(hoursInYear);
-    m_phi_fan.resize(hoursInYear);
-    m_phi_pump.resize(hoursInYear);
-    m_phi_int_App.resize(hoursInYear);
-    m_phi_ext_App.resize(hoursInYear);
-    m_phi_dhw.assign(hoursInYear, 0.0);
+  if (m_phi_H_nd.size() != HOURS_IN_YEAR) {
+    m_phi_H_nd.resize(HOURS_IN_YEAR);
+    m_phi_C_nd.resize(HOURS_IN_YEAR);
+    m_phi_int_L.resize(HOURS_IN_YEAR);
+    m_phi_ext_L.resize(HOURS_IN_YEAR);
+    m_phi_fan.resize(HOURS_IN_YEAR);
+    m_phi_pump.resize(HOURS_IN_YEAR);
+    m_phi_int_App.resize(HOURS_IN_YEAR);
+    m_phi_ext_App.resize(HOURS_IN_YEAR);
+    m_phi_dhw.assign(HOURS_IN_YEAR, 0.0);
   } else {
     std::ranges::fill(m_phi_dhw, 0.0);
   }
@@ -109,7 +109,7 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
   const double pump_heat_power_active = heat_E_pumps * heat_pumpRed;
   const double _rhoCpAirWh = rhoCpAirWh;
 
-  for (int i = 0; i < hoursInYear; ++i) {
+  for (int i = 0; i < HOURS_IN_YEAR; ++i) {
     const HourlyCache &cache = m_hourlyData[i];
     double theta_e = cache.theta_e;
 
@@ -394,7 +394,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
   bool electricHeat = (heating.energyType() == 1);
   std::vector<EndUses> results;
   if (!aggregateByMonth)
-    results.reserve(hoursInYear);
+    results.reserve(HOURS_IN_YEAR);
 
   auto mapToEU = [&](EndUses &eu, double h, double c, double il, double el,
                      double fn, double pm, double pi, double pe, double dw) {
@@ -437,7 +437,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
   };
 
   if (aggregateByMonth) {
-    for (int m = 0; m < monthsInYear; ++m) {
+    for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
       EndUses eu;
       double sums[9] = {0};
       for (int i = monthEndHours[m]; i < monthEndHours[m + 1]; ++i) {
@@ -456,7 +456,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
       results.push_back(eu);
     }
   } else {
-    for (int i = 0; i < hoursInYear; ++i) {
+    for (int i = 0; i < HOURS_IN_YEAR; ++i) {
       EndUses eu;
       mapToEU(eu, m_phi_H_nd[i], m_phi_C_nd[i], m_phi_int_L[i], m_phi_ext_L[i],
               m_phi_fan[i], m_phi_pump[i], m_phi_int_App[i], m_phi_ext_App[i],
@@ -588,7 +588,7 @@ void HourlyModel::initialize() {
   H_z = std::max(0.1, ventilation.hzone());
   f_ve_mech_sup = std::max(0.00001, ventilation.fanControlFactor());
 
-  m_hourlyData.resize(hoursInYear); // Ensure m_hourlyData is sized
+  m_hourlyData.resize(HOURS_IN_YEAR); // Ensure m_hourlyData is sized
 
   const auto &data = epwData->dataRef();
 
@@ -597,7 +597,7 @@ void HourlyModel::initialize() {
   const std::vector<double> &egh = data[EGH];
 
   TimeFrame frame;
-  for (int i = 0; i < hoursInYear; ++i) {
+  for (int i = 0; i < HOURS_IN_YEAR; ++i) {
     int h = frame.Hour[i];
     int d = frame.DayOfWeek[i];
     HourlyCache &c = m_hourlyData[i];

@@ -86,7 +86,7 @@ public:
   // Calculates the revolution angle in radians of the earth around the sun.
   // Ref: Duffie & Beckman Eq 1.4.2 (approx)
   double calculateRevolutionAngle(int dayOfYear) {
-    return 2.0 * PI * dayOfYear / daysInYear;
+    return 2.0 * PI * dayOfYear / DAYS_IN_YEAR;
   }
 
   // Calculates the equation of time (EOT) in minutes.

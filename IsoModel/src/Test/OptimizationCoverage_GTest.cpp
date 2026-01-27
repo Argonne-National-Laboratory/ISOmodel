@@ -23,8 +23,8 @@ TEST(OptimizationCoverage, Constants_Values) {
   EXPECT_DOUBLE_EQ(PI, std::numbers::pi);
 
   // Check integer constants used in loops
-  EXPECT_EQ(daysInYear, 365);
-  EXPECT_EQ(hoursInYear, 8760);
+  EXPECT_EQ(DAYS_IN_YEAR, 365);
+  EXPECT_EQ(HOURS_IN_YEAR, 8760);
   EXPECT_EQ(numVerticalSurfaces, 8);
 
   // Check array sizes
@@ -44,7 +44,7 @@ TEST(OptimizationCoverage, SolarRadiation_Math) {
   EXPECT_DOUBLE_EQ(rev0, 0.0);
 
   // Test Revolution Angle for Day 365 (should be 2*PI)
-  // This verifies daysInYear constant is used correctly in division
+  // This verifies DAYS_IN_YEAR constant is used correctly in division
   double rev365 = solar.calculateRevolutionAngle(365);
   EXPECT_DOUBLE_EQ(rev365, 2.0 * PI);
 

@@ -69,14 +69,14 @@ inline constexpr std::string_view ADVANCED = "advanced";
 
 // --- Time Constants ---
 
-constexpr int monthsInYear = 12;
-constexpr int hoursInDay = 24;
-constexpr int hoursInWeek = 168;
-constexpr int daysInWeek = 7;
-constexpr int daysInYear = 365;
-// constexpr int hoursInYear = 8760;
-constexpr int hoursInYear = daysInYear * hoursInDay;
-constexpr int secondsInHour = 3600;
+constexpr int MONTHS_IN_YEAR = 12;
+constexpr int HOURS_IN_DAY = 24;
+constexpr int HOURS_IN_WEEK = 168;
+constexpr int DAYS_IN_WEEK = 7;
+constexpr int DAYS_IN_YEAR = 365;
+// constexpr int HOURS_IN_YEAR = 8760;
+constexpr int HOURS_IN_YEAR = DAYS_IN_YEAR * HOURS_IN_DAY;
+constexpr int SECONDS_IN_HOUR = 3600;
 
 // Start hour for a standard weekday in EECALC
 constexpr int eecalcWeekdayStart = 7;
