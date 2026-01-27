@@ -388,8 +388,8 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
   EXPECT_DOUBLE_EQ(300.0, userModel.presenceAutoLux());
   EXPECT_DOUBLE_EQ(500.0, userModel.manualSwitchLux());
   EXPECT_DOUBLE_EQ(0.0, userModel.naturallyLightedArea());
-  // EXPECT_DOUBLE_EQ(1.22521 * 0.001012, userModel.rhoCpAir());
-  // EXPECT_DOUBLE_EQ(4.1813, userModel.rhoCpWater());
+  // EXPECT_DOUBLE_EQ(1.22521 * 0.001012, userModel.RHO_CP_AIR());
+  // EXPECT_DOUBLE_EQ(4.1813, userModel.RHO_CP_WATER());
   EXPECT_DOUBLE_EQ(0.04, userModel.R_se());
   EXPECT_DOUBLE_EQ(500, userModel.irradianceForMaxShadingUse());
   EXPECT_DOUBLE_EQ(0.5, userModel.shadingFactorAtMaxUse());
@@ -462,8 +462,8 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesOverrideTests) {
   EXPECT_DOUBLE_EQ(301.0, userModel.presenceAutoLux());
   EXPECT_DOUBLE_EQ(501.0, userModel.manualSwitchLux());
   EXPECT_DOUBLE_EQ(1.0, userModel.naturallyLightedArea());
-  // EXPECT_DOUBLE_EQ(2.2252099999999997, userModel.rhoCpAir());
-  // EXPECT_DOUBLE_EQ(5.1813, userModel.rhoCpWater());
+  // EXPECT_DOUBLE_EQ(2.2252099999999997, userModel.RHO_CP_AIR());
+  // EXPECT_DOUBLE_EQ(5.1813, userModel.RHO_CP_WATER());
   EXPECT_DOUBLE_EQ(1.04, userModel.R_se());
   EXPECT_DOUBLE_EQ(501.0, userModel.irradianceForMaxShadingUse());
   EXPECT_DOUBLE_EQ(1.5, userModel.shadingFactorAtMaxUse());

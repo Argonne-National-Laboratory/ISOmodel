@@ -2,7 +2,7 @@
  * SolarRadiation.cpp
  *
  * REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
- * 1. Memory: Removed heavy allocations from Constructor. Vectors are now
+ * 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
  * lazy-loaded.
  * 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
  * per year, not checked per hour. This fixes potential day-shift bugs.

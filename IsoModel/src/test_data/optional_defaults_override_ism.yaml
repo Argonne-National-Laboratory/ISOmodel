@@ -35,8 +35,8 @@ automaticLux: 301.0
 presenceAutoLux: 301.0
 manualSwitchLux: 501.0
 naturallyLightedArea: 1.0
-rhoCpAir: 2.2252099999999997
-rhoCpWater: 5.1813
+RHO_CP_AIR: 2.2252099999999997
+RHO_CP_WATER: 5.1813
 R_se: 1.04
 irradianceForMaxShadingUse: 501.0
 shadingFactorAtMaxUse: 1.5

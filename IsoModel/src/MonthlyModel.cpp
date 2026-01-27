@@ -631,8 +631,8 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
       double qve_cl = qv_inf_cl + mve_init;
 
       // Hve
-      simData.v_Hve_ht[i] = qve_ht * rhoCpAirWh;
-      simData.v_Hve_cl[i] = qve_cl * rhoCpAirWh;
+      simData.v_Hve_ht[i] = qve_ht * RHO_CP_AIR_IN_WATT_HOURS;
+      simData.v_Hve_cl[i] = qve_cl * RHO_CP_AIR_IN_WATT_HOURS;
   }
 }
 
@@ -677,36 +677,36 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
                      (simData.v_Hve_cl[i] * floor_area * Tc_avg_minus_mdbt * MEGASECONDS_IN_MONTH[i]);
 
     // 2. Heating Need
-    double gamma_H_ht = tot_mo_ht_gain / (Qtot_ht + std::numeric_limits<double>::epsilon());
+    double gamma_H_ht = tot_mo_ht_gain / (Qtot_ht + SAFE_EPSILON);
     double eta_g_H;
     if (gamma_H_ht > 0) {
       double num = std::pow(gamma_H_ht, a_H);
       eta_g_H = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_ht);
     } else {
-      eta_g_H = UNITY_FRACTION / (gamma_H_ht + std::numeric_limits<double>::epsilon());
+      eta_g_H = UNITY_FRACTION / (gamma_H_ht + SAFE_EPSILON);
     }
     
     simData.v_Qneed_ht[i] = Qtot_ht - (eta_g_H * tot_mo_ht_gain);
     simData.Qneed_ht_yr += simData.v_Qneed_ht[i];
 
     // 3. Cooling Need
-    double gamma_H_cl = Qtot_cl / (tot_mo_ht_gain + std::numeric_limits<double>::epsilon());
+    double gamma_H_cl = Qtot_cl / (tot_mo_ht_gain + SAFE_EPSILON);
     double eta_g_CL;
     if (gamma_H_cl > 0) {
       double num = std::pow(gamma_H_cl, a_H);
       eta_g_CL = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_cl);
     } else {
-      eta_g_CL = UNITY_FRACTION / (gamma_H_cl + std::numeric_limits<double>::epsilon());
+      eta_g_CL = UNITY_FRACTION / (gamma_H_cl + SAFE_EPSILON);
     }
 
     simData.v_Qneed_cl[i] = tot_mo_ht_gain - (eta_g_CL * Qtot_cl);
     simData.Qneed_cl_yr += simData.v_Qneed_cl[i];
 
     // 4. Air Volumes
-    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * RHO_CP_AIR) + SAFE_EPSILON;
     simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
 
-    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * RHO_CP_AIR) + SAFE_EPSILON;
     simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
 
     // 5. Total Air Flow
@@ -782,7 +782,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   // Overall distrubtion efficiency for cooling.
   double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
 
-  double ht_eff = heating.efficiency() + std::numeric_limits<double>::epsilon();
+  double ht_eff = heating.efficiency() + SAFE_EPSILON;
   double ht_dh_free = 1.0 - heating.frac_DH_free();
   double ht_dh_sys_net = heating.eta_DH_sys() * heating.eta_DH_network();
   double cl_dc_frac_abs = 1.0 - cooling.eta_DC_frac_abs();
@@ -808,7 +808,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
       Qcool_DC = simData.v_Qneed_cl[i] + Qloss_cl_dist;
       Qcl_sys = 0.0;
     } else {
-      Qcl_sys = (Qloss_cl_dist + simData.v_Qneed_cl[i]) / (IEER + std::numeric_limits<double>::epsilon());
+      Qcl_sys = (Qloss_cl_dist + simData.v_Qneed_cl[i]) / (IEER + SAFE_EPSILON);
       Qcool_DC = 0.0;
     }
 
@@ -859,7 +859,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
 
   // Distribute the total annual pump energy for this mode across the months.
   return div(mult(v_frac_mode, Q_pumps_mode),
-             frac_total + std::numeric_limits<double>::epsilon());
+             frac_total + SAFE_EPSILON);
 }
 
 /**
@@ -902,7 +902,7 @@ void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
     // Otherwise, distribut the combined pump energy proportional to the
     // combined heating/cooling load.
     simData.v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot),
-                       frac_total + std::numeric_limits<double>::epsilon());
+                       frac_total + SAFE_EPSILON);
   }
 }
 
@@ -921,7 +921,7 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
 
   // Total annual energy demand required for heating DHW (MJ/yr).
   double Q_dhw_yr = heating.hotWaterDemand() *
-                    (heating.dhw_tset() - heating.dhw_tsupply()) * rhoCpWater;
+                    (heating.dhw_tset() - heating.dhw_tsupply()) * RHO_CP_WATER;
 
   double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
   double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();

@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "Constants.hpp"
+
 namespace openstudio {
 
 // ==========================================
@@ -207,7 +209,7 @@ template <size_t N>
 [[nodiscard]] inline Vector div(const double s1, const Vector &v1) noexcept {
   Vector vp(v1.size());
   for (size_t i = 0; i < v1.size(); i++) {
-    vp[i] = (std::fabs(v1[i]) < std::numeric_limits<double>::epsilon())
+    vp[i] = (std::fabs(v1[i]) < SAFE_EPSILON)
                 ? std::numeric_limits<double>::infinity()
                 : (s1 / v1[i]);
   }
@@ -217,7 +219,7 @@ template <size_t N>
 [[nodiscard]] inline Vector div(const Vector &v1, const Vector &v2) noexcept {
   Vector vp(v1.size());
   for (size_t i = 0; i < v1.size(); i++) {
-    vp[i] = (std::fabs(v2[i]) < std::numeric_limits<double>::epsilon())
+    vp[i] = (std::fabs(v2[i]) < SAFE_EPSILON)
                 ? std::numeric_limits<double>::infinity()
                 : (v1[i] / v2[i]);
   }

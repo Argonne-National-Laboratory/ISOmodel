@@ -67,7 +67,7 @@ TEST_F(ISOModelFixture, HourlyModelTests) {
   // };
 
   // updated values after correction ventilation where 0.34 hardcoded was
-  // supposed to be rhoCpAirWh
+  // supposed to be RHO_CP_AIR_IN_WATT_HOURS
   double expected[12][13] = {{0, 0, 2.74978, 0.257822, 7.28523, 0.186, 2.24088,
                               0, 0, 41.4661, 0, 0, 0},
                              {0, 0, 2.48852, 0.207327, 5.80074, 0.168, 2.02735,

@@ -12,7 +12,7 @@ public:
   ~Building() = default;
 
   /**
-   * Lighting occupancy sensor dimming fraction (unitless).
+   * lighting occupancy sensor dimming fraction (unitless).
    * Illum controls are set to 1 if there is no control.
    * See iso 15193 Annex F/G for values.
    */

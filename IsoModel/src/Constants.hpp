@@ -17,19 +17,19 @@ namespace openstudio::isomodel {
 
 //// --- Math & Physics ---
 inline constexpr double PI = std::numbers::pi;
-// constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding
-// zero
+constexpr double SAFE_EPSILON = 1e-15; // Small value to prevent division by zero
+constexpr double UNITY_FRACTION = 1.0;  // Unity value for fractions    
 
 // Physical Constants
-// Volumetric heat capacity of air (MJ/m3/K)
-// Derived from: rho (1.22521 kg/m3) * cp (1.012 kJ/kg*K) / 1000 kJ/MJ
-constexpr double rhoCpAir = 1.22521 * 0.001012; // = 0.001239 MJ/m3/K
-constexpr double rhoCpAirWh =
-    rhoCpAir * 1000000.0 / 3600; // Volumetric heat capacity of air ~1200 J/m3K
+constexpr double RHO_AIR = 1.22521;          // Density of air (kg/m3)
+constexpr double CP_AIR = 0.001012;          // Specific heat capacity of air in MJ/kg*K
+constexpr double RHO_CP_AIR = RHO_AIR * CP_AIR; // = 0.001239 MJ/m3/K
+// Volumetric heat capacity of air in wh/m3K = rho*cp in MJ/m3K * 1000000 J/MJ / 3600 s/h = Wh/m3K 
+constexpr double RHO_CP_AIR_IN_WATT_HOURS = RHO_CP_AIR * 1000000.0 / 3600; 
+    // Volumetric heat capacity of air ~1200 J/m3K
                                  // / 3600 = 0.33-0.34 Wh/m3K
 
-constexpr double rhoCpWater =
-    4.1813; // Volumetric heat capacity of water (MJ/m3/K)
+constexpr double RHO_CP_WATER = 4.1813; // Volumetric heat capacity of water (MJ/m3/K)
 
 // ventilation physics constants from ISO 15242 6.7.1
 // based on Q = C * (dP)^0.667
@@ -49,11 +49,11 @@ constexpr double qInfilWindFraction =
 //  the surface and other empirical factors.
 
 // ISO 13790 12.3.1.2 Table 12 constants for heat capacity categories
-constexpr double veryHeavy = 370.0;
-constexpr double heavy = 260.0;
-constexpr double medium = 165.0;
-constexpr double light = 110.0;
-constexpr double veryLight = 80.0;
+constexpr double VERY_HEAVY = 370.0;
+constexpr double HEAVY = 260.0;
+constexpr double MEDIUM = 165.0;
+constexpr double LIGHT = 110.0;
+constexpr double VERY_LIGHT = 80.0;
 
 // from usermodel.hpp
 // Defined as const char* for efficiency, but fully compatible with std::string
@@ -152,7 +152,7 @@ constexpr double SHGCClearGlass = 0.87;
 constexpr double DEFAULT_INITIAL_TEMP = 20.0; // Degrees C
 constexpr double ISO_SKY_TEMP_DIFF = 11.0;    // K (Intermediate zones)
 constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // W/m2K
-constexpr double LIGHTING_LEVEL_COEFF = 53.0;  // Empirical constant for daylighting
+constexpr double LIGHTING_LEVEL_COEFF = 53.0;  // Empirical constant for dayLIGHTing
 constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
 constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
 
@@ -163,7 +163,7 @@ constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
 constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
 
 
-constexpr double UNITY_FRACTION = 1.0;          // Represents 1.0 for various fractional calculations
+
 constexpr double DEFAULT_DH_NETWORK_EFF = 0.9;
 constexpr double DEFAULT_DH_SYS_EFF = 0.87;
 constexpr double DEFAULT_DC_COP = 5.5;

@@ -25,7 +25,7 @@
 namespace openstudio::isomodel {
 
 HourlyModel::HourlyModel() noexcept
-    : invFloorArea(0), rhoCpAir_277(rhoCpAirWh), m_I_sol_max(0),
+    : invFloorArea(0), RHO_CP_AIR_277(RHO_CP_AIR_IN_WATT_HOURS), m_I_sol_max(0),
       m_Cp_air_pressure(0), m_theta_ve_preheat(0), m_eta_ve_rec(0),
       m_phi_fan_spec(0), m_A_nat_inv(0), m_f_phi_int_L(0), m_f_phi_sol_air(0),
       m_f_phi_int_air(0), win_floor_ratio(0) {
@@ -107,7 +107,7 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
   // Optimization: Pre-calculate pump powers for efficiency in loop
   const double pump_cool_power_active = cool_E_pumps * cool_pumpRed;
   const double pump_heat_power_active = heat_E_pumps * heat_pumpRed;
-  const double _rhoCpAirWh = rhoCpAirWh;
+  const double _RHO_CP_AIR_IN_WATT_HOURS = RHO_CP_AIR_IN_WATT_HOURS;
 
   for (int i = 0; i < HOURS_IN_YEAR; ++i) {
     const HourlyCache &cache = m_hourlyData[i];
@@ -147,15 +147,15 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
                        invFloorArea; // Convert to energy units
 
     // Calculate Air Volume for fans (V_{air}) based on heating/cooling delivery
-    // needs Using rhoCpAir_277 (Wh/m3K)
+    // needs Using RHO_CP_AIR_277 (Wh/m3K)
     double V_air = std::max(
         {q_ve_mech,
          m_phi_H_nd[i] /
-             (((heat_occ_sp + heat_dT_supp) - theta_air) * _rhoCpAirWh +
-              std::numeric_limits<double>::epsilon()),
+             (((heat_occ_sp + heat_dT_supp) - theta_air) * _RHO_CP_AIR_IN_WATT_HOURS + 
+              SAFE_EPSILON),
          m_phi_C_nd[i] /
-             ((theta_air - (cool_occ_sp - cool_dT_supp)) * _rhoCpAirWh +
-              std::numeric_limits<double>::epsilon())});
+             ((theta_air - (cool_occ_sp - cool_dT_supp)) * _RHO_CP_AIR_IN_WATT_HOURS + 
+              SAFE_EPSILON)});
 
     // Fan energy: V_{air} * specific fan power
     m_phi_fan[i] = V_air * fan_power_factor;
@@ -215,8 +215,7 @@ inline GainsResult HourlyModel::calculateGains(std::span<const double> curSolar,
       f_L_max *
           (1.0 -
            lightingLevel /
-               (I_lux_nat +
-                std::numeric_limits<double>::epsilon()))); // Use epsilon for
+               (I_lux_nat + SAFE_EPSILON))); // Use epsilon for
                                                            // small divisor
   res.phi_int_L =
       (f_L * f_A_nat + (1.0 - f_A_nat) * f_L_max) * cache.sched_phi_int_L;
@@ -237,6 +236,8 @@ HourlyModel::calculateAirFlows(double theta_air,
 
   AirFlowResult res;
   double theta_e = cache.theta_e;
+  // calculate absolute delta T with a minimum value of 1E-5 because there is 
+  // always some difference between indoor and outdoor temperature in reality
   double absDT = std::max(std::abs(theta_e - theta_air), 1e-5);
 
   // ISO 15242 6.7.1 Step 1: q_{stack} (Stack effect)
@@ -250,8 +251,7 @@ HourlyModel::calculateAirFlows(double theta_air,
   // ISO 15242 6.7.1 Step 2: q_{exfiltration}
   // Protection needed here: stack and wind could both be zero
   double q_ve_sw =
-      q_ve_stack + q_ve_wind +
-      std::numeric_limits<double>::epsilon(); // Use epsilon for small additive
+      q_ve_stack + q_ve_wind + SAFE_EPSILON; // Use epsilon for small additive
                                               // factor
   double q_ve_exf =
       std::max(0.0, std::max(q_ve_stack, q_ve_wind) -
@@ -268,12 +268,11 @@ HourlyModel::calculateAirFlows(double theta_air,
   res.theta_ent =
       (theta_e * (std::max(0.0, (double)q_ve_diff) + q_ve_exf) +
        cache.theta_sup * cache.q_ve_mech_sup) /
-      (q_ve_ent +
-       std::numeric_limits<double>::epsilon()); // Use epsilon for small
+      (q_ve_ent + SAFE_EPSILON); // Use epsilon for small
                                                 // additive factor
 
   // ISO 13790 9.3.1 eq. 21: H_{ve} (Ventilation heat transfer coefficient)
-  res.H_ve = rhoCpAirWh * q_ve_ent;
+  res.H_ve = RHO_CP_AIR_IN_WATT_HOURS * q_ve_ent;
 
   // ISO 13790 C.3 eq. C.6: H_{tr,1}
   // OPTIMIZATION: Harmonic Mean Simplification (A*B)/(A+B)
@@ -380,8 +379,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
   double phi_H_tot = std::accumulate(m_phi_H_nd.begin(), m_phi_H_nd.end(), 0.0);
   double phi_C_tot = std::accumulate(m_phi_C_nd.begin(), m_phi_C_nd.end(),
                                      0.0); // Total cooling need
-  double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot +
-                                     std::numeric_limits<double>::epsilon()),
+  double f_H = std::max(phi_H_tot / (phi_C_tot + phi_H_tot + SAFE_EPSILON),
                         0.1); // Use epsilon for small additive factor
 
   double s_ht =
@@ -473,7 +471,7 @@ void HourlyModel::initialize() {
 
   // OPTIMIZATION 1: Inverse Floor Area
   // Calculate 1.0 / floorArea once.
-  invFloorArea = 1.0 / (floorArea + 1E-15);
+  invFloorArea = 1.0 / (floorArea + SAFE_EPSILON);
 
   m_I_sol_max = structure.irradianceForMaxShadingUse();
   m_Cp_air_pressure = ventilation.dCp();
@@ -556,12 +554,12 @@ void HourlyModel::initialize() {
 
   // OPTIMIZATION 2: Mass Area (A_m) Interpolation
   // Moved out of hourly loop because C_m is constant.
-  if (C_m > veryHeavy)
+  if (C_m > VERY_HEAVY)
     A_m = 3.5;
-  else if (C_m > heavy)
-    A_m = std::lerp(3.0, 3.5, (C_m - heavy) / (veryHeavy - heavy));
-  else if (C_m > medium)
-    A_m = std::lerp(2.5, 3.0, (C_m - medium) / (heavy - medium));
+  else if (C_m > HEAVY)
+    A_m = std::lerp(3.0, 3.5, (C_m - HEAVY) / (VERY_HEAVY - HEAVY));
+  else if (C_m > MEDIUM)
+    A_m = std::lerp(2.5, 3.0, (C_m - MEDIUM) / (HEAVY - MEDIUM));
   else
     A_m = 2.5;
 

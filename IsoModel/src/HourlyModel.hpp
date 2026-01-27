@@ -129,7 +129,7 @@ public: // Changed from private to public
                                     double F_sh_without, int direction);
 
   // Constants
-  double invFloorArea, rhoCpAir_277, f_ve_mech_sup, q_ve_4Pa, H_z;
+  double invFloorArea, RHO_CP_AIR_277, f_ve_mech_sup, q_ve_4Pa, H_z;
   double A_m, C_m, f_sh_use, f_A_nat, f_L_max;
   double I_lux_nat, H_zone, h_ms, h_is, H_tr_is, H_tr_w;
   double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
