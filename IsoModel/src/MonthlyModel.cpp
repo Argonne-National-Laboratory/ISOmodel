@@ -87,14 +87,14 @@ void MonthlyModel::calculateAirVolumes(MonthlySimulationData &simData) const {
   double T_sup_cl =
       cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
 
-  // Volume of air moved for heating (m3).
-  simData.v_Vair_ht =
-      div(simData.v_Qneed_ht, sum(mult(dif(T_sup_ht, simData.v_Th_avg), rhoCpAir),
-                          std::numeric_limits<double>::epsilon()));
-  // Volume of air moved for cooling (m3).
-  simData.v_Vair_cl =
-      div(simData.v_Qneed_cl, sum(mult(dif(simData.v_Tc_avg, T_sup_cl), rhoCpAir),
-                          std::numeric_limits<double>::epsilon()));
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  for (int i = 0; i < monthsInYear; ++i) {
+    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
+
+    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
+  }
 }
 
 void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
@@ -102,13 +102,14 @@ void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
   // Total air flow (m3).
   // Multiply by MEGASECONDS_TO_SECONDS to convert megaseconds to seconds.
   // Divide by LITERS_TO_M3 to convert liters to m3.
-  simData.v_Vair_tot = maximum(
-      sum(simData.v_Vair_ht, simData.v_Vair_cl),
-      div(mult(megasecondsInMonth,
-               ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day *
-                   (MEGASECONDS_TO_SECONDS / LITERS_TO_M3),
-               monthsInYear),
-          UNITY_FRACTION)); // UNITY_FRACTION is 1.0, just for consistency
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
+
+  for (int i = 0; i < monthsInYear; ++i) {
+    double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
+    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
+    simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
+  }
 }
 
 void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
@@ -116,10 +117,12 @@ void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
   // Fan power (MJ)
   // ventilation.fanPower is in W/(L/s) which is J/L, also kJ/m3. Divide by
   // KJ_TO_MJ for MJ/m3 to get fanEnergy in MJ.
-  Vector fanEnergy = mult(simData.v_Vair_tot, ventilation.fanPower() / KJ_TO_MJ);
-
-  // Calculate fan EUI (kWh/m2).
-  simData.v_Qfan_tot = div(div(fanEnergy, structure.floorArea()), kWh2MJ);
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
+  double area_kWh_factor = structure.floorArea() * kWh2MJ;
+  for (int i = 0; i < monthsInYear; ++i) {
+    simData.v_Qfan_tot[i] = (simData.v_Vair_tot[i] * fan_power_factor) / area_kWh_factor;
+  }
 }
 
 Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
@@ -220,12 +223,14 @@ Vector MonthlyModel::calculatePeriodHeatGain(
     const Vector &frac_Pgh_period, const Vector &v_E_sol, double floor_area) {
   PROFILE_FUNCTION();
   // Internal heat gain for the period (MJ).
-  Vector v_W_int_period =
-      mult(megaseconds_period, phi_int_period * floor_area);
-  // Solar heat gain for the period (MJ).
-  Vector v_W_sol_period = mult(v_E_sol, frac_Pgh_period);
-  // Total heat gain for the period (W).
-  return div(sum(v_W_int_period, v_W_sol_period), megaseconds_period);
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  Vector result(megaseconds_period.size());
+  for (size_t i = 0; i < result.size(); ++i) {
+    double W_int = megaseconds_period[i] * phi_int_period * floor_area;
+    double W_sol = v_E_sol[i] * frac_Pgh_period[i];
+    result[i] = (W_int + W_sol) / megaseconds_period[i];
+  }
+  return result;
 }
 
 MonthlyModel::PlugLoads
@@ -557,8 +562,12 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
     theta_er[i] = ISO_SKY_TEMP_DIFF;
   } */
 
-  Vector v_wall_phi_r = mult(
-      mult(mult(mult(simData.v_wall_R_sc, simData.v_wall_U), simData.v_wall_A), simData.v_win_hr), theta_er);
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  Vector v_wall_phi_r(numTotalSurfaces);
+  for (int i = 0; i < numTotalSurfaces; ++i) {
+    v_wall_phi_r[i] = simData.v_wall_R_sc[i] * simData.v_wall_U[i] *
+                      simData.v_wall_A[i] * simData.v_win_hr[i] * theta_er[i];
+  }
 
   // Total solar heat gain for opaque area.
   Vector v_wall_phi_sol = calculateOpaqueSolarHeatGain(m_I_sol, simData.v_wall_A_sol, v_wall_phi_r);
@@ -568,11 +577,12 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   printVector("v_wall_phi_sol", v_wall_phi_sol);
 
   // Total envelope solar heat gain (W).
-  Vector v_phi_sol = sum(v_win_phi_sol, v_wall_phi_sol);
-  printVector("v_phi_sol", v_phi_sol);
-
-  // Total envelope solar heat gain (MJ).
-  simData.v_E_sol = mult(v_phi_sol, megasecondsInMonth);
+  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
+  for (int i = 0; i < monthsInYear; ++i) {
+    double phi_sol = v_win_phi_sol[i] + v_wall_phi_sol[i];
+    simData.v_E_sol[i] = phi_sol * megasecondsInMonth[i];
+    if (debugIsoModelSimulation) { std::cout << "v_phi_sol[" << i << "]=" << phi_sol << std::endl; }
+  }
 }
 
 /**
@@ -1049,23 +1059,27 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
 
-  // Convert internal heat gains from W to MJ.
-  Vector temp = mult(megasecondsInMonth, simData.phi_I_tot, monthsInYear);
+  // OPTIMIZATION: Replaced chained vector math with loops to avoid temporary allocations.
+  Vector v_tot_mo_ht_gain(monthsInYear);
+  Vector v_Qtot_ht(monthsInYear);
+  Vector v_Qtot_cl(monthsInYear);
 
-  // Total internal + solar heat gains (MJ).
-  Vector v_tot_mo_ht_gain = sum(temp, simData.v_E_sol);
+  for (int i = 0; i < monthsInYear; ++i) {
+    v_tot_mo_ht_gain[i] = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
+
+    double Th_avg_minus_mdbt = simData.v_Th_avg[i] - v_mdbt[i];
+    double QT_ht = Th_avg_minus_mdbt * megasecondsInMonth[i] * simData.H_tr;
+    double QV_ht = simData.v_Hve_ht[i] * structure.floorArea() * Th_avg_minus_mdbt * megasecondsInMonth[i];
+    v_Qtot_ht[i] = QT_ht + QV_ht;
+
+    double Tc_avg_minus_mdbt = simData.v_Tc_avg[i] - v_mdbt[i];
+    double QT_cl = Tc_avg_minus_mdbt * simData.H_tr * megasecondsInMonth[i];
+    double QV_cl = simData.v_Hve_cl[i] * structure.floorArea() * Tc_avg_minus_mdbt * megasecondsInMonth[i];
+    v_Qtot_cl[i] = QT_cl + QV_cl;
+  }
 
   // Building heating dimensionless constant.
   double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
-
-  // Heat transfer (loss) by transmission, heating (MJ).
-  Vector v_QT_ht = mult(mult(dif(simData.v_Th_avg, v_mdbt), megasecondsInMonth), simData.H_tr);
-  // Heat transfer (loss) by ventilation, heating (MJ).
-  Vector v_QV_ht =
-      mult(mult(mult(simData.v_Hve_ht, structure.floorArea()), dif(simData.v_Th_avg, v_mdbt)),
-           megasecondsInMonth);
-  // Total heat transfer (loss) (MJ). ISO 13790 7.2.1.3 eq. 7.
-  Vector v_Qtot_ht = sum(v_QT_ht, v_QV_ht);
 
   // Compute the ratio of heat gain to heat loss.
   Vector v_gamma_H_ht = div(
@@ -1100,15 +1114,6 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   // Total heating need (MJ).
   simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
   simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
-
-  // Heat transfer (loss) by transmission, cooling (MJ).
-  Vector v_QT_cl = mult(mult(dif(simData.v_Tc_avg, v_mdbt), simData.H_tr), megasecondsInMonth);
-  // Heat transfer (loss) by ventilation, cooling (MJ).
-  Vector v_QV_cl =
-      mult(mult(mult(simData.v_Hve_cl, structure.floorArea()), dif(simData.v_Tc_avg, v_mdbt)),
-           megasecondsInMonth);
-  // Total heat transfer (loss), cooling (MJ). ISO 13790 7.2.1.3 eq. 7.
-  Vector v_Qtot_cl = sum(v_QT_cl, v_QV_cl);
 
   // Heat transfer (loss) to heat gain ratio, cooling.
   Vector v_gamma_H_cl = div(
