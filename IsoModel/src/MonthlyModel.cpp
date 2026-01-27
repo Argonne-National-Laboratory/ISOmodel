@@ -52,23 +52,6 @@ Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   return m_I_sol;
 }
 
-MonthlyModel::WindowShadingComponents
-MonthlyModel::calculateWindowShadingComponents(const Structure& structure) {
-  PROFILE_FUNCTION();
-  WindowShadingComponents result;
-  result.v_win_ff.resize(numTotalSurfaces);  
-  result.v_win_F_shgl.resize(numTotalSurfaces);
-
-  for (int i = 0; i < numTotalSurfaces; i++) {
-    result.v_win_ff[i] = UNITY_FRACTION - structure.win_ff();
-    // Assign SDF based on pulldown value of 1, 2 or 3.
-    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
-    // SDF fractions which include heat transfer set at 100% (UNITY_FRACTION) for now.
-    result.v_win_F_shgl[i] = SDF * UNITY_FRACTION;
-  }
-  return result;
-}
-
 MonthlyModel::AnnualLightingHours
 MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop) {
   PROFILE_FUNCTION();
@@ -201,12 +184,14 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   // Total annual lighting energy (kWh).
   simData.Q_illum_tot_yr = simData.Q_illum_occ + simData.Q_illum_unocc;
 
-  // Split annual lighting energy into monthly lighting energy via the month
-  // fraction of the year (kWh).
-  simData.v_Q_illum_tot = mult(monthFractionOfYear, simData.Q_illum_tot_yr, monthsInYear);
-  // Total exterior lighting (kWh).
-  simData.v_Q_illum_ext_tot =
-      mult(simData.v_hrs_sun_down_mo, lights.exteriorEnergy() * W2kW);
+  simData.v_Q_illum_tot.resize(monthsInYear);
+  simData.v_Q_illum_ext_tot.resize(monthsInYear);
+  double ext_energy_kW = lights.exteriorEnergy() * W2kW;
+
+  for (int i = 0; i < monthsInYear; ++i) {
+    simData.v_Q_illum_tot[i] = monthFractionOfYear[i] * simData.Q_illum_tot_yr;
+    simData.v_Q_illum_ext_tot[i] = simData.v_hrs_sun_down_mo[i] * ext_energy_kW;
+  }
 }
 
 /**
@@ -221,13 +206,12 @@ void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   simData.v_wall_U = structure.wallUniformRef();
   const Vector &v_win_U = structure.windowUniformRef();
 
-  // Compute total envelope U*A.
-  const Vector v_env_UA = sum(mult(simData.v_wall_A, simData.v_wall_U), mult(simData.v_win_A, v_win_U));
-
-  // Compute direct transmission heat transfer coefficient to exterior in as per
-  // ISO 13790 8.3.1 (W/K). Ignore linear and point thermal bridges for now.
-  // TODO: Implement thermal bridges. BAA@2015-07-13.
-  double H_D = sum(v_env_UA);
+  // Compute direct transmission heat transfer coefficient (H_D)
+  double H_D = 0.0;
+  for (int i = 0; i < numTotalSurfaces; ++i) {
+    H_D += (simData.v_wall_A[i] * simData.v_wall_U[i]) +
+           (simData.v_win_A[i] * v_win_U[i]);
+  }
 
   // For now, also ignore heat transfer to ground (minimal in large buildings),
   // unconditioned spaces, and adjacent buildings.
@@ -259,62 +243,37 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   // collecting area of window in m2 F_sh,gl = shading reduction factor for
   // movable shades as per 11.4.3 (v_win_SDF *v_win_SDF_frac) g_gl = total solar
   // energy transmittance of transparent element as per 11.4.2 F_f = Frame area
-  // fraction (ratio of projected frame area to overall glazed element area) as
-  // per 11.4.5 (v_wind_ff) A_w,p = ovaral projected area of glazed element in
-  // m2 (v_wind_A)
+  // fraction.
 
-  // // Frame factor.
-  // Vector v_win_ff = Vector(numTotalSurfaces);
-
-  // Vector v_win_SDF = Vector(numTotalSurfaces);
-  // Vector v_win_SDF_frac = Vector(numTotalSurfaces);
-
-  // for (int i = 0; i < numTotalSurfaces; i++) {
-  //   v_win_ff[i] = 1.0 - structure.win_ff();
-  //   // Assign SDF based on pulldown value of 1, 2 or 3.
-  //   // TODO: This needs to be clarified in the .ism file as it's not obvious
-  //   // that the window SDF is a magic number rather than the actual value.
-  //   // BAA@2015-07-13 BAA@2015-07-143
-  //   v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDevice()[i]) - 1];
-  //   // Set the SDF fractions which include heat transfer - set at 100% for now.
-  //   v_win_SDF_frac[i] = 1.0;
-  // }
-
-  // Vector v_win_F_shgl = mult(v_win_SDF, v_win_SDF_frac);
-
-
-  // Calculate window shading components
-  WindowShadingComponents shadingComponents = calculateWindowShadingComponents(structure);
-  const Vector &v_win_ff = shadingComponents.v_win_ff;
-  const Vector &v_win_F_shgl = shadingComponents.v_win_F_shgl;
-
-
-  // Normal incidence solar energy transmittance which is SHGC in america.
-  // Vector v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittance();
   const Vector &v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittanceRef();
-  // Solar energy transmittance of glazing as per ISO 13790 11.4.2.
-  Vector v_g_gl = mult(v_g_gln, structure.win_F_W());
+  double win_F_W = structure.win_F_W();
+  double win_ff_base = UNITY_FRACTION - structure.win_ff();
+  double R_sc_ext = structure.R_sc_ext();
+  double hr_factor = ISO_WIN_EXT_RAD_COEFF;
 
-  simData.v_win_A_sol = mult(mult(mult(v_win_F_shgl, v_g_gl), v_win_ff), simData.v_win_A);
+  simData.v_win_A_sol.resize(numTotalSurfaces);
+  simData.v_wall_R_sc.resize(numTotalSurfaces);
+  simData.v_win_hr.resize(numTotalSurfaces);
+  simData.v_wall_A_sol.resize(numTotalSurfaces);
 
-  // // Form factors given in ISO 13790, 11.4.6 as 0.5 for wall, 1.0 for
-  // unshaded roof double envFormFactors[] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-  // 0.5, 0.5, 1 };
+  for (int i = 0; i < numTotalSurfaces; ++i) {
+    // Window Shading & Solar Area
+    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
+    double F_shgl = SDF * UNITY_FRACTION;
+    double g_gl = v_g_gln[i] * win_F_W;
+    simData.v_win_A_sol[i] = F_shgl * g_gl * win_ff_base * simData.v_win_A[i];
 
-  // Vertical wall external convective surface heat resistances (simplified).
-  simData.v_wall_R_sc.assign(numTotalSurfaces, structure.R_sc_ext());
+    // Wall R_sc
+    simData.v_wall_R_sc[i] = R_sc_ext;
 
-  // Window external radiative heat xfer coeff.
-  // ISO 13790 11.4.6 says use hr=5 as a first approx.
-  simData.v_win_hr = mult(simData.v_wall_emiss, ISO_WIN_EXT_RAD_COEFF);
+    // Window hr
+    simData.v_win_hr[i] = simData.v_wall_emiss[i] * hr_factor;
 
-  simData.v_wall_A_sol =
-      mult(mult(mult(simData.v_wall_alpha_sc, simData.v_wall_R_sc), simData.v_wall_U), simData.v_wall_A);
+    // Wall A_sol
+    simData.v_wall_A_sol[i] = simData.v_wall_alpha_sc[i] * simData.v_wall_R_sc[i] * simData.v_wall_U[i] * simData.v_wall_A[i];
+  }
 }
 
-/**
- * Calculate solar heat gain. ISO 13790 11.3.2.
- */
 void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // EN ISO 13790 11.3.2 eq. 43.

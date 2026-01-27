@@ -57,12 +57,6 @@ public:
    */
   std::vector<EndUses> simulate() const;
 
-  // Public helper structs, moved from private for accessibility
-  struct WindowShadingComponents {
-    Vector v_win_ff;
-    Vector v_win_F_shgl;
-  };
-
   struct AnnualLightingHours {
     double t_lt_D;
     double t_lt_N;
@@ -182,8 +176,6 @@ private:
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
   static double calculateBEMAdjustment(const Building& building);
-
-  static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
 
   void calculateVentilation(MonthlySimulationData &simData) const;
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
