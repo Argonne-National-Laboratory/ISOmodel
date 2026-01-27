@@ -63,68 +63,6 @@ void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_do
   }
 }
 
-Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H, double a_H) {
-  PROFILE_FUNCTION();
-  Vector eta_g(monthsInYear);
-  for (unsigned int i = 0; i < eta_g.size(); i++) {
-    if (gamma_H[i] > 0) {
-      double num = std::pow(gamma_H[i], a_H);
-      eta_g[i] = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H[i]);
-    } else {
-      eta_g[i] =
-          UNITY_FRACTION / (gamma_H[i] + std::numeric_limits<double>::epsilon());
-    }
-  }
-  return eta_g;
-}
-
-void MonthlyModel::calculateAirVolumes(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Hot air supply temperature (C).
-  double T_sup_ht =
-      heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
-  // Cool air supply temperature (C).
-  double T_sup_cl =
-      cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
-
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  for (int i = 0; i < monthsInYear; ++i) {
-    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + std::numeric_limits<double>::epsilon();
-    simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
-
-    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + std::numeric_limits<double>::epsilon();
-    simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
-  }
-}
-
-void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Total air flow (m3).
-  // Multiply by MEGASECONDS_TO_SECONDS to convert megaseconds to seconds.
-  // Divide by LITERS_TO_M3 to convert liters to m3.
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
-
-  for (int i = 0; i < monthsInYear; ++i) {
-    double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
-    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
-    simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
-  }
-}
-
-void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Fan power (MJ)
-  // ventilation.fanPower is in W/(L/s) which is J/L, also kJ/m3. Divide by
-  // KJ_TO_MJ for MJ/m3 to get fanEnergy in MJ.
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
-  double area_kWh_factor = structure.floorArea() * kWh2MJ;
-  for (int i = 0; i < monthsInYear; ++i) {
-    simData.v_Qfan_tot[i] = (simData.v_Vair_tot[i] * fan_power_factor) / area_kWh_factor;
-  }
-}
-
 Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
@@ -218,74 +156,7 @@ double MonthlyModel::calculateAverageIlluminationHeatGain(
          KWATTS_TO_WATTS;
 }
 
-Vector MonthlyModel::calculatePeriodHeatGain(
-    double phi_int_period, const Vector &megaseconds_period,
-    const Vector &frac_Pgh_period, const Vector &v_E_sol, double floor_area) {
-  PROFILE_FUNCTION();
-  // Internal heat gain for the period (MJ).
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  Vector result(megaseconds_period.size());
-  for (size_t i = 0; i < result.size(); ++i) {
-    double W_int = megaseconds_period[i] * phi_int_period * floor_area;
-    double W_sol = v_E_sol[i] * frac_Pgh_period[i];
-    result[i] = (W_int + W_sol) / megaseconds_period[i];
-  }
-  return result;
-}
 
-MonthlyModel::PlugLoads
-MonthlyModel::calculatePlugLoads(const Building& building, double frac_hrs_wk_day) {
-  PROFILE_FUNCTION();
-  PlugLoads result;
-
-  // Average electric plug loads (W/m2).
-  double E_plug_elec_avg =
-      building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.electricApplianceHeatGainUnoccupied() *
-          (UNITY_FRACTION - frac_hrs_wk_day);
-  // Average gas plug loads (W/m2).
-  double E_plug_gas_avg =
-      building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.gasApplianceHeatGainUnoccupied() *
-          (UNITY_FRACTION - frac_hrs_wk_day);
-
-  // Electric plug load (kWh/m2).
-  result.v_Q_plug_elec =
-      mult(hoursInMonth, E_plug_elec_avg * W2kW, monthsInYear);
-  // Gas plug load (kWh/m2).
-  result.v_Q_plug_gas =
-      mult(hoursInMonth, E_plug_gas_avg * W2kW, monthsInYear);
-
-  return result;
-}
-
-Vector MonthlyModel::convertEnergyToKWhPerSqM(const Vector &energy_MJ,
-                                              double floor_area) {
-  PROFILE_FUNCTION();
-  if (floor_area == 0.0) {
-    return Vector(energy_MJ.size(), 0.0); // Avoid division by zero
-  }
-  // Convert MJ to kWh, then divide by floor area
-  return div(div(energy_MJ, floor_area), kWh2MJ);
-}
-
-
-MonthlyModel::WindowShadingComponents
-MonthlyModel::calculateWindowShadingComponents(const Structure& structure) {
-  PROFILE_FUNCTION();
-  WindowShadingComponents result;
-  result.v_win_ff.resize(numTotalSurfaces);  
-  result.v_win_F_shgl.resize(numTotalSurfaces);
-
-  for (int i = 0; i < numTotalSurfaces; i++) {
-    result.v_win_ff[i] = UNITY_FRACTION - structure.win_ff();
-    // Assign SDF based on pulldown value of 1, 2 or 3.
-    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
-    // SDF fractions which include heat transfer set at 100% (UNITY_FRACTION) for now.
-    result.v_win_F_shgl[i] = SDF * UNITY_FRACTION;
-  }
-  return result;
-}
 
 MonthlyModel::AnnualLightingHours
 MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop) {
@@ -347,24 +218,23 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
   Vector v_Egh_nt = prod(m_mhEgh, scheduleData.clockHourUnoccupied);
   v_Egh_nt = div(v_Egh_nt, sum(scheduleData.clockHourUnoccupied));
 
-  // Monthly avg Egh energy (Wgh) during the week days.
-  Vector v_Wgh_wk_day = mult(v_Egh_day, scheduleData.weekdayOccupiedMegaseconds);
-  // Monthly avg Wgh during week nights.
-  Vector v_Wgh_wk_nt = mult(v_Egh_nt, scheduleData.weekdayUnoccupiedMegaseconds);
-  // Monthly avg Wgh during weekend days.
-  Vector v_Wgh_wke_day = mult(v_Egh_day, scheduleData.weekendOccupiedMegaseconds);
-  // Monthly avg Wgh during weekend nights.
-  Vector v_Wgh_wke_nt = mult(v_Egh_nt, scheduleData.weekendUnoccupiedMegaseconds);
-  // Egh_avg_total MJ/m2.
-  // OPTIMIZATION: Variadic sum avoids temporaries (see MathHelpers.hpp)
-  Vector v_Wgh_tot = sum(v_Wgh_wk_day, v_Wgh_wk_nt, v_Wgh_wke_day, v_Wgh_wke_nt);
+  // OPTIMIZATION: Fused loop for solar fractions
+  // Replaces 4 mults, 1 sum, and 3 divs (8 vectors)
+  for (int i = 0; i < monthsInYear; ++i) {
+      double Wgh_wk_day = v_Egh_day[i] * scheduleData.weekdayOccupiedMegaseconds[i];
+      double Wgh_wk_nt = v_Egh_nt[i] * scheduleData.weekdayUnoccupiedMegaseconds[i];
+      double Wgh_wke_day = v_Egh_day[i] * scheduleData.weekendOccupiedMegaseconds[i];
+      double Wgh_wke_nt = v_Egh_nt[i] * scheduleData.weekendUnoccupiedMegaseconds[i];
+      
+      double Wgh_tot = Wgh_wk_day + Wgh_wk_nt + Wgh_wke_day + Wgh_wke_nt;
+      // Use 0.0 if total is 0 to avoid division by zero/infinity
+      double inv_Wgh_tot = (Wgh_tot > SMALL_EPSILON) ? 1.0 / Wgh_tot : 0.0;
 
-  // frac_Egh_unocc_weekday_night
-  simData.frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
-  // frac_Egh_unocc_weekend_day
-  simData.frac_Pgh_wke_day = div(v_Wgh_wke_day, v_Wgh_tot);
-  // frac_Egh_unocc_weekend_night
-  simData.frac_Pgh_wke_nt = div(v_Wgh_wke_nt, v_Wgh_tot);
+      // frac_Egh_unocc_weekday_night
+      simData.frac_Pgh_wk_nt[i] = Wgh_wk_nt * inv_Wgh_tot;
+      simData.frac_Pgh_wke_day[i] = Wgh_wke_day * inv_Wgh_tot;
+      simData.frac_Pgh_wke_nt[i] = Wgh_wke_nt * inv_Wgh_tot;
+  }
 
   calculateSunHours(m_mhEgh, simData.v_hrs_sun_down_mo);
 }
@@ -459,31 +329,17 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   // per 11.4.5 (v_wind_ff) A_w,p = ovaral projected area of glazed element in
   // m2 (v_wind_A)
 
-  // // Frame factor.
-  // Vector v_win_ff = Vector(numTotalSurfaces);
+  // OPTIMIZATION: Inlined calculation of shading components to avoid struct return
+  Vector v_win_ff(numTotalSurfaces);
+  Vector v_win_F_shgl(numTotalSurfaces);
 
-  // Vector v_win_SDF = Vector(numTotalSurfaces);
-  // Vector v_win_SDF_frac = Vector(numTotalSurfaces);
-
-  // for (int i = 0; i < numTotalSurfaces; i++) {
-  //   v_win_ff[i] = 1.0 - structure.win_ff();
-  //   // Assign SDF based on pulldown value of 1, 2 or 3.
-  //   // TODO: This needs to be clarified in the .ism file as it's not obvious
-  //   // that the window SDF is a magic number rather than the actual value.
-  //   // BAA@2015-07-13 BAA@2015-07-143
-  //   v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDevice()[i]) - 1];
-  //   // Set the SDF fractions which include heat transfer - set at 100% for now.
-  //   v_win_SDF_frac[i] = 1.0;
-  // }
-
-  // Vector v_win_F_shgl = mult(v_win_SDF, v_win_SDF_frac);
-
-
-  // Calculate window shading components
-  WindowShadingComponents shadingComponents = calculateWindowShadingComponents(structure);
-  const Vector &v_win_ff = shadingComponents.v_win_ff;
-  const Vector &v_win_F_shgl = shadingComponents.v_win_F_shgl;
-
+  for (int i = 0; i < numTotalSurfaces; i++) {
+    v_win_ff[i] = UNITY_FRACTION - structure.win_ff();
+    // Assign SDF based on pulldown value of 1, 2 or 3.
+    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
+    // SDF fractions which include heat transfer set at 100% (UNITY_FRACTION) for now.
+    v_win_F_shgl[i] = SDF * UNITY_FRACTION;
+  }
 
   // Normal incidence solar energy transmittance which is SHGC in america.
   // Vector v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittance();
@@ -616,13 +472,7 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
   simData.phi_int_wk_nt = phi_unoccupied_total;
   simData.phi_int_wke_day = phi_unoccupied_total;
   simData.phi_int_wke_nt = phi_unoccupied_total;
-}
 
-/**
- * Compute total internal heat gain in W.
- */
-void MonthlyModel::calculateTotalInternalGain(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
   // Total internal heat gain (W).
   simData.phi_I_tot =
       (simData.phi_int_avg + simData.phi_plug_avg + simData.phi_illum_avg) * structure.floorArea();
@@ -634,15 +484,36 @@ void MonthlyModel::calculateTotalInternalGain(MonthlySimulationData &simData) co
 void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
 
-  simData.v_P_tot_wk_nt = calculatePeriodHeatGain(simData.phi_int_wk_nt,
-                                          simData.scheduleData.weekdayUnoccupiedMegaseconds,
-                                          simData.frac_Pgh_wk_nt, simData.v_E_sol, structure.floorArea());
-  simData.v_P_tot_wke_day = calculatePeriodHeatGain(simData.phi_int_wke_day,
-                                            simData.scheduleData.weekendOccupiedMegaseconds,
-                                            simData.frac_Pgh_wke_day, simData.v_E_sol, structure.floorArea());
-  simData.v_P_tot_wke_nt = calculatePeriodHeatGain(simData.phi_int_wke_nt,
-                                           simData.scheduleData.weekendUnoccupiedMegaseconds,
-                                           simData.frac_Pgh_wke_nt, simData.v_E_sol, structure.floorArea());
+  // Ensure vectors are sized
+  simData.v_P_tot_wk_nt.resize(monthsInYear);
+  simData.v_P_tot_wke_day.resize(monthsInYear);
+  simData.v_P_tot_wke_nt.resize(monthsInYear);
+
+  double floor_area = structure.floorArea();
+  double phi_int_wk_nt = simData.phi_int_wk_nt;
+  double phi_int_wke_day = simData.phi_int_wke_day;
+  double phi_int_wke_nt = simData.phi_int_wke_nt;
+
+  // OPTIMIZATION: Fused loop for unoccupied heat gain
+  for (int i = 0; i < monthsInYear; ++i) {
+      // Week Night
+      double ms_wk_nt = simData.scheduleData.weekdayUnoccupiedMegaseconds[i];
+      double W_int_wk_nt = ms_wk_nt * phi_int_wk_nt * floor_area;
+      double W_sol_wk_nt = simData.v_E_sol[i] * simData.frac_Pgh_wk_nt[i];
+      simData.v_P_tot_wk_nt[i] = (ms_wk_nt > 0) ? (W_int_wk_nt + W_sol_wk_nt) / ms_wk_nt : 0.0;
+
+      // Weekend Day
+      double ms_wke_day = simData.scheduleData.weekendOccupiedMegaseconds[i];
+      double W_int_wke_day = ms_wke_day * phi_int_wke_day * floor_area;
+      double W_sol_wke_day = simData.v_E_sol[i] * simData.frac_Pgh_wke_day[i];
+      simData.v_P_tot_wke_day[i] = (ms_wke_day > 0) ? (W_int_wke_day + W_sol_wke_day) / ms_wke_day : 0.0;
+
+      // Weekend Night
+      double ms_wke_nt = simData.scheduleData.weekendUnoccupiedMegaseconds[i];
+      double W_int_wke_nt = ms_wke_nt * phi_int_wke_nt * floor_area;
+      double W_sol_wke_nt = simData.v_E_sol[i] * simData.frac_Pgh_wke_nt[i];
+      simData.v_P_tot_wke_nt[i] = (ms_wke_nt > 0) ? (W_int_wke_nt + W_sol_wke_nt) / ms_wke_nt : 0.0;
+  }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_P_tot_wk_nt", simData.v_P_tot_wk_nt);
@@ -680,6 +551,22 @@ void MonthlyModel::calculateWeekendTemperatures(
   // Steps: 0=wk_nt, 1=wke_day, 2=wke_nt, 3=wke_day, 4=wke_nt
   for (int step = 0; step < 5; ++step) {
     double ti = v_ti[step];
+
+    // Handle zero duration steps (e.g. if occupied 24 hours)
+    if (ti < 1e-6) {
+        for (int m = 0; m < monthsInYear; ++m) {
+             double limit;
+             if (step == 0) limit = v_limit_start_col0[m];
+             else limit = std::max(v_current_T[m], tset_unocc);
+             
+             // Temp stays at limit
+             v_wke_avg[m] += limit;
+             if (step == 1) v_wk_nt[m] = limit;
+             if (step < 4) v_current_T[m] = limit;
+        }
+        continue;
+    }
+
     double exp_val = std::exp(-ti / tau);
     double inv_ti_tau = tau / ti;
     double one_minus_exp = 1.0 - exp_val;
@@ -836,24 +723,19 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
     printVector("v_Tc_wke_avg", v_Tc_wke_avg);
   }
 
-  // Find the average temp for the whole week from the fractions of each period.
-  Vector v_Th_wk_avg = sum(
-      sum(mult(v_Th_wk_day, simData.scheduleData.frac_hrs_wk_day), mult(v_Th_wk_nt, simData.scheduleData.frac_hrs_wk_nt)),
-      mult(v_Th_wke_avg, simData.scheduleData.frac_hrs_wke_tot));
-  Vector v_Tc_wk_avg = sum(
-      sum(mult(v_Tc_wk_day, simData.scheduleData.frac_hrs_wk_day), mult(v_Tc_wk_nt, simData.scheduleData.frac_hrs_wk_nt)),
-      mult(v_Tc_wke_avg, simData.scheduleData.frac_hrs_wke_tot));
+  // OPTIMIZATION: Fused loop for weekly average temperatures
+  // Replaces 10 vector operations (mults and sums)
+  for (int i = 0; i < monthsInYear; i++) {
+    double Th_wk_avg = v_Th_wk_day[i] * simData.scheduleData.frac_hrs_wk_day +
+                       v_Th_wk_nt[i] * simData.scheduleData.frac_hrs_wk_nt +
+                       v_Th_wke_avg[i] * simData.scheduleData.frac_hrs_wke_tot;
+    
+    double Tc_wk_avg = v_Tc_wk_day[i] * simData.scheduleData.frac_hrs_wk_day +
+                       v_Tc_wk_nt[i] * simData.scheduleData.frac_hrs_wk_nt +
+                       v_Tc_wke_avg[i] * simData.scheduleData.frac_hrs_wke_tot;
 
-  if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_Tc_wk_avg", v_Tc_wk_avg);
-    printVector("v_Th_wk_avg", v_Th_wk_avg);
-  }
-
-  // The final avg for monthly energy computations is the lesser of the avg
-  // computed above and the heating set control.
-  for (unsigned int i = 0; i < v_Tc_wk_avg.size(); i++) {
-    simData.v_Th_avg[i] = std::min(v_Th_wk_avg[i], ht_tset_ctrl);
-    simData.v_Tc_avg[i] = std::min(v_Tc_wk_avg[i], cl_tset_ctrl);
+    simData.v_Th_avg[i] = std::min(Th_wk_avg, ht_tset_ctrl);
+    simData.v_Tc_avg[i] = std::min(Tc_wk_avg, cl_tset_ctrl);
   }
 }
 
@@ -993,89 +875,93 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
 
-  // OPTIMIZATION: Replaced chained vector math with loops to avoid temporary allocations.
-  Vector v_tot_mo_ht_gain(monthsInYear);
-  Vector v_Qtot_ht(monthsInYear);
-  Vector v_Qtot_cl(monthsInYear);
+  // Building heating dimensionless constant.
+  double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
 
+  // Pre-calculate constants for Air Volumes
+  double T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
+  double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
+
+  // Pre-calculate constants for Total Air Flow
+  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
+
+  // Pre-calculate constants for Fan Energy
+  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
+  double area_kWh_factor = structure.floorArea() * kWh2MJ;
+
+  // Initialize sums
+  simData.Qneed_ht_yr = 0.0;
+  simData.Qneed_cl_yr = 0.0;
+
+  // Ensure vectors are sized
+  simData.v_Qneed_ht.resize(monthsInYear);
+  simData.v_Qneed_cl.resize(monthsInYear);
+  simData.v_Vair_ht.resize(monthsInYear);
+  simData.v_Vair_cl.resize(monthsInYear);
+  simData.v_Vair_tot.resize(monthsInYear);
+  simData.v_Qfan_tot.resize(monthsInYear);
+
+  // OPTIMIZATION: Fused loop for Heating and Cooling Needs
+  // Calculates Gains, Losses, Gamma, Eta, and Qneed in one pass
   for (int i = 0; i < monthsInYear; ++i) {
-    v_tot_mo_ht_gain[i] = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
+    // 1. Calculate Gains and Losses
+    double tot_mo_ht_gain = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
 
     double Th_avg_minus_mdbt = simData.v_Th_avg[i] - v_mdbt[i];
     double QT_ht = Th_avg_minus_mdbt * megasecondsInMonth[i] * simData.H_tr;
     double QV_ht = simData.v_Hve_ht[i] * structure.floorArea() * Th_avg_minus_mdbt * megasecondsInMonth[i];
-    v_Qtot_ht[i] = QT_ht + QV_ht;
+    double Qtot_ht = QT_ht + QV_ht;
 
     double Tc_avg_minus_mdbt = simData.v_Tc_avg[i] - v_mdbt[i];
     double QT_cl = Tc_avg_minus_mdbt * simData.H_tr * megasecondsInMonth[i];
     double QV_cl = simData.v_Hve_cl[i] * structure.floorArea() * Tc_avg_minus_mdbt * megasecondsInMonth[i];
-    v_Qtot_cl[i] = QT_cl + QV_cl;
+    double Qtot_cl = QT_cl + QV_cl;
+
+    // 2. Heating Calculations
+    double gamma_H_ht = tot_mo_ht_gain / (Qtot_ht + SMALL_EPSILON);
+    double eta_g_H;
+    if (gamma_H_ht > 0) {
+        double num = std::pow(gamma_H_ht, a_H);
+        eta_g_H = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_ht);
+    } else {
+        eta_g_H = UNITY_FRACTION / (gamma_H_ht + SMALL_EPSILON);
+    }
+    
+    simData.v_Qneed_ht[i] = Qtot_ht - eta_g_H * tot_mo_ht_gain;
+    simData.Qneed_ht_yr += simData.v_Qneed_ht[i];
+
+    // 3. Cooling Calculations
+    double gamma_H_cl = Qtot_cl / (tot_mo_ht_gain + SMALL_EPSILON);
+    double eta_g_CL;
+    if (gamma_H_cl > 0) {
+        double num = std::pow(gamma_H_cl, a_H);
+        eta_g_CL = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_cl);
+    } else {
+        eta_g_CL = UNITY_FRACTION / (gamma_H_cl + SMALL_EPSILON);
+    }
+
+    simData.v_Qneed_cl[i] = tot_mo_ht_gain - eta_g_CL * Qtot_cl;
+    simData.Qneed_cl_yr += simData.v_Qneed_cl[i];
+
+    // 4. Calculate Air Volumes
+    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + SMALL_EPSILON;
+    simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
+
+    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + SMALL_EPSILON;
+    simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
+
+    // 5. Calculate Total Air Flow
+    double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
+    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
+    simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
+
+    // 6. Calculate Fan Energy
+    simData.v_Qfan_tot[i] = (simData.v_Vair_tot[i] * fan_power_factor) / area_kWh_factor;
   }
 
-  // Building heating dimensionless constant.
-  double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
-
-  // Compute the ratio of heat gain to heat loss.
-  Vector v_gamma_H_ht = div(
-      v_tot_mo_ht_gain,
-      sum(v_Qtot_ht,
-          std::numeric_limits<
-              double>::epsilon())); // Add
-                                    // std::numeric_limits<double>::epsilon()
-                                    // to avoid divide by zero.
-
-  // Heating utilization factor.
-  // Vector v_eta_g_H(monthsInYear);
-
-  // // For each month, set the check the heat gain ratio and set the heating
-  // // utlization factor accordingly.
-  // for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
-  //   if (v_gamma_H_ht[i] > 0) {
-  //     // Optimization: x^(a+1) = x^a * x
-  //     double num = std::pow(v_gamma_H_ht[i], a_H);
-  //     v_eta_g_H[i] = (1.0 - num) / (1.0 - num * v_gamma_H_ht[i]);
-  //   } else {
-  //     v_eta_g_H[i] =
-  //         1.0 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
-  //   }
-  // }
-
-
-  Vector v_eta_g_H = calculateUtilizationFactor(v_gamma_H_ht, a_H);
-
-  // Total heating need (MJ).
-  simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
-  simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
-
-  // Heat transfer (loss) to heat gain ratio, cooling.
-  Vector v_gamma_H_cl = div(
-      v_Qtot_cl, sum(v_tot_mo_ht_gain, std::numeric_limits<double>::epsilon()));
-
-  // Compute the cooling gain utilization factor eta_g_cl
-  Vector v_eta_g_CL = calculateUtilizationFactor(v_gamma_H_cl, a_H);
-
-  // Total cooling need (MJ).
-  simData.v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl));
-  simData.Qneed_cl_yr = sum(simData.v_Qneed_cl);
-
-  // Hot air supply temperature (C).
-  double T_sup_ht =
-      heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
-  // Cool air supply temperature (C).
-  double T_sup_cl =
-      cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
-
-  // Calculate air volumes for heating and cooling
-  calculateAirVolumes(simData);
   printVector("v_Vair_ht", simData.v_Vair_ht);
   printVector("v_Vair_cl", simData.v_Vair_cl);
-
-  // Calculate total air flow
-  calculateTotalAirFlow(simData);
   printVector("v_Vair_tot", simData.v_Vair_tot);
-
-  // Calculate fan energy
-  calculateFanEnergy(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     // Note: fanEnergy is no longer available here, but we can print the inputs and output
     printVector("v_Vair_tot (input to fan calc)", simData.v_Vair_tot);
@@ -1084,38 +970,6 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
     std::cout << "structure.floorArea() = " << structure.floorArea()
               << std::endl;
     printVector("v_Qfan_tot (output from fan calc)", simData.v_Qfan_tot);
-  }
-}
-
-void MonthlyModel::calculateHeatingSystemLoads(MonthlySimulationData &simData,
-                                               const Vector &v_Qloss_ht_dist) const {
-  PROFILE_FUNCTION();
-  if (heating.DH_YesNo() == 1) {
-    // If District Heating is enabled, the district heating system handles the load
-    simData.v_Qht_DH = sum(simData.v_Qneed_ht, v_Qloss_ht_dist);
-    simData.v_Qht_sys.assign(monthsInYear, 0.0); // No local system load
-  } else {
-    // Otherwise, the local system handles the load
-    simData.v_Qht_sys =
-        div(sum(v_Qloss_ht_dist, simData.v_Qneed_ht),
-            heating.efficiency() + std::numeric_limits<double>::epsilon());
-    simData.v_Qht_DH.assign(monthsInYear, 0.0); // No district heating load
-  }
-}
-
-void MonthlyModel::calculateCoolingSystemLoads(MonthlySimulationData &simData,
-                                               const Vector &v_Qloss_cl_dist,
-                                               double IEER) const {
-  PROFILE_FUNCTION();
-  if (cooling.DC_YesNo() == 1) {
-    // If District Cooling is enabled, the district cooling system handles the load
-    simData.v_Qcool_DC = sum(simData.v_Qneed_cl, v_Qloss_cl_dist);
-    simData.v_Qcl_sys.assign(monthsInYear, 0.0); // No local system load
-  } else {
-    // Otherwise, the local system handles the load
-    simData.v_Qcl_sys = div(sum(v_Qloss_cl_dist, simData.v_Qneed_cl),
-                    IEER + std::numeric_limits<double>::epsilon());
-    simData.v_Qcool_DC.assign(monthsInYear, 0.0); // No district cooling load
   }
 }
 
@@ -1170,71 +1024,73 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   // Overall distrubtion efficiency for cooling.
   double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
 
-  // Losses from HVAC distributuion, heating.
-  Vector v_Qloss_ht_dist =
-      div(mult(simData.v_Qneed_ht, (1 - eta_dist_ht)), eta_dist_ht);
-  // Losses from HVAC distributuion, cooling.
-  Vector v_Qloss_cl_dist =
-      div(mult(simData.v_Qneed_cl, (1 - eta_dist_cl)), eta_dist_cl);
-  printVector("v_Qloss_ht_dist", v_Qloss_ht_dist);
-  printVector("v_Qloss_cl_dist", v_Qloss_cl_dist);
+  // Pre-calc factors for loop
+  double loss_factor_ht = (1.0 - eta_dist_ht) / eta_dist_ht;
+  double loss_factor_cl = (1.0 - eta_dist_cl) / eta_dist_cl;
+  double inv_heat_eff = 1.0 / (heating.efficiency() + SMALL_EPSILON);
+  double inv_IEER = 1.0 / (IEER + SMALL_EPSILON);
+  double dc_elec_factor = 1.0 / (cooling.eta_DC_COP() * cooling.eta_DC_network());
+  double dc_abs_factor = 1.0 / cooling.eta_DC_COP_abs();
+  double one_minus_eta_DC_frac_abs = 1.0 - cooling.eta_DC_frac_abs();
+  double one_minus_frac_DC_free = 1.0 - cooling.frac_DC_free();
+  double dh_factor = 1.0 / (heating.eta_DH_sys() * heating.eta_DH_network());
+  double one_minus_frac_DH_free = 1.0 - heating.frac_DH_free();
 
-  calculateHeatingSystemLoads(simData, v_Qloss_ht_dist);
-  calculateCoolingSystemLoads(simData, v_Qloss_cl_dist, IEER);
+  bool dh_yes = (heating.DH_YesNo() == 1);
+  bool dc_yes = (cooling.DC_YesNo() == 1);
+  bool heat_is_elec = (heating.energyType() == 1);
 
-  printVector("v_Qht_sys", simData.v_Qht_sys);
-  printVector("v_Qht_DH", simData.v_Qht_DH);
-  printVector("v_Qcl_sys", simData.v_Qcl_sys);
-  printVector("v_Qcool_DC", simData.v_Qcool_DC);
-  Vector v_Qcl_DC_elec = div(mult(simData.v_Qcool_DC, 1 - cooling.eta_DC_frac_abs()),
-                             cooling.eta_DC_COP() * cooling.eta_DC_network());
-  Vector v_Qcl_DC_abs = div(mult(simData.v_Qcool_DC, 1 - cooling.frac_DC_free()),
-                            cooling.eta_DC_COP_abs());
-  printVector("v_Qcl_DC_elec", v_Qcl_DC_elec);
-  printVector("v_Qcl_DC_abs", v_Qcl_DC_abs);
+  // OPTIMIZATION: Fused loop for HVAC energy use
+  // Replaces multiple vector operations and helper function calls
+  simData.v_Qht_sys.resize(monthsInYear);
+  simData.v_Qht_DH.resize(monthsInYear);
+  simData.v_Qcl_sys.resize(monthsInYear);
+  simData.v_Qcool_DC.resize(monthsInYear);
+  simData.v_Qcl_elec_tot.resize(monthsInYear);
+  simData.v_Qcl_gas_tot.resize(monthsInYear);
+  simData.v_Qelec_ht.resize(monthsInYear);
+  simData.v_Qgas_ht.resize(monthsInYear);
 
-  Vector v_Qht_DH_total = div(mult(simData.v_Qht_DH, 1 - heating.frac_DH_free()),
-                              heating.eta_DH_sys() * heating.eta_DH_network());
-  simData.v_Qcl_elec_tot = sum(simData.v_Qcl_sys, v_Qcl_DC_elec);
-  simData.v_Qcl_gas_tot = v_Qcl_DC_abs;
-  printVector("v_Qht_DH_total", v_Qht_DH_total);
-  printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
-  printVector("v_Qcl_gas_tot", simData.v_Qcl_gas_tot);
+  for (int i = 0; i < monthsInYear; ++i) {
+      double Qloss_ht_dist = simData.v_Qneed_ht[i] * loss_factor_ht;
+      double Qloss_cl_dist = simData.v_Qneed_cl[i] * loss_factor_cl;
 
-  // Vector v_Qelec_ht,v_Qgas_ht;
+      // Heating System Loads
+      if (dh_yes) {
+          simData.v_Qht_DH[i] = simData.v_Qneed_ht[i] + Qloss_ht_dist;
+          simData.v_Qht_sys[i] = 0.0;
+      } else {
+          simData.v_Qht_sys[i] = (Qloss_ht_dist + simData.v_Qneed_ht[i]) * inv_heat_eff;
+          simData.v_Qht_DH[i] = 0.0;
+      }
 
-  if (heating.energyType() == 1) {
-    simData.v_Qelec_ht = simData.v_Qht_sys;
-    simData.v_Qgas_ht = v_Qht_DH_total;
-  } else {
-    simData.v_Qelec_ht.assign(monthsInYear, 0.0);
-    simData.v_Qgas_ht = sum(simData.v_Qht_sys, v_Qht_DH_total);
+      // Cooling System Loads
+      if (dc_yes) {
+          simData.v_Qcool_DC[i] = simData.v_Qneed_cl[i] + Qloss_cl_dist;
+          simData.v_Qcl_sys[i] = 0.0;
+      } else {
+          simData.v_Qcl_sys[i] = (Qloss_cl_dist + simData.v_Qneed_cl[i]) * inv_IEER;
+          simData.v_Qcool_DC[i] = 0.0;
+      }
+
+      double Qcl_DC_elec = simData.v_Qcool_DC[i] * one_minus_eta_DC_frac_abs * dc_elec_factor;
+      double Qcl_DC_abs = simData.v_Qcool_DC[i] * one_minus_frac_DC_free * dc_abs_factor;
+      double Qht_DH_total = simData.v_Qht_DH[i] * one_minus_frac_DH_free * dh_factor;
+
+      simData.v_Qcl_elec_tot[i] = simData.v_Qcl_sys[i] + Qcl_DC_elec;
+      simData.v_Qcl_gas_tot[i] = Qcl_DC_abs;
+
+      if (heat_is_elec) {
+          simData.v_Qelec_ht[i] = simData.v_Qht_sys[i];
+          simData.v_Qgas_ht[i] = Qht_DH_total;
+      } else {
+          simData.v_Qelec_ht[i] = 0.0;
+          simData.v_Qgas_ht[i] = simData.v_Qht_sys[i] + Qht_DH_total;
+      }
   }
+
   printVector("v_Qelec_ht", simData.v_Qelec_ht);
   printVector("v_Qgas_ht", simData.v_Qgas_ht);
-}
-
-Vector MonthlyModel::calculatePumpEnergyForMode(
-    const Vector &v_Qneed_mode, const Vector &v_Qneed_total,
-    double E_pumps_w_per_m2, double pump_control_reduction, double floor_area) {
-  PROFILE_FUNCTION();
-
-  // Total annual pump energy for the mode if pumps run continuously (MJ/m2).
-  double Q_pumps_yr_mode_per_m2 =
-      sum(mult(megasecondsInMonth, E_pumps_w_per_m2, monthsInYear));
-
-  // Fraction of time the system is in this mode each month.
-  Vector v_frac_mode = div(v_Qneed_mode, v_Qneed_total);
-
-  // Total energy fraction for this mode over the year.
-  double frac_total = sum(v_frac_mode);
-
-  // Total yearly pump energy, adjusted by control factor and floor area (MJ).
-  double Q_pumps_mode = Q_pumps_yr_mode_per_m2 * pump_control_reduction * floor_area;
-
-  // Distribute the total annual pump energy for this mode across the months.
-  return div(mult(v_frac_mode, Q_pumps_mode),
-             frac_total + std::numeric_limits<double>::epsilon());
 }
 
 /**
@@ -1252,32 +1108,45 @@ void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
   // challenges, which is why they are not yet implements. Until then, consider
   // the monthly pump values unreliable. BAA@2015-07-15.
 
-  // Total monthly heating and cooling need (MJ).
-  Vector v_Qneed_total = sum(simData.v_Qneed_ht, simData.v_Qneed_cl);
+  // OPTIMIZATION: Fused loop for Pump Energy
+  // Replaces calculatePumpEnergyForMode and multiple vector ops
+  double floor_area = structure.floorArea();
+  double ht_pump_factor = heating.E_pumps() * heating.pumpControlReduction() * floor_area;
+  double cl_pump_factor = cooling.E_pumps() * cooling.pumpControlReduction() * floor_area;
 
-  // Calculate monthly pump energy for heating mode.
-  Vector v_Q_pumps_ht = calculatePumpEnergyForMode(
-      simData.v_Qneed_ht, v_Qneed_total, heating.E_pumps(), heating.pumpControlReduction(), structure.floorArea());
+  // Calculate total annual pump energy potential (if running continuously)
+  double Q_pumps_yr_ht_base = 0.0;
+  double Q_pumps_yr_cl_base = 0.0;
+  for(int i=0; i<monthsInYear; ++i) {
+      double val = megasecondsInMonth[i];
+      Q_pumps_yr_ht_base += val * ht_pump_factor;
+      Q_pumps_yr_cl_base += val * cl_pump_factor;
+  }
 
-  // Calculate monthly pump energy for cooling mode.
-  Vector v_Q_pumps_cl = calculatePumpEnergyForMode(
-      simData.v_Qneed_cl, v_Qneed_total, cooling.E_pumps(), cooling.pumpControlReduction(), structure.floorArea());
+  // Calculate fractions
+  double frac_ht_total = 0.0;
+  double frac_cl_total = 0.0;
+  Vector v_frac_ht(monthsInYear);
+  Vector v_frac_cl(monthsInYear);
 
-  // Total pump operational factor.
-  Vector v_frac_tot =
-      div(sum(simData.v_Qneed_ht, simData.v_Qneed_cl), simData.Qneed_ht_yr + simData.Qneed_cl_yr);
-  double frac_total = sum(v_frac_tot);
-  double Q_pumps_tot = sum(v_Q_pumps_ht) + sum(v_Q_pumps_cl);
+  for(int i=0; i<monthsInYear; ++i) {
+      double total_need = simData.v_Qneed_ht[i] + simData.v_Qneed_cl[i];
+      if (total_need > 0) {
+          v_frac_ht[i] = simData.v_Qneed_ht[i] / total_need;
+          v_frac_cl[i] = simData.v_Qneed_cl[i] / total_need;
+      } else {
+          v_frac_ht[i] = 0.0;
+          v_frac_cl[i] = 0.0;
+      }
+      frac_ht_total += v_frac_ht[i];
+      frac_cl_total += v_frac_cl[i];
+  }
 
-  if (sum(v_Q_pumps_ht) == 0.0 || sum(v_Q_pumps_cl) == 0.0) {
-    // If there is just heating or just cooling, use the individual heating or
-    // cooling pump energy vector.
-    simData.v_Q_pump_tot = sum(v_Q_pumps_ht, v_Q_pumps_cl);
-  } else {
-    // Otherwise, distribut the combined pump energy proportional to the
-    // combined heating/cooling load.
-    simData.v_Q_pump_tot = div(mult(v_frac_tot, Q_pumps_tot),
-                       frac_total + std::numeric_limits<double>::epsilon());
+  simData.v_Q_pump_tot.resize(monthsInYear);
+  for(int i=0; i<monthsInYear; ++i) {
+      double Q_pumps_ht = (frac_ht_total > 0) ? (v_frac_ht[i] * Q_pumps_yr_ht_base / frac_ht_total) : 0.0;
+      double Q_pumps_cl = (frac_cl_total > 0) ? (v_frac_cl[i] * Q_pumps_yr_cl_base / frac_cl_total) : 0.0;
+      simData.v_Q_pump_tot[i] = Q_pumps_ht + Q_pumps_cl;
   }
 }
 
@@ -1294,29 +1163,28 @@ void MonthlyModel::energyGeneration() const { PROFILE_FUNCTION(); }
 void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Energy from solar energy hot water collectors - not included yet
-  Vector v_Q_dhw_solar(monthsInYear, 0.0);
+  // Vector v_Q_dhw_solar(monthsInYear, 0.0);
 
   // Total annual energy demand required for heating DHW (MJ/yr).
   double Q_dhw_yr = heating.hotWaterDemand() *
                     (heating.dhw_tset() - heating.dhw_tsupply()) * rhoCpWater;
 
-  Vector v_MonthlyDemand = mult(daysInMonth, Q_dhw_yr, monthsInYear);
-  Vector v_frac_MonthlyDemand_yr = div(v_MonthlyDemand, daysInYear);
-  Vector v_Qe_demand =
-      div(v_frac_MonthlyDemand_yr, heating.hotWaterDistributionEfficiency());
+  // OPTIMIZATION: Fused loop for DHW
+  double inv_daysInYear = 1.0 / daysInYear;
+  double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
+  double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();
+  double inv_kWh2MJ = 1.0 / kWh2MJ;
 
-  // Monthly DHW energy demand including distribution efficiency.
-  Vector v_Q_dhw_demand = div(v_Qe_demand, kWh2MJ);
-  // Total monthly supply need is (demand - solar)/system efficiency.
-  Vector v_Q_dhw_need = maximum(div(dif(v_Q_dhw_demand, v_Q_dhw_solar),
-                                    heating.hotWaterSystemEfficiency()),
-                                0);
+  Vector v_Q_dhw_need(monthsInYear);
+  for(int i=0; i<monthsInYear; ++i) {
+      double monthlyDemand = daysInMonth[i] * Q_dhw_yr;
+      double frac_MonthlyDemand_yr = monthlyDemand * inv_daysInYear;
+      double Qe_demand = frac_MonthlyDemand_yr * inv_dist_eff;
+      double Q_dhw_demand = Qe_demand * inv_kWh2MJ;
+      v_Q_dhw_need[i] = std::max(0.0, Q_dhw_demand * inv_sys_eff);
+  }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printVector("v_MonthlyDemand", v_MonthlyDemand);
-    printVector("v_frac_MonthlyDemand_yr", v_frac_MonthlyDemand_yr);
-    printVector("v_Qe_demand", v_Qe_demand);
-    printVector("v_Q_dhw_demand", v_Q_dhw_demand);
     printVector("v_Q_dhw_need", v_Q_dhw_need);
   }
 
@@ -1424,10 +1292,6 @@ Vector v_win_U = structure.windowUniform();*/
     std::cout << "phi_int_wk_nt: " << simData.phi_int_wk_nt << std::endl;
 
     std::cout << std::endl << "calculateTotalInternalGain: " << std::endl;
-  }
-  calculateTotalInternalGain(simData);
-  if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "phi_I_tot: " << simData.phi_I_tot << std::endl;
 
     std::cout << std::endl << "unoccupiedHeatGain: " << std::endl;
   }
@@ -1490,64 +1354,33 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   std::vector<EndUses> allResults;
 
-  // // TODO: Move the plug load calcs to a separate function. BAA@2015-07-15
+  // OPTIMIZATION: Inlined plug loads calculation
+  double frac_hrs_wk_day = simData.scheduleData.frac_hrs_wk_day;
+  double E_plug_elec_avg =
+      building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      building.electricApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
+  double E_plug_gas_avg =
+      building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      building.gasApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
 
-  // // Average electric plug loads (W/m2).
-  // double E_plug_elec =
-  //     building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
-  //     building.electricApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
-  // // Average gas plug loads (W/m2).
-  // double E_plug_gas =
-  //     building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
-  //     building.gasApplianceHeatGainUnoccupied() * (1.0 - frac_hrs_wk_day);
-
-  // // Electric plug load (kWh/m2).
-  // Vector v_Q_plug_elec =
-  //     div(mult(hoursInMonth, E_plug_elec, monthsInYear), 1000.0);
-  // // Gas plug load (kWh/m2).
-  // Vector v_Q_plug_gas =
-  //     div(mult(hoursInMonth, E_plug_gas, monthsInYear), 1000.0);
-  // printVector("v_Q_plug_elec", v_Q_plug_elec);
-  // printVector("v_Q_plug_gas", v_Q_plug_gas);
-
-
-
-  // Calculate plug loads
-  PlugLoads plugLoads = calculatePlugLoads(building, simData.scheduleData.frac_hrs_wk_day);
-  const Vector &v_Q_plug_elec = plugLoads.v_Q_plug_elec;
-  const Vector &v_Q_plug_gas = plugLoads.v_Q_plug_gas;
+  Vector v_Q_plug_elec = mult(hoursInMonth, E_plug_elec_avg * W2kW, monthsInYear);
+  Vector v_Q_plug_gas = mult(hoursInMonth, E_plug_gas_avg * W2kW, monthsInYear);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     printVector("v_Q_plug_elec", v_Q_plug_elec);
     printVector("v_Q_plug_gas", v_Q_plug_gas);
   }
 
-  // // Electric loads (kWh/m2).
-  // Vector Eelec_ht = div(div(v_Qelec_ht, structure.floorArea()),
-  //                       kWh2MJ); // Total monthly electric usage for heating.
-  // Vector Eelec_cl = div(div(v_Qcl_elec_tot, structure.floorArea()),
-  //                       kWh2MJ); // Total monthly electric usage for cooling.
-
-  Vector Eelec_ht = convertEnergyToKWhPerSqM(simData.v_Qelec_ht, structure.floorArea());
-  Vector Eelec_cl = convertEnergyToKWhPerSqM(simData.v_Qcl_elec_tot, structure.floorArea());
-               
-  // Total monthly electric usage for interior and exterior lights.
-  Vector Eelec_int_lt = div(simData.v_Q_illum_tot, structure.floorArea()); 
-  Vector Eelec_ext_lt = div(simData.v_Q_illum_ext_tot,structure.floorArea()); 
-  
-  // Vector Eelec_fan = v_Qfan_tot; // Total monthly elec usage for fans.
-  // Vector Eelec_pump = div(div(v_Q_pump_tot, structure.floorArea()),
-  //                         kWh2MJ); // Total monthly elec usage for pumps.
-  // Vector Eelec_plug =
-  //     v_Q_plug_elec; // Total monthly elec usage for elec plugloads.
-  
-  Vector Eelec_fan = simData.v_Qfan_tot;                               // Total monthly elec usage for fans.
-  Vector Eelec_pump = convertEnergyToKWhPerSqM(simData.v_Q_pump_tot, structure.floorArea()); // Total monthly elec usage for pumps.
-  Vector Eelec_plug = v_Q_plug_elec;                           // Total monthly elec usage for elec plugloads.
-  
-  Vector Eelec_dhw = div(simData.v_Q_dhw_elec, structure.floorArea());
+  // OPTIMIZATION: Pre-calculate factors for loop
+  double floorArea = structure.floorArea();
+  double invFloorArea = (floorArea > 0.0) ? 1.0 / floorArea : 0.0;
+  double energy_factor = invFloorArea / kWh2MJ; // MJ -> kWh/m2
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
+    // Debug prints for intermediate values (reconstructing what would have been calculated)
+    Vector Eelec_cl = mult(simData.v_Qcl_elec_tot, energy_factor);
+    Vector Eelec_pump = mult(simData.v_Q_pump_tot, energy_factor);
+    
     printVector("v_Qcl_elec_tot", simData.v_Qcl_elec_tot);
     printVector("v_Q_pump_tot", simData.v_Q_pump_tot);
     printVector("Eelec_cl", Eelec_cl);
@@ -1555,67 +1388,69 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
     std::cout << "floorArea: " << structure.floorArea() << std::endl;
   }
 
-  // Gas loads (kWh/m2).
-  // Vector Egas_ht = div(div(simData.v_Qgas_ht, structure.floorArea()),
-  //                      kWh2MJ); // Total monthly gas usage for heating.
-  // Vector Egas_cl = div(div(simData.v_Qcl_gas_tot, structure.floorArea()),
-  //                      kWh2MJ);    // Total monthly gas usage for cooling.
-  // Vector Egas_plug = v_Q_plug_gas; // Total monthly gas plugloads.
-  // Vector Egas_dhw = div(simData.v_Q_dhw_gas, structure.floorArea()); // Total monthly dhw gas plugloads.
-  
-  // Gas loads (kWh/m2).
-  Vector Egas_ht = convertEnergyToKWhPerSqM(simData.v_Qgas_ht, structure.floorArea());
-  Vector Egas_cl = convertEnergyToKWhPerSqM(simData.v_Qcl_gas_tot, structure.floorArea());
-  Vector Egas_plug = v_Q_plug_gas;
-  Vector Egas_dhw = div(simData.v_Q_dhw_gas, structure.floorArea());
-
   allResults.reserve(monthsInYear);
 
   for (int i = 0; i < monthsInYear; i++) {
+    // OPTIMIZATION: Calculate final values directly in the loop
+    // Electric (kWh/m2)
+    double Eelec_ht = simData.v_Qelec_ht[i] * energy_factor;
+    double Eelec_cl = simData.v_Qcl_elec_tot[i] * energy_factor;
+    double Eelec_int_lt = simData.v_Q_illum_tot[i] * invFloorArea;
+    double Eelec_ext_lt = simData.v_Q_illum_ext_tot[i] * invFloorArea;
+    double Eelec_fan = simData.v_Qfan_tot[i]; // Already kWh/m2
+    double Eelec_pump = simData.v_Q_pump_tot[i] * energy_factor;
+    double Eelec_plug = v_Q_plug_elec[i]; // Already kWh/m2
+    double Eelec_dhw = simData.v_Q_dhw_elec[i] * invFloorArea; // Already kWh
+
+    // Gas (kWh/m2)
+    double Egas_ht = simData.v_Qgas_ht[i] * energy_factor;
+    double Egas_cl = simData.v_Qcl_gas_tot[i] * energy_factor;
+    double Egas_plug = v_Q_plug_gas[i]; // Already kWh/m2
+    double Egas_dhw = simData.v_Q_dhw_gas[i] * invFloorArea; // Already kWh
 
 #ifdef ISOMODEL_STANDALONE
     EndUses eu;
     int euse = 0;
-    eu.addEndUse(euse++, Eelec_ht[i]);
-    eu.addEndUse(euse++, Eelec_cl[i]);
-    eu.addEndUse(euse++, Eelec_int_lt[i]);
-    eu.addEndUse(euse++, Eelec_ext_lt[i]);
-    eu.addEndUse(euse++, Eelec_fan[i]);
-    eu.addEndUse(euse++, Eelec_pump[i]);
-    eu.addEndUse(euse++, Eelec_plug[i]);
+    eu.addEndUse(euse++, Eelec_ht);
+    eu.addEndUse(euse++, Eelec_cl);
+    eu.addEndUse(euse++, Eelec_int_lt);
+    eu.addEndUse(euse++, Eelec_ext_lt);
+    eu.addEndUse(euse++, Eelec_fan);
+    eu.addEndUse(euse++, Eelec_pump);
+    eu.addEndUse(euse++, Eelec_plug);
     eu.addEndUse(euse++, 0); // Exterior Equipment
-    eu.addEndUse(euse++, Eelec_dhw[i]);
-    eu.addEndUse(euse++, Egas_ht[i]);
-    eu.addEndUse(euse++, Egas_cl[i]);
-    eu.addEndUse(euse++, Egas_plug[i]);
-    eu.addEndUse(euse++, Egas_dhw[i]);
+    eu.addEndUse(euse++, Eelec_dhw);
+    eu.addEndUse(euse++, Egas_ht);
+    eu.addEndUse(euse++, Egas_cl);
+    eu.addEndUse(euse++, Egas_plug);
+    eu.addEndUse(euse++, Egas_dhw);
     allResults.push_back(eu);
 #else
     EndUses eu;
-    eu.addEndUse(Eelec_ht[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_ht, EndUseFuelType::Electricity,
                  EndUseCategoryType::Heating);
-    eu.addEndUse(Eelec_cl[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_cl, EndUseFuelType::Electricity,
                  EndUseCategoryType::Cooling);
-    eu.addEndUse(Eelec_int_lt[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_int_lt, EndUseFuelType::Electricity,
                  EndUseCategoryType::InteriorLights);
-    eu.addEndUse(Eelec_ext_lt[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_ext_lt, EndUseFuelType::Electricity,
                  EndUseCategoryType::ExteriorLights);
-    eu.addEndUse(Eelec_fan[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_fan, EndUseFuelType::Electricity,
                  EndUseCategoryType::Fans);
-    eu.addEndUse(Eelec_pump[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_pump, EndUseFuelType::Electricity,
                  EndUseCategoryType::Pumps);
-    eu.addEndUse(Eelec_plug[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_plug, EndUseFuelType::Electricity,
                  EndUseCategoryType::InteriorEquipment);
     eu.addEndUse(0, EndUseFuelType::Electricity,
                  EndUseCategoryType::ExteriorEquipment);
-    eu.addEndUse(Eelec_dhw[i], EndUseFuelType::Electricity,
+    eu.addEndUse(Eelec_dhw, EndUseFuelType::Electricity,
                  EndUseCategoryType::WaterSystems);
 
-    eu.addEndUse(Egas_ht[i], EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    eu.addEndUse(Egas_cl[i], EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    eu.addEndUse(Egas_plug[i], EndUseFuelType::Gas,
+    eu.addEndUse(Egas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
+    eu.addEndUse(Egas_cl, EndUseFuelType::Gas, EndUseCategoryType::Cooling);
+    eu.addEndUse(Egas_plug, EndUseFuelType::Gas,
                  EndUseCategoryType::InteriorEquipment);
-    eu.addEndUse(Egas_dhw[i], EndUseFuelType::Gas,
+    eu.addEndUse(Egas_dhw, EndUseFuelType::Gas,
                  EndUseCategoryType::WaterSystems);
     allResults.push_back(eu);
 #endif

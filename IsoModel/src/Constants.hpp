@@ -17,8 +17,7 @@ constexpr bool debugIsoModelSimulation = false;
 
 //// --- Math & Physics ---
 inline constexpr double PI = std::numbers::pi;
-// constexpr double smallEpsilon = 1e-15;  // Used for safe division/avoiding
-// zero
+constexpr double SMALL_EPSILON = std::numeric_limits<double>::epsilon();
 
 // Physical Constants
 // Volumetric heat capacity of air (MJ/m3/K)
