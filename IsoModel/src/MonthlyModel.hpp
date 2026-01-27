@@ -179,27 +179,15 @@ private:
   void windowSolarGain(MonthlySimulationData &simData) const;
   void solarHeatGain(MonthlySimulationData &simData) const;
   void calculateInternalGainComponents(MonthlySimulationData &simData) const;
-  void calculateTotalInternalGain(MonthlySimulationData &simData) const;
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
   static double calculateBEMAdjustment(const Building& building);
 
-  static void calculateWeekendTemperatures(
-      const Vector &v_decay_start_base, const Vector &v_limit_start_col0, double tset_unocc,
-      double tau, const Vector &v_ti, const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_day,
-      const Vector &v_P_tot_wke_nt, const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day, double H_tot,
-      Vector &v_wke_avg, Vector &v_wk_nt);
-
   static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
-
-  static void calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_down_mo);
 
   void calculateVentilation(MonthlySimulationData &simData) const;
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
   void calculateHVACEnergyUse(MonthlySimulationData &simData) const;
-  // Helper functions for hvac
-  void calculateHeatingSystemLoads(MonthlySimulationData &simData, const Vector &v_Qloss_ht_dist) const;
-  void calculateCoolingSystemLoads(MonthlySimulationData &simData, const Vector &v_Qloss_cl_dist, double IEER) const;
   void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation
@@ -218,24 +206,6 @@ private:
 
   // Helper for solarHeatGain
   static Matrix buildSolarIrradianceMatrix(const WeatherData& weather);
-  static Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol, const Vector &v_win_A_sol, const Structure& structure);
-  static Vector calculateOpaqueSolarHeatGain(const Matrix &m_I_sol, const Vector &v_wall_A_sol, const Vector &v_wall_phi_r);
-
-  // Helper for heatGainsAndLosses
-  static double calculatePeopleHeatGain(const Population &pop, bool occupied);
-  static double calculateApplianceHeatGain(const Building &building, bool occupied);
-  static double calculateIlluminationHeatGain(double Q_illum_val, double hours_fraction, double floor_area);
-  static double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr, double floor_area);
-
-  // Helper for unoccupiedHeatGain
-  static Vector calculatePeriodHeatGain(double phi_int_period,
-                                        const Vector &megaseconds_period,
-                                        const Vector &frac_Pgh_period,
-                                        const Vector &v_E_sol, double floor_area);
-
-  // Helper for outputGeneration
-  static PlugLoads calculatePlugLoads(const Building& building, double frac_hrs_wk_day);
-  static Vector convertEnergyToKWhPerSqM(const Vector &energy_MJ, double floor_area);
 
   std::vector<EndUses> outputGeneration(const MonthlySimulationData &simData) const;
 
