@@ -274,18 +274,16 @@ MonthlyModel::WindowShadingComponents
 MonthlyModel::calculateWindowShadingComponents(const Structure& structure) {
   PROFILE_FUNCTION();
   WindowShadingComponents result;
-  result.v_win_ff.resize(numTotalSurfaces);
-  Vector v_win_SDF(numTotalSurfaces);
-  Vector v_win_SDF_frac(numTotalSurfaces);
+  result.v_win_ff.resize(numTotalSurfaces);  
+  result.v_win_F_shgl.resize(numTotalSurfaces);
 
   for (int i = 0; i < numTotalSurfaces; i++) {
     result.v_win_ff[i] = UNITY_FRACTION - structure.win_ff();
     // Assign SDF based on pulldown value of 1, 2 or 3.
-    v_win_SDF[i] = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
-    // Set the SDF fractions which include heat transfer - set at 100% for now.
-    v_win_SDF_frac[i] = UNITY_FRACTION;
+    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
+    // SDF fractions which include heat transfer set at 100% (UNITY_FRACTION) for now.
+    result.v_win_F_shgl[i] = SDF * UNITY_FRACTION;
   }
-  result.v_win_F_shgl = mult(v_win_SDF, v_win_SDF_frac);
   return result;
 }
 
@@ -358,8 +356,8 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
   // Monthly avg Wgh during weekend nights.
   Vector v_Wgh_wke_nt = mult(v_Egh_nt, scheduleData.weekendUnoccupiedMegaseconds);
   // Egh_avg_total MJ/m2.
-  Vector v_Wgh_tot =
-      sum(sum(v_Wgh_wk_day, v_Wgh_wk_nt), sum(v_Wgh_wke_day, v_Wgh_wke_nt));
+  // OPTIMIZATION: Variadic sum avoids temporaries (see MathHelpers.hpp)
+  Vector v_Wgh_tot = sum(v_Wgh_wk_day, v_Wgh_wk_nt, v_Wgh_wke_day, v_Wgh_wke_nt);
 
   // frac_Egh_unocc_weekday_night
   simData.frac_Pgh_wk_nt = div(v_Wgh_wk_nt, v_Wgh_tot);
@@ -667,63 +665,63 @@ double MonthlyModel::calculateBEMAdjustment(const Building& building) {
 }
 
 void MonthlyModel::calculateWeekendTemperatures(
-    const Vector &v_decay_start_base, const Vector &v_limit_start_col0,
-    double tset_unocc, double tau, const Vector &v_ti, const Matrix &M_dT,
-    const Matrix &M_Te, Vector &v_wke_avg, Vector &v_wk_nt) {
+    const Vector &v_decay_start_base, const Vector &v_limit_start_col0, double tset_unocc,
+    double tau, const Vector &v_ti, const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_day,
+    const Vector &v_P_tot_wke_nt, const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day, double H_tot,
+    Vector &v_wke_avg, Vector &v_wk_nt) {
 
-  // 1. Calculate exponential decay (floating temperature)
-  // M_Decay corresponds to M_Ta (heating) or M_Tc (cooling)
-  Matrix M_Decay(monthsInYear, 4);
-  Vector v_Tstart(v_decay_start_base);
+  // OPTIMIZATION: Removed matrix allocations.
+  // The calculation iterates through 5 time steps (columns) for each month (rows).
+  // We can accumulate the average and track the current temperature state per month.
 
-  for (unsigned int i = 0; i < M_Decay.size2(); i++) {
-    for (unsigned int j = 0; j < M_Decay.size1(); j++) {
-      v_Tstart[j] = M_Decay(j, i) =
-          (v_Tstart[j] - M_Te(j, i) - M_dT(j, i)) * exp(-1 * v_ti[i] / tau) +
-          M_Te(j, i) + M_dT(j, i);
+  std::fill(v_wke_avg.begin(), v_wke_avg.end(), 0.0);
+  Vector v_current_T = v_decay_start_base; // Tracks the temperature at the start of the decay phase
+
+  // Steps: 0=wk_nt, 1=wke_day, 2=wke_nt, 3=wke_day, 4=wke_nt
+  for (int step = 0; step < 5; ++step) {
+    double ti = v_ti[step];
+    double exp_val = std::exp(-ti / tau);
+    double inv_ti_tau = tau / ti;
+    double one_minus_exp = 1.0 - exp_val;
+
+    for (int m = 0; m < monthsInYear; ++m) {
+      // Determine inputs for this step
+      double P_tot = (step == 0) ? v_P_tot_wk_nt[m]
+                     : (step % 2 != 0) ? v_P_tot_wke_day[m]
+                                       : v_P_tot_wke_nt[m];
+      double Te = (step % 2 != 0) ? v_Tdbt_day[m] : v_Tdbt_nt[m];
+      double dT = P_tot / H_tot;
+
+      // 1. Apply Limits (M_Limit)
+      double limit;
+      if (step == 0) {
+        limit = v_limit_start_col0[m];
+      } else {
+        // Limit is max of previous decay end temp and setpoint
+        limit = std::max(v_current_T[m], tset_unocc);
+      }
+
+      // 2. Calculate Average (M_Avg)
+      double term = (limit - Te - dT);
+      double avg = inv_ti_tau * term * one_minus_exp + Te + dT;
+      avg = std::max(avg, tset_unocc);
+
+      v_wke_avg[m] += avg;
+
+      if (step == 1) {
+        v_wk_nt[m] = avg;
+      }
+
+      // 3. Calculate Decay for next step (M_Decay)
+      if (step < 4) {
+        v_current_T[m] = term * exp_val + Te + dT;
+      }
     }
   }
 
-  // 2. Apply setpoint limits
-  // M_Limit corresponds to M_Taa (heating) or M_Tcc (cooling)
-  Matrix M_Limit(monthsInYear, 5);
-
-  // Initialize column 0
-  for (unsigned int j = 0; j < M_Limit.size1(); j++) {
-    M_Limit(j, 0) = v_limit_start_col0[j];
-  }
-
-  // Apply limits for subsequent columns
-  for (unsigned int i = 1; i < M_Limit.size2(); i++) {
-    for (unsigned int j = 0; j < M_Limit.size1(); j++) {
-      M_Limit(j, i) = std::max(M_Decay(j, i - 1), tset_unocc);
-    }
-  }
-
-  // 3. Calculate average temperatures
-  // M_Avg corresponds to M_Tb (heating) or M_Td (cooling)
-  Matrix M_Avg(monthsInYear, 5);
-
-  for (unsigned int i = 0; i < M_Avg.size2(); i++) {
-    for (unsigned int j = 0; j < M_Avg.size1(); j++) {
-      double v_T_avg = tau / v_ti[i] *
-                           (M_Limit(j, i) - M_Te(j, i) - M_dT(j, i)) *
-                           (1 - exp(-1 * v_ti[i] / tau)) +
-                       M_Te(j, i) + M_dT(j, i);
-      M_Avg(j, i) = std::max(v_T_avg, tset_unocc);
-    }
-  }
-
-  // 4. Aggregate results
-  for (unsigned int i = 0; i < v_wke_avg.size(); i++) {
-    double rowSum = 0;
-    for (unsigned int j = 0; j < M_Avg.size2(); j++) {
-      rowSum += M_Avg(i, j);
-    }
-    v_wke_avg[i] = rowSum / M_Avg.size2();
-  }
-  for (unsigned int j = 0; j < M_Avg.size1(); j++) {
-    v_wk_nt[j] = M_Avg(j, 1);
+  // Finalize average
+  for (int m = 0; m < monthsInYear; ++m) {
+    v_wke_avg[m] /= 5.0;
   }
 }
 
@@ -793,29 +791,7 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   v_ti[0] = v_ti[2] = v_ti[4] = simData.scheduleData.hoursUnoccupiedPerDay;
   v_ti[1] = v_ti[3] = simData.scheduleData.hoursOccupiedPerDay;
 
-  // Generate an effective delta T matrix from ratio of total interior gains to
-  // heat transfer coefficient for each time period.
-  //
-  // This is a matrix where the columns are the vectors v_P_tot_wk_nt/H_tot, and
-  // so on this is for a week night, weekend day, weekend night, weekend day,
-  // weekend night sequence
-  Matrix M_dT(simData.v_P_tot_wk_nt.size(), 5);
-  Matrix M_Te(simData.v_Tdbt_nt.size(), 5);
-
-  for (unsigned int i = 0; i < simData.v_P_tot_wk_nt.size(); ++i) {
-    M_dT(i, 0) = simData.v_P_tot_wk_nt[i] / H_tot;
-    M_dT(i, 1) = M_dT(i, 3) = simData.v_P_tot_wke_day[i] / H_tot;
-    M_dT(i, 2) = M_dT(i, 4) = simData.v_P_tot_wke_nt[i] / H_tot;
-  }
-
-  for (unsigned int i = 0; i < simData.v_Tdbt_nt.size(); ++i) {
-    M_Te(i, 0) = M_Te(i, 2) = M_Te(i, 4) = simData.v_Tdbt_nt[i];
-    M_Te(i, 1) = M_Te(i, 3) = simData.v_Tdbt_day[i];
-  }
-
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    printMatrix("M_dT", M_dT);
-    printMatrix("M_Te", M_Te);
     printVector("v_ti", v_ti);
   }
 
@@ -834,8 +810,9 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   if (heating.T_ht_ctrl_flag() ==
       1) { // If the HVAC heating controls are turned on.
     calculateWeekendTemperatures(v_ht_tset_ctrl, v_ht_tset_ctrl, ht_tset_unocc,
-                                 simData.tau, v_ti, M_dT, M_Te, v_Th_wke_avg,
-                                 v_Th_wk_nt);
+                                 simData.tau, v_ti, simData.v_P_tot_wk_nt, simData.v_P_tot_wke_day,
+                                 simData.v_P_tot_wke_nt, simData.v_Tdbt_nt, simData.v_Tdbt_day,
+                                 H_tot, v_Th_wke_avg, v_Th_wk_nt);
   }
 
   // Default for if cooling is turned off.
@@ -848,8 +825,9 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   if (cooling.T_cl_ctrl_flag() == 1) {
     Vector v_limit_start = minimum(v_ht_tset_ctrl, cl_tset_unocc);
     calculateWeekendTemperatures(v_cl_tset_ctrl, v_limit_start, cl_tset_unocc,
-                                 simData.tau, v_ti, M_dT, M_Te, v_Tc_wke_avg,
-                                 v_Tc_wk_nt);
+                                 simData.tau, v_ti, simData.v_P_tot_wk_nt, simData.v_P_tot_wke_day,
+                                 simData.v_P_tot_wke_nt, simData.v_Tdbt_nt, simData.v_Tdbt_day,
+                                 H_tot, v_Tc_wke_avg, v_Tc_wk_nt);
   }
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -934,73 +912,6 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   // Effective stack height.
   double h_stack = ventilation.zone_frac() * vent_zone_height;
 
-  Vector dbtDiff = dif(v_mdbt, simData.v_Th_avg);
-  printVector("dbtDiff", dbtDiff);
-  Vector dbtDiffAbs = abs(dbtDiff);
-  printVector("dbtDiffAbs", dbtDiffAbs);
-  Vector dbtHStack = mult(dbtDiffAbs, h_stack);
-  printVector("dbtHstack", dbtHStack);
-  Vector dbtPowered = pow(dbtHStack, ventilation.stack_exp());
-  printVector("dbtPowered", dbtPowered);
-  Vector dbtMultQ4 = mult(dbtPowered, ventilation.stack_coeff() * v_Q4pa);
-  printVector("dbtMultQ4", dbtMultQ4);
-
-  // Calculate the infiltration from stack effect pressure difference for
-  // heating from EN 15242: sec 6.7.1 (m3/h/m2).
-  Vector v_qv_stack_ht = maximum(dbtMultQ4, MIN_INFILTRATION_FLOW);
-
-  // Recalculate for cooling.
-  dbtDiff = dif(v_mdbt, simData.v_Tc_avg);
-  printVector("dbtDiff", dbtDiff);
-  dbtDiffAbs = abs(dbtDiff);
-  printVector("dbtDiffAbs", dbtDiffAbs);
-  dbtHStack = mult(dbtDiffAbs, h_stack);
-  printVector("dbtHstack", dbtHStack);
-  dbtPowered = pow(dbtHStack, ventilation.stack_exp());
-  printVector("dbtPowered", dbtPowered);
-  dbtMultQ4 = mult(dbtPowered, ventilation.stack_coeff() * v_Q4pa);
-  printVector("dbtMultQ4", dbtMultQ4);
-
-  // Calculate the infiltration from stack effect pressure difference for
-  // cooling from EN 15242: sec 6.7.1 (m3/h/m2).
-  Vector v_qv_stack_cl = maximum(dbtMultQ4, MIN_INFILTRATION_FLOW);
-  printVector("v_qv_stack_ht", v_qv_stack_ht);
-  printVector("v_qv_stack_cl", v_qv_stack_cl);
-
-  Vector v_qv_wind_ht =
-      mult(mult(pow(mult(mult(v_mwind, v_mwind),
-                         ventilation.dCp() * location.terrain()),
-                    ventilation.wind_exp()),
-                v_Q4pa),
-           ventilation.wind_coeff());
-  Vector v_qv_wind_cl =
-      mult(mult(pow(mult(mult(v_mwind, v_mwind),
-                         ventilation.dCp() * location.terrain()),
-                    ventilation.wind_exp()),
-                v_Q4pa),
-           ventilation.wind_coeff());
-  printVector("v_qv_wind_ht", v_qv_wind_ht);
-  printVector("v_qv_wind_cl", v_qv_wind_cl);
-
-  Vector v_qv_ht_max = maximum(v_qv_stack_ht, v_qv_wind_ht);
-  Vector v_qv_cl_max = maximum(v_qv_stack_cl, v_qv_wind_cl);
-  printVector("v_qv_ht_max", v_qv_ht_max);
-  printVector("v_qv_cl_max", v_qv_cl_max);
-
-  Vector v_qv_sw_ht =
-      sum(v_qv_ht_max, div(mult(mult(v_qv_stack_ht, v_qv_wind_ht), n_sw_coeff),
-                           v_Q4pa)); // m3/h/m2
-  Vector v_qv_sw_cl =
-      sum(v_qv_cl_max, div(mult(mult(v_qv_stack_cl, v_qv_wind_cl), n_sw_coeff),
-                           v_Q4pa)); // m3/h/m2
-  printVector("v_qv_sw_ht", v_qv_sw_ht);
-  printVector("v_qv_sw_cl", v_qv_sw_cl);
-
-  Vector v_qv_inf_ht = sum(v_qv_sw_ht, std::max(0.0, -qv_diff)); // m3/h/m2
-  Vector v_qv_inf_cl = sum(v_qv_sw_cl, std::max(0.0, -qv_diff)); // m3/h/m2
-  printVector("v_qv_inf_ht", v_qv_inf_ht);
-  printVector("v_qv_inf_cl", v_qv_inf_cl);
-
   // TODO: Figure out what the comment below is refering to. I don't want to
   // delete it just yet because connecting the code to the sources of the
   // equations is important. BAA@2015-07-14.
@@ -1031,24 +942,47 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
     break;
   }
 
-  double initVal =
-      ventilation.ventType() == 3
-          ? 0
-          : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
-  Vector v_qv_mve_ht(monthsInYear, initVal);
-  Vector v_qv_mve_cl(monthsInYear, initVal);
+  double mve_init = ventilation.ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
 
-  // Total air flow in m3/s when heating.
-  Vector v_qve_ht = sum(v_qv_inf_ht, v_qv_mve_ht);
-  // Total air flow in m3/s when cooling.
-  Vector v_qve_cl = sum(v_qv_inf_cl, v_qv_mve_cl);
-  printVector("v_qve_ht", v_qve_ht);
-  printVector("v_qve_cl", v_qve_cl);
+  // OPTIMIZATION: Fused vector operations into a single loop to avoid temporary allocations.
+  double stack_exp = ventilation.stack_exp();
+  double stack_coeff_Q4 = ventilation.stack_coeff() * v_Q4pa;
+  double wind_exp = ventilation.wind_exp();
+  double wind_coeff = ventilation.wind_coeff();
+  double dCp_terrain = ventilation.dCp() * location.terrain();
 
-  // Hve heating (W/K).
-  simData.v_Hve_ht = mult(v_qve_ht, rhoCpAirWh);
-  // Hve cooling (W/K).
-  simData.v_Hve_cl = mult(v_qve_cl, rhoCpAirWh);
+  for (int i = 0; i < monthsInYear; ++i) {
+      // Stack Effect Heating
+      double dbtDiff_ht = std::abs(v_mdbt[i] - simData.v_Th_avg[i]);
+      double qv_stack_ht = std::max(std::pow(dbtDiff_ht * h_stack, stack_exp) * stack_coeff_Q4, MIN_INFILTRATION_FLOW);
+
+      // Stack Effect Cooling
+      double dbtDiff_cl = std::abs(v_mdbt[i] - simData.v_Tc_avg[i]);
+      double qv_stack_cl = std::max(std::pow(dbtDiff_cl * h_stack, stack_exp) * stack_coeff_Q4, MIN_INFILTRATION_FLOW);
+
+      // Wind Effect
+      double wind_sq = v_mwind[i] * v_mwind[i];
+      double qv_wind = std::pow(wind_sq * dCp_terrain, wind_exp) * v_Q4pa * wind_coeff;
+
+      // Combined (Superposition)
+      double qv_ht_max = std::max(qv_stack_ht, qv_wind);
+      double qv_cl_max = std::max(qv_stack_cl, qv_wind);
+
+      double qv_sw_ht = qv_ht_max + (qv_stack_ht * qv_wind) * n_sw_coeff / v_Q4pa;
+      double qv_sw_cl = qv_cl_max + (qv_stack_cl * qv_wind) * n_sw_coeff / v_Q4pa;
+
+      // Infiltration
+      double qv_inf_ht = qv_sw_ht + std::max(0.0, -qv_diff);
+      double qv_inf_cl = qv_sw_cl + std::max(0.0, -qv_diff);
+
+      // Total
+      double qve_ht = qv_inf_ht + mve_init;
+      double qve_cl = qv_inf_cl + mve_init;
+
+      // Hve
+      simData.v_Hve_ht[i] = qve_ht * rhoCpAirWh;
+      simData.v_Hve_cl[i] = qve_cl * rhoCpAirWh;
+  }
 }
 
 /**
@@ -1109,8 +1043,6 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
 
   Vector v_eta_g_H = calculateUtilizationFactor(v_gamma_H_ht, a_H);
 
-  // Ensure v_Qneed_ht is initialized to the correct size before use
-  simData.v_Qneed_ht.resize(monthsInYear);
   // Total heating need (MJ).
   simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
   simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
@@ -1122,8 +1054,6 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   // Compute the cooling gain utilization factor eta_g_cl
   Vector v_eta_g_CL = calculateUtilizationFactor(v_gamma_H_cl, a_H);
 
-  // Ensure v_Qneed_cl is initialized to the correct size before use
-  simData.v_Qneed_cl.resize(monthsInYear);
   // Total cooling need (MJ).
   simData.v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl));
   simData.Qneed_cl_yr = sum(simData.v_Qneed_cl);
