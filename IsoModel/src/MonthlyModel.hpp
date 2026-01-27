@@ -76,32 +76,27 @@ private:
 
     // From solarRadiationBreakdown
     Vector v_hrs_sun_down_mo = Vector(monthsInYear);
-    Vector frac_Pgh_wk_nt;
-    Vector frac_Pgh_wke_day;
-    Vector frac_Pgh_wke_nt;
-    Vector v_Tdbt_nt;
-    Vector v_Tdbt_day;
+    Vector frac_Pgh_wk_nt = Vector(monthsInYear);
+    Vector frac_Pgh_wke_day = Vector(monthsInYear);
+    Vector frac_Pgh_wke_nt = Vector(monthsInYear);
+    Vector v_Tdbt_nt = Vector(monthsInYear);
+    Vector v_Tdbt_day = Vector(monthsInYear);
 
     // From lightingEnergyUse
     double Q_illum_occ = 0.0;
     double Q_illum_unocc = 0.0;
     double Q_illum_tot_yr = 0.0;
-    Vector v_Q_illum_tot;
-    Vector v_Q_illum_ext_tot;
+    Vector v_Q_illum_tot = Vector(monthsInYear);
+    Vector v_Q_illum_ext_tot = Vector(monthsInYear);
 
     // From envelopCalculations
-    Vector v_win_A;
-    Vector v_wall_emiss;
-    Vector v_wall_alpha_sc;
-    Vector v_wall_U;
-    Vector v_wall_A;
     double H_tr = 0.0;
 
     // From windowSolarGain
-    Vector v_wall_A_sol;
-    Vector v_win_hr;
-    Vector v_wall_R_sc;
-    Vector v_win_A_sol;
+    Vector v_wall_A_sol = Vector(numTotalSurfaces);
+    Vector v_win_hr = Vector(numTotalSurfaces);
+    Vector v_wall_R_sc = Vector(numTotalSurfaces);
+    Vector v_win_A_sol = Vector(numTotalSurfaces);
 
     // From solarHeatGain
     Vector v_E_sol = Vector(monthsInYear);
@@ -118,9 +113,9 @@ private:
     double phi_I_tot = 0.0;
 
     // From unoccupiedHeatGain
-    Vector v_P_tot_wke_day;
-    Vector v_P_tot_wk_nt;
-    Vector v_P_tot_wke_nt;
+    Vector v_P_tot_wke_day = Vector(monthsInYear);
+    Vector v_P_tot_wk_nt = Vector(monthsInYear);
+    Vector v_P_tot_wke_nt = Vector(monthsInYear);
 
     // From interiorTemp
     Vector v_Th_avg = Vector(monthsInYear);
@@ -133,25 +128,25 @@ private:
 
     // From heatingAndCooling
     Vector v_Qfan_tot = Vector(monthsInYear);
-    Vector v_Qneed_ht;
-    Vector v_Qneed_cl;
+    Vector v_Qneed_ht = Vector(monthsInYear);
+    Vector v_Qneed_cl = Vector(monthsInYear);
     double Qneed_ht_yr = 0.0;
     double Qneed_cl_yr = 0.0;
 
     // From hvac
-    Vector v_Qelec_ht;
-    Vector v_Qgas_ht;
-    Vector v_Qcl_elec_tot;
-    Vector v_Qcl_gas_tot;
+    Vector v_Qelec_ht = Vector(monthsInYear);
+    Vector v_Qgas_ht = Vector(monthsInYear);
+    Vector v_Qcl_elec_tot = Vector(monthsInYear);
+    Vector v_Qcl_gas_tot = Vector(monthsInYear);
 
     // Intermediate HVAC loads
-    Vector v_Qht_sys;
-    Vector v_Qht_DH;
-    Vector v_Qcl_sys;
-    Vector v_Qcool_DC;
+    Vector v_Qht_sys = Vector(monthsInYear);
+    Vector v_Qht_DH = Vector(monthsInYear);
+    Vector v_Qcl_sys = Vector(monthsInYear);
+    Vector v_Qcool_DC = Vector(monthsInYear);
 
     // From pump
-    Vector v_Q_pump_tot;
+    Vector v_Q_pump_tot = Vector(monthsInYear);
 
     // From calculateAirVolumes
     Vector v_Vair_ht = Vector(monthsInYear);
@@ -161,8 +156,8 @@ private:
     Vector v_Vair_tot = Vector(monthsInYear);
 
     // From heatedWater
-    Vector v_Q_dhw_elec;
-    Vector v_Q_dhw_gas;
+    Vector v_Q_dhw_elec = Vector(monthsInYear);
+    Vector v_Q_dhw_gas = Vector(monthsInYear);
   };
 
 private:

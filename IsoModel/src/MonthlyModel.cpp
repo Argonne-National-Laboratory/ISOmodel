@@ -91,12 +91,6 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
   const Matrix &m_mhdbt = location.weather()->mhdbtRef();
   const auto &sched = simData.scheduleData;
 
-  simData.v_Tdbt_day.resize(monthsInYear);
-  simData.v_Tdbt_nt.resize(monthsInYear);
-  simData.frac_Pgh_wk_nt.resize(monthsInYear);
-  simData.frac_Pgh_wke_day.resize(monthsInYear);
-  simData.frac_Pgh_wke_nt.resize(monthsInYear);
-
   double sum_occ = sum(sched.clockHourOccupied);
   double sum_unocc = sum(sched.clockHourUnoccupied);
 
@@ -184,8 +178,6 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   // Total annual lighting energy (kWh).
   simData.Q_illum_tot_yr = simData.Q_illum_occ + simData.Q_illum_unocc;
 
-  simData.v_Q_illum_tot.resize(monthsInYear);
-  simData.v_Q_illum_ext_tot.resize(monthsInYear);
   double ext_energy_kW = lights.exteriorEnergy() * W2kW;
 
   for (int i = 0; i < monthsInYear; ++i) {
@@ -199,18 +191,15 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
  */
 void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
-  // TODO: Copying the various structure values to new variables (e.g. v_wall_A)
-  // is not necessary. BAA@2015-07-13.
-  simData.v_wall_A = structure.wallAreaRef();
-  simData.v_win_A = structure.windowAreaRef();
-  simData.v_wall_U = structure.wallUniformRef();
+  const Vector &v_wall_A = structure.wallAreaRef();
+  const Vector &v_win_A = structure.windowAreaRef();
+  const Vector &v_wall_U = structure.wallUniformRef();
   const Vector &v_win_U = structure.windowUniformRef();
 
   // Compute direct transmission heat transfer coefficient (H_D)
   double H_D = 0.0;
   for (int i = 0; i < numTotalSurfaces; ++i) {
-    H_D += (simData.v_wall_A[i] * simData.v_wall_U[i]) +
-           (simData.v_win_A[i] * v_win_U[i]);
+    H_D += (v_wall_A[i] * v_wall_U[i]) + (v_win_A[i] * v_win_U[i]);
   }
 
   // For now, also ignore heat transfer to ground (minimal in large buildings),
@@ -223,9 +212,6 @@ void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
 
   // Total transmission heat transfer coefficient. ISO 13790 8.3.1 eq. 17.
   simData.H_tr = H_D + H_g + H_U + H_A;
-
-  simData.v_wall_emiss = structure.wallThermalEmissivityRef();
-  simData.v_wall_alpha_sc = structure.wallSolarAbsorptionRef();
 }
 
 /*
@@ -251,26 +237,27 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   double R_sc_ext = structure.R_sc_ext();
   double hr_factor = ISO_WIN_EXT_RAD_COEFF;
 
-  simData.v_win_A_sol.resize(numTotalSurfaces);
-  simData.v_wall_R_sc.resize(numTotalSurfaces);
-  simData.v_win_hr.resize(numTotalSurfaces);
-  simData.v_wall_A_sol.resize(numTotalSurfaces);
+  const Vector &v_win_A = structure.windowAreaRef();
+  const Vector &v_wall_emiss = structure.wallThermalEmissivityRef();
+  const Vector &v_wall_alpha_sc = structure.wallSolarAbsorptionRef();
+  const Vector &v_wall_U = structure.wallUniformRef();
+  const Vector &v_wall_A = structure.wallAreaRef();
 
   for (int i = 0; i < numTotalSurfaces; ++i) {
     // Window Shading & Solar Area
     double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
     double F_shgl = SDF * UNITY_FRACTION;
     double g_gl = v_g_gln[i] * win_F_W;
-    simData.v_win_A_sol[i] = F_shgl * g_gl * win_ff_base * simData.v_win_A[i];
+    simData.v_win_A_sol[i] = F_shgl * g_gl * win_ff_base * v_win_A[i];
 
     // Wall R_sc
     simData.v_wall_R_sc[i] = R_sc_ext;
 
     // Window hr
-    simData.v_win_hr[i] = simData.v_wall_emiss[i] * hr_factor;
+    simData.v_win_hr[i] = v_wall_emiss[i] * hr_factor;
 
     // Wall A_sol
-    simData.v_wall_A_sol[i] = simData.v_wall_alpha_sc[i] * simData.v_wall_R_sc[i] * simData.v_wall_U[i] * simData.v_wall_A[i];
+    simData.v_wall_A_sol[i] = v_wall_alpha_sc[i] * simData.v_wall_R_sc[i] * v_wall_U[i] * v_wall_A[i];
   }
 }
 
@@ -300,18 +287,19 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   // theta_er is constant ISO_SKY_TEMP_DIFF (11 K)
   double theta_er = ISO_SKY_TEMP_DIFF;
   
+  const Vector &v_wall_U = structure.wallUniformRef();
+  const Vector &v_wall_A = structure.wallAreaRef();
+
   Vector v_wall_phi_r(numTotalSurfaces);
   for (int j = 0; j < numTotalSurfaces; ++j) {
-    v_wall_phi_r[j] = simData.v_wall_R_sc[j] * simData.v_wall_U[j] *
-                      simData.v_wall_A[j] * simData.v_win_hr[j] * theta_er;
+    v_wall_phi_r[j] = simData.v_wall_R_sc[j] * v_wall_U[j] *
+                      v_wall_A[j] * simData.v_win_hr[j] * theta_er;
   }
 
   // Pre-calculate window shading factors
   const Vector& v_win_SCF = structure.windowShadingCorrectionFactorRef();
   const Vector& v_win_A_sol = simData.v_win_A_sol;
   const Vector& v_wall_A_sol = simData.v_wall_A_sol;
-
-  simData.v_E_sol.resize(monthsInYear);
 
   for (int i = 0; i < monthsInYear; ++i) {
     double phi_sol = 0.0;
@@ -365,10 +353,6 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
  */
 void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
-
-  simData.v_P_tot_wk_nt.resize(monthsInYear);
-  simData.v_P_tot_wke_day.resize(monthsInYear);
-  simData.v_P_tot_wke_nt.resize(monthsInYear);
 
   double floor_area = structure.floorArea();
   double phi_int_wk_nt = simData.phi_int_wk_nt;
@@ -445,7 +429,7 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   double Cm_int = structure.interiorHeatCapacity() * structure.floorArea();
 
   // Envelope heat capacity (J/k).
-  double Cm_env = structure.wallHeatCapacity() * sum(simData.v_wall_A);
+  double Cm_env = structure.wallHeatCapacity() * sum(structure.wallAreaRef());
 
   // Total heat capacity (J/k).
   double Cm = Cm_int + Cm_env;
@@ -660,14 +644,6 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
   
-  // Resize output vectors
-  simData.v_Qneed_ht.resize(monthsInYear);
-  simData.v_Qneed_cl.resize(monthsInYear);
-  simData.v_Vair_ht.resize(monthsInYear);
-  simData.v_Vair_cl.resize(monthsInYear);
-  simData.v_Vair_tot.resize(monthsInYear);
-  simData.v_Qfan_tot.resize(monthsInYear);
-
   // Initialize yearly sums
   simData.Qneed_ht_yr = 0.0;
   simData.Qneed_cl_yr = 0.0;
@@ -815,15 +791,6 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   double cl_dc_cop_abs = cooling.eta_DC_COP_abs();
   bool is_ht_elec = (heating.energyType() == 1);
 
-  simData.v_Qcl_elec_tot.resize(monthsInYear);
-  simData.v_Qcl_gas_tot.resize(monthsInYear);
-  simData.v_Qelec_ht.resize(monthsInYear);
-  simData.v_Qgas_ht.resize(monthsInYear);
-  simData.v_Qht_sys.resize(monthsInYear);
-  simData.v_Qht_DH.resize(monthsInYear);
-  simData.v_Qcl_sys.resize(monthsInYear);
-  simData.v_Qcool_DC.resize(monthsInYear);
-
   for (int i = 0; i < monthsInYear; ++i) {
     double Qloss_ht_dist = simData.v_Qneed_ht[i] * (1.0 - eta_dist_ht) / eta_dist_ht;
     double Qloss_cl_dist = simData.v_Qneed_cl[i] * (1.0 - eta_dist_cl) / eta_dist_cl;
@@ -961,9 +928,6 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
   double inv_kWh2MJ = 1.0 / kWh2MJ;
   bool is_elec = (heating.hotWaterEnergyType() == 1);
 
-  simData.v_Q_dhw_elec.resize(monthsInYear);
-  simData.v_Q_dhw_gas.resize(monthsInYear);
-
   for(int i=0; i<monthsInYear; ++i) {
       double monthlyDemand = daysInMonth[i] * Q_dhw_yr;
       double frac_MonthlyDemand_yr = monthlyDemand / daysInYear;
@@ -1045,11 +1009,6 @@ Vector v_win_U = structure.windowUniform();*/
   envelopeCalculations(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "H_tr: " << simData.H_tr << std::endl;
-    printVector("v_win_A", simData.v_win_A);
-    printVector("v_wall_emiss", simData.v_wall_emiss);
-    printVector("v_wall_alpha_sc", simData.v_wall_alpha_sc);
-    printVector("v_wall_U", simData.v_wall_U);
-    printVector("v_wall_A", simData.v_wall_A);
 
     std::cout << std::endl << "windowSolarGain: " << std::endl;
   }
