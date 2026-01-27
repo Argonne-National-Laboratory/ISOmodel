@@ -93,10 +93,10 @@ private:
     double H_tr = 0.0;
 
     // From windowSolarGain
-    Vector v_wall_A_sol = Vector(numTotalSurfaces);
-    Vector v_win_hr = Vector(numTotalSurfaces);
-    Vector v_wall_R_sc = Vector(numTotalSurfaces);
-    Vector v_win_A_sol = Vector(numTotalSurfaces);
+    Vector v_wall_A_sol = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_win_hr = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_wall_R_sc = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_win_A_sol = Vector(NUM_TOTAL_SURFACESs);
 
     // From solarHeatGain
     Vector v_E_sol = Vector(MONTHS_IN_YEAR);

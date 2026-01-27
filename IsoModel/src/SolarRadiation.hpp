@@ -46,7 +46,7 @@ protected:
   std::vector<double> m_eglobeFlat;
 
   // Averages (Lazy Allocated - Empty by default)
-  // Flattened 2D vectors to 1D for performance (Stride = numVerticalSurfaces or
+  // Flattened 2D vectors to 1D for performance (Stride = NUM_VERTICAL_SURFACES or
   // 24 hours)
   std::vector<double> m_monthlyDryBulbTemp;
   std::vector<double> m_monthlyDewPointTemp;
@@ -65,8 +65,8 @@ protected:
   // Performance caches
   double m_sinTilt = 0.0;
   double m_cosTilt = 0.0;
-  double m_surfSin[numVerticalSurfaces] = {};
-  double m_surfCos[numVerticalSurfaces] = {};
+  double m_surfSin[NUM_VERTICAL_SURFACES] = {};
+  double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 public:
   SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt = PI);

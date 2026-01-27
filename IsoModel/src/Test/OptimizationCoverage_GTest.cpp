@@ -25,7 +25,7 @@ TEST(OptimizationCoverage, Constants_Values) {
   // Check integer constants used in loops
   EXPECT_EQ(DAYS_IN_YEAR, 365);
   EXPECT_EQ(HOURS_IN_YEAR, 8760);
-  EXPECT_EQ(numVerticalSurfaces, 8);
+  EXPECT_EQ(NUM_VERTICAL_SURFACES, 8);
 
   // Check array sizes
   EXPECT_EQ(winSDFTable.size(), 3);

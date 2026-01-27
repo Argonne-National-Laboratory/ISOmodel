@@ -34,13 +34,13 @@ SolarRadiation::SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt)
   m_sinLat = std::sin(m_latitude);
   m_cosLat = std::cos(m_latitude);
 
-  for (int i = 0; i < numVerticalSurfaces; ++i) {
-    m_surfSin[i] = std::sin(SurfaceAzimuths[i]);
-    m_surfCos[i] = std::cos(SurfaceAzimuths[i]);
+  for (int i = 0; i < NUM_VERTICAL_SURFACES; ++i) {
+    m_surfSin[i] = std::sin(SURFACE_AZIMUTHS[i]);
+    m_surfCos[i] = std::cos(SURFACE_AZIMUTHS[i]);
   }
 
   // Only allocate the essential output vector
-  m_eglobeFlat.assign(HOURS_IN_YEAR * numVerticalSurfaces, 0.0);
+  m_eglobeFlat.assign(HOURS_IN_YEAR * NUM_VERTICAL_SURFACES, 0.0);
 
   // OPTIMIZATION: Do NOT allocate the monthly/hourly average vectors here.
   // They are often unused by HourlyModel, saving 20+ malloc calls per object.
@@ -51,10 +51,10 @@ SolarRadiation::SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt)
 // Legacy support: Reconstructs 2D vector from flat storage
 std::vector<std::vector<double>> SolarRadiation::eglobe() {
   std::vector<std::vector<double>> legacy(
-      HOURS_IN_YEAR, std::vector<double>(numVerticalSurfaces, 0.0));
+      HOURS_IN_YEAR, std::vector<double>(NUM_VERTICAL_SURFACES, 0.0));
   for (int i = 0; i < HOURS_IN_YEAR; ++i) {
-    for (int s = 0; s < numVerticalSurfaces; ++s) {
-      legacy[i][s] = m_eglobeFlat[i * numVerticalSurfaces + s];
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s) {
+      legacy[i][s] = m_eglobeFlat[i * NUM_VERTICAL_SURFACES + s];
     }
   }
   return legacy;
@@ -148,7 +148,7 @@ void SolarRadiation::calculateSurfaceSolarRadiation() {
     double ed_i = vecED[i];
 
     // Vectorization-friendly loop (no branches)
-    for (int s = 0; s < numVerticalSurfaces; s++) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
 
       // Incidence Angle (Theta): ASHRAE Fundamentals 2013 Ch 14 Eq 8
       // Optimized: Uses pre-calculated terms
@@ -189,7 +189,7 @@ void SolarRadiation::calculateAverages() {
     m_monthlyGlobalHorizontalRadiation.assign(MONTHS_IN_YEAR, 0.0);
 
     // Flattened allocations
-    m_monthlySolarRadiation.assign(MONTHS_IN_YEAR * numVerticalSurfaces, 0.0);
+    m_monthlySolarRadiation.assign(MONTHS_IN_YEAR * NUM_VERTICAL_SURFACES, 0.0);
     m_hourlyDryBulbTemp.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
     m_hourlyDewPointTemp.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
     m_hourlyGlobalHorizontalRadiation.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
@@ -243,10 +243,10 @@ void SolarRadiation::calculateAverages() {
     m_hourlyDewPointTemp[hourIdx] += dpt[i];
     m_hourlyGlobalHorizontalRadiation[hourIdx] += egh[i];
 
-    for (int s = 0; s < numVerticalSurfaces; s++) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
       // Flat Indexing: month * numSurfaces + s
-      m_monthlySolarRadiation[midx * numVerticalSurfaces + s] +=
-          m_eglobeFlat[i * numVerticalSurfaces + s];
+      m_monthlySolarRadiation[midx * NUM_VERTICAL_SURFACES + s] +=
+          m_eglobeFlat[i * NUM_VERTICAL_SURFACES + s];
     }
   }
   calculateMonthAvg(midx, cnt);
@@ -260,8 +260,8 @@ void SolarRadiation::calculateMonthAvg(int midx, int cnt) {
   m_monthlyWindspeed[midx] *= inv;
   m_monthlyGlobalHorizontalRadiation[midx] *= inv;
 
-  for (int s = 0; s < numVerticalSurfaces; s++) {
-    m_monthlySolarRadiation[midx * numVerticalSurfaces + s] *= inv;
+  for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
+    m_monthlySolarRadiation[midx * NUM_VERTICAL_SURFACES + s] *= inv;
   }
 
   double days = m_frame->monthLength(midx + 1);
@@ -283,10 +283,10 @@ void SolarRadiation::clearMonthlyAvg(int midx) {
 
 std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() {
   std::vector<std::vector<double>> ret(
-      MONTHS_IN_YEAR, std::vector<double>(numVerticalSurfaces));
+      MONTHS_IN_YEAR, std::vector<double>(NUM_VERTICAL_SURFACES));
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
-    for (int s = 0; s < numVerticalSurfaces; ++s) {
-      ret[m][s] = m_monthlySolarRadiation[m * numVerticalSurfaces + s];
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s) {
+      ret[m][s] = m_monthlySolarRadiation[m * NUM_VERTICAL_SURFACES + s];
     }
   }
   return ret;

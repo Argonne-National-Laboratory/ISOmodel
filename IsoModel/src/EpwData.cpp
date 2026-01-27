@@ -72,7 +72,7 @@ void EpwData::populateWeatherData(std::shared_ptr<WeatherData> wd) {
 
   // Solar radiation is 12 months x 8 surfaces
   wd->setMsolar(
-      toMatrix(pos.monthlySolarRadiation(), MONTHS_IN_YEAR, numVerticalSurfaces));
+      toMatrix(pos.monthlySolarRadiation(), MONTHS_IN_YEAR, NUM_VERTICAL_SURFACES));
 }
 
 void EpwData::parseHeader(const std::string &line) {
@@ -217,7 +217,7 @@ std::string EpwData::toISOData() {
   const auto &msolar = pos.monthlySolarRadiation();
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     sstream << i;
-    for (int s = 0; s < numVerticalSurfaces; ++s)
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s)
       sstream << "," << msolar[i][s];
     sstream << "\n";
   }

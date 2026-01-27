@@ -104,13 +104,13 @@ inline constexpr std::array<int, 13> MONTH_END_HOURS = {
 
 // --- Geometry & Directions ---
 // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
-constexpr int numCompassDirections = 8;
+constexpr int NUM_COMPASS_DIRECTIONS = 8;
 // 8 Compass directions + 1 Roof/Horizontal = 9 (Used often in loops)
-constexpr int numTotalSurfaces = 9;
-constexpr int numVerticalSurfaces = 8;
+constexpr int NUM_TOTAL_SURFACESs = 9;
+constexpr int NUM_VERTICAL_SURFACES = 8;
 
 // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
-inline constexpr std::array<double, 8> SurfaceAzimuths = {
+inline constexpr std::array<double, 8> SURFACE_AZIMUTHS = {
     0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4};
 
 //// --- Unit Conversions ---

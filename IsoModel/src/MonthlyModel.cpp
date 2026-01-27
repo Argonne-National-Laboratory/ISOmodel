@@ -37,17 +37,17 @@ Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
   // (mEgh) into one matrix (W/m2).
-  Matrix m_I_sol(MONTHS_IN_YEAR, numTotalSurfaces);
+  Matrix m_I_sol(MONTHS_IN_YEAR, NUM_TOTAL_SURFACESs);
 
   // Access weather data via reference to avoid copy
   const Matrix &m_solar = weather.msolarRef();
   const Vector &v_mEgh = weather.mEghRef();
 
   for (unsigned int r = 0; r < m_I_sol.size1(); r++) {
-    for (unsigned int c = 0; c < numVerticalSurfaces; c++) { // Vertical surfaces
+    for (unsigned int c = 0; c < NUM_VERTICAL_SURFACES; c++) { // Vertical surfaces
       m_I_sol(r, c) = m_solar(r, c);
     }
-    m_I_sol(r, numVerticalSurfaces) = v_mEgh[r]; // Roof/Horizontal surface
+    m_I_sol(r, NUM_VERTICAL_SURFACES) = v_mEgh[r]; // Roof/Horizontal surface
   }
   return m_I_sol;
 }
@@ -198,7 +198,7 @@ void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
 
   // Compute direct transmission heat transfer coefficient (H_D)
   double H_D = 0.0;
-  for (int i = 0; i < numTotalSurfaces; ++i) {
+  for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
     H_D += (v_wall_A[i] * v_wall_U[i]) + (v_win_A[i] * v_win_U[i]);
   }
 
@@ -243,7 +243,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   const Vector &v_wall_U = structure.wallUniformRef();
   const Vector &v_wall_A = structure.wallAreaRef();
 
-  for (int i = 0; i < numTotalSurfaces; ++i) {
+  for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
     // Window Shading & Solar Area
     double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
     double F_shgl = SDF * UNITY_FRACTION;
@@ -290,8 +290,8 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   const Vector &v_wall_U = structure.wallUniformRef();
   const Vector &v_wall_A = structure.wallAreaRef();
 
-  Vector v_wall_phi_r(numTotalSurfaces);
-  for (int j = 0; j < numTotalSurfaces; ++j) {
+  Vector v_wall_phi_r(NUM_TOTAL_SURFACESs);
+  for (int j = 0; j < NUM_TOTAL_SURFACESs; ++j) {
     v_wall_phi_r[j] = simData.v_wall_R_sc[j] * v_wall_U[j] *
                       v_wall_A[j] * simData.v_win_hr[j] * theta_er;
   }
@@ -303,7 +303,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double phi_sol = 0.0;
-    for (int j = 0; j < numTotalSurfaces; ++j) {
+    for (int j = 0; j < NUM_TOTAL_SURFACESs; ++j) {
       double I_sol = m_I_sol(i, j);
       // Glazing Gain: SCF * A_sol * I_sol (SCF_frac is 1.0)
       phi_sol += v_win_SCF[j] * v_win_A_sol[j] * I_sol;
