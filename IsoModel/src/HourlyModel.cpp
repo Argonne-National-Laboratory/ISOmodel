@@ -241,8 +241,8 @@ HourlyModel::calculateAirFlows(double theta_air,
   double absDT = std::max(std::abs(theta_e - theta_air), 1e-5);
 
   // ISO 15242 6.7.1 Step 1: q_{stack} (Stack effect)
-  double q_ve_stack = stackFactor * q_ve_4Pa *
-                      fastPow23(effectiveStackHeightFraction * H_z * absDT);
+  double q_ve_stack = STACK_FACTOR * q_ve_4Pa *
+                      fastPow23(EFFECTIVE_STACK_HEIGHT_FRACTION * H_z * absDT);
 
   // Promote float physics to double
   double q_ve_wind = cache.q_ve_wind;
@@ -256,8 +256,8 @@ HourlyModel::calculateAirFlows(double theta_air,
   double q_ve_exf =
       std::max(0.0, std::max(q_ve_stack, q_ve_wind) -
                         std::abs(q_ve_diff) *
-                            (qInfilStackFraction * q_ve_stack +
-                             qInfilWindFraction * q_ve_wind / q_ve_sw));
+                            (Q_INFIL_STACT_FRACTION * q_ve_stack +
+                             Q_INFIL_WIND_FRACTION * q_ve_wind / q_ve_sw));
 
   // ISO 15242 6.7.2: q_{ent} (Total entering air)
   double q_ve_ent =
@@ -536,7 +536,7 @@ void HourlyModel::initialize() {
   }
 
   q_ve_4Pa = std::max(0.000001,
-                      (n50ToQ4 * (ventilation.n50() *
+                      (N50_TO_Q4 * (ventilation.n50() *
                                   (floorArea * structure.buildingHeight()))) *
                           invFloorArea);
 
@@ -612,7 +612,7 @@ void HourlyModel::initialize() {
     c.theta_e = (float)temp[i];
     c.I_sol_gh = (float)egh[i];
 
-    c.q_ve_wind = (float)(windFactor * q_ve_4Pa *
+    c.q_ve_wind = (float)(WIND_FACTOR * q_ve_4Pa *
                           fastPow23(m_Cp_air_pressure * wind[i] * wind[i]));
 
     double q_ve = c.sched_q_ve_mech * KILOWATTHOURS_TO_MEGAJOULES * invFloorArea;
@@ -634,7 +634,7 @@ inline void HourlyModel::structureCalculations(
     double alpha_wall, double F_sh_with, double F_sh_without, int direction) {
   PROFILE_FUNCTION();
 
-  double WindowT = SHGC / SHGCClearGlass;
+  double WindowT = SHGC / SHGC_CLEAR_GLASS;
   A_nla_ms[direction] = A_win * WindowT;
   A_nla[direction] = A_win * WindowT;
   A_sol_ms[direction] =

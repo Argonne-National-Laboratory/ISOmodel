@@ -36,7 +36,7 @@ protected:
   double m_localMeridian = 0.0;
   double m_longitude = 0.0;
   double m_latitude = 0.0;
-  double m_groundReflectance = defaultGroundReflectance;
+  double m_groundReflectance = DEFAULT_GROUND_REFLECTANCE;
 
   // Optimization: Pre-calculated Latitude Trig
   double m_sinLat = 0.0;

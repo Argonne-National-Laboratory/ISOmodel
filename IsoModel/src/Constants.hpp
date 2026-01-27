@@ -26,20 +26,18 @@ constexpr double CP_AIR = 0.001012;          // Specific heat capacity of air in
 constexpr double RHO_CP_AIR = RHO_AIR * CP_AIR; // = 0.001239 MJ/m3/K
 // Volumetric heat capacity of air in wh/m3K = rho*cp in MJ/m3K * 1000000 J/MJ / 3600 s/h = Wh/m3K 
 constexpr double RHO_CP_AIR_IN_WATT_HOURS = RHO_CP_AIR * 1000000.0 / 3600; 
-    // Volumetric heat capacity of air ~1200 J/m3K
-                                 // / 3600 = 0.33-0.34 Wh/m3K
 
 constexpr double RHO_CP_WATER = 4.1813; // Volumetric heat capacity of water (MJ/m3/K)
 
 // ventilation physics constants from ISO 15242 6.7.1
 // based on Q = C * (dP)^0.667
-constexpr double stackFactor = 0.0146; // Physics constant for qStack
-constexpr double effectiveStackHeightFraction =
+constexpr double STACK_FACTOR = 0.0146; // Physics constant for qStack
+constexpr double EFFECTIVE_STACK_HEIGHT_FRACTION =
     0.5; // Effective stack height is 50% of zone height
-constexpr double windFactor = 0.0769; // Physics constant for qWind
-constexpr double qInfilStackFraction =
+constexpr double WIND_FACTOR = 0.0769; // Physics constant for qWind
+constexpr double Q_INFIL_STACT_FRACTION =
     0.5; // coefficient for infiltration from stack effect
-constexpr double qInfilWindFraction =
+constexpr double Q_INFIL_WIND_FRACTION =
     2.0 / 3.0; // coefficient for infiltration from wind effect
 
 // This constant converts the physics of thermal buoyancy (stack effect) into a
@@ -128,25 +126,25 @@ constexpr double MEGASECONDS_TO_SECONDS = 1000000.0;
 // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
 // 0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to
 // Constants.hpp
-constexpr double n50ToQ4 = 0.19;
+constexpr double N50_TO_Q4 = 0.19;
 
 //// --- ISO 13790 Constants ---
 // Solar heat gain coefficient for internal gains
 constexpr double n_si_coeff = 0.9;
 
 // from ventilation calcs in MonthlyModel.cpp
-constexpr double n_sw_coeff = 0.14;
+constexpr double N_SW_COEFF = 0.14;
 
 // default ground reflectance
-constexpr double defaultGroundReflectance = 0.14;
+constexpr double DEFAULT_GROUND_REFLECTANCE = 0.14;
 
 // Shading device factors (1=None, 2=Internal, 3=External)
-inline constexpr std::array<double, 3> winSDFTable = {0.5, 0.35, 1.0};
+inline constexpr std::array<double, 3> WIN_SDF_TABLE = {0.5, 0.35, 1.0};
 // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
-inline constexpr std::array<double, 9> envFormFactors = {
+inline constexpr std::array<double, 9> ENV_FORM_FACTORS = {
     0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0};
 
-constexpr double SHGCClearGlass = 0.87;
+constexpr double SHGC_CLEAR_GLASS = 0.87;
 
 // Simulation Defaults
 constexpr double DEFAULT_INITIAL_TEMP = 20.0; // Degrees C

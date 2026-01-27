@@ -28,8 +28,8 @@ TEST(OptimizationCoverage, Constants_Values) {
   EXPECT_EQ(NUM_VERTICAL_SURFACES, 8);
 
   // Check array sizes
-  EXPECT_EQ(winSDFTable.size(), 3);
-  EXPECT_EQ(envFormFactors.size(), 9);
+  EXPECT_EQ(WIN_SDF_TABLE.size(), 3);
+  EXPECT_EQ(ENV_FORM_FACTORS.size(), 9);
 }
 
 // 2. Verify SolarRadiation Math Helpers

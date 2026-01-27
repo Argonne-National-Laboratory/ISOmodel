@@ -245,7 +245,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
 
   for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
     // Window Shading & Solar Area
-    double SDF = winSDFTable[((int)structure.windowShadingDeviceRef()[i]) - 1];
+    double SDF = WIN_SDF_TABLE[((int)structure.windowShadingDeviceRef()[i]) - 1];
     double F_shgl = SDF * UNITY_FRACTION;
     double g_gl = v_g_gln[i] * win_F_W;
     simData.v_win_A_sol[i] = F_shgl * g_gl * win_ff_base * v_win_A[i];
@@ -308,7 +308,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
       // Glazing Gain: SCF * A_sol * I_sol (SCF_frac is 1.0)
       phi_sol += v_win_SCF[j] * v_win_A_sol[j] * I_sol;
       // Opaque Gain: A_sol * I_sol - phi_r * formFactor
-      phi_sol += v_wall_A_sol[j] * I_sol - v_wall_phi_r[j] * envFormFactors[j];
+      phi_sol += v_wall_A_sol[j] * I_sol - v_wall_phi_r[j] * ENV_FORM_FACTORS[j];
     }
     simData.v_E_sol[i] = phi_sol * MEGASECONDS_IN_MONTH[i];
     if (DEBUG_ISO_MODEL_SIMULATION) { std::cout << "v_phi_sol[" << i << "]=" << phi_sol << std::endl; }
@@ -619,8 +619,8 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
       double qv_ht_max = std::max(qv_stack_ht, qv_wind);
       double qv_cl_max = std::max(qv_stack_cl, qv_wind);
 
-      double qv_sw_ht = qv_ht_max + (qv_stack_ht * qv_wind) * n_sw_coeff / v_Q4pa;
-      double qv_sw_cl = qv_cl_max + (qv_stack_cl * qv_wind) * n_sw_coeff / v_Q4pa;
+      double qv_sw_ht = qv_ht_max + (qv_stack_ht * qv_wind) * N_SW_COEFF / v_Q4pa;
+      double qv_sw_cl = qv_cl_max + (qv_stack_cl * qv_wind) * N_SW_COEFF / v_Q4pa;
 
       // Infiltration
       double qv_inf_ht = qv_sw_ht + std::max(0.0, -qv_diff);
