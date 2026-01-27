@@ -217,10 +217,6 @@ private:
   void calculateHeatedWaterEnergy(MonthlySimulationData &simData) const;
 
   // Helper for solarHeatGain
-  static Vector calculateUtilizationFactor(const Vector &gamma_H, double a_H);
-  void calculateAirVolumes(MonthlySimulationData &simData) const;
-  void calculateTotalAirFlow(MonthlySimulationData &simData) const;
-  void calculateFanEnergy(MonthlySimulationData &simData) const;
   static Matrix buildSolarIrradianceMatrix(const WeatherData& weather);
   static Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol, const Vector &v_win_A_sol, const Structure& structure);
   static Vector calculateOpaqueSolarHeatGain(const Matrix &m_I_sol, const Vector &v_wall_A_sol, const Vector &v_wall_phi_r);

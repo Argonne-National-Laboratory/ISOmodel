@@ -63,68 +63,6 @@ void MonthlyModel::calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_do
   }
 }
 
-Vector MonthlyModel::calculateUtilizationFactor(const Vector &gamma_H, double a_H) {
-  PROFILE_FUNCTION();
-  Vector eta_g(monthsInYear);
-  for (unsigned int i = 0; i < eta_g.size(); i++) {
-    if (gamma_H[i] > 0) {
-      double num = std::pow(gamma_H[i], a_H);
-      eta_g[i] = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H[i]);
-    } else {
-      eta_g[i] =
-          UNITY_FRACTION / (gamma_H[i] + std::numeric_limits<double>::epsilon());
-    }
-  }
-  return eta_g;
-}
-
-void MonthlyModel::calculateAirVolumes(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Hot air supply temperature (C).
-  double T_sup_ht =
-      heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
-  // Cool air supply temperature (C).
-  double T_sup_cl =
-      cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
-
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  for (int i = 0; i < monthsInYear; ++i) {
-    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + std::numeric_limits<double>::epsilon();
-    simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
-
-    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + std::numeric_limits<double>::epsilon();
-    simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
-  }
-}
-
-void MonthlyModel::calculateTotalAirFlow(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Total air flow (m3).
-  // Multiply by MEGASECONDS_TO_SECONDS to convert megaseconds to seconds.
-  // Divide by LITERS_TO_M3 to convert liters to m3.
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
-
-  for (int i = 0; i < monthsInYear; ++i) {
-    double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
-    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
-    simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
-  }
-}
-
-void MonthlyModel::calculateFanEnergy(MonthlySimulationData &simData) const {
-  PROFILE_FUNCTION();
-  // Fan power (MJ)
-  // ventilation.fanPower is in W/(L/s) which is J/L, also kJ/m3. Divide by
-  // KJ_TO_MJ for MJ/m3 to get fanEnergy in MJ.
-  // OPTIMIZATION: Replaced chained vector math with a loop to avoid temporary allocations.
-  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
-  double area_kWh_factor = structure.floorArea() * kWh2MJ;
-  for (int i = 0; i < monthsInYear; ++i) {
-    simData.v_Qfan_tot[i] = (simData.v_Vair_tot[i] * fan_power_factor) / area_kWh_factor;
-  }
-}
-
 Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
@@ -992,92 +930,93 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   PROFILE_FUNCTION();
   // Optimization: Cache weather reference
   const Vector &v_mdbt = location.weather()->mdbtRef();
+  
+  // Resize output vectors
+  simData.v_Qneed_ht.resize(monthsInYear);
+  simData.v_Qneed_cl.resize(monthsInYear);
+  simData.v_Vair_ht.resize(monthsInYear);
+  simData.v_Vair_cl.resize(monthsInYear);
+  simData.v_Vair_tot.resize(monthsInYear);
+  simData.v_Qfan_tot.resize(monthsInYear);
 
-  // OPTIMIZATION: Replaced chained vector math with loops to avoid temporary allocations.
-  Vector v_tot_mo_ht_gain(monthsInYear);
-  Vector v_Qtot_ht(monthsInYear);
-  Vector v_Qtot_cl(monthsInYear);
+  // Initialize yearly sums
+  simData.Qneed_ht_yr = 0.0;
+  simData.Qneed_cl_yr = 0.0;
+
+  // Constants for loop
+  double floor_area = structure.floorArea();
+  double H_tr = simData.H_tr;
+  double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
+  
+  // Air Volume constants
+  double T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
+  double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
+  
+  // Total Air Flow constants
+  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
+  
+  // Fan Energy constants
+  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
+  double area_kWh_factor = floor_area * kWh2MJ;
 
   for (int i = 0; i < monthsInYear; ++i) {
-    v_tot_mo_ht_gain[i] = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
+    // 1. Gains and Losses
+    double tot_mo_ht_gain = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
 
     double Th_avg_minus_mdbt = simData.v_Th_avg[i] - v_mdbt[i];
-    double QT_ht = Th_avg_minus_mdbt * megasecondsInMonth[i] * simData.H_tr;
-    double QV_ht = simData.v_Hve_ht[i] * structure.floorArea() * Th_avg_minus_mdbt * megasecondsInMonth[i];
-    v_Qtot_ht[i] = QT_ht + QV_ht;
+    double Qtot_ht = (Th_avg_minus_mdbt * megasecondsInMonth[i] * H_tr) +
+                     (simData.v_Hve_ht[i] * floor_area * Th_avg_minus_mdbt * megasecondsInMonth[i]);
 
     double Tc_avg_minus_mdbt = simData.v_Tc_avg[i] - v_mdbt[i];
-    double QT_cl = Tc_avg_minus_mdbt * simData.H_tr * megasecondsInMonth[i];
-    double QV_cl = simData.v_Hve_cl[i] * structure.floorArea() * Tc_avg_minus_mdbt * megasecondsInMonth[i];
-    v_Qtot_cl[i] = QT_cl + QV_cl;
+    double Qtot_cl = (Tc_avg_minus_mdbt * H_tr * megasecondsInMonth[i]) +
+                     (simData.v_Hve_cl[i] * floor_area * Tc_avg_minus_mdbt * megasecondsInMonth[i]);
+
+    // 2. Heating Need
+    double gamma_H_ht = tot_mo_ht_gain / (Qtot_ht + std::numeric_limits<double>::epsilon());
+    double eta_g_H;
+    if (gamma_H_ht > 0) {
+      double num = std::pow(gamma_H_ht, a_H);
+      eta_g_H = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_ht);
+    } else {
+      eta_g_H = UNITY_FRACTION / (gamma_H_ht + std::numeric_limits<double>::epsilon());
+    }
+    
+    simData.v_Qneed_ht[i] = Qtot_ht - (eta_g_H * tot_mo_ht_gain);
+    simData.Qneed_ht_yr += simData.v_Qneed_ht[i];
+
+    // 3. Cooling Need
+    double gamma_H_cl = Qtot_cl / (tot_mo_ht_gain + std::numeric_limits<double>::epsilon());
+    double eta_g_CL;
+    if (gamma_H_cl > 0) {
+      double num = std::pow(gamma_H_cl, a_H);
+      eta_g_CL = (UNITY_FRACTION - num) / (UNITY_FRACTION - num * gamma_H_cl);
+    } else {
+      eta_g_CL = UNITY_FRACTION / (gamma_H_cl + std::numeric_limits<double>::epsilon());
+    }
+
+    simData.v_Qneed_cl[i] = tot_mo_ht_gain - (eta_g_CL * Qtot_cl);
+    simData.Qneed_cl_yr += simData.v_Qneed_cl[i];
+
+    // 4. Air Volumes
+    double denominator_ht = ((T_sup_ht - simData.v_Th_avg[i]) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    simData.v_Vair_ht[i] = simData.v_Qneed_ht[i] / denominator_ht;
+
+    double denominator_cl = ((simData.v_Tc_avg[i] - T_sup_cl) * rhoCpAir) + std::numeric_limits<double>::epsilon();
+    simData.v_Vair_cl[i] = simData.v_Qneed_cl[i] / denominator_cl;
+
+    // 5. Total Air Flow
+    double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
+    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
+    simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
+
+    // 6. Fan Energy
+    simData.v_Qfan_tot[i] = (simData.v_Vair_tot[i] * fan_power_factor) / area_kWh_factor;
   }
 
-  // Building heating dimensionless constant.
-  double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
-
-  // Compute the ratio of heat gain to heat loss.
-  Vector v_gamma_H_ht = div(
-      v_tot_mo_ht_gain,
-      sum(v_Qtot_ht,
-          std::numeric_limits<
-              double>::epsilon())); // Add
-                                    // std::numeric_limits<double>::epsilon()
-                                    // to avoid divide by zero.
-
-  // Heating utilization factor.
-  // Vector v_eta_g_H(monthsInYear);
-
-  // // For each month, set the check the heat gain ratio and set the heating
-  // // utlization factor accordingly.
-  // for (unsigned int i = 0; i < v_eta_g_H.size(); i++) {
-  //   if (v_gamma_H_ht[i] > 0) {
-  //     // Optimization: x^(a+1) = x^a * x
-  //     double num = std::pow(v_gamma_H_ht[i], a_H);
-  //     v_eta_g_H[i] = (1.0 - num) / (1.0 - num * v_gamma_H_ht[i]);
-  //   } else {
-  //     v_eta_g_H[i] =
-  //         1.0 / (v_gamma_H_ht[i] + std::numeric_limits<double>::epsilon());
-  //   }
-  // }
-
-
-  Vector v_eta_g_H = calculateUtilizationFactor(v_gamma_H_ht, a_H);
-
-  // Total heating need (MJ).
-  simData.v_Qneed_ht = dif(v_Qtot_ht, mult(v_eta_g_H, v_tot_mo_ht_gain));
-  simData.Qneed_ht_yr = sum(simData.v_Qneed_ht);
-
-  // Heat transfer (loss) to heat gain ratio, cooling.
-  Vector v_gamma_H_cl = div(
-      v_Qtot_cl, sum(v_tot_mo_ht_gain, std::numeric_limits<double>::epsilon()));
-
-  // Compute the cooling gain utilization factor eta_g_cl
-  Vector v_eta_g_CL = calculateUtilizationFactor(v_gamma_H_cl, a_H);
-
-  // Total cooling need (MJ).
-  simData.v_Qneed_cl = dif(v_tot_mo_ht_gain, mult(v_eta_g_CL, v_Qtot_cl));
-  simData.Qneed_cl_yr = sum(simData.v_Qneed_cl);
-
-  // Hot air supply temperature (C).
-  double T_sup_ht =
-      heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
-  // Cool air supply temperature (C).
-  double T_sup_cl =
-      cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
-
-  // Calculate air volumes for heating and cooling
-  calculateAirVolumes(simData);
-  printVector("v_Vair_ht", simData.v_Vair_ht);
-  printVector("v_Vair_cl", simData.v_Vair_cl);
-
-  // Calculate total air flow
-  calculateTotalAirFlow(simData);
-  printVector("v_Vair_tot", simData.v_Vair_tot);
-
-  // Calculate fan energy
-  calculateFanEnergy(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
     // Note: fanEnergy is no longer available here, but we can print the inputs and output
+    printVector("v_Vair_ht", simData.v_Vair_ht);
+    printVector("v_Vair_cl", simData.v_Vair_cl);
     printVector("v_Vair_tot (input to fan calc)", simData.v_Vair_tot);
     std::cout << "ventilation.fanPower() = " << ventilation.fanPower()
               << std::endl;
