@@ -311,7 +311,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
       phi_sol += v_wall_A_sol[j] * I_sol - v_wall_phi_r[j] * envFormFactors[j];
     }
     simData.v_E_sol[i] = phi_sol * MEGASECONDS_IN_MONTH[i];
-    if (debugIsoModelSimulation) { std::cout << "v_phi_sol[" << i << "]=" << phi_sol << std::endl; }
+    if (DEBUG_ISO_MODEL_SIMULATION) { std::cout << "v_phi_sol[" << i << "]=" << phi_sol << std::endl; }
   }
 }
 
