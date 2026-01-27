@@ -146,7 +146,7 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
     }
 
     double frac_hrs_sun_up = (sun_down_time - sun_up_time + 1) / 24.0;
-    simData.v_hrs_sun_down_mo[i] = (1.0 - frac_hrs_sun_up) * hoursInMonth[i];
+    simData.v_hrs_sun_down_mo[i] = (1.0 - frac_hrs_sun_up) * HOURS_IN_MONTH[i];
   }
 }
 
@@ -181,7 +181,7 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   double ext_energy_kW = lights.exteriorEnergy() * W2kW;
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
-    simData.v_Q_illum_tot[i] = monthFractionOfYear[i] * simData.Q_illum_tot_yr;
+    simData.v_Q_illum_tot[i] = MONTH_FRACTION_OF_YEAR[i] * simData.Q_illum_tot_yr;
     simData.v_Q_illum_ext_tot[i] = simData.v_hrs_sun_down_mo[i] * ext_energy_kW;
   }
 }
@@ -310,7 +310,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
       // Opaque Gain: A_sol * I_sol - phi_r * formFactor
       phi_sol += v_wall_A_sol[j] * I_sol - v_wall_phi_r[j] * envFormFactors[j];
     }
-    simData.v_E_sol[i] = phi_sol * megasecondsInMonth[i];
+    simData.v_E_sol[i] = phi_sol * MEGASECONDS_IN_MONTH[i];
     if (debugIsoModelSimulation) { std::cout << "v_phi_sol[" << i << "]=" << phi_sol << std::endl; }
   }
 }
@@ -666,15 +666,15 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     // 1. Gains and Losses
-    double tot_mo_ht_gain = (simData.phi_I_tot * megasecondsInMonth[i]) + simData.v_E_sol[i];
+    double tot_mo_ht_gain = (simData.phi_I_tot * MEGASECONDS_IN_MONTH[i]) + simData.v_E_sol[i];
 
     double Th_avg_minus_mdbt = simData.v_Th_avg[i] - v_mdbt[i];
-    double Qtot_ht = (Th_avg_minus_mdbt * megasecondsInMonth[i] * H_tr) +
-                     (simData.v_Hve_ht[i] * floor_area * Th_avg_minus_mdbt * megasecondsInMonth[i]);
+    double Qtot_ht = (Th_avg_minus_mdbt * MEGASECONDS_IN_MONTH[i] * H_tr) +
+                     (simData.v_Hve_ht[i] * floor_area * Th_avg_minus_mdbt * MEGASECONDS_IN_MONTH[i]);
 
     double Tc_avg_minus_mdbt = simData.v_Tc_avg[i] - v_mdbt[i];
-    double Qtot_cl = (Tc_avg_minus_mdbt * H_tr * megasecondsInMonth[i]) +
-                     (simData.v_Hve_cl[i] * floor_area * Tc_avg_minus_mdbt * megasecondsInMonth[i]);
+    double Qtot_cl = (Tc_avg_minus_mdbt * H_tr * MEGASECONDS_IN_MONTH[i]) +
+                     (simData.v_Hve_cl[i] * floor_area * Tc_avg_minus_mdbt * MEGASECONDS_IN_MONTH[i]);
 
     // 2. Heating Need
     double gamma_H_ht = tot_mo_ht_gain / (Qtot_ht + std::numeric_limits<double>::epsilon());
@@ -711,7 +711,7 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
 
     // 5. Total Air Flow
     double sum_Vair = simData.v_Vair_ht[i] + simData.v_Vair_cl[i];
-    double min_flow_month = megasecondsInMonth[i] * min_flow_rate;
+    double min_flow_month = MEGASECONDS_IN_MONTH[i] * min_flow_rate;
     simData.v_Vair_tot[i] = std::max(sum_Vair, min_flow_month);
 
     // 6. Fan Energy
@@ -846,7 +846,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(
 
   // Total annual pump energy for the mode if pumps run continuously (MJ/m2).
   double Q_pumps_yr_mode_per_m2 =
-      sum(mult(megasecondsInMonth, E_pumps_w_per_m2, MONTHS_IN_YEAR));
+      sum(mult(MEGASECONDS_IN_MONTH, E_pumps_w_per_m2, MONTHS_IN_YEAR));
 
   // Fraction of time the system is in this mode each month.
   Vector v_frac_mode = div(v_Qneed_mode, v_Qneed_total);
@@ -929,7 +929,7 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
   bool is_elec = (heating.hotWaterEnergyType() == 1);
 
   for(int i=0; i<MONTHS_IN_YEAR; ++i) {
-      double monthlyDemand = daysInMonth[i] * Q_dhw_yr;
+      double monthlyDemand = DAYS_IN_MONTH[i] * Q_dhw_yr;
       double frac_MonthlyDemand_yr = monthlyDemand / DAYS_IN_YEAR;
       double Qe_demand = frac_MonthlyDemand_yr * inv_dist_eff;
       double Q_dhw_demand = Qe_demand * inv_kWh2MJ;
@@ -1122,12 +1122,12 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
     double Eelec_ext_lt = simData.v_Q_illum_ext_tot[i] * area_factor;
     double Eelec_fan = simData.v_Qfan_tot[i];
     double Eelec_pump = simData.v_Q_pump_tot[i] * energy_factor;
-    double Eelec_plug = hoursInMonth[i] * E_plug_elec_avg * W2kW;
+    double Eelec_plug = HOURS_IN_MONTH[i] * E_plug_elec_avg * W2kW;
     double Eelec_dhw = simData.v_Q_dhw_elec[i] * area_factor;
 
     double Egas_ht = simData.v_Qgas_ht[i] * energy_factor;
     double Egas_cl = simData.v_Qcl_gas_tot[i] * energy_factor;
-    double Egas_plug = hoursInMonth[i] * E_plug_gas_avg * W2kW;
+    double Egas_plug = HOURS_IN_MONTH[i] * E_plug_gas_avg * W2kW;
     double Egas_dhw = simData.v_Q_dhw_gas[i] * area_factor;
 
 #ifdef ISOMODEL_STANDALONE

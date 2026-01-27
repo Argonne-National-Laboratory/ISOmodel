@@ -212,14 +212,14 @@ MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &
   double frac_hrs_wke_nt = weekendHoursUnoccupied / HOURS_IN_WEEK;
 
   for (int m = 0; m < MONTHS_IN_YEAR; m++) {
-    data.weekdayOccupiedMegaseconds[m] = megasecondsInMonth[m] * data.frac_hrs_wk_day;
-    data.weekdayUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * data.frac_hrs_wk_nt;
-    data.weekendOccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_day;
-    data.weekendUnoccupiedMegaseconds[m] = megasecondsInMonth[m] * frac_hrs_wke_nt;
+    data.weekdayOccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * data.frac_hrs_wk_day;
+    data.weekdayUnoccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * data.frac_hrs_wk_nt;
+    data.weekendOccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * frac_hrs_wke_day;
+    data.weekendUnoccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * frac_hrs_wke_nt;
   }
   for (int h = 0; h < HOURS_IN_DAY; h++) {
-    if (h - eecalcWeekdayStart >= 0 &&
-        h - eecalcWeekdayStart < data.hoursOccupiedPerDay) {
+    if (h - WEEKDAY_START >= 0 &&
+        h - WEEKDAY_START < data.hoursOccupiedPerDay) {
       data.clockHourOccupied[h] = 1;
       data.clockHourUnoccupied[h] = 0;
     } else {

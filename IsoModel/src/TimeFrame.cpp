@@ -32,7 +32,7 @@ TimeFrame::~TimeFrame() = default;
 int TimeFrame::monthLength(int month) {
   if (month < 1 || month > 12)
     return 0;
-  return static_cast<int>(daysInMonth[month - 1]);
+  return static_cast<int>(DAYS_IN_MONTH[month - 1]);
 }
 
 } // namespace openstudio::isomodel

@@ -79,27 +79,27 @@ constexpr int HOURS_IN_YEAR = DAYS_IN_YEAR * HOURS_IN_DAY;
 constexpr int SECONDS_IN_HOUR = 3600;
 
 // Start hour for a standard weekday in EECALC
-constexpr int eecalcWeekdayStart = 7;
+constexpr int WEEKDAY_START = 7;
 
 // Constants
-inline constexpr std::array<double, 12> daysInMonth = {31, 28, 31, 30, 31, 30,
+inline constexpr std::array<double, 12> DAYS_IN_MONTH = {31, 28, 31, 30, 31, 30,
                                                        31, 31, 30, 31, 30, 31};
 
-inline constexpr std::array<double, 12> hoursInMonth = {
+inline constexpr std::array<double, 12> HOURS_IN_MONTH = {
     744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744};
 
-inline constexpr std::array<double, 12> megasecondsInMonth = {
+inline constexpr std::array<double, 12> MEGASECONDS_IN_MONTH = {
     2.6784, 2.4192, 2.6784, 2.592,  2.6784, 2.592,
     2.6784, 2.6784, 2.592,  2.6784, 2.592,  2.6784};
 
-inline constexpr std::array<double, 12> monthFractionOfYear = {
+inline constexpr std::array<double, 12> MONTH_FRACTION_OF_YEAR = {
     0.0849315068493151, 0.0767123287671233, 0.0849315068493151,
     0.0821917808219178, 0.0849315068493151, 0.0821917808219178,
     0.0849315068493151, 0.0849315068493151, 0.0821917808219178,
     0.0849315068493151, 0.0821917808219178, 0.0849315068493151};
 
 // Cumulative hours at the end of each month (0 to 8760)
-inline constexpr std::array<int, 13> monthEndHours = {
+inline constexpr std::array<int, 13> MONTH_END_HOURS = {
     0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760};
 
 // --- Geometry & Directions ---
