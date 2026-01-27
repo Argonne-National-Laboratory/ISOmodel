@@ -171,14 +171,14 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   // Total lighting energy for occupied times (kWh).
   simData.Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O *
                 (annualHours.t_lt_D * F_D + annualHours.t_lt_N) *
-                W2kW;
+                WATTS_TO_KILOWATTS;
   // Total annual lighting energy for unnocupied times (kWh).
   simData.Q_illum_unocc =
-      structure.floorArea() * lpd_unocc * annualHours.t_unocc * W2kW;
+      structure.floorArea() * lpd_unocc * annualHours.t_unocc * WATTS_TO_KILOWATTS;
   // Total annual lighting energy (kWh).
   simData.Q_illum_tot_yr = simData.Q_illum_occ + simData.Q_illum_unocc;
 
-  double ext_energy_kW = lights.exteriorEnergy() * W2kW;
+  double ext_energy_kW = lights.exteriorEnergy() * WATTS_TO_KILOWATTS;
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     simData.v_Q_illum_tot[i] = MONTH_FRACTION_OF_YEAR[i] * simData.Q_illum_tot_yr;
@@ -332,7 +332,7 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
 
   // Internal heat gain from illumination (W/m2).
   double floor_area = structure.floorArea();
-  double inv_area_hours = KWATTS_TO_WATTS / (floor_area * HOURS_IN_YEAR);
+  double inv_area_hours = KILOWATTS_TO_WATTS / (floor_area * HOURS_IN_YEAR);
   
   // phi_illum_occ is unused
   double phi_illum_unocc = (simData.Q_illum_unocc * inv_area_hours) / (UNITY_FRACTION - simData.scheduleData.frac_hrs_wk_day);
@@ -524,11 +524,11 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
 
   // Vent supply rate m3/h/m2 (input is in in L/s).
   double qv_supp =
-      ventilation.supplyRate() / structure.floorArea() / LPS_TO_M3H;
+      ventilation.supplyRate() / structure.floorArea() / LITERS_PER_SECOND_TO_METERS3_PER_HOUR;
 
   // Vent exhaust rate m3/h/m2, negative indicates out of building.
   double qv_ext = -(qv_supp - ventilation.supplyDifference() /
-                                  structure.floorArea() / LPS_TO_M3H);
+                                  structure.floorArea() / LITERS_PER_SECOND_TO_METERS3_PER_HOUR);
 
   // Combustion appliance ventilation rate - not implemented yet but will be
   // impt for restaurants.
@@ -661,8 +661,8 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day * (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
   
   // Fan Energy constants
-  double fan_power_factor = ventilation.fanPower() / KJ_TO_MJ;
-  double area_kWh_factor = floor_area * kWh2MJ;
+  double fan_power_factor = ventilation.fanPower() / KILOJOULE_TO_MEGAJOULE;
+  double area_kWh_factor = floor_area * KILOWATTHOURS_TO_MEGAJOULES;
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     // 1. Gains and Losses
@@ -925,14 +925,14 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
 
   double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
   double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();
-  double inv_kWh2MJ = 1.0 / kWh2MJ;
+  double inv_KILOWATTHOURS_TO_MEGAJOULES = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
   bool is_elec = (heating.hotWaterEnergyType() == 1);
 
   for(int i=0; i<MONTHS_IN_YEAR; ++i) {
       double monthlyDemand = DAYS_IN_MONTH[i] * Q_dhw_yr;
       double frac_MonthlyDemand_yr = monthlyDemand / DAYS_IN_YEAR;
       double Qe_demand = frac_MonthlyDemand_yr * inv_dist_eff;
-      double Q_dhw_demand = Qe_demand * inv_kWh2MJ;
+      double Q_dhw_demand = Qe_demand * inv_KILOWATTHOURS_TO_MEGAJOULES;
       // v_Q_dhw_solar is zero, so we can ignore it in `dif`
       double Q_dhw_need = std::max(0.0, Q_dhw_demand * inv_sys_eff);
 
@@ -1101,7 +1101,7 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
   allResults.reserve(MONTHS_IN_YEAR);
 
   double floor_area = structure.floorArea();
-  double energy_factor = (floor_area > 0) ? (1.0 / (floor_area * kWh2MJ)) : 0.0;
+  double energy_factor = (floor_area > 0) ? (1.0 / (floor_area * KILOWATTHOURS_TO_MEGAJOULES)) : 0.0;
   double area_factor = (floor_area > 0) ? (1.0 / floor_area) : 0.0;
 
   // Plug load factors
@@ -1122,12 +1122,12 @@ MonthlyModel::outputGeneration(const MonthlySimulationData &simData) const {
     double Eelec_ext_lt = simData.v_Q_illum_ext_tot[i] * area_factor;
     double Eelec_fan = simData.v_Qfan_tot[i];
     double Eelec_pump = simData.v_Q_pump_tot[i] * energy_factor;
-    double Eelec_plug = HOURS_IN_MONTH[i] * E_plug_elec_avg * W2kW;
+    double Eelec_plug = HOURS_IN_MONTH[i] * E_plug_elec_avg * WATTS_TO_KILOWATTS;
     double Eelec_dhw = simData.v_Q_dhw_elec[i] * area_factor;
 
     double Egas_ht = simData.v_Qgas_ht[i] * energy_factor;
     double Egas_cl = simData.v_Qcl_gas_tot[i] * energy_factor;
-    double Egas_plug = HOURS_IN_MONTH[i] * E_plug_gas_avg * W2kW;
+    double Egas_plug = HOURS_IN_MONTH[i] * E_plug_gas_avg * WATTS_TO_KILOWATTS;
     double Egas_dhw = simData.v_Q_dhw_gas[i] * area_factor;
 
 #ifdef ISOMODEL_STANDALONE

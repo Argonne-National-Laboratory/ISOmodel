@@ -143,7 +143,7 @@ std::vector<EndUses> HourlyModel::simulate(bool aggregateByMonth) {
     m_phi_C_nd[i] = std::max(0.0, -phi_HC_nd);
 
     // 4. Auxiliary Calculations
-    double q_ve_mech = cache.sched_q_ve_mech * kWh2MJ *
+    double q_ve_mech = cache.sched_q_ve_mech * KILOWATTHOURS_TO_MEGAJOULES *
                        invFloorArea; // Convert to energy units
 
     // Calculate Air Volume for fans (V_{air}) based on heating/cooling delivery
@@ -317,7 +317,7 @@ inline double HourlyModel::solveThermalBalance(
       H_tr_3_H_tr_2 *
       R_ve_tr; // d(phim)/dP (using R_ve_tr instead of H_tr_1/H_ve)
 
-  double Cm_units = C_m / kWh2MJ;
+  double Cm_units = C_m / KILOWATTHOURS_TO_MEGAJOULES;
   double Cm_plus_H = Cm_units + H_tr_3_H_em;
   double d_thetam_dp = d_phim_dp / Cm_plus_H;
 
@@ -398,39 +398,39 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
 
   auto mapToEU = [&](EndUses &eu, double h, double c, double il, double el,
                      double fn, double pm, double pi, double pe, double dw) {
-    double total_heat_req = h * s_ht * W2kW;
+    double total_heat_req = h * s_ht * WATTS_TO_KILOWATTS;
     double elec_ht = total_heat_req * electricHeat;
     double gas_ht = total_heat_req - elec_ht;
 
 #ifdef ISOMODEL_STANDALONE
     eu.addEndUse(0, elec_ht);
-    eu.addEndUse(1, c * s_cl * W2kW);
-    eu.addEndUse(2, il * W2kW);
-    eu.addEndUse(3, el * W2kW);
-    eu.addEndUse(4, fn * W2kW);
-    eu.addEndUse(5, pm * W2kW);
-    eu.addEndUse(6, pi * W2kW);
-    eu.addEndUse(7, pe * W2kW);
-    eu.addEndUse(8, dw * W2kW);
+    eu.addEndUse(1, c * s_cl * WATTS_TO_KILOWATTS);
+    eu.addEndUse(2, il * WATTS_TO_KILOWATTS);
+    eu.addEndUse(3, el * WATTS_TO_KILOWATTS);
+    eu.addEndUse(4, fn * WATTS_TO_KILOWATTS);
+    eu.addEndUse(5, pm * WATTS_TO_KILOWATTS);
+    eu.addEndUse(6, pi * WATTS_TO_KILOWATTS);
+    eu.addEndUse(7, pe * WATTS_TO_KILOWATTS);
+    eu.addEndUse(8, dw * WATTS_TO_KILOWATTS);
     eu.addEndUse(9, gas_ht);
 #else
     eu.addEndUse(elec_ht, EndUseFuelType::Electricity,
                  EndUseCategoryType::Heating);
-    eu.addEndUse(c * s_cl * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(c * s_cl * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::Cooling);
-    eu.addEndUse(il * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(il * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::InteriorLights);
-    eu.addEndUse(el * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(el * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::ExteriorLights);
-    eu.addEndUse(fn * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(fn * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::Fans);
-    eu.addEndUse(pm * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(pm * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::Pumps);
-    eu.addEndUse(pi * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(pi * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::InteriorEquipment);
-    eu.addEndUse(pe * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(pe * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::ExteriorEquipment);
-    eu.addEndUse(dw * W2kW, EndUseFuelType::Electricity,
+    eu.addEndUse(dw * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
                  EndUseCategoryType::WaterSystems);
     eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
 #endif
@@ -617,7 +617,7 @@ void HourlyModel::initialize() {
     c.q_ve_wind = (float)(windFactor * q_ve_4Pa *
                           fastPow23(m_Cp_air_pressure * wind[i] * wind[i]));
 
-    double q_ve = c.sched_q_ve_mech * kWh2MJ * invFloorArea;
+    double q_ve = c.sched_q_ve_mech * KILOWATTHOURS_TO_MEGAJOULES * invFloorArea;
     c.q_ve_mech_sup = (float)(q_ve * f_ve_mech_sup);
     c.q_ve_diff = (float)(-(c.q_ve_mech_sup - q_ve));
     c.theta_sup = (float)(std::max(

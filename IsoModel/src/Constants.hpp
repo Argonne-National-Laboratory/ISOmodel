@@ -114,13 +114,16 @@ inline constexpr std::array<double, 8> SURFACE_AZIMUTHS = {
     0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4};
 
 //// --- Unit Conversions ---
-constexpr double kWh2MJ = 3.6; // 1 kWh = 3.6 MJ
-constexpr double MJ2kWh = 1.0 / 3.6;
-constexpr double MJ2Wh = 277.777778; // 1 MJ = 277.78 Wh
-constexpr double KWATTS_TO_WATTS = 1000.0;
-constexpr double W2kW = 0.001;
-constexpr double LPS_TO_M3H = 3.6;        // Liters/sec to m3/h
+constexpr double KILOWATTHOURS_TO_MEGAJOULES = 3.6; // 1 kWh = 3.6 MJ
+constexpr double MEGAJOULES_TO_KILOWATTHOURS = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
+constexpr double MEGAJOULES_TO_WATTHOURS = 1000*MEGAJOULES_TO_KILOWATTHOURS; // 1 MJ = 277.78 Wh
+constexpr double KILOWATTS_TO_WATTS = 1000.0;
+constexpr double WATTS_TO_KILOWATTS = 0.001;
+constexpr double LITERS_PER_SECOND_TO_METERS3_PER_HOUR = 3.6;        // Liters/sec to m3/h
 constexpr double DEGREES_PER_HOUR = 15.0; // Earth rotation
+constexpr double LITERS_TO_M3 = 1000.0;
+constexpr double KILOJOULE_TO_MEGAJOULE = 1000.0;
+constexpr double MEGASECONDS_TO_SECONDS = 1000000.0;
 
 // ISO 15242 Annex D Table D.1: Total air leakage at 4Pa
 // 0.19 is conversion from n50 to q_ve_4Pa with exponent 0.667  Move to
@@ -149,8 +152,7 @@ constexpr double SHGCClearGlass = 0.87;
 constexpr double DEFAULT_INITIAL_TEMP = 20.0; // Degrees C
 constexpr double ISO_SKY_TEMP_DIFF = 11.0;    // K (Intermediate zones)
 constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // W/m2K
-constexpr double LIGHTING_LEVEL_COEFF =
-    53.0;                           // Empirical constant for daylighting
+constexpr double LIGHTING_LEVEL_COEFF = 53.0;  // Empirical constant for daylighting
 constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
 constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
 
@@ -159,9 +161,8 @@ constexpr double MIN_INFILTRATION_FLOW = 0.001; // m3/h/m2
 constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
 constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
 constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
-constexpr double MEGASECONDS_TO_SECONDS = 1000000.0;
-constexpr double LITERS_TO_M3 = 1000.0;
-constexpr double KJ_TO_MJ = 1000.0;
+
+
 constexpr double UNITY_FRACTION = 1.0;          // Represents 1.0 for various fractional calculations
 constexpr double DEFAULT_DH_NETWORK_EFF = 0.9;
 constexpr double DEFAULT_DH_SYS_EFF = 0.87;
