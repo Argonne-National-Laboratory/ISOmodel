@@ -108,14 +108,20 @@ public:
   }
 
   /// Gets a Building property.
-  std::string bemType() const { return building.buildingEnergyManagement(); }
+  std::string bemType() const {
+    double val = building.buildingEnergyManagement();
+    for (const auto &[key, adj] : BEM_TYPE_TO_ADJUSTMENT) {
+      if (std::abs(val - adj) < 0.001) return key;
+    }
+    return std::string(NONE);
+  }
 
   /// Sets a Building property.
   void setBemType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
     
-    if (BEM_TYPE_TO_ADJUSTMENT.count(type)) {
-      building.setBuildingEnergyManagement(type);
+    if (auto it = BEM_TYPE_TO_ADJUSTMENT.find(type); it != BEM_TYPE_TO_ADJUSTMENT.end()) {
+      building.setBuildingEnergyManagement(it->second);
     } else {
       throw std::invalid_argument(
           "bemType parameter must be one of 'none', 'simple', or 'advanced'");

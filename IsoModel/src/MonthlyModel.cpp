@@ -396,14 +396,10 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   // effective heating temp and raising the effective cooling temp during
   // times of control (i.e. during occupancy).
 
-  std::string bemType = building.buildingEnergyManagement();
-  double T_adj = 0.0;
-  if (auto it = BEM_TYPE_TO_ADJUSTMENT.find(bemType); it != BEM_TYPE_TO_ADJUSTMENT.end()) {
-    T_adj = it->second;
-  }
+  double T_adj = building.buildingEnergyManagement();
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "BEM Type: " << bemType << ", Adjustment: " << T_adj << std::endl;
+    std::cout << "BEM Adjustment: " << T_adj << std::endl;
   }
 
   // Adjust the heating set points.
