@@ -83,22 +83,39 @@ constexpr int WEEKDAY_START = 7;
 inline constexpr std::array<double, 12> DAYS_IN_MONTH = {31, 28, 31, 30, 31, 30,
                                                        31, 31, 30, 31, 30, 31};
 
-inline constexpr std::array<double, 12> HOURS_IN_MONTH = {
-    744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744};
+inline constexpr std::array<double, 12> HOURS_IN_MONTH = [] {
+  std::array<double, 12> v{};
+  for (size_t i = 0; i < 12; ++i) {
+    v[i] = DAYS_IN_MONTH[i] * HOURS_IN_DAY;
+  }
+  return v;
+}();
 
-inline constexpr std::array<double, 12> MEGASECONDS_IN_MONTH = {
-    2.6784, 2.4192, 2.6784, 2.592,  2.6784, 2.592,
-    2.6784, 2.6784, 2.592,  2.6784, 2.592,  2.6784};
+inline constexpr std::array<double, 12> MEGASECONDS_IN_MONTH = [] {
+  std::array<double, 12> v{};
+  for (size_t i = 0; i < 12; ++i) {
+    v[i] = HOURS_IN_MONTH[i] * SECONDS_IN_HOUR / 1000000.0;
+  }
+  return v;
+}();
 
-inline constexpr std::array<double, 12> MONTH_FRACTION_OF_YEAR = {
-    0.0849315068493151, 0.0767123287671233, 0.0849315068493151,
-    0.0821917808219178, 0.0849315068493151, 0.0821917808219178,
-    0.0849315068493151, 0.0849315068493151, 0.0821917808219178,
-    0.0849315068493151, 0.0821917808219178, 0.0849315068493151};
+inline constexpr std::array<double, 12> MONTH_FRACTION_OF_YEAR = [] {
+  std::array<double, 12> v{};
+  for (size_t i = 0; i < 12; ++i) {
+    v[i] = DAYS_IN_MONTH[i] / DAYS_IN_YEAR;
+  }
+  return v;
+}();
 
 // Cumulative hours at the end of each month (0 to 8760)
-inline constexpr std::array<int, 13> MONTH_END_HOURS = {
-    0, 744, 1416, 2160, 2880, 3624, 4344, 5088, 5832, 6552, 7296, 8016, 8760};
+inline constexpr std::array<int, 13> MONTH_END_HOURS = [] {
+  std::array<int, 13> v{};
+  v[0] = 0;
+  for (size_t i = 0; i < 12; ++i) {
+    v[i + 1] = v[i] + static_cast<int>(HOURS_IN_MONTH[i]);
+  }
+  return v;
+}();
 
 // --- Geometry & Directions ---
 // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
