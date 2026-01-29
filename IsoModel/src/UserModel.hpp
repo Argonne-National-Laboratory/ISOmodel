@@ -113,16 +113,18 @@ public:
   /// Sets a Building property.
   void setBemType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    // Constants like NONE are now pulled from Constants.hpp via the namespace
-    if (type == NONE)
-      building.setBuildingEnergyManagement(1.0);
-    else if (type == SIMPLE)
-      building.setBuildingEnergyManagement(2.0);
-    else if (type == ADVANCED)
-      building.setBuildingEnergyManagement(3.0);
-    else
+    
+    static const std::map<std::string, double> bemMap = {
+        {std::string(NONE), 1.0},
+        {std::string(SIMPLE), 2.0},
+        {std::string(ADVANCED), 3.0}};
+
+    if (auto it = bemMap.find(type); it != bemMap.end()) {
+      building.setBuildingEnergyManagement(it->second);
+    } else {
       throw std::invalid_argument(
           "bemType parameter must be one of 'none', 'simple', or 'advanced'");
+    }
   }
 
   /// Gets a Building property.

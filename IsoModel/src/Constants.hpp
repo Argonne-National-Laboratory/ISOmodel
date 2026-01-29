@@ -64,6 +64,17 @@ inline constexpr std::string_view COMBINED = "combined";
 inline constexpr std::string_view NONE = "none";
 inline constexpr std::string_view SIMPLE = "simple";
 inline constexpr std::string_view ADVANCED = "advanced";
+  // BEM_ADJUSTMENT sets the temp differential from the interior heating/cooling setpoint
+  // based on the BEM type. An advanced BEM has the effect of reducing the
+  // effective heating temp and raising the effective cooling temp during
+  // times of control (i.e. during occupancy).
+constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
+constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
+constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
+
+// Lookup table for BEM adjustments: 0=Unused, 1=None, 2=Simple, 3=Advanced
+inline constexpr std::array<double, 4> BEM_ADJUSTMENTS = {
+    0.0, 0.0, BEM_SIMPLE_ADJUSTMENT, BEM_ADVANCED_ADJUSTMENT};
 
 // --- Time Constants ---
 
@@ -72,12 +83,8 @@ constexpr int HOURS_IN_DAY = 24;
 constexpr int HOURS_IN_WEEK = 168;
 constexpr int DAYS_IN_WEEK = 7;
 constexpr int DAYS_IN_YEAR = 365;
-// constexpr int HOURS_IN_YEAR = 8760;
 constexpr int HOURS_IN_YEAR = DAYS_IN_YEAR * HOURS_IN_DAY;
 constexpr int SECONDS_IN_HOUR = 3600;
-
-// Start hour for a standard weekday in EECALC
-constexpr int WEEKDAY_START = 7;
 
 // Constants
 inline constexpr std::array<double, 12> DAYS_IN_MONTH = {31, 28, 31, 30, 31, 30,
@@ -117,6 +124,9 @@ inline constexpr std::array<int, 13> MONTH_END_HOURS = [] {
   return v;
 }();
 
+// Start hour for a standard weekday 
+constexpr int WEEKDAY_START_HOUR = 7;
+
 // --- Geometry & Directions ---
 // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
 constexpr int NUM_COMPASS_DIRECTIONS = 8;
@@ -147,7 +157,7 @@ constexpr double N50_TO_Q4 = 0.19;
 
 //// --- ISO 13790 Constants ---
 // Solar heat gain coefficient for internal gains
-constexpr double n_si_coeff = 0.9;
+constexpr double N_SI_COEFF = 0.9;
 
 // from ventilation calcs in MonthlyModel.cpp
 constexpr double N_SW_COEFF = 0.14;
@@ -163,20 +173,16 @@ inline constexpr std::array<double, 9> ENV_FORM_FACTORS = {
 
 constexpr double SHGC_CLEAR_GLASS = 0.87;
 
-// Simulation Defaults
-constexpr double DEFAULT_INITIAL_TEMP = 20.0; // Degrees C
-constexpr double ISO_SKY_TEMP_DIFF = 11.0;    // K (Intermediate zones)
-constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // W/m2K
+// Simulation Defaults from ISO standards
+constexpr double DEFAULT_INITIAL_TEMP = 20.0; // starting room temp for calcs in Degrees C
+constexpr double ISO_SKY_TEMP_DIFF = 11.0;    // effective temp diff between oudoors and sky temp in K
+constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // exterior radiation heat xfer coefficient W/m2K
 constexpr double LIGHTING_LEVEL_COEFF = 53.0;  // Empirical constant for dayLIGHTing
-constexpr double H_MS_FACTOR = 1.2; // Relation between h_ms and h_ri
-constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // meters
+constexpr double H_MS_FACTOR = 1.2; // h_ms = h_ci + h_ri * H_MS_FACTOR
+constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // minimum zone height to use meters
 
 // Monthly Model Constants
 constexpr double MIN_INFILTRATION_FLOW = 0.001; // m3/h/m2
-constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
-constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
-constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
-
 
 
 constexpr double DEFAULT_DH_NETWORK_EFF = 0.9;

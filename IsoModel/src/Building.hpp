@@ -69,7 +69,7 @@ public:
   }
 
   /**
-   * Building energy management type: none (0), simple (1) or advanced (2).
+   * Building energy management type: none (1), simple (2) or advanced (3).
    */
   double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
   void setBuildingEnergyManagement(double value) {

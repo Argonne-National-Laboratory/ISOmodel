@@ -170,7 +170,6 @@ private:
   void calculateInternalGainComponents(MonthlySimulationData &simData) const;
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
-  static double calculateBEMAdjustment(const Building& building);
 
   void calculateVentilation(MonthlySimulationData &simData) const;
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;

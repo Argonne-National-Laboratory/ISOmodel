@@ -218,8 +218,8 @@ MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &
     data.weekendUnoccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * frac_hrs_wke_nt;
   }
   for (int h = 0; h < HOURS_IN_DAY; h++) {
-    if (h - WEEKDAY_START >= 0 &&
-        h - WEEKDAY_START < data.hoursOccupiedPerDay) {
+    if (h - WEEKDAY_START_HOUR >= 0 &&
+        h - WEEKDAY_START_HOUR < data.hoursOccupiedPerDay) {
       data.clockHourOccupied[h] = 1;
       data.clockHourUnoccupied[h] = 0;
     } else {
