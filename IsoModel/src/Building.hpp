@@ -1,8 +1,20 @@
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the `Building` class, a data container for building-wide
+// properties such as occupancy sensor settings, appliance power densities,
+// and the building energy management (BEM) type.
+
 #ifndef ISOMODEL_BUILDING_HPP
 #define ISOMODEL_BUILDING_HPP
 
 #include "ISOModelAPI.hpp"
-
 
 namespace openstudio::isomodel {
 
@@ -70,7 +82,7 @@ public:
   }
 
   /**
-   * Building energy management temperature adjustment (K).
+   * Building energy management type: none (0), simple (1) or advanced (2).
    */
   double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
   void setBuildingEnergyManagement(double value) {

@@ -1,9 +1,14 @@
-/*
- * solar_debug.cpp
- *
- * Refactored to remove boost dependencies and ensure output prints regardless
- * of global debug flags.
- */
+// First Commit: 2015-03-11
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+//
+// Summary:
+// This file provides a command-line utility for debugging the
+// `SolarRadiation` class. It can load a model and print either the
+// aggregated monthly solar radiation values or the detailed hour-by-hour
+// solar radiation values for all surfaces.
 
 #include "../MonthlyModel.hpp"
 #include "../SolarRadiation.hpp"

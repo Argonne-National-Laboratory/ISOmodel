@@ -1,7 +1,17 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the UserModel class, which acts as the primary user interface for
+// loading building configurations from `.ism` (YAML) files. It orchestrates
+// the parsing of parameters, loading of weather data, and serves as a
+// factory to create `MonthlyModel` or `HourlyModel` instances for
+// simulation.
 
 #ifndef ISOMODEL_USERMODEL_HPP
 #define ISOMODEL_USERMODEL_HPP
@@ -108,24 +118,21 @@ public:
   }
 
   /// Gets a Building property.
-  std::string bemType() const {
-    double val = building.buildingEnergyManagement();
-    for (const auto &[key, adj] : BEM_TYPE_TO_ADJUSTMENT) {
-      if (std::abs(val - adj) < 0.001) return key;
-    }
-    return "none";
-  }
+  double bemType() const { return building.buildingEnergyManagement(); }
 
   /// Sets a Building property.
   void setBemType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    
-    if (auto it = BEM_TYPE_TO_ADJUSTMENT.find(type); it != BEM_TYPE_TO_ADJUSTMENT.end()) {
-      building.setBuildingEnergyManagement(it->second);
-    } else {
+    // Constants like NONE are now pulled from Constants.hpp via the namespace
+    if (type == NONE)
+      building.setBuildingEnergyManagement(1.0);
+    else if (type == SIMPLE)
+      building.setBuildingEnergyManagement(2.0);
+    else if (type == ADVANCED)
+      building.setBuildingEnergyManagement(3.0);
+    else
       throw std::invalid_argument(
           "bemType parameter must be one of 'none', 'simple', or 'advanced'");
-    }
   }
 
   /// Gets a Building property.
@@ -433,17 +440,18 @@ public:
   }
 
   /// Gets a Heating property.
-  double dhwEnergyCarrier() const { return static_cast<double>(heating.hotWaterEnergyType()); }
+  double dhwEnergyCarrier() const { return heating.hotWaterEnergyType(); }
 
   /// Sets a Heating property.
   void setDhwEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (auto it = STRING_TO_FUEL_TYPE.find(type); it != STRING_TO_FUEL_TYPE.end()) {
-      heating.setHotWaterEnergyType(it->second);
-    } else {
+    if (type == ELECTRIC)
+      heating.setHotWaterEnergyType(1.0);
+    else if (type == GAS)
+      heating.setHotWaterEnergyType(2.0);
+    else
       throw std::invalid_argument(
           "dhwFuelType parameter must be one of 'gas' or 'electric'");
-    }
   }
 
   /// Gets a Heating property.
@@ -489,17 +497,18 @@ public:
   }
 
   /// Gets a Heating property.
-  double heatingEnergyCarrier() const { return static_cast<double>(heating.energyType()); }
+  double heatingEnergyCarrier() const { return heating.energyType(); }
 
   /// Sets a Heating property.
   void setHeatingEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (auto it = STRING_TO_FUEL_TYPE.find(type); it != STRING_TO_FUEL_TYPE.end()) {
-      heating.setEnergyType(it->second);
-    } else {
+    if (type == ELECTRIC)
+      heating.setEnergyType(1.0);
+    else if (type == GAS)
+      heating.setEnergyType(2.0);
+    else
       throw std::invalid_argument(
           "heatingFuelType parameter must be one of 'gas' or 'electric'");
-    }
   }
 
   /// Gets a Heating property.
@@ -1737,17 +1746,20 @@ public:
   }
 
   /// Gets a Ventilation property.
-  double ventilationType() const { return static_cast<double>(ventilation.ventType()); }
+  double ventilationType() const { return ventilation.ventType(); }
 
   /// Sets a Ventilation property.
   void setVentilationType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (auto it = STRING_TO_VENTILATION_TYPE.find(type); it != STRING_TO_VENTILATION_TYPE.end()) {
-      ventilation.setVentType(it->second);
-    } else {
+    if (type == MECHANICAL)
+      ventilation.setVentType(1.0);
+    else if (type == COMBINED)
+      ventilation.setVentType(2.0);
+    else if (type == NATURAL)
+      ventilation.setVentType(3.0);
+    else
       throw std::invalid_argument("ventilationType parameter must be one of "
                                   "'mechanical', 'natural', or 'combined'");
-    }
   }
 
   /// Gets a Ventilation property.

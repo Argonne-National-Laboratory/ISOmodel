@@ -1,9 +1,14 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// First Commit: 2015-07-16
+// 
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+// 
+// Summary:
+// This file contains Google Test unit tests for the legacy `Properties`
+// class. It validates the correct parsing of key-value pairs from `.props`
+// files, including type conversions (e.g., to double, vector) and handling
+// of missing properties.
 
 #include "gtest/gtest.h"
 

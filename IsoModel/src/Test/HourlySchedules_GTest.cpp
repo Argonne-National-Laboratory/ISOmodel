@@ -1,9 +1,13 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// This file contains the Google Test unit tests for the `HourlyModel` when
+// using an external schedule file. It validates the accuracy of the
+// simulation by loading a model with a schedule file and comparing its
+// monthly aggregated results against a set of known, expected values.
 
 #include "gtest/gtest.h"
 

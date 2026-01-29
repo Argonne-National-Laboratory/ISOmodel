@@ -1,3 +1,14 @@
+// First Commit: 2025-12-22
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// This file defines lightweight replacements for `Vector` and `Matrix` types,
+// previously based on Boost UBLAS, and provides a collection of mathematical
+// helper functions for vector and matrix arithmetic. These helpers are
+// essential for the core physics calculations in the simulation models.
+
 #ifndef ISOMODEL_MATHHELPERS_HPP
 #define ISOMODEL_MATHHELPERS_HPP
 

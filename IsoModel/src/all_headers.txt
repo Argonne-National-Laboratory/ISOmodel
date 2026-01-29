@@ -1,0 +1,509 @@
+--- FILE: ./TimeFrame.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./EpwData.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./SimulationSettings.hpp ---
+// First Commit: 2015-06-12
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Ventilation.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./ISOResults.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./WeatherData.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Cooling.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./SolarRadiation.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./EndUses.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Heating.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Simulation.hpp ---
+// First Commit: 2015-06-01
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Structure.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./EpwData.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./UserModel.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./HourlyModel.cpp ---
+// First Commit: 2014-06-20
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./mainpage.hpp ---
+// First Commit: 2015-09-20
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Structure.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Schedules.hpp ---
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./Location.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Location.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Cooling.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Simulation.cpp ---
+// First Commit: 2015-06-01
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./old/WeatherData.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Building.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Ventilation.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Vector.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/PhysicalQuantities.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Matrix.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/MonthlyModelHelpers.hpp ---
+// First Commit: 2025-12-22
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./old/Lighting.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/Population.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/PhysicalQuantities.cpp ---
+// First Commit: 2015-06-11
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./old/Heating.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./old/SimulationSettings.cpp ---
+// First Commit: 2025-12-21
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./MonthlyModel.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Daniel Chopson
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/ISOModel_Benchmark.cpp ---
+// First Commit: 2014-12-16
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Test/ISOModel_GTest.cpp ---
+// First Commit: 2014-12-05
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/HourlyModel_GTest.cpp ---
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/Properties_GTest.cpp ---
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Test/HourlySchedule_GTest.cpp ---
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./Test/HourlySchedules_GTest.cpp ---
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./Test/MonthlyModel_GTest.cpp ---
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/ISOModelFixture.cpp ---
+// First Commit: 2015-09-20
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Test/OptimizationCoverage_GTest.cpp ---
+// First Commit: 2026-01-07
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./Test/TimeFrame_GTest.cpp ---
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/ISOModelFixture.hpp ---
+// First Commit: 2015-09-20
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Test/UserModel_GTest.cpp ---
+// First Commit: 2014-12-05
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Test/solar_debug.cpp ---
+// First Commit: 2015-03-11
+//
+// Authors:
+// - Brendan Albano
+// - Ralph Muehleisen
+
+--- FILE: ./Test/SolarRadiation_GTest.cpp ---
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Profiler.hpp ---
+// First Commit: 2026-01-26
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./MathHelpers.hpp ---
+// First Commit: 2025-12-22
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./HourlyModel.hpp ---
+// First Commit: 2014-06-20
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./standalone_main.cpp ---
+// First Commit: 2014-12-05
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./ISOModelAPI.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./MonthlyModel.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Constants.hpp ---
+// First Commit: 2025-12-22
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./SolarRadiation.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Schedules.cpp ---
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+
+--- FILE: ./UserModel.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./ISOResults.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Building.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Lighting.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./TimeFrame.cpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+
+--- FILE: ./Population.hpp ---
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+

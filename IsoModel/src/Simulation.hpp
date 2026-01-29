@@ -1,3 +1,16 @@
+// First Commit: 2015-06-01
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the `Simulation` base class, which serves as a common foundation
+// for both `MonthlyModel` and `HourlyModel`. It aggregates all the building
+// parameter data objects (e.g., `Structure`, `Ventilation`, `Heating`) and
+// provides a unified interface for setting them.
+
 #ifndef ISOMODEL_SIMULATION_HPP
 #define ISOMODEL_SIMULATION_HPP
 

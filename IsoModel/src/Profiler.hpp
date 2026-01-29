@@ -1,3 +1,14 @@
+// First Commit: 2026-01-26
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines a lightweight, header-only profiler for measuring code execution
+// time. It provides a `PROFILE_FUNCTION()` macro that uses a `ScopeTimer` to
+// automatically record the duration of a function's scope. The profiler can
+// be enabled or disabled at compile time via the `PROFILING_ENABLED` macro.
+
 #ifndef ISOMODEL_PROFILER_HPP
 #define ISOMODEL_PROFILER_HPP
 

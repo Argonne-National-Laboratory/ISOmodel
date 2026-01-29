@@ -1,3 +1,11 @@
+# First Commit: 2014-11-17
+#
+# Authors:
+# - Brendan Albano
+# - Daniel Chopson
+# - Nick Collier
+# - Ralph Muehleisen
+
 cmake_minimum_required(VERSION 3.20)
 
 # Set policy to ignore warning about FindBoost module since we are removing it

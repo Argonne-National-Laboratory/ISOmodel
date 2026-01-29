@@ -1,7 +1,17 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the Structure class, which serves as a data container for the
+// building's physical geometry and envelope properties. This includes wall
+// and window areas, U-values, heat capacities, and infiltration rates for
+// each surface orientation.
+
 #ifndef ISOMODEL_STRUCTURE_HPP
 #define ISOMODEL_STRUCTURE_HPP
 

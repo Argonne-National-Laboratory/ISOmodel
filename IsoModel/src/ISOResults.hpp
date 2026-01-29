@@ -1,7 +1,15 @@
-/**********************************************************************
- * Copyright (c) 2008-2015, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file defines helper functions for processing simulation results. It
+// includes utilities like `totalEnergyUse` to aggregate energy consumption
+// data from a vector of `EndUses` objects.
 
 #ifndef ISOMODEL_ISORESULTS_HPP
 #define ISOMODEL_ISORESULTS_HPP

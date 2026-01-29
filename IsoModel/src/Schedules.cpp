@@ -1,3 +1,15 @@
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// This file implements the schedule management functions declared in
+// Schedules.hpp. It contains the logic for loading hourly schedules from CSV
+// files, generating weekly schedules based on building occupancy rules, and
+// orchestrating the data preparation for both the hourly and monthly
+// simulation models.
+
 #include "Schedules.hpp"
 #include "Constants.hpp" // For HOURS_IN_DAY, DAYS_IN_WEEK, HOURS_IN_YEAR
 #include "Population.hpp"

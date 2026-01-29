@@ -1,9 +1,14 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// First Commit: 2014-12-05
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file contains the main function for the ISOModel Google Test suite. It
+// is responsible for initializing the test framework and running all
+// registered tests.
 
 #include "gtest/gtest.h"
 

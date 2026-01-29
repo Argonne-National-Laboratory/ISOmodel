@@ -1,3 +1,17 @@
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file implements the `EpwData` class, providing the logic for
+// parsing and loading hourly weather data from EPW files. It includes
+// methods for handling file I/O, parsing header and data lines, and
+// populating other data structures like `WeatherData`.
+
 #include "EpwData.hpp"
 #include "Constants.hpp"
 #include "MathHelpers.hpp"

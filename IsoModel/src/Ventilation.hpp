@@ -1,11 +1,20 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the Ventilation class, which serves as a data container for
+// parameters related to building ventilation and infiltration. This includes
+// supply rates, heat recovery efficiency, fan power, and air leakage values
+// (n50) used in both monthly and hourly simulations.
+
 #ifndef ISOMODEL_VENTILATION_HPP
 #define ISOMODEL_VENTILATION_HPP
 
-#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -47,8 +56,8 @@ public:
   /**
    * Ventilation type (mechanical = 1.0, natural = 2.0, combined = 3.0).
    */
-  VentilationType ventType() const { return m_ventType; }
-  void setVentType(VentilationType value) { m_ventType = value; }
+  double ventType() const { return m_ventType; }
+  void setVentType(double value) { m_ventType = value; }
 
   /**
    * Specific fan power (W/(L/s)).
@@ -168,7 +177,7 @@ private:
   double m_supplyDifference = 0.0;
   double m_heatRecoveryEfficiency = 0.0;
   double m_exhaustAirRecirculated = 0.0;
-  VentilationType m_ventType = VentilationType::Unspecified;
+  double m_ventType = 0.0;
   double m_fanPower = 0.0;
   double m_fanControlFactor = 1.0; // Default: no control
 

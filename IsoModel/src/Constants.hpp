@@ -1,3 +1,14 @@
+// First Commit: 2025-12-22
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// This file centralizes physical, mathematical, time-based, and geometric
+// constants used throughout the simulation models. It also provides unit
+// conversion factors and other `constexpr` values to improve code clarity,
+// maintainability, and performance by avoiding magic numbers.
+
 #ifndef ISOMODEL_CONSTANTS_HPP
 #define ISOMODEL_CONSTANTS_HPP
 

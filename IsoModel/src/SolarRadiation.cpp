@@ -1,15 +1,17 @@
-/*
- * SolarRadiation.cpp
- *
- * REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
- * 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
- * lazy-loaded.
- * 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
- * per year, not checked per hour. This fixes potential day-shift bugs.
- * 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
- * 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
- * Duffie & Beckman.
- */
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file implements the `SolarRadiation` class, providing the core
+// physics calculations for determining solar position and the resulting
+// irradiance on building surfaces. It uses algorithms from ASHRAE and Duffie
+// & Beckman, and includes logic for calculating monthly and hourly averages
+// of weather data.
 
 #include "SolarRadiation.hpp"
 #include "EpwData.hpp"

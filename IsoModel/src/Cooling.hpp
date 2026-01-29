@@ -1,3 +1,17 @@
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the `Cooling` class, a data container for parameters related to
+// the building's cooling system. This includes temperature setpoints,
+// coefficient of performance (COP), HVAC loss factors, and pump control
+// settings.
+
 #ifndef ISOMODEL_COOLING_HPP
 #define ISOMODEL_COOLING_HPP
 

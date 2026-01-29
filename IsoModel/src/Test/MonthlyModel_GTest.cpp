@@ -1,9 +1,14 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// First Commit: 2015-07-16
+//
+// Authors:
+// - Brendan Albano
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file contains the Google Test unit tests for the `MonthlyModel`. It
+// validates the accuracy of the monthly simulation by comparing its results
+// against a set of known, expected values for a standard test building.
 
 #include "gtest/gtest.h"
 

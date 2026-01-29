@@ -1,22 +1,17 @@
-/**********************************************************************
- *  Copyright (c) 2008-2015, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *USA
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the MonthlyModel class, which is responsible for running a
+// simplified, month-by-month building energy simulation according to the
+// ISO 13790 standard. It outlines the structure for storing monthly
+// simulation data and the sequence of calculation steps, such as solar gains,
+// ventilation, and heating/cooling needs.
 
 #ifndef ISOMODEL_MONTHLYMODEL_HPP
 #define ISOMODEL_MONTHLYMODEL_HPP
@@ -93,10 +88,10 @@ private:
     double H_tr = 0.0;
 
     // From windowSolarGain
-    Vector v_wall_A_sol = Vector(NUM_TOTAL_SURFACES);
-    Vector v_win_hr = Vector(NUM_TOTAL_SURFACES);
-    Vector v_wall_R_sc = Vector(NUM_TOTAL_SURFACES);
-    Vector v_win_A_sol = Vector(NUM_TOTAL_SURFACES);
+    Vector v_wall_A_sol = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_win_hr = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_wall_R_sc = Vector(NUM_TOTAL_SURFACESs);
+    Vector v_win_A_sol = Vector(NUM_TOTAL_SURFACESs);
 
     // From solarHeatGain
     Vector v_E_sol = Vector(MONTHS_IN_YEAR);
@@ -170,6 +165,7 @@ private:
   void calculateInternalGainComponents(MonthlySimulationData &simData) const;
   void unoccupiedHeatGain(MonthlySimulationData &simData) const;
   void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
+  static double calculateBEMAdjustment(const Building& building);
 
   void calculateVentilation(MonthlySimulationData &simData) const;
   void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;

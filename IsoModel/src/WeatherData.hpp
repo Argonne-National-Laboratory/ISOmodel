@@ -1,7 +1,17 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the `WeatherData` class, a data container for storing processed,
+// aggregated weather data. It holds monthly and hourly averages of
+// temperature, wind speed, and solar radiation used by the monthly
+// simulation model.
+
 #ifndef ISOMODEL_WEATHER_DATA_HPP
 #define ISOMODEL_WEATHER_DATA_HPP
 

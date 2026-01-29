@@ -1,3 +1,16 @@
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// This file implements the `TimeFrame` class constructor, which populates
+// the lookup arrays that map an hour-of-the-year index to its
+// corresponding month, day, and hour.
+
 #include "TimeFrame.hpp"
 #include "Constants.hpp"
 

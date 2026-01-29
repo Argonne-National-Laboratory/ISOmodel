@@ -1,4 +1,14 @@
-// C++ Schedules.hpp
+// First Commit: 2026-01-23
+//
+// Authors:
+// - Ralph Muehleisen
+//
+// Summary:
+// This file defines data structures and functions for managing building
+// schedules. It provides utilities to load schedules from files or generate
+// them based on occupancy rules for both the hourly and monthly simulation
+// models.
+
 #ifndef ISOMODEL_SCHEDULES_HPP
 #define ISOMODEL_SCHEDULES_HPP
 

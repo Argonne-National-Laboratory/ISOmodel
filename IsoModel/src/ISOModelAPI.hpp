@@ -1,3 +1,16 @@
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the `ISOMODEL_API` macro, which handles the `__declspec(dllexport)`
+// and `__declspec(dllimport)` directives for building the code as a shared
+// library (DLL) on Windows. It ensures that classes and functions are
+// correctly exported and imported.
+
 #ifndef __ISOMODEL_API_HPP__
 #define __ISOMODEL_API_HPP__
 

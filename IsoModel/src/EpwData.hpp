@@ -1,7 +1,17 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
+// First Commit: 2013-11-05
+//
+// Authors:
+// - Brendan Albano
+// - Brian Craig
+// - Nick Collier
+// - Ralph Muehleisen
+//
+// Summary:
+// Defines the EpwData class, which is responsible for parsing, storing, and
+// providing access to hourly weather data from standard EPW files. It
+// manages meteorological data such as temperature, humidity, and solar
+// radiation required for the simulations.
+
 #ifndef ISOMODEL_EPW_DATA_HPP
 #define ISOMODEL_EPW_DATA_HPP
 
@@ -89,8 +99,3 @@ public:
 } // namespace openstudio::isomodel
 
 #endif // ISOMODEL_EPW_DATA_HPP
-
-
-
-
-
