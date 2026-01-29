@@ -56,23 +56,9 @@ constexpr double LIGHT = 110.0;
 constexpr double VERY_LIGHT = 80.0;
 
 // from usermodel.hpp
-// Defined as const char* for efficiency, but fully compatible with std::string
-// comparisons.
-inline constexpr std::string_view GAS = "gas";
-inline constexpr std::string_view ELECTRIC = "electric";
-inline constexpr std::string_view MECHANICAL = "mechanical";
-inline constexpr std::string_view NATURAL = "natural";
-inline constexpr std::string_view COMBINED = "combined";
-inline constexpr std::string_view NONE = "none";
-inline constexpr std::string_view SIMPLE = "simple";
-inline constexpr std::string_view ADVANCED = "advanced";
-  // BEM_ADJUSTMENT sets the temp differential from the interior heating/cooling setpoint
-  // based on the BEM type. An advanced BEM has the effect of reducing the
-  // effective heating temp and raising the effective cooling temp during
-  // times of control (i.e. during occupancy).
+
 constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
-// constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
-// constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
+
 
 // Lookup table for BEM adjustments mapping type string to T_adj
 // This sets the temp differential from the interior heating/cooling setpoint
@@ -80,12 +66,21 @@ constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly de
 // effective heating temp and raising the effective cooling temp during
 // times of control (i.e. during occupancy).
 inline const std::map<std::string, double> BEM_TYPE_TO_ADJUSTMENT = {
-    {std::string(NONE), 0.0},
-    {std::string(SIMPLE), 0.5},
-    {std::string(ADVANCED), 1.0}};
+    {"none", 0.0},
+    {"simple", 0.5},
+    {"advanced", 1.0}};
 
 enum class FuelType { Unspecified = 0, Electric = 1, Gas = 2 };
 enum class VentilationType { Unspecified = 0, Mechanical = 1, Combined = 2, Natural = 3 };
+
+inline const std::map<std::string, FuelType> STRING_TO_FUEL_TYPE = {
+    {"electric", FuelType::Electric},
+    {"gas", FuelType::Gas}};
+
+inline const std::map<std::string, VentilationType> STRING_TO_VENTILATION_TYPE = {
+    {"mechanical", VentilationType::Mechanical},
+    {"natural", VentilationType::Natural},
+    {"combined", VentilationType::Combined}};
 
 // --- Time Constants ---
 

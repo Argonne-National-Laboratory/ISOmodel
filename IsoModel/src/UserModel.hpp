@@ -113,7 +113,7 @@ public:
     for (const auto &[key, adj] : BEM_TYPE_TO_ADJUSTMENT) {
       if (std::abs(val - adj) < 0.001) return key;
     }
-    return std::string(NONE);
+    return "none";
   }
 
   /// Sets a Building property.
@@ -438,13 +438,12 @@ public:
   /// Sets a Heating property.
   void setDhwEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (type == ELECTRIC)
-      heating.setHotWaterEnergyType(FuelType::Electric);
-    else if (type == GAS)
-      heating.setHotWaterEnergyType(FuelType::Gas);
-    else
+    if (auto it = STRING_TO_FUEL_TYPE.find(type); it != STRING_TO_FUEL_TYPE.end()) {
+      heating.setHotWaterEnergyType(it->second);
+    } else {
       throw std::invalid_argument(
           "dhwFuelType parameter must be one of 'gas' or 'electric'");
+    }
   }
 
   /// Gets a Heating property.
@@ -495,13 +494,12 @@ public:
   /// Sets a Heating property.
   void setHeatingEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (type == ELECTRIC)
-      heating.setEnergyType(FuelType::Electric);
-    else if (type == GAS)
-      heating.setEnergyType(FuelType::Gas);
-    else
+    if (auto it = STRING_TO_FUEL_TYPE.find(type); it != STRING_TO_FUEL_TYPE.end()) {
+      heating.setEnergyType(it->second);
+    } else {
       throw std::invalid_argument(
           "heatingFuelType parameter must be one of 'gas' or 'electric'");
+    }
   }
 
   /// Gets a Heating property.
@@ -1744,15 +1742,12 @@ public:
   /// Sets a Ventilation property.
   void setVentilationType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if (type == MECHANICAL)
-      ventilation.setVentType(VentilationType::Mechanical);
-    else if (type == COMBINED)
-      ventilation.setVentType(VentilationType::Combined);
-    else if (type == NATURAL)
-      ventilation.setVentType(VentilationType::Natural);
-    else
+    if (auto it = STRING_TO_VENTILATION_TYPE.find(type); it != STRING_TO_VENTILATION_TYPE.end()) {
+      ventilation.setVentType(it->second);
+    } else {
       throw std::invalid_argument("ventilationType parameter must be one of "
                                   "'mechanical', 'natural', or 'combined'");
+    }
   }
 
   /// Gets a Ventilation property.
