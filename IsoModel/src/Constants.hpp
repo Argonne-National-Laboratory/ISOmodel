@@ -137,7 +137,7 @@ constexpr int WEEKDAY_START_HOUR = 7;
 // 8 Compass directions (N, NE, E, SE, S, SW, W, NW)
 constexpr int NUM_COMPASS_DIRECTIONS = 8;
 // 8 Compass directions + 1 Roof/Horizontal = 9 (Used often in loops)
-constexpr int NUM_TOTAL_SURFACESs = 9;
+constexpr int NUM_TOTAL_SURFACES = 9;
 constexpr int NUM_VERTICAL_SURFACES = 8;
 
 // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW

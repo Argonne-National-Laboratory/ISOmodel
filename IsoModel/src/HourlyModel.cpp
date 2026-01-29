@@ -515,7 +515,7 @@ void HourlyModel::initialize() {
                         ? 0.0
                         : structure.windowArea()[0] * invFloorArea;
 
-  for (int i = 0; i != NUM_TOTAL_SURFACESs; ++i) {
+  for (int i = 0; i != NUM_TOTAL_SURFACES; ++i) {
     structureCalculations(
         structure.windowShadingDevice()[i], structure.wallArea()[i],
         structure.windowArea()[i], structure.wallUniform()[i],
@@ -534,7 +534,7 @@ void HourlyModel::initialize() {
   f_sh_use = structure.shadingFactorAtMaxUse() /
              structure.irradianceForMaxShadingUse();
 
-  for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
+  for (int i = 0; i < NUM_TOTAL_SURFACES; ++i) {
     precalc_nla_shading[i] = f_sh_use * f_light_shade_reduction[i];
     precalc_solar_shading[i] = f_sol_shade_reduction[i] * f_sh_use;
   }
@@ -568,7 +568,7 @@ void HourlyModel::initialize() {
     A_m = 2.5;
 
   double H_win_sum = 0.0, H_wall_sum_total = 0.0;
-  for (int i = 0; i != NUM_TOTAL_SURFACESs; ++i) {
+  for (int i = 0; i != NUM_TOTAL_SURFACES; ++i) {
     H_win_sum += H_win[i];
     H_wall_sum_total += H_tot[i] - H_win[i];
   }
