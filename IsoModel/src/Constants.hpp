@@ -4,6 +4,8 @@
 #include <array>
 #include <limits>
 #include <numbers>
+#include <map>
+#include <string>
 #include <string_view>
 
 namespace openstudio::isomodel {
@@ -69,12 +71,18 @@ inline constexpr std::string_view ADVANCED = "advanced";
   // effective heating temp and raising the effective cooling temp during
   // times of control (i.e. during occupancy).
 constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
-constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
-constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
+// constexpr double BEM_SIMPLE_ADJUSTMENT = 0.5;   // K
+// constexpr double BEM_ADVANCED_ADJUSTMENT = 1.0; // K
 
-// Lookup table for BEM adjustments: 0=Unused, 1=None, 2=Simple, 3=Advanced
-inline constexpr std::array<double, 4> BEM_ADJUSTMENTS = {
-    0.0, 0.0, BEM_SIMPLE_ADJUSTMENT, BEM_ADVANCED_ADJUSTMENT};
+// Lookup table for BEM adjustments mapping type string to T_adj
+// This sets the temp differential from the interior heating/cooling setpoint
+// based on the BEM type. An advanced BEM has the effect of reducing the
+// effective heating temp and raising the effective cooling temp during
+// times of control (i.e. during occupancy).
+inline const std::map<std::string, double> BEM_TYPE_TO_ADJUSTMENT = {
+    {std::string(NONE), 0.0},
+    {std::string(SIMPLE), 0.5},
+    {std::string(ADVANCED), 1.0}};
 
 // --- Time Constants ---
 

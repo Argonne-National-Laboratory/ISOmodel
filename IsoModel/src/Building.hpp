@@ -3,6 +3,8 @@
 
 #include "ISOModelAPI.hpp"
 
+#include <string>
+
 namespace openstudio::isomodel {
 
 class ISOMODEL_API Building {
@@ -69,10 +71,10 @@ public:
   }
 
   /**
-   * Building energy management type: none (1), simple (2) or advanced (3).
+   * Building energy management type: "none", "simple" or "advanced".
    */
-  double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
-  void setBuildingEnergyManagement(double value) {
+  std::string buildingEnergyManagement() const { return m_buildingEnergyManagement; }
+  void setBuildingEnergyManagement(std::string value) {
     m_buildingEnergyManagement = value;
   }
 
@@ -121,7 +123,7 @@ private:
   double m_electricApplianceHeatGainUnoccupied = 0.0;
   double m_gasApplianceHeatGainOccupied = 0.0;
   double m_gasApplianceHeatGainUnoccupied = 0.0;
-  double m_buildingEnergyManagement = 0.0;
+  std::string m_buildingEnergyManagement = "none";
   double m_externalEquipment = 0.0;
 
   double m_electricAppliancePowerFixedOccupied = 0.0;

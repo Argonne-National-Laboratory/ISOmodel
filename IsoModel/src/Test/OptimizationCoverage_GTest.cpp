@@ -126,8 +126,8 @@ TEST(OptimizationCoverage, UserModel_ModernFeatures) {
 
   // Test string_view compatible setters (implicit conversion)
   user.setBemType("simple");
-  EXPECT_EQ(user.bemType(), 2.0);
+  EXPECT_EQ(user.bemType(), "simple");
 
   user.setBemType("ADVANCED"); // Case insensitivity check
-  EXPECT_EQ(user.bemType(), 3.0);
+  EXPECT_EQ(user.bemType(), "advanced");
 }

@@ -62,7 +62,7 @@ TEST_F(ISOModelFixture, UserModelInitializationTests) {
   // and the variable
   // EXPECT_DOUBLE_EQ(0.791092991177229, userModel.dhwDistributionSystem());
   EXPECT_DOUBLE_EQ(2, userModel.dhwEnergyCarrier());
-  EXPECT_DOUBLE_EQ(3, userModel.bemType());
+  EXPECT_EQ("advanced", userModel.bemType());
   EXPECT_DOUBLE_EQ(0.590020871911987, userModel.interiorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.256509943938684, userModel.specificFanPower());
   EXPECT_DOUBLE_EQ(0.171213718831364, userModel.fanFlowControlFactor());
@@ -229,7 +229,7 @@ TEST_F(ISOModelFixture, UserModelDefaultsTests) {
   // and the variable
   // EXPECT_DOUBLE_EQ(0.791092991177229, userModel.dhwDistributionSystem());
   EXPECT_DOUBLE_EQ(2, userModel.dhwEnergyCarrier());
-  EXPECT_DOUBLE_EQ(3, userModel.bemType());
+  EXPECT_EQ("advanced", userModel.bemType());
   EXPECT_DOUBLE_EQ(0.590020871911987, userModel.interiorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.256509943938684, userModel.specificFanPower());
   EXPECT_DOUBLE_EQ(0.171213718831364, userModel.fanFlowControlFactor());

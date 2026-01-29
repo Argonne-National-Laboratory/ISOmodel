@@ -108,19 +108,14 @@ public:
   }
 
   /// Gets a Building property.
-  double bemType() const { return building.buildingEnergyManagement(); }
+  std::string bemType() const { return building.buildingEnergyManagement(); }
 
   /// Sets a Building property.
   void setBemType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
     
-    static const std::map<std::string, double> bemMap = {
-        {std::string(NONE), 1.0},
-        {std::string(SIMPLE), 2.0},
-        {std::string(ADVANCED), 3.0}};
-
-    if (auto it = bemMap.find(type); it != bemMap.end()) {
-      building.setBuildingEnergyManagement(it->second);
+    if (BEM_TYPE_TO_ADJUSTMENT.count(type)) {
+      building.setBuildingEnergyManagement(type);
     } else {
       throw std::invalid_argument(
           "bemType parameter must be one of 'none', 'simple', or 'advanced'");
