@@ -433,15 +433,15 @@ public:
   }
 
   /// Gets a Heating property.
-  double dhwEnergyCarrier() const { return heating.hotWaterEnergyType(); }
+  double dhwEnergyCarrier() const { return static_cast<double>(heating.hotWaterEnergyType()); }
 
   /// Sets a Heating property.
   void setDhwEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
     if (type == ELECTRIC)
-      heating.setHotWaterEnergyType(1.0);
+      heating.setHotWaterEnergyType(FuelType::Electric);
     else if (type == GAS)
-      heating.setHotWaterEnergyType(2.0);
+      heating.setHotWaterEnergyType(FuelType::Gas);
     else
       throw std::invalid_argument(
           "dhwFuelType parameter must be one of 'gas' or 'electric'");
@@ -490,15 +490,15 @@ public:
   }
 
   /// Gets a Heating property.
-  double heatingEnergyCarrier() const { return heating.energyType(); }
+  double heatingEnergyCarrier() const { return static_cast<double>(heating.energyType()); }
 
   /// Sets a Heating property.
   void setHeatingEnergyCarrier(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
     if (type == ELECTRIC)
-      heating.setEnergyType(1.0);
+      heating.setEnergyType(FuelType::Electric);
     else if (type == GAS)
-      heating.setEnergyType(2.0);
+      heating.setEnergyType(FuelType::Gas);
     else
       throw std::invalid_argument(
           "heatingFuelType parameter must be one of 'gas' or 'electric'");
@@ -1739,17 +1739,17 @@ public:
   }
 
   /// Gets a Ventilation property.
-  double ventilationType() const { return ventilation.ventType(); }
+  double ventilationType() const { return static_cast<double>(ventilation.ventType()); }
 
   /// Sets a Ventilation property.
   void setVentilationType(std::string type) {
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
     if (type == MECHANICAL)
-      ventilation.setVentType(1.0);
+      ventilation.setVentType(VentilationType::Mechanical);
     else if (type == COMBINED)
-      ventilation.setVentType(2.0);
+      ventilation.setVentType(VentilationType::Combined);
     else if (type == NATURAL)
-      ventilation.setVentType(3.0);
+      ventilation.setVentType(VentilationType::Natural);
     else
       throw std::invalid_argument("ventilationType parameter must be one of "
                                   "'mechanical', 'natural', or 'combined'");

@@ -579,7 +579,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
     break;
   }
 
-  double mve_init = ventilation.ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
+  double mve_init = ventilation.ventType() == VentilationType::Natural ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
 
   // OPTIMIZATION: Fused vector operations into a single loop to avoid temporary allocations.
   double stack_exp = ventilation.stack_exp();
@@ -775,7 +775,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   double cl_dc_elec_net = cooling.eta_DC_COP() * cooling.eta_DC_network();
   double cl_dc_free = 1.0 - cooling.frac_DC_free();
   double cl_dc_cop_abs = cooling.eta_DC_COP_abs();
-  bool is_ht_elec = (heating.energyType() == 1);
+  bool is_ht_elec = (heating.energyType() == FuelType::Electric);
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double Qloss_ht_dist = simData.v_Qneed_ht[i] * (1.0 - eta_dist_ht) / eta_dist_ht;
@@ -912,7 +912,7 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
   double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
   double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();
   double inv_KILOWATTHOURS_TO_MEGAJOULES = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
-  bool is_elec = (heating.hotWaterEnergyType() == 1);
+  bool is_elec = (heating.hotWaterEnergyType() == FuelType::Electric);
 
   for(int i=0; i<MONTHS_IN_YEAR; ++i) {
       double monthlyDemand = DAYS_IN_MONTH[i] * Q_dhw_yr;

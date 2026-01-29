@@ -5,6 +5,7 @@
 #ifndef ISOMODEL_VENTILATION_HPP
 #define ISOMODEL_VENTILATION_HPP
 
+#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -46,8 +47,8 @@ public:
   /**
    * Ventilation type (mechanical = 1.0, natural = 2.0, combined = 3.0).
    */
-  double ventType() const { return m_ventType; }
-  void setVentType(double value) { m_ventType = value; }
+  VentilationType ventType() const { return m_ventType; }
+  void setVentType(VentilationType value) { m_ventType = value; }
 
   /**
    * Specific fan power (W/(L/s)).
@@ -167,7 +168,7 @@ private:
   double m_supplyDifference = 0.0;
   double m_heatRecoveryEfficiency = 0.0;
   double m_exhaustAirRecirculated = 0.0;
-  double m_ventType = 0.0;
+  VentilationType m_ventType = VentilationType::Unspecified;
   double m_fanPower = 0.0;
   double m_fanControlFactor = 1.0; // Default: no control
 

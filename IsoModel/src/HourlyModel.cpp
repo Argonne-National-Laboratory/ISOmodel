@@ -389,7 +389,6 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
                  heating.hotcoldWasteFactor() / (1.0 - f_H)) /
                 cooling.cop();
 
-  bool electricHeat = (heating.energyType() == 1);
   std::vector<EndUses> results;
   if (!aggregateByMonth)
     results.reserve(HOURS_IN_YEAR);
@@ -397,8 +396,13 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
   auto mapToEU = [&](EndUses &eu, double h, double c, double il, double el,
                      double fn, double pm, double pi, double pe, double dw) {
     double total_heat_req = h * s_ht * WATTS_TO_KILOWATTS;
-    double elec_ht = total_heat_req * electricHeat;
-    double gas_ht = total_heat_req - elec_ht;
+    double elec_ht = 0.0;
+    double gas_ht = 0.0;
+    if (heating.energyType() == FuelType::Electric) {
+      elec_ht = total_heat_req;
+    } else {
+      gas_ht = total_heat_req;
+    }
 
 #ifdef ISOMODEL_STANDALONE
     eu.addEndUse(0, elec_ht);

@@ -84,6 +84,9 @@ inline const std::map<std::string, double> BEM_TYPE_TO_ADJUSTMENT = {
     {std::string(SIMPLE), 0.5},
     {std::string(ADVANCED), 1.0}};
 
+enum class FuelType { Unspecified = 0, Electric = 1, Gas = 2 };
+enum class VentilationType { Unspecified = 0, Mechanical = 1, Combined = 2, Natural = 3 };
+
 // --- Time Constants ---
 
 constexpr int MONTHS_IN_YEAR = 12;
