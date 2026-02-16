@@ -1,23 +1,23 @@
 #include "Schedules.hpp"
-#include "Constants.hpp" // For HOURS_IN_DAY, DAYS_IN_WEEK, HOURS_IN_YEAR
-#include "Population.hpp"
-#include "Ventilation.hpp"
-#include "Building.hpp"
-#include "Lighting.hpp"
-#include "Heating.hpp"
-#include "TimeFrame.hpp" // Needed for TimeFrame to map weekly to hourly
-#include "Cooling.hpp"
-#include "Profiler.hpp"
 
+#include "Building.hpp"
+#include "Constants.hpp" // For HOURS_IN_DAY, DAYS_IN_WEEK, HOURS_IN_YEAR
+#include "Cooling.hpp"
+#include "Heating.hpp"
+#include "Lighting.hpp"
+#include "Population.hpp"
+#include "Profiler.hpp"
+#include "TimeFrame.hpp" // Needed for TimeFrame to map weekly to hourly
+#include "Ventilation.hpp"
+
+#include <algorithm> // For std::max
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <algorithm> // For std::max
 
 namespace openstudio::isomodel::schedules {
 
-bool loadHourlySchedulesFromFile(const std::string &path,
-                                 std::vector<LoadedScheduleData> &data) {
+bool loadHourlySchedulesFromFile(const std::string &path, std::vector<LoadedScheduleData> &data) {
   PROFILE_FUNCTION();
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -80,15 +80,12 @@ void buildWeeklySchedules(const openstudio::isomodel::Population &pop,
                           const openstudio::isomodel::Building &building,
                           const openstudio::isomodel::Lighting &lights,
                           const openstudio::isomodel::Heating &heating,
-                          const openstudio::isomodel::Cooling &cooling,
-                          WeeklyScheduleData &sched) {
+                          const openstudio::isomodel::Cooling &cooling, WeeklyScheduleData &sched) {
   PROFILE_FUNCTION();
-  const int dayStart = static_cast<int>(pop.daysStart()),
-            dayEnd = static_cast<int>(pop.daysEnd());
+  const int dayStart = static_cast<int>(pop.daysStart()), dayEnd = static_cast<int>(pop.daysEnd());
   const int hourStart = static_cast<int>(pop.hoursStart()),
             hourEnd = static_cast<int>(pop.hoursEnd());
-  const double ventRate = ventilation.supplyRate(),
-               extEquip = building.externalEquipment();
+  const double ventRate = ventilation.supplyRate(), extEquip = building.externalEquipment();
   const double intOcc = building.electricApplianceHeatGainOccupied(),
                intUnocc = building.electricApplianceHeatGainUnoccupied();
   const double intLtOcc = lights.powerDensityOccupied(),
@@ -114,13 +111,10 @@ void buildWeeklySchedules(const openstudio::isomodel::Population &pop,
 }
 
 std::vector<ScheduleDataForHourlyCache> getHourlySchedules(
-    const std::string &hourlySchedulePath,
-    const openstudio::isomodel::Population &pop,
+    const std::string &hourlySchedulePath, const openstudio::isomodel::Population &pop,
     const openstudio::isomodel::Ventilation &ventilation,
-    const openstudio::isomodel::Building &building,
-    const openstudio::isomodel::Lighting &lights,
-    const openstudio::isomodel::Heating &heating,
-    const openstudio::isomodel::Cooling &cooling) {
+    const openstudio::isomodel::Building &building, const openstudio::isomodel::Lighting &lights,
+    const openstudio::isomodel::Heating &heating, const openstudio::isomodel::Cooling &cooling) {
   PROFILE_FUNCTION();
 
   std::vector<ScheduleDataForHourlyCache> hourlyScheduleData(HOURS_IN_YEAR);
@@ -196,16 +190,13 @@ MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &
   data.frac_hrs_wk_day = hoursOccupiedDuringWeek / HOURS_IN_WEEK;
 
   data.hoursUnoccupiedPerDay = 24 - data.hoursOccupiedPerDay;
-  double hoursUnoccupiedDuringWeek =
-      (daysOccupiedPerWeek - 1) * data.hoursUnoccupiedPerDay;
+  double hoursUnoccupiedDuringWeek = (daysOccupiedPerWeek - 1) * data.hoursUnoccupiedPerDay;
   data.frac_hrs_wk_nt = hoursUnoccupiedDuringWeek / HOURS_IN_WEEK;
 
-  double totalWeekendHours =
-      HOURS_IN_WEEK - hoursOccupiedDuringWeek - hoursUnoccupiedDuringWeek;
+  double totalWeekendHours = HOURS_IN_WEEK - hoursOccupiedDuringWeek - hoursUnoccupiedDuringWeek;
   data.frac_hrs_wke_tot = totalWeekendHours / HOURS_IN_WEEK;
 
-  double weekendHoursOccupied =
-      (DAYS_IN_WEEK - daysOccupiedPerWeek) * data.hoursOccupiedPerDay;
+  double weekendHoursOccupied = (DAYS_IN_WEEK - daysOccupiedPerWeek) * data.hoursOccupiedPerDay;
   double frac_hrs_wke_day = weekendHoursOccupied / HOURS_IN_WEEK;
 
   double weekendHoursUnoccupied = totalWeekendHours - weekendHoursOccupied;
@@ -218,8 +209,7 @@ MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &
     data.weekendUnoccupiedMegaseconds[m] = MEGASECONDS_IN_MONTH[m] * frac_hrs_wke_nt;
   }
   for (int h = 0; h < HOURS_IN_DAY; h++) {
-    if (h - WEEKDAY_START_HOUR >= 0 &&
-        h - WEEKDAY_START_HOUR < data.hoursOccupiedPerDay) {
+    if (h - WEEKDAY_START_HOUR >= 0 && h - WEEKDAY_START_HOUR < data.hoursOccupiedPerDay) {
       data.clockHourOccupied[h] = 1;
       data.clockHourUnoccupied[h] = 0;
     } else {

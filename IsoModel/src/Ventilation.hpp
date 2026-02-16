@@ -32,17 +32,13 @@ public:
    * Efficiency of heat recovery (unitless. Use 0.0 for no heat recovery).
    */
   double heatRecoveryEfficiency() const { return m_heatRecoveryEfficiency; }
-  void setHeatRecoveryEfficiency(double value) {
-    m_heatRecoveryEfficiency = value;
-  }
+  void setHeatRecoveryEfficiency(double value) { m_heatRecoveryEfficiency = value; }
 
   /**
    * Fraction of supply air recirculated (unitless).
    */
   double exhaustAirRecirculated() const { return m_exhaustAirRecirculated; }
-  void setExhaustAirRecirculated(double value) {
-    m_exhaustAirRecirculated = value;
-  }
+  void setExhaustAirRecirculated(double value) { m_exhaustAirRecirculated = value; }
 
   /**
    * Ventilation type (mechanical = 1.0, natural = 2.0, combined = 3.0).
@@ -66,9 +62,7 @@ public:
    * Ventilation preheat (C).
    */
   double ventPreheatDegC() const { return m_ventPreheatDegC; }
-  void setVentPreheatDegC(double ventPreheatDegC) {
-    m_ventPreheatDegC = ventPreheatDegC;
-  }
+  void setVentPreheatDegC(double ventPreheatDegC) { m_ventPreheatDegC = ventPreheatDegC; }
 
   /**
    * Air leakage at 50 Pa (air-changes/hr). See ISO 15242.
@@ -129,9 +123,7 @@ public:
    * unoccupied times.
    */
   int vent_rate_flag() const { return m_vent_rate_flag; }
-  void setVent_rate_flag(int vent_rate_flag) {
-    m_vent_rate_flag = vent_rate_flag;
-  }
+  void setVent_rate_flag(int vent_rate_flag) { m_vent_rate_flag = vent_rate_flag; }
 
   /**
    * Overall heat transfer coefficient by ventilation as per ISO 13790 9.3.
@@ -139,26 +131,18 @@ public:
   double H_ve() const { return m_H_ve; }
   void setH_ve(double H_ve) { m_H_ve = H_ve; }
 
-  double infiltrationRateUnoccupied() const {
-    return m_infiltrationRateUnoccupied;
-  }
+  double infiltrationRateUnoccupied() const { return m_infiltrationRateUnoccupied; }
   void setInfiltrationRateUnoccupied(double infiltrationRateUnoccupied) {
     m_infiltrationRateUnoccupied = infiltrationRateUnoccupied;
   }
 
-  double ventilationExhaustRateUnoccupied() const {
-    return m_ventilationExhaustRateUnoccupied;
-  }
-  void
-  setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
+  double ventilationExhaustRateUnoccupied() const { return m_ventilationExhaustRateUnoccupied; }
+  void setVentilationExhaustRateUnoccupied(double ventilationExhaustRateUnoccupied) {
     m_ventilationExhaustRateUnoccupied = ventilationExhaustRateUnoccupied;
   }
 
-  double ventilationIntakeRateUnoccupied() const {
-    return m_ventilationIntakeRateUnoccupied;
-  }
-  void
-  setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
+  double ventilationIntakeRateUnoccupied() const { return m_ventilationIntakeRateUnoccupied; }
+  void setVentilationIntakeRateUnoccupied(double ventilationIntakeRateUnoccupied) {
     m_ventilationIntakeRateUnoccupied = ventilationIntakeRateUnoccupied;
   }
 

@@ -25,42 +25,29 @@
 #endif
 
 void ISOModelFixture::SetUp() {
-  endUseNames = {"ElecHeat", "ElecCool", "ElecIntLights", "ElecExtLights",
-                 "ElecFans", "ElecPump", "ElecEquipInt",  "ElecEquipExt",
-                 "ElectDHW", "GasHeat",  "GasCool",       "GasEquip",
-                 "GasDHW"};
+  endUseNames = {"ElecHeat", "ElecCool",     "ElecIntLights", "ElecExtLights", "ElecFans",
+                 "ElecPump", "ElecEquipInt", "ElecEquipExt",  "ElectDHW",      "GasHeat",
+                 "GasCool",  "GasEquip",     "GasDHW"};
 
 #ifdef ISOMODEL_STANDALONE
   test_data_path = "test_data";
 #else
   test_data_path = resourcesPath().string() + "/isomodel";
 
-  isoResultsEndUseTypes = {{openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::Heating},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::Cooling},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::InteriorLights},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::ExteriorLights},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::Fans},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::Pumps},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::InteriorEquipment},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::ExteriorEquipment},
-                           {openstudio::EndUseFuelType::Electricity,
-                            openstudio::EndUseCategoryType::WaterSystems},
-                           {openstudio::EndUseFuelType::Gas,
-                            openstudio::EndUseCategoryType::Heating},
-                           {openstudio::EndUseFuelType::Gas,
-                            openstudio::EndUseCategoryType::Cooling},
-                           {openstudio::EndUseFuelType::Gas,
-                            openstudio::EndUseCategoryType::InteriorEquipment},
-                           {openstudio::EndUseFuelType::Gas,
-                            openstudio::EndUseCategoryType::WaterSystems}};
+  isoResultsEndUseTypes = {
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::Heating},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::Cooling},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::InteriorLights},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::ExteriorLights},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::Fans},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::Pumps},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::InteriorEquipment},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::ExteriorEquipment},
+      {openstudio::EndUseFuelType::Electricity, openstudio::EndUseCategoryType::WaterSystems},
+      {openstudio::EndUseFuelType::Gas, openstudio::EndUseCategoryType::Heating},
+      {openstudio::EndUseFuelType::Gas, openstudio::EndUseCategoryType::Cooling},
+      {openstudio::EndUseFuelType::Gas, openstudio::EndUseCategoryType::InteriorEquipment},
+      {openstudio::EndUseFuelType::Gas, openstudio::EndUseCategoryType::WaterSystems}};
 #endif
 }
 

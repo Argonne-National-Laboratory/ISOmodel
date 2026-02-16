@@ -5,9 +5,8 @@
  *      Author: nick
  */
 
-#include "gtest/gtest.h"
-
 #include "../UserModel.hpp"
+#include "gtest/gtest.h"
 
 using namespace openstudio::isomodel;
 

@@ -5,11 +5,10 @@
  *      Author: nick
  */
 
-#include "gtest/gtest.h"
-
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"
+#include "gtest/gtest.h"
 
 using namespace openstudio::isomodel;
 

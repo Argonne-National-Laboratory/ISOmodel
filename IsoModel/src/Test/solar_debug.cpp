@@ -8,6 +8,7 @@
 #include "../MonthlyModel.hpp"
 #include "../SolarRadiation.hpp"
 #include "../UserModel.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -44,8 +45,7 @@ void forcePrintMonthlySolar(UserModel umodel) {
     std::cout << std::endl;
   }
 
-  std::cout << "\n--- Monthly Global Horizontal Radiation (mEgh) ---"
-            << std::endl;
+  std::cout << "\n--- Monthly Global Horizontal Radiation (mEgh) ---" << std::endl;
   std::cout << "Month, W/m2" << std::endl;
   for (size_t i = 0; i < mEgh.size(); ++i) {
     std::cout << i + 1 << ", " << mEgh[i] << std::endl;

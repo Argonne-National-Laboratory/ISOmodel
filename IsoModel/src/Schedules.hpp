@@ -2,20 +2,21 @@
 #ifndef ISOMODEL_SCHEDULES_HPP
 #define ISOMODEL_SCHEDULES_HPP
 
-#include "MathHelpers.hpp"
 #include "ISOModelAPI.hpp" // For ISOMODEL_API macro
+#include "MathHelpers.hpp"
+
 #include <string>
 #include <vector>
 
 // Forward declarations for parameters in buildWeeklySchedules
 namespace openstudio::isomodel {
-  class Population;
-  class Ventilation;
-  class Building;
-  class Lighting;
-  class Heating;
-  class Cooling;
-}
+class Population;
+class Ventilation;
+class Building;
+class Lighting;
+class Heating;
+class Cooling;
+} // namespace openstudio::isomodel
 
 namespace openstudio::isomodel::schedules {
 
@@ -94,13 +95,10 @@ ISOMODEL_API void buildWeeklySchedules(const openstudio::isomodel::Population &p
  * to populate its HourlyCache.
  */
 ISOMODEL_API std::vector<ScheduleDataForHourlyCache> getHourlySchedules(
-    const std::string &hourlySchedulePath,
-    const openstudio::isomodel::Population &pop,
+    const std::string &hourlySchedulePath, const openstudio::isomodel::Population &pop,
     const openstudio::isomodel::Ventilation &ventilation,
-    const openstudio::isomodel::Building &building,
-    const openstudio::isomodel::Lighting &lights,
-    const openstudio::isomodel::Heating &heating,
-    const openstudio::isomodel::Cooling &cooling);
+    const openstudio::isomodel::Building &building, const openstudio::isomodel::Lighting &lights,
+    const openstudio::isomodel::Heating &heating, const openstudio::isomodel::Cooling &cooling);
 
 /**
  * Generates schedule and occupancy data for the MonthlyModel.

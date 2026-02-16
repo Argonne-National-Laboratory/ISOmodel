@@ -83,9 +83,7 @@ public:
 
   // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
   std::string scheduleFilePath() const { return m_scheduleFilePath; }
-  void setScheduleFilePath(std::string scheduleFilePath) {
-    m_scheduleFilePath = scheduleFilePath;
-  }
+  void setScheduleFilePath(std::string scheduleFilePath) { m_scheduleFilePath = scheduleFilePath; }
 
 private:
   // In-class initialization prevents undefined behavior and potential

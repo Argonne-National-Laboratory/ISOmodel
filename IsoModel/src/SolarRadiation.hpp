@@ -17,6 +17,7 @@
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "TimeFrame.hpp"
+
 #include <array>
 #include <cmath>
 #include <vector>
@@ -85,9 +86,7 @@ public:
 
   // Calculates the revolution angle in radians of the earth around the sun.
   // Ref: Duffie & Beckman Eq 1.4.2 (approx)
-  double calculateRevolutionAngle(int dayOfYear) {
-    return 2.0 * PI * dayOfYear / DAYS_IN_YEAR;
-  }
+  double calculateRevolutionAngle(int dayOfYear) { return 2.0 * PI * dayOfYear / DAYS_IN_YEAR; }
 
   // Calculates the equation of time (EOT) in minutes.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 1
@@ -100,8 +99,7 @@ public:
   // Calculates the apparent Solar Time (AST) in hours.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 3
   // Ref: Duffie & Beckman Eq 1.5.2
-  double calculateApparentSolarTime(int localStandardTime,
-                                    double equationOfTime) {
+  double calculateApparentSolarTime(int localStandardTime, double equationOfTime) {
     return localStandardTime + equationOfTime / 60.0 +
            (m_longitude - m_localMeridian) * (12.0 / PI);
   }
@@ -118,9 +116,7 @@ public:
   // Calculates the solar hour angle (H) in radians.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 4
   // Ref: Duffie & Beckman Eq 1.6.4 (15 degrees per hour from solar noon)
-  double calculateSolarHourAngle(double ast) {
-    return (ast - 12) * (PI / 12.0);
-  }
+  double calculateSolarHourAngle(double ast) { return (ast - 12) * (PI / 12.0); }
 
   // Calculates the solar altitude angle (beta) in radians.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 6
@@ -141,15 +137,13 @@ public:
             std::sin(dec) * std::cos(m_latitude)) /
            std::cos(beta);
   }
-  double calculateSolarAzimuth(double sina, double cosa) {
-    return std::atan2(sina, cosa);
-  }
+  double calculateSolarAzimuth(double sina, double cosa) { return std::atan2(sina, cosa); }
 
   // Ground reflected radiation (Isotropic Model)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 23
   // Ref: Duffie & Beckman Eq 2.15.1
-  double calculateGroundReflectedIrradiance(double eb, double ed, double rho,
-                                            double beta, double tilt) {
+  double calculateGroundReflectedIrradiance(double eb, double ed, double rho, double beta,
+                                            double tilt) {
     return (eb * std::sin(beta) + ed) * rho * (1 - std::cos(tilt)) / 2;
   }
 
@@ -175,15 +169,13 @@ public:
   // Diffuse angle of incidence factor (Y)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 22
   double calculateDiffuseAngleOfIncidenceFactor(double theta) {
-    return std::max(0.45, 0.55 + 0.437 * std::cos(theta) +
-                              0.313 * std::pow(std::cos(theta), 2.0));
+    return std::max(0.45, 0.55 + 0.437 * std::cos(theta) + 0.313 * std::pow(std::cos(theta), 2.0));
   }
 
   // Total diffuse irradiance (Surface Diffuse)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 21 & 22
   double calculateTotalDiffuseIrradiance(double ed, double Y, double tilt) {
-    return (tilt > PI / 2) ? ed * Y * std::sin(tilt)
-                           : ed * (Y * std::sin(tilt) + std::cos(tilt));
+    return (tilt > PI / 2) ? ed * Y * std::sin(tilt) : ed * (Y * std::sin(tilt) + std::cos(tilt));
   }
 
   // Total irradiance (Global Surface)
@@ -206,9 +198,7 @@ public:
 
   std::vector<double> monthlyDryBulbTemp() { return m_monthlyDryBulbTemp; }
   std::vector<double> monthlyDewPointTemp() { return m_monthlyDewPointTemp; }
-  std::vector<double> monthlyRelativeHumidity() {
-    return m_monthlyRelativeHumidity;
-  }
+  std::vector<double> monthlyRelativeHumidity() { return m_monthlyRelativeHumidity; }
   std::vector<double> monthlyWindspeed() { return m_monthlyWindspeed; }
   std::vector<double> monthlyGlobalHorizontalRadiation() {
     return m_monthlyGlobalHorizontalRadiation;

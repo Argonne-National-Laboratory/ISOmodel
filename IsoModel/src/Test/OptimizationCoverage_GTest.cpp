@@ -4,16 +4,16 @@
  * Verifies correctness of recent C++20 optimizations and constant replacements.
  */
 
+#include "../Constants.hpp"
+#include "../EpwData.hpp"
+#include "../SolarRadiation.hpp"
+#include "../UserModel.hpp"
+
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numbers>
 #include <string>
 #include <vector>
-
-#include "../Constants.hpp"
-#include "../EpwData.hpp"
-#include "../SolarRadiation.hpp"
-#include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
 
@@ -81,8 +81,7 @@ TEST(OptimizationCoverage, EpwData_Parsing) {
 
   // Test Header Parsing
   // Format: LOCATION,City,State,Country,Source,ID,Lat,Lon,TimeZone,Elev
-  std::string header =
-      "LOCATION,Denver,CO,USA,WMO,725650,39.83,-104.65,-7.0,1611";
+  std::string header = "LOCATION,Denver,CO,USA,WMO,725650,39.83,-104.65,-7.0,1611";
   epw.parseHeader(header);
 
   EXPECT_NEAR(epw.latitude(), 39.83, 0.001);

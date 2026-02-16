@@ -1,12 +1,11 @@
 #ifndef ISOMODEL_SIMULATION_HPP
 #define ISOMODEL_SIMULATION_HPP
 
-#include "ISOModelAPI.hpp"
-
 #include "Building.hpp"
 #include "Cooling.hpp"
 #include "EpwData.hpp"
 #include "Heating.hpp"
+#include "ISOModelAPI.hpp"
 #include "Lighting.hpp"
 #include "Location.hpp"
 #include "Population.hpp"
@@ -37,9 +36,7 @@ public:
   void setEpwData(std::shared_ptr<EpwData> value) { epwData = value; }
   // REMOVED: void setPhysicalQuantities(const PhysicalQuantities& value) { phys
   // = value; }
-  void setSimulationSettings(const SimulationSettings &value) {
-    simSettings = value;
-  }
+  void setSimulationSettings(const SimulationSettings &value) { simSettings = value; }
 
 protected:
   // Pointers/Objects that store the .ism parameters.

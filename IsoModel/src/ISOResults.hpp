@@ -7,6 +7,7 @@
 #define ISOMODEL_ISORESULTS_HPP
 
 #include "ISOModelAPI.hpp"
+
 #include <vector>
 
 #ifdef ISOMODEL_STANDALONE

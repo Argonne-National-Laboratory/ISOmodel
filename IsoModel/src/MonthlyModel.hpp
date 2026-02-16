@@ -21,11 +21,11 @@
 #ifndef ISOMODEL_MONTHLYMODEL_HPP
 #define ISOMODEL_MONTHLYMODEL_HPP
 
+#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
 #include "Schedules.hpp"
-#include "Constants.hpp"
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -34,9 +34,9 @@
 #include "../utilities/data/EndUses.hpp"
 #endif
 
-#include <memory>
-
 #include "Simulation.hpp"
+
+#include <memory>
 
 namespace openstudio::isomodel {
 
@@ -177,21 +177,20 @@ private:
   void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
   // Helper for pump energy calculation
-  static Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
-                                           const Vector &v_Qneed_total,
-                                           double E_pumps_w_per_m2,
-                                           double pump_control_reduction,
+  static Vector calculatePumpEnergyForMode(const Vector &v_Qneed_mode, const Vector &v_Qneed_total,
+                                           double E_pumps_w_per_m2, double pump_control_reduction,
                                            double floor_area);
 
   // Helper for lighting energy use
-  static AnnualLightingHours calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop);
+  static AnnualLightingHours calculateAnnualLightingOperationalHours(const Lighting &lights,
+                                                                     const Population &pop);
 
   void energyGeneration() const;
 
   void calculateHeatedWaterEnergy(MonthlySimulationData &simData) const;
 
   // Helper for solarHeatGain
-  static Matrix buildSolarIrradianceMatrix(const WeatherData& weather);
+  static Matrix buildSolarIrradianceMatrix(const WeatherData &weather);
 
   std::vector<EndUses> outputGeneration(const MonthlySimulationData &simData) const;
 

@@ -1,9 +1,8 @@
 #ifndef ISOMODEL_HEATING_HPP
 #define ISOMODEL_HEATING_HPP
 
-#include "ISOModelAPI.hpp"
-
 #include "Constants.hpp"
+#include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
 
@@ -13,19 +12,11 @@ public:
   Heating() = default;
   ~Heating() = default;
 
-  double temperatureSetPointOccupied() const {
-    return m_temperatureSetPointOccupied;
-  }
-  void setTemperatureSetPointOccupied(double value) {
-    m_temperatureSetPointOccupied = value;
-  }
+  double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
+  void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
 
-  double temperatureSetPointUnoccupied() const {
-    return m_temperatureSetPointUnoccupied;
-  }
-  void setTemperatureSetPointUnoccupied(double value) {
-    m_temperatureSetPointUnoccupied = value;
-  }
+  double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
+  void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
 
   double hvacLossFactor() const { return m_hvacLossFactor; }
   void setHvacLossFactor(double value) { m_hvacLossFactor = value; }
@@ -45,17 +36,11 @@ public:
   double hotWaterDemand() const { return m_hotWaterDemand; }
   void setHotWaterDemand(double value) { m_hotWaterDemand = value; }
 
-  double hotWaterDistributionEfficiency() const {
-    return m_hotWaterDistributionEfficiency;
-  }
-  void setHotWaterDistributionEfficiency(double value) {
-    m_hotWaterDistributionEfficiency = value;
-  }
+  double hotWaterDistributionEfficiency() const { return m_hotWaterDistributionEfficiency; }
+  void setHotWaterDistributionEfficiency(double value) { m_hotWaterDistributionEfficiency = value; }
 
   double hotWaterSystemEfficiency() const { return m_hotWaterSystemEfficiency; }
-  void setHotWaterSystemEfficiency(double value) {
-    m_hotWaterSystemEfficiency = value;
-  }
+  void setHotWaterSystemEfficiency(double value) { m_hotWaterSystemEfficiency = value; }
 
   FuelType hotWaterEnergyType() const { return m_hotWaterEnergyType; }
   void setHotWaterEnergyType(FuelType value) { m_hotWaterEnergyType = value; }

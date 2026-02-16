@@ -1,4 +1,5 @@
 #include "TimeFrame.hpp"
+
 #include "Constants.hpp"
 
 namespace openstudio::isomodel {

@@ -18,6 +18,7 @@
 #include "Schedules.hpp"
 #include "Simulation.hpp"
 #include "TimeFrame.hpp"
+
 #include <array>
 #include <cmath>
 #include <memory>
@@ -36,8 +37,7 @@ namespace openstudio::isomodel {
 class EpwData;
 
 // Compressed Data Structure (Array of Structures)
-struct HourlyCache
-    final { // Use final for structs that are not intended for inheritance
+struct HourlyCache final { // Use final for structs that are not intended for inheritance
   // Schedules (0.0 - 1.0)
   float sched_q_ve_mech = 0.0f;   // Mechanical ventilation schedule
   float sched_phi_int_App = 0.0f; // Appliances gain schedule
@@ -81,9 +81,7 @@ public:
   [[nodiscard]] std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
   // NEW: Accessor for the internal schedule cache
-  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const {
-    return m_hourlyData;
-  }
+  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const { return m_hourlyData; }
 
 private:
   void initialize();
@@ -108,24 +106,23 @@ public: // Changed from private to public
   std::vector<double> m_phi_dhw;
 
   // Refactored Helpers - Inlined for performance
-  [[nodiscard]] inline AirFlowResult
-  calculateAirFlows(double theta_air, const HourlyCache &cache) noexcept;
+  [[nodiscard]] inline AirFlowResult calculateAirFlows(double theta_air,
+                                                       const HourlyCache &cache) noexcept;
 
-  [[nodiscard]] inline GainsResult
-  calculateGains(std::span<const double> curSolar, const HourlyCache &cache,
-                 double phi_int_App) noexcept;
+  [[nodiscard]] inline GainsResult calculateGains(std::span<const double> curSolar,
+                                                  const HourlyCache &cache,
+                                                  double phi_int_App) noexcept;
 
-  [[nodiscard]] inline double
-  solveThermalBalance(double theta_e, double theta_ent, double phi_ia,
-                      double phi_int, double phi_sol, double H_ve,
-                      double H_tr_1, double theta_H_set, double theta_C_set,
-                      double &theta_m_prev, double &theta_air) noexcept;
+  [[nodiscard]] inline double solveThermalBalance(double theta_e, double theta_ent, double phi_ia,
+                                                  double phi_int, double phi_sol, double H_ve,
+                                                  double H_tr_1, double theta_H_set,
+                                                  double theta_C_set, double &theta_m_prev,
+                                                  double &theta_air) noexcept;
 
   std::vector<EndUses> processResults(bool aggregateByMonth);
 
-  inline void structureCalculations(double SHGC, double A_wall, double A_win,
-                                    double U_wall, double U_win,
-                                    double alpha_wall, double F_sh_with,
+  inline void structureCalculations(double SHGC, double A_wall, double A_win, double U_wall,
+                                    double U_win, double alpha_wall, double F_sh_with,
                                     double F_sh_without, int direction);
 
   // Constants

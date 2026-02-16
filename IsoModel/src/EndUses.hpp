@@ -21,6 +21,7 @@
 #define ISOMODEL_ENDUSES_HPP
 
 #include "ISOModelAPI.hpp"
+
 #include <vector> // Ensure vector is available for both modes
 
 #ifdef ISOMODEL_STANDALONE
@@ -63,8 +64,7 @@ public:
   // Default constructor: pre-allocate flattened vector
   EndUses() : _endUses(18, 0.0) {}
 
-  void addEndUse(double value, EndUseFuelType fuel,
-                 EndUseCategoryType category) {
+  void addEndUse(double value, EndUseFuelType fuel, EndUseCategoryType category) {
     int index = getIndex(fuel, category);
     if (index >= 0 && index < static_cast<int>(_endUses.size())) {
       _endUses[index] = value;

@@ -11,19 +11,11 @@ public:
   Cooling() = default;
   ~Cooling() = default;
 
-  double temperatureSetPointOccupied() const {
-    return m_temperatureSetPointOccupied;
-  }
-  void setTemperatureSetPointOccupied(double value) {
-    m_temperatureSetPointOccupied = value;
-  }
+  double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
+  void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
 
-  double temperatureSetPointUnoccupied() const {
-    return m_temperatureSetPointUnoccupied;
-  }
-  void setTemperatureSetPointUnoccupied(double value) {
-    m_temperatureSetPointUnoccupied = value;
-  }
+  double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
+  void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
 
   double cop() const { return m_cop; }
   void setCop(double value) { m_cop = value; }

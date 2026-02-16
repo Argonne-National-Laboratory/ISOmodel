@@ -4,6 +4,7 @@
  **********************************************************************/
 
 #include "ISOResults.hpp"
+
 #include <vector>
 
 namespace openstudio::isomodel {

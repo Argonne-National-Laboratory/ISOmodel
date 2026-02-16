@@ -5,11 +5,10 @@
  *      Author: nick
  */
 
-#include "gtest/gtest.h"
-
 #include "ISOModelFixture.hpp"
 
 #include "../Properties.hpp"
+#include "gtest/gtest.h"
 
 using namespace openstudio::isomodel;
 
@@ -57,14 +56,12 @@ TEST_F(ISOModelFixture, PropsMissingValueTests) {
   EXPECT_TRUE(bool(props.getPropertyAsDouble("buildingHeight")));
   EXPECT_FALSE(bool(props.getProperty("aMissingProperty")));         // Missing.
   EXPECT_FALSE(bool(props.getPropertyAsDouble("aMissingProperty"))); // Missing.
-  EXPECT_FALSE(bool(props.getPropertyAsDouble(
-      "weatherFilePath"))); // Cannot convert to double.
+  EXPECT_FALSE(bool(props.getPropertyAsDouble("weatherFilePath")));  // Cannot convert to double.
 
   // Test methods that return bool
   std::vector<double> vec;
   EXPECT_TRUE(props.getPropertyAsDoubleVector("wallU", vec));
+  EXPECT_FALSE(props.getPropertyAsDoubleVector("aMissingProperty", vec)); // Mising
   EXPECT_FALSE(
-      props.getPropertyAsDoubleVector("aMissingProperty", vec)); // Mising
-  EXPECT_FALSE(props.getPropertyAsDoubleVector(
-      "weatherFilePath", vec)); // Cannot convert to double.
+      props.getPropertyAsDoubleVector("weatherFilePath", vec)); // Cannot convert to double.
 }

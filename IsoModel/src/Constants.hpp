@@ -3,8 +3,8 @@
 
 #include <array>
 #include <limits>
-#include <numbers>
 #include <map>
+#include <numbers>
 #include <string>
 #include <string_view>
 
@@ -20,14 +20,14 @@ namespace openstudio::isomodel {
 //// --- Math & Physics ---
 inline constexpr double PI = std::numbers::pi;
 constexpr double SAFE_EPSILON = 1e-15; // Small value to prevent division by zero
-constexpr double UNITY_FRACTION = 1.0;  // Unity value for fractions    
+constexpr double UNITY_FRACTION = 1.0; // Unity value for fractions
 
 // Physical Constants
-constexpr double RHO_AIR = 1.22521;          // Density of air (kg/m3)
-constexpr double CP_AIR = 0.001012;          // Specific heat capacity of air in MJ/kg*K
+constexpr double RHO_AIR = 1.22521;             // Density of air (kg/m3)
+constexpr double CP_AIR = 0.001012;             // Specific heat capacity of air in MJ/kg*K
 constexpr double RHO_CP_AIR = RHO_AIR * CP_AIR; // = 0.001239 MJ/m3/K
-// Volumetric heat capacity of air in wh/m3K = rho*cp in MJ/m3K * 1000000 J/MJ / 3600 s/h = Wh/m3K 
-constexpr double RHO_CP_AIR_IN_WATT_HOURS = RHO_CP_AIR * 1000000.0 / 3600; 
+// Volumetric heat capacity of air in wh/m3K = rho*cp in MJ/m3K * 1000000 J/MJ / 3600 s/h = Wh/m3K
+constexpr double RHO_CP_AIR_IN_WATT_HOURS = RHO_CP_AIR * 1000000.0 / 3600;
 
 constexpr double RHO_CP_WATER = 4.1813; // Volumetric heat capacity of water (MJ/m3/K)
 
@@ -35,12 +35,10 @@ constexpr double RHO_CP_WATER = 4.1813; // Volumetric heat capacity of water (MJ
 // based on Q = C * (dP)^0.667
 constexpr double STACK_FACTOR = 0.0146; // Physics constant for qStack
 constexpr double EFFECTIVE_STACK_HEIGHT_FRACTION =
-    0.5; // Effective stack height is 50% of zone height
-constexpr double WIND_FACTOR = 0.0769; // Physics constant for qWind
-constexpr double Q_INFIL_STACT_FRACTION =
-    0.5; // coefficient for infiltration from stack effect
-constexpr double Q_INFIL_WIND_FRACTION =
-    2.0 / 3.0; // coefficient for infiltration from wind effect
+    0.5;                                       // Effective stack height is 50% of zone height
+constexpr double WIND_FACTOR = 0.0769;         // Physics constant for qWind
+constexpr double Q_INFIL_STACT_FRACTION = 0.5; // coefficient for infiltration from stack effect
+constexpr double Q_INFIL_WIND_FRACTION = 2.0 / 3.0; // coefficient for infiltration from wind effect
 
 // This constant converts the physics of thermal buoyancy (stack effect) into a
 // flow rate relative to the leakage measured at 4 Pa ($Q_{4Pa}$).
@@ -57,7 +55,7 @@ constexpr double VERY_LIGHT = 80.0;
 
 // from usermodel.hpp
 
-constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly demand
+constexpr double MIN_DEMAND_FRACTION = 0.1; // Minimum fraction of yearly demand
 
 
 // Lookup table for BEM adjustments mapping type string to T_adj
@@ -66,16 +64,13 @@ constexpr double MIN_DEMAND_FRACTION = 0.1;     // Minimum fraction of yearly de
 // effective heating temp and raising the effective cooling temp during
 // times of control (i.e. during occupancy).
 inline const std::map<std::string, double> BEM_TYPE_TO_ADJUSTMENT = {
-    {"none", 0.0},
-    {"simple", 0.5},
-    {"advanced", 1.0}};
+    {"none", 0.0}, {"simple", 0.5}, {"advanced", 1.0}};
 
 enum class FuelType { Unspecified = 0, Electric = 1, Gas = 2 };
 enum class VentilationType { Unspecified = 0, Mechanical = 1, Combined = 2, Natural = 3 };
 
 inline const std::map<std::string, FuelType> STRING_TO_FUEL_TYPE = {
-    {"electric", FuelType::Electric},
-    {"gas", FuelType::Gas}};
+    {"electric", FuelType::Electric}, {"gas", FuelType::Gas}};
 
 inline const std::map<std::string, VentilationType> STRING_TO_VENTILATION_TYPE = {
     {"mechanical", VentilationType::Mechanical},
@@ -94,7 +89,7 @@ constexpr int SECONDS_IN_HOUR = 3600;
 
 // Constants
 inline constexpr std::array<double, 12> DAYS_IN_MONTH = {31, 28, 31, 30, 31, 30,
-                                                       31, 31, 30, 31, 30, 31};
+                                                         31, 31, 30, 31, 30, 31};
 
 inline constexpr std::array<double, 12> HOURS_IN_MONTH = [] {
   std::array<double, 12> v{};
@@ -130,7 +125,7 @@ inline constexpr std::array<int, 13> MONTH_END_HOURS = [] {
   return v;
 }();
 
-// Start hour for a standard weekday 
+// Start hour for a standard weekday
 constexpr int WEEKDAY_START_HOUR = 7;
 
 // --- Geometry & Directions ---
@@ -141,17 +136,17 @@ constexpr int NUM_TOTAL_SURFACES = 9;
 constexpr int NUM_VERTICAL_SURFACES = 8;
 
 // Surface Azimuths in radians: S, SE, E, NE, N, NW, W, SW
-inline constexpr std::array<double, 8> SURFACE_AZIMUTHS = {
-    0, -PI / 4, -PI / 2, -3 * PI / 4, PI, 3 * PI / 4, PI / 2, PI / 4};
+inline constexpr std::array<double, 8> SURFACE_AZIMUTHS = {0,  -PI / 4,    -PI / 2, -3 * PI / 4,
+                                                           PI, 3 * PI / 4, PI / 2,  PI / 4};
 
 //// --- Unit Conversions ---
 constexpr double KILOWATTHOURS_TO_MEGAJOULES = 3.6; // 1 kWh = 3.6 MJ
 constexpr double MEGAJOULES_TO_KILOWATTHOURS = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
-constexpr double MEGAJOULES_TO_WATTHOURS = 1000*MEGAJOULES_TO_KILOWATTHOURS; // 1 MJ = 277.78 Wh
+constexpr double MEGAJOULES_TO_WATTHOURS = 1000 * MEGAJOULES_TO_KILOWATTHOURS; // 1 MJ = 277.78 Wh
 constexpr double KILOWATTS_TO_WATTS = 1000.0;
 constexpr double WATTS_TO_KILOWATTS = 0.001;
-constexpr double LITERS_PER_SECOND_TO_METERS3_PER_HOUR = 3.6;        // Liters/sec to m3/h
-constexpr double DEGREES_PER_HOUR = 15.0; // Earth rotation
+constexpr double LITERS_PER_SECOND_TO_METERS3_PER_HOUR = 3.6; // Liters/sec to m3/h
+constexpr double DEGREES_PER_HOUR = 15.0;                     // Earth rotation
 constexpr double LITERS_TO_M3 = 1000.0;
 constexpr double KILOJOULE_TO_MEGAJOULE = 1000.0;
 constexpr double MEGASECONDS_TO_SECONDS = 1000000.0;
@@ -174,18 +169,18 @@ constexpr double DEFAULT_GROUND_REFLECTANCE = 0.14;
 // Shading device factors (1=None, 2=Internal, 3=External)
 inline constexpr std::array<double, 3> WIN_SDF_TABLE = {0.5, 0.35, 1.0};
 // Form factors given in ISO 13790, 11.4.6 (0.5 for wall, 1.0 for unshaded roof)
-inline constexpr std::array<double, 9> ENV_FORM_FACTORS = {
-    0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0};
+inline constexpr std::array<double, 9> ENV_FORM_FACTORS = {0.5, 0.5, 0.5, 0.5, 0.5,
+                                                           0.5, 0.5, 0.5, 1.0};
 
 constexpr double SHGC_CLEAR_GLASS = 0.87;
 
 // Simulation Defaults from ISO standards
 constexpr double DEFAULT_INITIAL_TEMP = 20.0; // starting room temp for calcs in Degrees C
-constexpr double ISO_SKY_TEMP_DIFF = 11.0;    // effective temp diff between oudoors and sky temp in K
+constexpr double ISO_SKY_TEMP_DIFF = 11.0; // effective temp diff between oudoors and sky temp in K
 constexpr double ISO_WIN_EXT_RAD_COEFF = 5.0; // exterior radiation heat xfer coefficient W/m2K
-constexpr double LIGHTING_LEVEL_COEFF = 53.0;  // Empirical constant for dayLIGHTing
-constexpr double H_MS_FACTOR = 1.2; // h_ms = h_ci + h_ri * H_MS_FACTOR
-constexpr double MIN_VENT_ZONE_HEIGHT = 0.1; // minimum zone height to use meters
+constexpr double LIGHTING_LEVEL_COEFF = 53.0; // Empirical constant for dayLIGHTing
+constexpr double H_MS_FACTOR = 1.2;           // h_ms = h_ci + h_ri * H_MS_FACTOR
+constexpr double MIN_VENT_ZONE_HEIGHT = 0.1;  // minimum zone height to use meters
 
 // Monthly Model Constants
 constexpr double MIN_INFILTRATION_FLOW = 0.001; // m3/h/m2

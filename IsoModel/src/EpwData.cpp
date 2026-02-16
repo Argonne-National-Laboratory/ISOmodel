@@ -1,4 +1,5 @@
 #include "EpwData.hpp"
+
 #include "Constants.hpp"
 #include "MathHelpers.hpp"
 #include "SolarRadiation.hpp"
@@ -13,28 +14,29 @@
 #include <sstream>
 
 namespace {
-  // Determine number of columns based on last enum value.  EpwDataCol is defined in EpwData.hpp
-  constexpr int kNumEpwDataCols = openstudio::isomodel::toIndex(openstudio::isomodel::EpwDataCol::WSPD) + 1;
+// Determine number of columns based on last enum value.  EpwDataCol is defined in EpwData.hpp
+constexpr int kNumEpwDataCols =
+    openstudio::isomodel::toIndex(openstudio::isomodel::EpwDataCol::WSPD) + 1;
 
-  //// --- EPW Data Indices (for internal storage vectors) ---
-    // EPW Columns of interest (0-based index in m_data):
-    // DBT = Dry Bulb Temp [C]  = col 6
-    // DPT = Dew Point Temp  [C] = col 7,
-    // RH = Relative Humidity [%] = col 8
-    // EGH = Global Horizontal Irradiance [W/m2] = col 13
-    // EB =  Beam Normal Irradiance [W/m2]=  col 14
-    // ED = Diffuse Horizontal Irradiance [W/m2] = col 15
-    // WSPD = Wind Speed Magnitude [m/s]= col 21
+//// --- EPW Data Indices (for internal storage vectors) ---
+// EPW Columns of interest (0-based index in m_data):
+// DBT = Dry Bulb Temp [C]  = col 6
+// DPT = Dew Point Temp  [C] = col 7,
+// RH = Relative Humidity [%] = col 8
+// EGH = Global Horizontal Irradiance [W/m2] = col 13
+// EB =  Beam Normal Irradiance [W/m2]=  col 14
+// ED = Diffuse Horizontal Irradiance [W/m2] = col 15
+// WSPD = Wind Speed Magnitude [m/s]= col 21
 
-  constexpr int EPW_FILE_COL_DBT = 6;
-  constexpr int EPW_FILE_COL_DPT = 7;
-  constexpr int EPW_FILE_COL_RH = 8;
-  constexpr int EPW_FILE_COL_EGH = 13;
-  constexpr int EPW_FILE_COL_EB = 14;
-  constexpr int EPW_FILE_COL_ED = 15;
-  constexpr int EPW_FILE_COL_WSPD = 21;
+constexpr int EPW_FILE_COL_DBT = 6;
+constexpr int EPW_FILE_COL_DPT = 7;
+constexpr int EPW_FILE_COL_RH = 8;
+constexpr int EPW_FILE_COL_EGH = 13;
+constexpr int EPW_FILE_COL_EB = 14;
+constexpr int EPW_FILE_COL_ED = 15;
+constexpr int EPW_FILE_COL_WSPD = 21;
 
-}
+} // namespace
 
 
 namespace openstudio::isomodel {
@@ -42,7 +44,7 @@ namespace openstudio::isomodel {
 EpwData::EpwData() {
   // Pre-allocate the 7 data columns
   // m_data.resize(7);
-  m_data.resize(kNumEpwDataCols);  // size based on last enum value
+  m_data.resize(kNumEpwDataCols); // size based on last enum value
   for (auto &col : m_data) {
     col.reserve(HOURS_IN_YEAR); // Optional optimization
   }
@@ -67,12 +69,10 @@ void EpwData::populateWeatherData(std::shared_ptr<WeatherData> wd) {
   // Convert and set matrices using helper from MathHelpers.hpp
   // Hourly data is 12 months x 24 hours
   wd->setMhdbt(toMatrix(pos.hourlyDryBulbTemp(), MONTHS_IN_YEAR, HOURS_IN_DAY));
-  wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), MONTHS_IN_YEAR,
-                        HOURS_IN_DAY));
+  wd->setMhEgh(toMatrix(pos.hourlyGlobalHorizontalRadiation(), MONTHS_IN_YEAR, HOURS_IN_DAY));
 
   // Solar radiation is 12 months x 8 surfaces
-  wd->setMsolar(
-      toMatrix(pos.monthlySolarRadiation(), MONTHS_IN_YEAR, NUM_VERTICAL_SURFACES));
+  wd->setMsolar(toMatrix(pos.monthlySolarRadiation(), MONTHS_IN_YEAR, NUM_VERTICAL_SURFACES));
 }
 
 void EpwData::parseHeader(const std::string &line) {
@@ -125,31 +125,30 @@ void EpwData::parseData(const std::string &line, int row) {
   int colIdx = 0;
 
 
-
   while ((end = line.find(',', start)) != std::string::npos) {
     int dataIndex = -1;
 
     switch (colIdx) {
     case EPW_FILE_COL_DBT:
-      dataIndex = toIndex(EpwDataCol::DBT);  // update to more modern access style
+      dataIndex = toIndex(EpwDataCol::DBT); // update to more modern access style
       break;
     case EPW_FILE_COL_DPT:
-      dataIndex = toIndex(EpwDataCol::DPT);  
+      dataIndex = toIndex(EpwDataCol::DPT);
       break;
     case EPW_FILE_COL_RH:
-      dataIndex = toIndex(EpwDataCol::RH);  
+      dataIndex = toIndex(EpwDataCol::RH);
       break;
     case EPW_FILE_COL_EGH:
-      dataIndex = toIndex(EpwDataCol::EGH);  
+      dataIndex = toIndex(EpwDataCol::EGH);
       break;
     case EPW_FILE_COL_EB:
-      dataIndex = toIndex(EpwDataCol::EB);  
+      dataIndex = toIndex(EpwDataCol::EB);
       break;
     case EPW_FILE_COL_ED:
-      dataIndex = toIndex(EpwDataCol::ED);  
+      dataIndex = toIndex(EpwDataCol::ED);
       break;
     case EPW_FILE_COL_WSPD:
-      dataIndex = toIndex(EpwDataCol::WSPD);  
+      dataIndex = toIndex(EpwDataCol::WSPD);
       break;
     }
 
@@ -183,8 +182,7 @@ std::string EpwData::toISOData() {
 
   std::stringstream sstream;
 
-  auto write_csv = [&](const char *name, const std::vector<double> &vec,
-                       int limit) {
+  auto write_csv = [&](const char *name, const std::vector<double> &vec, int limit) {
     sstream << name << "\n";
     for (int i = 0; i < limit; ++i) {
       sstream << i << "," << vec[i] << "\n";
@@ -234,11 +232,10 @@ void EpwData::loadData(int block_size, double *data) {
   m_timezone = static_cast<int>(data[2]);
 
   double *ptr = data + 3;
-  size_t rows = std::min(static_cast<size_t>(block_size),
-                         static_cast<size_t>(HOURS_IN_YEAR));
+  size_t rows = std::min(static_cast<size_t>(block_size), static_cast<size_t>(HOURS_IN_YEAR));
 
   // for (int c = 0; c < 7; ++c)  remove hardcoded column numbers
-  for (int c = 0; c < kNumEpwDataCols; ++c){
+  for (int c = 0; c < kNumEpwDataCols; ++c) {
     m_data[c].resize(HOURS_IN_YEAR); // Ensure size
     for (size_t i = 0; i < rows; ++i) {
       m_data[c][i] = *ptr++;

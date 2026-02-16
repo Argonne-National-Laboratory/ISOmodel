@@ -1,0 +1,105 @@
+# ISOModel C++ Coding Style
+# Phase 0 of refactoring plan — establishes consistent formatting.
+#
+# Usage:
+#   clang-format -i *.hpp *.cpp Test/*.hpp Test/*.cpp
+#
+# Based on the dominant style already present in the codebase.
+
+Language: Cpp
+Standard: c++20
+BasedOnStyle: LLVM
+
+# --- Indentation ---
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+IndentCaseLabels: false
+IndentPPDirectives: None
+NamespaceIndentation: None
+AccessModifierOffset: -2
+
+# --- Braces ---
+BreakBeforeBraces: Attach
+# Attach = K&R style: opening brace on same line as statement.
+# This matches the dominant style in the codebase.
+
+# --- Line width ---
+ColumnLimit: 100
+
+# --- Alignment ---
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: true
+
+# --- Short forms ---
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+
+# --- Breaking ---
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+PackConstructorInitializers: BinPack
+
+# --- Spaces ---
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# --- Includes ---
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1. Main header (same name as .cpp file)
+  - Regex: '^"([A-Za-z0-9_]+)\.(hpp|h)"$'
+    Priority: 1
+  # 2. Other project headers
+  - Regex: '^"'
+    Priority: 2
+  # 3. System/library headers
+  - Regex: '^<'
+    Priority: 3
+SortIncludes: true
+
+# --- Other ---
+FixNamespaceComments: true
+MaxEmptyLinesToKeep: 2
+PointerAlignment: Right
+DerivePointerAlignment: false
+ReflowComments: true
+SortUsingDeclarations: true
+CompactNamespaces: false
+
+# --- Penalties (tune to minimize diff) ---
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60

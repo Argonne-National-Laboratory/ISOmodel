@@ -18,7 +18,7 @@
 namespace openstudio::isomodel::profiler {
 
 // Helper to simplify the verbose function name from __PRETTY_FUNCTION__
-inline std::string simplifyName(const char* raw_name) {
+inline std::string simplifyName(const char *raw_name) {
   std::string name(raw_name);
   auto parenPos = name.find('(');
   if (parenPos == std::string::npos) {
@@ -72,33 +72,28 @@ public:
       totalProfiledTime_ms = 1.0; // Avoid division by zero
 
     out << "\n--- Profiling Results ---\n";
-    out << std::left << std::setw(50) << "Function" << std::right
-        << std::setw(10) << "% Total" << std::setw(18) << "Total Time (ms)"
-        << std::setw(12) << "Calls" << std::setw(20) << "Avg Time (us)\n";
+    out << std::left << std::setw(50) << "Function" << std::right << std::setw(10) << "% Total"
+        << std::setw(18) << "Total Time (ms)" << std::setw(12) << "Calls" << std::setw(20)
+        << "Avg Time (us)\n";
     out << std::string(110, '-') << "\n";
 
     // Sort results by total time for a more useful report
-    std::vector<std::pair<const char *, ProfileResult>> sortedResults(
-        m_results.begin(), m_results.end());
+    std::vector<std::pair<const char *, ProfileResult>> sortedResults(m_results.begin(),
+                                                                      m_results.end());
     std::sort(sortedResults.begin(), sortedResults.end(),
-              [](const auto &a, const auto &b) {
-                return a.second.totalTime > b.second.totalTime;
-              });
+              [](const auto &a, const auto &b) { return a.second.totalTime > b.second.totalTime; });
 
     for (const auto &[name, result] : sortedResults) {
       std::string simplifiedName = simplifyName(name);
-      double total_ms =
-          std::chrono::duration<double, std::milli>(result.totalTime).count();
+      double total_ms = std::chrono::duration<double, std::milli>(result.totalTime).count();
       double percentage = (total_ms / totalProfiledTime_ms) * 100.0;
       double avg_us =
-          std::chrono::duration<double, std::micro>(result.totalTime).count() /
-          result.callCount;
+          std::chrono::duration<double, std::micro>(result.totalTime).count() / result.callCount;
 
-      out << std::left << std::setw(50) << simplifiedName << std::right
-          << std::fixed << std::setprecision(2) << std::setw(9) << percentage
-          << "%" << std::fixed << std::setprecision(4) << std::setw(18)
-          << total_ms << std::setw(12) << result.callCount << std::fixed
-          << std::setprecision(4) << std::setw(20) << avg_us << "\n";
+      out << std::left << std::setw(50) << simplifiedName << std::right << std::fixed
+          << std::setprecision(2) << std::setw(9) << percentage << "%" << std::fixed
+          << std::setprecision(4) << std::setw(18) << total_ms << std::setw(12) << result.callCount
+          << std::fixed << std::setprecision(4) << std::setw(20) << avg_us << "\n";
     }
     out << "-------------------------\n";
   }
@@ -120,8 +115,7 @@ public:
 
   ~ScopeTimer() {
     auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - m_startTime);
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - m_startTime);
     Profiler::getInstance().addResult(m_name, duration);
   }
 
@@ -133,7 +127,8 @@ private:
 } // namespace openstudio::isomodel::profiler
 
 #define PROFILE_SCOPE(name) openstudio::isomodel::profiler::ScopeTimer timer##__LINE__(name)
-#define PROFILE_FUNCTION() openstudio::isomodel::profiler::ScopeTimer timer##__LINE__(__PRETTY_FUNCTION__)
+#define PROFILE_FUNCTION() \
+  openstudio::isomodel::profiler::ScopeTimer timer##__LINE__(__PRETTY_FUNCTION__)
 
 #else // PROFILING_ENABLED is 0 or not defined
 

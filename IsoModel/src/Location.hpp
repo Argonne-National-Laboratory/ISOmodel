@@ -21,6 +21,7 @@
 
 #include "ISOModelAPI.hpp"
 #include "WeatherData.hpp"
+
 #include <memory>
 
 namespace openstudio::isomodel {

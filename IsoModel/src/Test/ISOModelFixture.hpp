@@ -56,8 +56,7 @@ protected:
   std::string test_data_path;
 
 #ifndef ISOMODEL_STANDALONE
-  std::vector<
-      std::pair<openstudio::EndUseFuelType, openstudio::EndUseCategoryType>>
+  std::vector<std::pair<openstudio::EndUseFuelType, openstudio::EndUseCategoryType>>
       isoResultsEndUseTypes;
 
   static std::shared_ptr<openstudio::FileLogSink> logFile;
