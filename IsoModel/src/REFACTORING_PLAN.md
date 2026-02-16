@@ -548,20 +548,20 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 ## 21. Implementation Phases
 
 ### Phase 0: Preparation (Low Risk)
-- [ ] Set up CI with the existing test suite to catch regressions
-- [ ] Run all tests, establish baseline
-- [ ] Create a `.clang-format` file encoding the chosen style
-- [ ] Run `clang-format` on all files for whitespace/brace consistency
+- [x] Set up CI with the existing test suite to catch regressions
+- [x ] Run all tests, establish baseline
+- [x] Create a `.clang-format` file encoding the chosen style
+- [x ] Run `clang-format` on all files for whitespace/brace consistency
 
 ### Phase 1: Non-Breaking Cleanup (No API Changes)
-- [ ] Standardize copyright headers (§3)
-- [ ] Fix include guards / adopt `#pragma once` (§2)
-- [ ] Add `const` to all getters (§4)
-- [ ] Add `[[nodiscard]]` and `noexcept` to getters (§16a, §16b)
+- [x ] Standardize copyright headers (§3)
+- [x ] Fix include guards / adopt `#pragma once` (§2)
+- [x ] Add `const` to all getters (§4)
+- [x ] Add `[[nodiscard]]` and `noexcept` to getters (§16a, §16b)
 - [ ] Remove dead code and stale comments (§20)
-- [ ] Remove `#ifdef ISOMODEL_STANDALONE` dead branches (§14)
+- [x] Remove `#ifdef ISOMODEL_STANDALONE` dead branches (§14)
 - [ ] Remove `old/` directory and generated files (§19)
-- [ ] Replace `#define TIMESLICES` with `HOURS_IN_YEAR` (§8)
+- [x ] Replace `#define TIMESLICES` with `HOURS_IN_YEAR` (§8)
 - [ ] Replace `DEBUG_ISO_MODEL_SIMULATION` macro with `constexpr` (§8)
 - [ ] Fix C-style arrays → `std::array` in `SolarRadiation.hpp` (§16f)
 - [ ] Run tests ✓

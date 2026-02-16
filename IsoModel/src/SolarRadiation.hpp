@@ -64,8 +64,8 @@ protected:
   // Performance caches
   double m_sinTilt = 0.0;
   double m_cosTilt = 0.0;
-  double m_surfSin[NUM_VERTICAL_SURFACES] = {};
-  double m_surfCos[NUM_VERTICAL_SURFACES] = {};
+  std::array<double, NUM_VERTICAL_SURFACES> m_surfSin{};
+  std::array<double, NUM_VERTICAL_SURFACES> m_surfCos{};
 
 public:
   SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt = PI);
