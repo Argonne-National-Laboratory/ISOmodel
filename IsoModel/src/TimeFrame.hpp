@@ -1,7 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
 #ifndef ISOMODEL_TIMEFRAME_HPP
 #define ISOMODEL_TIMEFRAME_HPP
 

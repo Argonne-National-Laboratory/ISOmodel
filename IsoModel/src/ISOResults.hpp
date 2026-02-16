@@ -1,7 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2008-2015, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
 
 #ifndef ISOMODEL_ISORESULTS_HPP
 #define ISOMODEL_ISORESULTS_HPP
