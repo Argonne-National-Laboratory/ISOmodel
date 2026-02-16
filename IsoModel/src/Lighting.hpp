@@ -1,17 +1,3 @@
-// First Commit: 2013-11-05
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// Defines the `Lighting` class, a data container for parameters related to
-// the building's lighting system. This includes power densities, exterior
-// lighting power, and settings for various control strategies like daylight
-// dimming and occupancy sensors.
-
 #ifndef ISOMODEL_LIGHTING_HPP
 #define ISOMODEL_LIGHTING_HPP
 

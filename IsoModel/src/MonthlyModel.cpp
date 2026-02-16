@@ -1,20 +1,21 @@
-// First Commit: 2013-11-05
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Daniel Chopson
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// Implements the MonthlyModel class, providing the core logic for the
-// simplified, month-by-month building energy simulation based on the
-// ISO 13790 standard. This file contains the main `simulate` method which
-// orchestrates the sequence of calculations (e.g., solar gains,
-// ventilation, heating/cooling needs) and the implementations of those
-// individual calculation steps.
-
+/**********************************************************************
+ * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ * All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ **********************************************************************/
 #include "MonthlyModel.hpp"
 // to run main
 #include "UserModel.hpp"
@@ -36,7 +37,7 @@ Matrix MonthlyModel::buildSolarIrradianceMatrix(const WeatherData& weather) {
   PROFILE_FUNCTION();
   // Combine vertical surface radiation (msolar) and horizontal radiation
   // (mEgh) into one matrix (W/m2).
-  Matrix m_I_sol(MONTHS_IN_YEAR, NUM_TOTAL_SURFACESs);
+  Matrix m_I_sol(MONTHS_IN_YEAR, NUM_TOTAL_SURFACES);
 
   // Access weather data via reference to avoid copy
   const Matrix &m_solar = weather.msolarRef();
@@ -197,7 +198,7 @@ void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
 
   // Compute direct transmission heat transfer coefficient (H_D)
   double H_D = 0.0;
-  for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
+  for (int i = 0; i < NUM_TOTAL_SURFACES; ++i) {
     H_D += (v_wall_A[i] * v_wall_U[i]) + (v_win_A[i] * v_win_U[i]);
   }
 
@@ -242,7 +243,7 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   const Vector &v_wall_U = structure.wallUniformRef();
   const Vector &v_wall_A = structure.wallAreaRef();
 
-  for (int i = 0; i < NUM_TOTAL_SURFACESs; ++i) {
+  for (int i = 0; i < NUM_TOTAL_SURFACES; ++i) {
     // Window Shading & Solar Area
     double SDF = WIN_SDF_TABLE[((int)structure.windowShadingDeviceRef()[i]) - 1];
     double F_shgl = SDF * UNITY_FRACTION;
@@ -289,8 +290,8 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   const Vector &v_wall_U = structure.wallUniformRef();
   const Vector &v_wall_A = structure.wallAreaRef();
 
-  Vector v_wall_phi_r(NUM_TOTAL_SURFACESs);
-  for (int j = 0; j < NUM_TOTAL_SURFACESs; ++j) {
+  Vector v_wall_phi_r(NUM_TOTAL_SURFACES);
+  for (int j = 0; j < NUM_TOTAL_SURFACES; ++j) {
     v_wall_phi_r[j] = simData.v_wall_R_sc[j] * v_wall_U[j] *
                       v_wall_A[j] * simData.v_win_hr[j] * theta_er;
   }
@@ -302,7 +303,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double phi_sol = 0.0;
-    for (int j = 0; j < NUM_TOTAL_SURFACESs; ++j) {
+    for (int j = 0; j < NUM_TOTAL_SURFACES; ++j) {
       double I_sol = m_I_sol(i, j);
       // Glazing Gain: SCF * A_sol * I_sol (SCF_frac is 1.0)
       phi_sol += v_win_SCF[j] * v_win_A_sol[j] * I_sol;
@@ -385,19 +386,6 @@ void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   }
 }
 
-double MonthlyModel::calculateBEMAdjustment(const Building& building) {
-  switch ((int)building.buildingEnergyManagement()) {
-  case 1:
-    return 0.0;
-  case 2:
-    return BEM_SIMPLE_ADJUSTMENT;
-  case 3:
-    return BEM_ADVANCED_ADJUSTMENT;
-  default:
-    return 0.0;
-  }
-}
-
 /*
  * Calculate interior temp.
  */
@@ -407,12 +395,11 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   // based on the BEM type. An advanced BEM has the effect of reducing the
   // effective heating temp and raising the effective cooling temp during
   // times of control (i.e. during occupancy).
-  double T_adj = calculateBEMAdjustment(building);
+
+  double T_adj = building.buildingEnergyManagement();
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << "BEM: " << building.buildingEnergyManagement() << ", "
-              << ((int)building.buildingEnergyManagement()) << std::endl;
-    std::cout << "T_adj: " << T_adj << std::endl;
+    std::cout << "BEM Adjustment: " << T_adj << std::endl;
   }
 
   // Adjust the heating set points.
@@ -592,7 +579,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
     break;
   }
 
-  double mve_init = ventilation.ventType() == 3 ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
+  double mve_init = ventilation.ventType() == VentilationType::Natural ? 0 : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
 
   // OPTIMIZATION: Fused vector operations into a single loop to avoid temporary allocations.
   double stack_exp = ventilation.stack_exp();
@@ -788,7 +775,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   double cl_dc_elec_net = cooling.eta_DC_COP() * cooling.eta_DC_network();
   double cl_dc_free = 1.0 - cooling.frac_DC_free();
   double cl_dc_cop_abs = cooling.eta_DC_COP_abs();
-  bool is_ht_elec = (heating.energyType() == 1);
+  bool is_ht_elec = (heating.energyType() == FuelType::Electric);
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double Qloss_ht_dist = simData.v_Qneed_ht[i] * (1.0 - eta_dist_ht) / eta_dist_ht;
@@ -925,7 +912,7 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
   double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
   double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();
   double inv_KILOWATTHOURS_TO_MEGAJOULES = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
-  bool is_elec = (heating.hotWaterEnergyType() == 1);
+  bool is_elec = (heating.hotWaterEnergyType() == FuelType::Electric);
 
   for(int i=0; i<MONTHS_IN_YEAR; ++i) {
       double monthlyDemand = DAYS_IN_MONTH[i] * Q_dhw_yr;

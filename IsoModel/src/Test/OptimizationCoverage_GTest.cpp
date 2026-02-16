@@ -1,14 +1,8 @@
-// First Commit: 2026-01-07
-//
-// Authors:
-// - Ralph Muehleisen
-//
-// Summary:
-// This file contains Google Test unit tests designed to verify the
-// correctness of recent performance optimizations and C++20 modernizations.
-// It includes tests for updated constants, mathematical helpers in
-// `SolarRadiation`, string parsing in `EpwData`, and modern C++ features in
-// `UserModel`.
+/*
+ * OptimizationCoverage_GTest.cpp
+ *
+ * Verifies correctness of recent C++20 optimizations and constant replacements.
+ */
 
 #include <cmath>
 #include <gtest/gtest.h>

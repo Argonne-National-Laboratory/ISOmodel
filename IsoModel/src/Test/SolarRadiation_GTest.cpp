@@ -1,16 +1,9 @@
-// First Commit: 2015-07-16
-//
-// Authors:
-// - Brendan Albano
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// This file contains Google Test unit tests for the `SolarRadiation` class.
-// It validates the core physics calculations by comparing them against a set
-// of known, expected values from ASHRAE and Duffie & Beckman for a specific
-// time and location (Jan 21, 12:00 noon, for a south-facing surface at
-// Chicago O'Hare).
+/*
+ * ISOModel_GTest.cpp
+ *
+ * Created on: Dec 5, 2014
+ * Author: nick
+ */
 
 #include "gtest/gtest.h"
 

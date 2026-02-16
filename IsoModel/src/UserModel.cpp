@@ -1,17 +1,7 @@
-// First Commit: 2013-11-05
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// This file implements the `UserModel` class, which is responsible for
-// loading and parsing building configuration data from `.ism` (YAML) files.
-// It populates the various data model objects (Structure, Ventilation, etc.)
-// and acts as a factory for creating `MonthlyModel` and `HourlyModel`
-// instances.
+/**********************************************************************
+ * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ * All rights reserved.
+ **********************************************************************/
 
 #include "UserModel.hpp"
 #include <algorithm> // Required for std::transform in loadBuilding

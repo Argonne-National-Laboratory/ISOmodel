@@ -1,17 +1,12 @@
-// First Commit: 2014-06-20
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// Defines the HourlyModel class for performing detailed, hour-by-hour building
-// energy simulations based on the ISO 13790 5R1C model. This class
-// orchestrates the main simulation loop, manages data caching, and contains
-// the core physics calculations for thermal balance, solar gains, and
-// ventilation.
+/*
+ * HourlyModel.hpp
+ *
+ * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
+ * - Renamed A_floor_inv -> invFloorArea
+ * - Added static optimization members (win_floor_ratio, invFloorArea)
+ * - Added persistent result vectors to reduce heap allocation overhead
+ * - Marked helper functions as inline for loop performance
+ */
 
 #ifndef ISOMODEL_HOURLYMODEL_HPP
 #define ISOMODEL_HOURLYMODEL_HPP

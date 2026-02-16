@@ -1,16 +1,8 @@
-// First Commit: 2014-12-16
-//
-// Authors:
-// - Brendan Albano
-// - Ralph Muehleisen
-//
-// Summary:
-// This file contains a benchmark application for the ISOModel library. It
-// measures and reports the average execution time of the `MonthlyModel`
-// and `HourlyModel` simulations over a large number of iterations,
-// including a test case that involves modifying model properties between
-// runs.
-
+/*
+ * ISOModel_Benchmark.cpp
+ * Refactored to ensure standard C++ compatibility while preserving all original
+ * benchmark loops.
+ */
 #include "../HourlyModel.hpp"
 #include "../MonthlyModel.hpp"
 #include "../UserModel.hpp"

@@ -1,21 +1,9 @@
-// First Commit: 2013-11-05
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// Defines the `Heating` class, a data container for parameters related to
-// the building's heating system and domestic hot water (DHW). This includes
-// temperature setpoints, system efficiency, fuel type, and distribution
-// loss factors.
-
 #ifndef ISOMODEL_HEATING_HPP
 #define ISOMODEL_HEATING_HPP
 
 #include "ISOModelAPI.hpp"
+
+#include "Constants.hpp"
 
 namespace openstudio::isomodel {
 
@@ -48,8 +36,8 @@ public:
   double efficiency() const { return m_efficiency; }
   void setEfficiency(double value) { m_efficiency = value; }
 
-  double energyType() const { return m_energyType; }
-  void setEnergyType(double value) { m_energyType = value; }
+  FuelType energyType() const { return m_energyType; }
+  void setEnergyType(FuelType value) { m_energyType = value; }
 
   double pumpControlReduction() const { return m_pumpControlReduction; }
   void setPumpControlReduction(double value) { m_pumpControlReduction = value; }
@@ -69,8 +57,8 @@ public:
     m_hotWaterSystemEfficiency = value;
   }
 
-  double hotWaterEnergyType() const { return m_hotWaterEnergyType; }
-  void setHotWaterEnergyType(double value) { m_hotWaterEnergyType = value; }
+  FuelType hotWaterEnergyType() const { return m_hotWaterEnergyType; }
+  void setHotWaterEnergyType(FuelType value) { m_hotWaterEnergyType = value; }
 
   double dT_supp_ht() const { return m_dT_supp_ht; }
   void setDT_supp_ht(double value) { m_dT_supp_ht = value; }
@@ -114,12 +102,12 @@ private:
   double m_temperatureSetPointUnoccupied = 0.0;
   double m_hvacLossFactor = 0.0;
   double m_efficiency = 0.0;
-  double m_energyType = 0.0;
+  FuelType m_energyType = FuelType::Unspecified;
   double m_pumpControlReduction = 0.0;
   double m_hotWaterDemand = 0.0;
   double m_hotWaterDistributionEfficiency = 0.0;
   double m_hotWaterSystemEfficiency = 0.0;
-  double m_hotWaterEnergyType = 0.0;
+  FuelType m_hotWaterEnergyType = FuelType::Unspecified;
   double m_hotcoldWasteFactor = 0.0;
 
   // Default values preserved

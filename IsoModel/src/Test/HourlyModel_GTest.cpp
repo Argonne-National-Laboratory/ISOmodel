@@ -1,15 +1,9 @@
-// First Commit: 2015-07-16
-//
-// Authors:
-// - Brendan Albano
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// This file contains the Google Test unit tests for the `HourlyModel`. It
-// validates the accuracy of the hourly simulation by comparing its
-// monthly aggregated results against a set of known, expected values for a
-// standard test building.
+/*
+ * ISOModel_GTest.cpp
+ *
+ *  Created on: Dec 5, 2014
+ *      Author: nick
+ */
 
 #include "gtest/gtest.h"
 

@@ -1,15 +1,9 @@
-// First Commit: 2015-07-16
-//
-// Authors:
-// - Brendan Albano
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// This file contains Google Test unit tests for the `TimeFrame` class. It
-// validates that the lookup arrays for month, day, hour, etc., are
-// correctly populated by checking specific values at various hour-of-the-year
-// indices.
+/*
+ * ISOModel_GTest.cpp
+ *
+ *  Created on: Dec 5, 2014
+ *      Author: nick
+ */
 
 #include "gtest/gtest.h"
 

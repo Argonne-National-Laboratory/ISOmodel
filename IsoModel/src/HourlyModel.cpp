@@ -1,17 +1,13 @@
-// First Commit: 2014-06-20
-//
-// Authors:
-// - Brendan Albano
-// - Brian Craig
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// Implements the HourlyModel class, providing the core logic for the
-// hour-by-hour building energy simulation. This includes the main simulation
-// loop, initialization of physical constants and schedules, and the detailed
-// implementation of the 5R1C thermal model physics for gains, airflow, and
-// thermal balance.
+/*
+ * HourlyModel.cpp
+ *
+ * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE
+ * - Renamed A_floor_inv -> invFloorArea
+ * - Replaced harmonic mean divisions with multiplication (algebraic
+ * simplification).
+ * - Removed smallEpsilon where algebra safely handles zero values.
+ * - Reused member vectors to eliminate heap allocation in main loop.
+ */
 
 #include "HourlyModel.hpp"
 #include "Constants.hpp"

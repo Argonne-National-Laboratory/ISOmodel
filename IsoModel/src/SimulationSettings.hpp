@@ -1,15 +1,7 @@
-// First Commit: 2015-06-12
-//
-// Authors:
-// - Brendan Albano
-// - Ralph Muehleisen
-//
-// Summary:
-// Defines the `SimulationSettings` class, a data container for core physics
-// parameters of the 5R1C model. This includes internal and solar gain
-// distribution fractions and the internal convective and radiative heat
-// transfer coefficients.
-
+/**********************************************************************
+ * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
+ * All rights reserved.
+ **********************************************************************/
 #ifndef ISOMODEL_SIMULATIONSETTINGS_HPP
 #define ISOMODEL_SIMULATIONSETTINGS_HPP
 

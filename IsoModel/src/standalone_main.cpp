@@ -1,15 +1,7 @@
-// First Commit: 2014-12-05
-//
-// Authors:
-// - Brendan Albano
-// - Nick Collier
-// - Ralph Muehleisen
-//
-// Summary:
-// This file provides a standalone command-line interface for the ISOModel
-// library. It parses command-line arguments to load building models (`.ism`
-// files), select between monthly and hourly simulations, and print results
-// to the console.
+/*
+ * standalone_main.cpp
+ * * Compatible with the Original Interface (std::vector<EndUses>)
+ */
 
 #include "HourlyModel.hpp"
 #include "MonthlyModel.hpp"
