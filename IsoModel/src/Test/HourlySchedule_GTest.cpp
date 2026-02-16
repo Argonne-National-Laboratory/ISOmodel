@@ -53,21 +53,10 @@ TEST_F(ISOModelFixture, HourlyScheduleTests) {
         expectedEquipment) {
       EXPECT_EQ(i, hour) << "Hour mismatch at line " << lineNum;
 
-#ifdef ISOMODEL_STANDALONE
       double actualHeating = results[i].getEndUse(0);   // Electric heating
       double actualCooling = results[i].getEndUse(1);   // Cooling
       double actualLighting = results[i].getEndUse(2);  // Interior lighting
       double actualEquipment = results[i].getEndUse(6); // Interior equipment
-#else
-      double actualHeating =
-          results[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-      double actualCooling =
-          results[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-      double actualLighting =
-          results[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-      double actualEquipment =
-          results[i].getEndUse(EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-#endif
 
       // Compare with tolerance
       if (expectedHeating > 0.0) {

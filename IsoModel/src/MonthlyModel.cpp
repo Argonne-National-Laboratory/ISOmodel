@@ -1120,7 +1120,6 @@ std::vector<EndUses> MonthlyModel::outputGeneration(const MonthlySimulationData 
     double Egas_plug = HOURS_IN_MONTH[i] * E_plug_gas_avg * WATTS_TO_KILOWATTS;
     double Egas_dhw = simData.v_Q_dhw_gas[i] * area_factor;
 
-#ifdef ISOMODEL_STANDALONE
     EndUses eu;
     int euse = 0;
     eu.addEndUse(euse++, Eelec_ht);
@@ -1137,24 +1136,6 @@ std::vector<EndUses> MonthlyModel::outputGeneration(const MonthlySimulationData 
     eu.addEndUse(euse++, Egas_plug);
     eu.addEndUse(euse++, Egas_dhw);
     allResults.push_back(eu);
-#else
-    EndUses eu;
-    eu.addEndUse(Eelec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    eu.addEndUse(Eelec_cl, EndUseFuelType::Electricity, EndUseCategoryType::Cooling);
-    eu.addEndUse(Eelec_int_lt, EndUseFuelType::Electricity, EndUseCategoryType::InteriorLights);
-    eu.addEndUse(Eelec_ext_lt, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorLights);
-    eu.addEndUse(Eelec_fan, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    eu.addEndUse(Eelec_pump, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    eu.addEndUse(Eelec_plug, EndUseFuelType::Electricity, EndUseCategoryType::InteriorEquipment);
-    eu.addEndUse(0, EndUseFuelType::Electricity, EndUseCategoryType::ExteriorEquipment);
-    eu.addEndUse(Eelec_dhw, EndUseFuelType::Electricity, EndUseCategoryType::WaterSystems);
-
-    eu.addEndUse(Egas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
-    eu.addEndUse(Egas_cl, EndUseFuelType::Gas, EndUseCategoryType::Cooling);
-    eu.addEndUse(Egas_plug, EndUseFuelType::Gas, EndUseCategoryType::InteriorEquipment);
-    eu.addEndUse(Egas_dhw, EndUseFuelType::Gas, EndUseCategoryType::WaterSystems);
-    allResults.push_back(eu);
-#endif
   }
   return allResults;
 }

@@ -5,12 +5,7 @@
 #include "MathHelpers.hpp"
 #include "Schedules.hpp"
 
-#ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
-#else
-#include "../utilities/core/Logger.hpp"
-#include "../utilities/data/EndUses.hpp"
-#endif
 
 #include "Simulation.hpp"
 

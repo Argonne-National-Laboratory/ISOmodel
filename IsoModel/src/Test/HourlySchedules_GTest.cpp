@@ -45,16 +45,8 @@ TEST_F(ISOModelFixture, HourlyModelScheduleTests) {
 
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 13; ++j) {
-#ifdef ISOMODEL_STANDALONE
       EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), 0.001)
           << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
-#else
-      EXPECT_NEAR(
-          expected[i][j],
-          results[i].getEndUse(isoResultsEndUseTypes[j].first, isoResultsEndUseTypes[j].second),
-          0.001)
-          << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
-#endif
     }
   }
 }

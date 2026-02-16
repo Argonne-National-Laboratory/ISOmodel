@@ -4,11 +4,7 @@
 
 #include <vector>
 
-#ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
-#else
-#include "../utilities/data/EndUses.hpp"
-#endif
 
 namespace openstudio::isomodel {
 

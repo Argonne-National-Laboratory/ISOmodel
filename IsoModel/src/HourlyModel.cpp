@@ -377,7 +377,6 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
       gas_ht = total_heat_req;
     }
 
-#ifdef ISOMODEL_STANDALONE
     eu.addEndUse(0, elec_ht);
     eu.addEndUse(1, c * s_cl * WATTS_TO_KILOWATTS);
     eu.addEndUse(2, il * WATTS_TO_KILOWATTS);
@@ -388,24 +387,6 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
     eu.addEndUse(7, pe * WATTS_TO_KILOWATTS);
     eu.addEndUse(8, dw * WATTS_TO_KILOWATTS);
     eu.addEndUse(9, gas_ht);
-#else
-    eu.addEndUse(elec_ht, EndUseFuelType::Electricity, EndUseCategoryType::Heating);
-    eu.addEndUse(c * s_cl * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::Cooling);
-    eu.addEndUse(il * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::InteriorLights);
-    eu.addEndUse(el * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::ExteriorLights);
-    eu.addEndUse(fn * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity, EndUseCategoryType::Fans);
-    eu.addEndUse(pm * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity, EndUseCategoryType::Pumps);
-    eu.addEndUse(pi * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::InteriorEquipment);
-    eu.addEndUse(pe * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::ExteriorEquipment);
-    eu.addEndUse(dw * WATTS_TO_KILOWATTS, EndUseFuelType::Electricity,
-                 EndUseCategoryType::WaterSystems);
-    eu.addEndUse(gas_ht, EndUseFuelType::Gas, EndUseCategoryType::Heating);
-#endif
   };
 
   if (aggregateByMonth) {

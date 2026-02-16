@@ -144,8 +144,6 @@ set(${target_name}_depends "")
 set(unit_test_depends GTest::gtest GTest::gtest_main)
 set(benchmark_depends "")
 
-add_definitions(-DISOMODEL_STANDALONE)
-
 # ---------------------------------------------------------------------------
 # OPTIMIZATION FLAGS
 # ---------------------------------------------------------------------------

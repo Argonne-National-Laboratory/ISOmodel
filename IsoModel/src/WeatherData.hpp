@@ -1,14 +1,6 @@
 #pragma once
 #include "ISOModelAPI.hpp"
-
-#ifdef ISOMODEL_STANDALONE
-// #include "Vector.hpp"
-// #include "Matrix.hpp"
 #include "MathHelpers.hpp"
-#else
-#include "../utilities/data/Matrix.hpp"
-#include "../utilities/data/Vector.hpp"
-#endif
 
 #include <memory>
 
