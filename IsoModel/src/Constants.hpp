@@ -9,7 +9,7 @@
 namespace openstudio::isomodel {
 
 // flag to turn on debug printing of many intermediate variables to stdout
-// constexpr bool DEBUG_ISO_MODEL_SIMULATION = false;
+constexpr bool DEBUG_ISO_MODEL_SIMULATION = false;
 
 // Replaced #define maxDouble and minDouble with inline use of
 // std::numeric_limits using e.g. std::numeric_limits<double>::epsilon() and

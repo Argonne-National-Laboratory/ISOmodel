@@ -1,9 +1,10 @@
 #pragma once
+#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
-namespace openstudio::isomodel {
+#include <array>
 
-#define TIMESLICES 8760
+namespace openstudio::isomodel {
 
 /**
  * Simple data structure that allows conversion from the hour of the year
@@ -21,19 +22,19 @@ public:
   int monthLength(int month);
 
   /// Returns the day of the year (0-364).
-  int YTD[TIMESLICES];
+  std::array<int, HOURS_IN_YEAR> YTD{};
 
   /// Returns the hour of the day (0-23).
-  int Hour[TIMESLICES];
+  std::array<int, HOURS_IN_YEAR> Hour{};
 
   /// Returns the day of the month (1-monthLength)
-  int DayOfMonth[TIMESLICES];
+  std::array<int, HOURS_IN_YEAR> DayOfMonth{};
 
   /// Returns the day of the week (0-6).
-  int DayOfWeek[TIMESLICES];
+  std::array<int, HOURS_IN_YEAR> DayOfWeek{};
 
   /// Returns the month (1-12).
-  int Month[TIMESLICES];
+  std::array<int, HOURS_IN_YEAR> Month{};
 };
 
 } // namespace openstudio::isomodel

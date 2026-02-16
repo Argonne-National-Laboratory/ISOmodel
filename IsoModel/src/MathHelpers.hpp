@@ -62,12 +62,6 @@ private:
 } // namespace openstudio
 namespace openstudio::isomodel {
 
-// Note: Ensure DEBUG_ISO_MODEL_SIMULATION is defined before including this,
-// or passed as a template/argument.
-#ifndef DEBUG_ISO_MODEL_SIMULATION
-#define DEBUG_ISO_MODEL_SIMULATION false
-#endif
-
 // --- Printing Utilities ---
 
 inline void printVector(const char *vecName, const Vector &vec) noexcept {
