@@ -51,7 +51,7 @@ SolarRadiation::SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt)
 // Destructor is defaulted in header
 
 // Legacy support: Reconstructs 2D vector from flat storage
-std::vector<std::vector<double>> SolarRadiation::eglobe() {
+std::vector<std::vector<double>> SolarRadiation::eglobe() const {
   std::vector<std::vector<double>> legacy(HOURS_IN_YEAR,
                                           std::vector<double>(NUM_VERTICAL_SURFACES, 0.0));
   for (int i = 0; i < HOURS_IN_YEAR; ++i) {
@@ -278,7 +278,7 @@ void SolarRadiation::clearMonthlyAvg(int midx) {
 
 // --- Legacy Getters Re-implementation for Flat Vectors ---
 
-std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() {
+std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() const {
   std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(NUM_VERTICAL_SURFACES));
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s) {
@@ -288,7 +288,7 @@ std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() {
   return ret;
 }
 
-std::vector<std::vector<double>> SolarRadiation::hourlyDryBulbTemp() {
+std::vector<std::vector<double>> SolarRadiation::hourlyDryBulbTemp() const {
   std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     for (int h = 0; h < HOURS_IN_DAY; ++h) {
@@ -298,7 +298,7 @@ std::vector<std::vector<double>> SolarRadiation::hourlyDryBulbTemp() {
   return ret;
 }
 
-std::vector<std::vector<double>> SolarRadiation::hourlyDewPointTemp() {
+std::vector<std::vector<double>> SolarRadiation::hourlyDewPointTemp() const {
   std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     for (int h = 0; h < HOURS_IN_DAY; ++h) {
@@ -308,7 +308,7 @@ std::vector<std::vector<double>> SolarRadiation::hourlyDewPointTemp() {
   return ret;
 }
 
-std::vector<std::vector<double>> SolarRadiation::hourlyGlobalHorizontalRadiation() {
+std::vector<std::vector<double>> SolarRadiation::hourlyGlobalHorizontalRadiation() const {
   std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     for (int h = 0; h < HOURS_IN_DAY; ++h) {

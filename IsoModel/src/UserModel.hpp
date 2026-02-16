@@ -84,10 +84,10 @@ public:
   // ------------------------------------------------ //
 
   /// Gets a EpwData property.
-  [[nodiscard]] const std::shared_ptr<EpwData> epwData() { return _edata; }
+  [[nodiscard]] const std::shared_ptr<EpwData> epwData() const { return _edata; }
 
   /// Gets a WeatherData property.
-  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() { return _weather; }
+  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() const { return _weather; }
 
   /// Gets a WeatherData property. Property name in .ism file:
   /// "weatherfilepath". Property is required.
