@@ -16,14 +16,14 @@ public:
    * Terrain class (urban/city = 0.8, suburban/some shielding = 0.9,
    * country/open = 1.0).
    */
-  double terrain() const { return m_terrain; }
+  [[nodiscard]] double terrain() const { return m_terrain; }
 
   void setTerrain(double value) { m_terrain = value; }
 
   /**
    * Pointer to weather data. Contains data extracted/computed from .epw file.
    */
-  std::shared_ptr<WeatherData> weather() const { return m_weather; }
+  [[nodiscard]] std::shared_ptr<WeatherData> weather() const { return m_weather; }
 
   void setWeatherData(std::shared_ptr<WeatherData> value) { m_weather = value; }
 

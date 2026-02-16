@@ -10,73 +10,73 @@ public:
   Heating() = default;
   ~Heating() = default;
 
-  double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
+  [[nodiscard]] double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
   void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
 
-  double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
+  [[nodiscard]] double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
   void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
 
-  double hvacLossFactor() const { return m_hvacLossFactor; }
+  [[nodiscard]] double hvacLossFactor() const { return m_hvacLossFactor; }
   void setHvacLossFactor(double value) { m_hvacLossFactor = value; }
 
-  double hotcoldWasteFactor() const { return m_hotcoldWasteFactor; }
+  [[nodiscard]] double hotcoldWasteFactor() const { return m_hotcoldWasteFactor; }
   void setHotcoldWasteFactor(double value) { m_hotcoldWasteFactor = value; }
 
-  double efficiency() const { return m_efficiency; }
+  [[nodiscard]] double efficiency() const { return m_efficiency; }
   void setEfficiency(double value) { m_efficiency = value; }
 
-  FuelType energyType() const { return m_energyType; }
+  [[nodiscard]] FuelType energyType() const { return m_energyType; }
   void setEnergyType(FuelType value) { m_energyType = value; }
 
-  double pumpControlReduction() const { return m_pumpControlReduction; }
+  [[nodiscard]] double pumpControlReduction() const { return m_pumpControlReduction; }
   void setPumpControlReduction(double value) { m_pumpControlReduction = value; }
 
-  double hotWaterDemand() const { return m_hotWaterDemand; }
+  [[nodiscard]] double hotWaterDemand() const { return m_hotWaterDemand; }
   void setHotWaterDemand(double value) { m_hotWaterDemand = value; }
 
-  double hotWaterDistributionEfficiency() const { return m_hotWaterDistributionEfficiency; }
+  [[nodiscard]] double hotWaterDistributionEfficiency() const { return m_hotWaterDistributionEfficiency; }
   void setHotWaterDistributionEfficiency(double value) { m_hotWaterDistributionEfficiency = value; }
 
-  double hotWaterSystemEfficiency() const { return m_hotWaterSystemEfficiency; }
+  [[nodiscard]] double hotWaterSystemEfficiency() const { return m_hotWaterSystemEfficiency; }
   void setHotWaterSystemEfficiency(double value) { m_hotWaterSystemEfficiency = value; }
 
-  FuelType hotWaterEnergyType() const { return m_hotWaterEnergyType; }
+  [[nodiscard]] FuelType hotWaterEnergyType() const { return m_hotWaterEnergyType; }
   void setHotWaterEnergyType(FuelType value) { m_hotWaterEnergyType = value; }
 
-  double dT_supp_ht() const { return m_dT_supp_ht; }
+  [[nodiscard]] double dT_supp_ht() const { return m_dT_supp_ht; }
   void setDT_supp_ht(double value) { m_dT_supp_ht = value; }
 
-  bool forcedAirHeating() const { return m_forcedAirHeating; }
+  [[nodiscard]] bool forcedAirHeating() const { return m_forcedAirHeating; }
   void setForcedAirHeating(bool value) { m_forcedAirHeating = value; }
 
-  double E_pumps() const { return m_E_pumps; }
+  [[nodiscard]] double E_pumps() const { return m_E_pumps; }
   void setE_pumps(double value) { m_E_pumps = value; }
 
-  double T_ht_ctrl_flag() const { return m_T_ht_ctrl_flag; }
+  [[nodiscard]] double T_ht_ctrl_flag() const { return m_T_ht_ctrl_flag; }
   void setT_ht_ctrl_flag(double value) { m_T_ht_ctrl_flag = value; }
 
-  double a_H0() const { return m_a_H0; }
+  [[nodiscard]] double a_H0() const { return m_a_H0; }
   void setA_H0(double value) { m_a_H0 = value; }
 
-  double tau_H0() const { return m_tau_H0; }
+  [[nodiscard]] double tau_H0() const { return m_tau_H0; }
   void setTau_H0(double value) { m_tau_H0 = value; }
 
-  double DH_YesNo() const { return m_DH_YesNo; }
+  [[nodiscard]] double DH_YesNo() const { return m_DH_YesNo; }
   void setDH_YesNo(double value) { m_DH_YesNo = value; }
 
-  double eta_DH_network() const { return m_eta_DH_network; }
+  [[nodiscard]] double eta_DH_network() const { return m_eta_DH_network; }
   void setEta_DH_network(double value) { m_eta_DH_network = value; }
 
-  double eta_DH_sys() const { return m_eta_DH_sys; }
+  [[nodiscard]] double eta_DH_sys() const { return m_eta_DH_sys; }
   void setEta_DH_sys(double value) { m_eta_DH_sys = value; }
 
-  double frac_DH_free() const { return m_frac_DH_free; }
+  [[nodiscard]] double frac_DH_free() const { return m_frac_DH_free; }
   void setFrac_DH_free(double value) { m_frac_DH_free = value; }
 
-  double dhw_tset() const { return m_dhw_tset; }
+  [[nodiscard]] double dhw_tset() const { return m_dhw_tset; }
   void setDhw_tset(double value) { m_dhw_tset = value; }
 
-  double dhw_tsupply() const { return m_dhw_tsupply; }
+  [[nodiscard]] double dhw_tsupply() const { return m_dhw_tsupply; }
   void setDhw_tsupply(double value) { m_dhw_tsupply = value; }
 
 private:

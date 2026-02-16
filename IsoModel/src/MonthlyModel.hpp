@@ -28,7 +28,7 @@ public:
    * given set of input parameters. returns a vector of EndUses, one EndUses per
    * month of the year
    */
-  std::vector<EndUses> simulate() const;
+  [[nodiscard]] std::vector<EndUses> simulate() const;
 
   struct AnnualLightingHours {
     double t_lt_D;

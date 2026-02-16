@@ -16,7 +16,7 @@ public:
    * closed interval. For example, a "nine to five" eight hour day would have
    * hoursStart() == 9 and hoursEnd() == 16.
    */
-  double hoursStart() const { return m_hoursStart; }
+  [[nodiscard]] double hoursStart() const { return m_hoursStart; }
   void setHoursStart(double value) { m_hoursStart = value; }
 
   /**
@@ -24,7 +24,7 @@ public:
    * closed interval. For example, a "nine to five" eight hour day would have
    * hoursStart() == 9 and hoursEnd() == 16.
    */
-  double hoursEnd() const { return m_hoursEnd; }
+  [[nodiscard]] double hoursEnd() const { return m_hoursEnd; }
   void setHoursEnd(double value) { m_hoursEnd = value; }
 
   /**
@@ -32,7 +32,7 @@ public:
    * interval. For example, a "mondey to friday" five day work week would have
    * daysStart() == 1 and daysEnd() == 5.
    */
-  double daysStart() const { return m_daysStart; }
+  [[nodiscard]] double daysStart() const { return m_daysStart; }
   void setDaysStart(double value) { m_daysStart = value; }
 
   /**
@@ -40,29 +40,29 @@ public:
    * interval. For example, a "mondey to friday" five day work week would have
    * daysStart() == 1 and daysEnd() == 5.
    */
-  double daysEnd() const { return m_daysEnd; }
+  [[nodiscard]] double daysEnd() const { return m_daysEnd; }
   void setDaysEnd(double value) { m_daysEnd = value; }
 
   /**
    * People density occupied (m2/person).
    */
-  double densityOccupied() const { return m_densityOccupied; }
+  [[nodiscard]] double densityOccupied() const { return m_densityOccupied; }
   void setDensityOccupied(double value) { m_densityOccupied = value; }
 
   /**
    * People density unoccupied (m2/person).
    */
-  double densityUnoccupied() const { return m_densityUnoccupied; }
+  [[nodiscard]] double densityUnoccupied() const { return m_densityUnoccupied; }
   void setDensityUnoccupied(double value) { m_densityUnoccupied = value; }
 
   /**
    * Heat gain per person (W/m2).
    */
-  double heatGainPerPerson() const { return m_heatGainPerPerson; }
+  [[nodiscard]] double heatGainPerPerson() const { return m_heatGainPerPerson; }
   void setHeatGainPerPerson(double value) { m_heatGainPerPerson = value; }
 
   // TODO: These properties aren't used by the simulations yet -BAA@2015-06-18
-  std::string scheduleFilePath() const { return m_scheduleFilePath; }
+  [[nodiscard]] std::string scheduleFilePath() const { return m_scheduleFilePath; }
   void setScheduleFilePath(std::string scheduleFilePath) { m_scheduleFilePath = scheduleFilePath; }
 
 private:

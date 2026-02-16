@@ -15,20 +15,20 @@ public:
    * Illum controls are set to 1 if there is no control.
    * See iso 15193 Annex F/G for values.
    */
-  double lightingOccupancySensor() const { return m_lightingOccupancySensor; }
+  [[nodiscard]] double lightingOccupancySensor() const { return m_lightingOccupancySensor; }
   void setLightingOccupancySensor(double value) { m_lightingOccupancySensor = value; }
 
   /**
    * Constant illumination control multiplier (unitless).
    * Illum controls are set to 1 if there is no control.
    */
-  double constantIllumination() const { return m_constantIllumination; }
+  [[nodiscard]] double constantIllumination() const { return m_constantIllumination; }
   void setConstantIllumination(double value) { m_constantIllumination = value; }
 
   /**
    * Electric appliance power density occupied (W/m2).
    */
-  double electricApplianceHeatGainOccupied() const { return m_electricApplianceHeatGainOccupied; }
+  [[nodiscard]] double electricApplianceHeatGainOccupied() const { return m_electricApplianceHeatGainOccupied; }
   void setElectricApplianceHeatGainOccupied(double value) {
     m_electricApplianceHeatGainOccupied = value;
   }
@@ -36,7 +36,7 @@ public:
   /**
    * Electric appliance power density unoccupied (W/m2).
    */
-  double electricApplianceHeatGainUnoccupied() const {
+  [[nodiscard]] double electricApplianceHeatGainUnoccupied() const {
     return m_electricApplianceHeatGainUnoccupied;
   }
   void setElectricApplianceHeatGainUnoccupied(double value) {
@@ -46,46 +46,46 @@ public:
   /**
    * Gas appliance power density occupied (W/m2).
    */
-  double gasApplianceHeatGainOccupied() const { return m_gasApplianceHeatGainOccupied; }
+  [[nodiscard]] double gasApplianceHeatGainOccupied() const { return m_gasApplianceHeatGainOccupied; }
   void setGasApplianceHeatGainOccupied(double value) { m_gasApplianceHeatGainOccupied = value; }
 
   /**
    * Gas appliance power density unoccupied (W/m2).
    */
-  double gasApplianceHeatGainUnoccupied() const { return m_gasApplianceHeatGainUnoccupied; }
+  [[nodiscard]] double gasApplianceHeatGainUnoccupied() const { return m_gasApplianceHeatGainUnoccupied; }
   void setGasApplianceHeatGainUnoccupied(double value) { m_gasApplianceHeatGainUnoccupied = value; }
 
   /**
    * Building energy management temperature adjustment (K).
    */
-  double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
+  [[nodiscard]] double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
   void setBuildingEnergyManagement(double value) { m_buildingEnergyManagement = value; }
 
   /**
    * External equipment energy use (W).
    */
-  double externalEquipment() const { return m_externalEquipment; }
+  [[nodiscard]] double externalEquipment() const { return m_externalEquipment; }
   void setExternalEquipment(double externalEquipment) { m_externalEquipment = externalEquipment; }
 
   // Unused properties preserved for interface compatibility
-  double electricAppliancePowerFixedOccupied() const {
+  [[nodiscard]] double electricAppliancePowerFixedOccupied() const {
     return m_electricAppliancePowerFixedOccupied;
   }
   void setElectricAppliancePowerFixedOccupied(double value) {
     m_electricAppliancePowerFixedOccupied = value;
   }
 
-  double electricAppliancePowerFixedUnoccupied() const {
+  [[nodiscard]] double electricAppliancePowerFixedUnoccupied() const {
     return m_electricAppliancePowerFixedUnoccupied;
   }
   void setElectricAppliancePowerFixedUnoccupied(double value) {
     m_electricAppliancePowerFixedUnoccupied = value;
   }
 
-  double gasAppliancePowerFixedOccupied() const { return m_gasAppliancePowerFixedOccupied; }
+  [[nodiscard]] double gasAppliancePowerFixedOccupied() const { return m_gasAppliancePowerFixedOccupied; }
   void setGasAppliancePowerFixedOccupied(double value) { m_gasAppliancePowerFixedOccupied = value; }
 
-  double gasAppliancePowerFixedUnoccupied() const { return m_gasAppliancePowerFixedUnoccupied; }
+  [[nodiscard]] double gasAppliancePowerFixedUnoccupied() const { return m_gasAppliancePowerFixedUnoccupied; }
   void setGasAppliancePowerFixedUnoccupied(double value) {
     m_gasAppliancePowerFixedUnoccupied = value;
   }

@@ -16,7 +16,7 @@ public:
     }
   }
 
-  double getEndUse(int index) const {
+  [[nodiscard]] double getEndUse(int index) const {
     if (index >= 0 && index < static_cast<int>(_endUses.size())) {
       return _endUses[index];
     }
