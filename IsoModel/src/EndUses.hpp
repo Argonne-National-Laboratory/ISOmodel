@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_ENDUSES_HPP
-#define ISOMODEL_ENDUSES_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #include <vector> // Ensure vector is available for both modes
@@ -105,4 +103,3 @@ private:
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_ENDUSES_HPP

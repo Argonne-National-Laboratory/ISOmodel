@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_TIMEFRAME_HPP
-#define ISOMODEL_TIMEFRAME_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -39,4 +37,3 @@ public:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_TIMEFRAME_HPP

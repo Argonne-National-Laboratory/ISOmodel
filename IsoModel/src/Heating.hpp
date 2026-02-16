@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_HEATING_HPP
-#define ISOMODEL_HEATING_HPP
-
+#pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
@@ -111,4 +109,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_HEATING_HPP

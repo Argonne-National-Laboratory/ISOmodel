@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_EPW_DATA_HPP
-#define ISOMODEL_EPW_DATA_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #include <memory>
@@ -84,4 +82,3 @@ public:
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_EPW_DATA_HPP

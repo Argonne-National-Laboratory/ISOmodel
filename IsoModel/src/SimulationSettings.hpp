@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_SIMULATIONSETTINGS_HPP
-#define ISOMODEL_SIMULATIONSETTINGS_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -48,4 +46,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_SIMULATIONSETTINGS_HPP

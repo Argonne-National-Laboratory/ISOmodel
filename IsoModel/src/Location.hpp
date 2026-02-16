@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_LOCATION_HPP
-#define ISOMODEL_LOCATION_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 #include "WeatherData.hpp"
 
@@ -36,4 +34,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_LOCATION_HPP

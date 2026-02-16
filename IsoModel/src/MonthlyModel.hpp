@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_MONTHLYMODEL_HPP
-#define ISOMODEL_MONTHLYMODEL_HPP
-
+#pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
@@ -180,4 +178,3 @@ private:
 };
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_MONTHLYMODEL_HPP

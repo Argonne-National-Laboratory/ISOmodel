@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_WEATHER_DATA_HPP
-#define ISOMODEL_WEATHER_DATA_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #ifdef ISOMODEL_STANDALONE
@@ -76,4 +74,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_WEATHER_DATA_HPP

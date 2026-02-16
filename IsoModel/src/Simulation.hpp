@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_SIMULATION_HPP
-#define ISOMODEL_SIMULATION_HPP
-
+#pragma once
 #include "Building.hpp"
 #include "Cooling.hpp"
 #include "EpwData.hpp"
@@ -54,4 +52,3 @@ protected:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_SIMULATION_HPP

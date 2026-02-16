@@ -8,9 +8,7 @@
  * - Marked helper functions as inline for loop performance
  */
 
-#ifndef ISOMODEL_HOURLYMODEL_HPP
-#define ISOMODEL_HOURLYMODEL_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
@@ -178,4 +176,3 @@ public: // Changed from private to public
 };
 } // namespace openstudio::isomodel
 
-#endif

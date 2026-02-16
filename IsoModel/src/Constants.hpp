@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_CONSTANTS_HPP
-#define ISOMODEL_CONSTANTS_HPP
-
+#pragma once
 #include <array>
 #include <limits>
 #include <map>
@@ -192,4 +190,3 @@ constexpr double DEFAULT_DC_COP = 5.5;
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_CONSTANTS_HPP

@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_VENTILATION_HPP
-#define ISOMODEL_VENTILATION_HPP
-
+#pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
@@ -172,4 +170,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_VENTILATION_HPP

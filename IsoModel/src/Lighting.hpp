@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_LIGHTING_HPP
-#define ISOMODEL_LIGHTING_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -102,4 +100,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_LIGHTING_HPP

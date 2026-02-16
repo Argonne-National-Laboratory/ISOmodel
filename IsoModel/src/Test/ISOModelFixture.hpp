@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_TEST_ISOMODELFIXTURE_HPP
-#define ISOMODEL_TEST_ISOMODELFIXTURE_HPP
-
+#pragma once
 #include <gtest/gtest.h>
 
 #ifdef ISOMODEL_STANDALONE
@@ -45,4 +43,3 @@ protected:
 #endif
 };
 
-#endif // ISOMODEL_TEST_ISOMODELFIXTURE_HPP

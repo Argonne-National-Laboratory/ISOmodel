@@ -1,7 +1,5 @@
 // C++ Schedules.hpp
-#ifndef ISOMODEL_SCHEDULES_HPP
-#define ISOMODEL_SCHEDULES_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp" // For ISOMODEL_API macro
 #include "MathHelpers.hpp"
 
@@ -107,4 +105,3 @@ ISOMODEL_API MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel:
 
 } // namespace openstudio::isomodel::schedules
 
-#endif // ISOMODEL_SCHEDULES_HPP

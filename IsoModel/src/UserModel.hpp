@@ -1,7 +1,5 @@
 
-#ifndef ISOMODEL_USERMODEL_HPP
-#define ISOMODEL_USERMODEL_HPP
-
+#pragma once
 #include "Constants.hpp" // Added to access ConfigStrings and Physics constants
 #include "EpwData.hpp"
 #include "HourlyModel.hpp"
@@ -1577,4 +1575,3 @@ private:
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_USERMODEL_HPP

@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_BUILDING_HPP
-#define ISOMODEL_BUILDING_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 
@@ -110,4 +108,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_BUILDING_HPP

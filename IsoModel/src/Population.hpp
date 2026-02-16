@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_POPULATION_HPP
-#define ISOMODEL_POPULATION_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #include <string>
@@ -83,4 +81,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_POPULATION_HPP

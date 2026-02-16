@@ -1,7 +1,5 @@
 
-#ifndef ISOMODEL_ISORESULTS_HPP
-#define ISOMODEL_ISORESULTS_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #include <vector>
@@ -20,4 +18,3 @@ ISOMODEL_API double totalEnergyUse(const std::vector<EndUses> &results);
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_ISORESULTS_HPP

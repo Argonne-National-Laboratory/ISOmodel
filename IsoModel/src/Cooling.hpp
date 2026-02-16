@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_COOLING_HPP
-#define ISOMODEL_COOLING_HPP
-
+#pragma once
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -82,4 +80,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_COOLING_HPP

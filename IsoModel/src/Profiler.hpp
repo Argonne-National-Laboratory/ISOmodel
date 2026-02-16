@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_PROFILER_HPP
-#define ISOMODEL_PROFILER_HPP
-
+#pragma once
 // Master switch for profiling. This will be defined via CMake for specific builds.
 // If PROFILING_ENABLED is not defined or is 0, all profiling code compiles to nothing.
 // Example: #define PROFILING_ENABLED 1
@@ -137,4 +135,3 @@ private:
 
 #endif // PROFILING_ENABLED
 
-#endif // ISOMODEL_PROFILER_HPP

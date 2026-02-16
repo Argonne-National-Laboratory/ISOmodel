@@ -1,6 +1,4 @@
-#ifndef ISOMODEL_MATHHELPERS_HPP
-#define ISOMODEL_MATHHELPERS_HPP
-
+#pragma once
 #include "Constants.hpp"
 
 #include <algorithm>
@@ -336,4 +334,3 @@ inline double sum(const Vector &v1) {
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_MATHHELPERS_HPP

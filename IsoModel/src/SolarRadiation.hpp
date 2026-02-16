@@ -11,9 +11,7 @@
  * Beckman.
  */
 
-#ifndef ISOMODEL_SOLAR_RADIATION_HPP
-#define ISOMODEL_SOLAR_RADIATION_HPP
-
+#pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "TimeFrame.hpp"
@@ -212,4 +210,3 @@ public:
 };
 
 } // namespace openstudio::isomodel
-#endif
