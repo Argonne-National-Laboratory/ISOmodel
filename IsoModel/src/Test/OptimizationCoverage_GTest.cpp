@@ -1,8 +1,6 @@
-/*
- * OptimizationCoverage_GTest.cpp
- *
- * Verifies correctness of recent C++20 optimizations and constant replacements.
- */
+// OptimizationCoverage_GTest.cpp
+//
+// Verifies correctness of recent C++20 optimizations and constant replacements.
 
 #include "../Constants.hpp"
 #include "../EpwData.hpp"

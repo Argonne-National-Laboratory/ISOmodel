@@ -1,12 +1,10 @@
-/*
- * HourlyModel.hpp
- *
- * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
- * - Renamed A_floor_inv -> invFloorArea
- * - Added static optimization members (win_floor_ratio, invFloorArea)
- * - Added persistent result vectors to reduce heap allocation overhead
- * - Marked helper functions as inline for loop performance
- */
+// HourlyModel.hpp
+//
+// REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
+// - Renamed A_floor_inv -> invFloorArea
+// - Added static optimization members (win_floor_ratio, invFloorArea)
+// - Added persistent result vectors to reduce heap allocation overhead
+// - Marked helper functions as inline for loop performance
 
 #pragma once
 #include "EndUses.hpp"

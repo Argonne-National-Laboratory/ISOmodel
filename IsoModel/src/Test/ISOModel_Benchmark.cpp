@@ -1,8 +1,6 @@
-/*
- * ISOModel_Benchmark.cpp
- * Refactored to ensure standard C++ compatibility while preserving all original
- * benchmark loops.
- */
+// ISOModel_Benchmark.cpp
+// Refactored to ensure standard C++ compatibility while preserving all original
+// benchmark loops.
 #include "../HourlyModel.hpp"
 #include "../MonthlyModel.hpp"
 #include "../Profiler.hpp" // Include the new profiler

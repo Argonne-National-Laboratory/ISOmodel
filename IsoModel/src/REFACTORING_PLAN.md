@@ -499,7 +499,9 @@ No C-style array declarations remain in headers or implementation files.
 
 ## 17. Documentation Consistency
 
-**Problem:** Documentation style varies:
+**Status: ✅ COMPLETE (comment style standardization)**
+
+**Problem:** Documentation style varied:
 
 | Style | Example | Files |
 |-------|---------|-------|
@@ -508,14 +510,25 @@ No C-style array declarations remain in headers or implementation files.
 | C `/* ... */` block | `/* SolarRadiation.hpp ... */` | `SolarRadiation.hpp`, `HourlyModel.hpp` |
 | No documentation | Most getters in `Cooling.hpp`, `Heating.hpp` | Various |
 
-**Proposed Fix:**
-- Standardize on `///` (Doxygen-compatible single-line) for brief docs
-- Use `/** ... */` for multi-line documentation blocks
-- Add units and ISO standard references to all physical quantity getters:
-  ```cpp
-  /// Floor area [m²]
-  double floorArea() const noexcept { return m_floorArea; }
-  ```
+**Convention (see CODING_STYLE.md §9):**
+- `//` for regular comments, `///` for Doxygen doc comments, `///<` for inline member docs
+- No `/* ... */` or `/** ... */` block comments anywhere
+- Multiline docs use stacked `///` lines
+
+**Changes made:**
+- Converted ~93 `/** ... */` Doxygen blocks → `///` in: `Building.hpp`, `Location.hpp`,
+  `MonthlyModel.hpp`, `Population.hpp`, `Schedules.hpp`, `SimulationSettings.hpp`,
+  `Structure.hpp`, `TimeFrame.hpp`, `UserModel.hpp`, `Ventilation.hpp`, `WeatherData.hpp`,
+  `MonthlyModel.cpp`
+- Converted `/* ... */` file headers → `//` in: `SolarRadiation.hpp`, `SolarRadiation.cpp`,
+  `HourlyModel.hpp`, `HourlyModel.cpp`, `standalone_main.cpp`,
+  `Test/ISOModel_Benchmark.cpp`, `Test/OptimizationCoverage_GTest.cpp`, `Test/solar_debug.cpp`
+- Converted `/* ... */` inline blocks → `//` in `MonthlyModel.cpp` (district H/C code, debug output)
+- Converted `mainpage.hpp` from `/** \mainpage */` to `/// \mainpage`
+- Added CODING_STYLE.md §9 (Comment Style)
+
+**Remaining (future work):** Add units and ISO standard references to undocumented getters
+in `Cooling.hpp`, `Heating.hpp`, `Lighting.hpp`, etc.
 
 ---
 
@@ -623,7 +636,7 @@ No C-style array declarations remain in headers or implementation files.
 - [ ] Run tests ✓
 
 ### Phase 6: Documentation & Polish
-- [ ] Standardize documentation style across all files (§17)
+- [x] Standardize documentation style across all files (§17) — comment style done
 - [ ] Add units and ISO references to all physical quantity accessors
 - [ ] Add ISO equation variable cross-reference comments to all ISO-notation accessors
 - [x] Modernize test code (§18)
@@ -648,7 +661,7 @@ No C-style array declarations remain in headers or implementation files.
 | Error handling | Exceptions for runtime errors | Consistent, modern C++ |
 | `ISOMODEL_STANDALONE` | Remove non-standalone branches | Dead code, always defined |
 | Backward compatibility | `[[deprecated]]` wrappers during transition | Source-compatible migration path |
-| Documentation | `///` single-line, `/** */` multi-line | Doxygen-compatible |
+| Documentation | `///` everywhere (no `/* */`) | Doxygen-compatible |
 
 ---
 

@@ -35,45 +35,31 @@ public:
   UserModel() = default;
   virtual ~UserModel() = default;
 
-  /**
-   * Loads an ISO model from the specified .ism file
-   */
+  /// Loads an ISO model from the specified .ism file
   void load(std::string buildingFile);
 
-  /**
-   * Loads an ISO model file from the specified .ism file and defaults
-   * properties from the specified .ism.
-   */
+  /// Loads an ISO model file from the specified .ism file and defaults
+  /// properties from the specified .ism.
   void load(std::string buildingFile, std::string defaultsFile);
 
-  /**
-   * Loads the specified weather data from disk.
-   * Exposed to allow for separate loading from Ruby Scripts
-   * Call setWeatherFilePath(path) then loadWeather() to update
-   * the UserModel with a new set of weather data
-   */
+  /// Loads the specified weather data from disk.
+  /// Exposed to allow for separate loading from Ruby Scripts
+  /// Call setWeatherFilePath(path) then loadWeather() to update
+  /// the UserModel with a new set of weather data
   void loadWeather();
 
-  /**
-   * Loads the weather from the specified array of doubles.
-   */
+  /// Loads the weather from the specified array of doubles.
   void loadWeather(int block_size, double *weather_data);
 
   void loadAndSetWeather();
 
-  /**
-   * Generates a MonthlyModel from the properties of the UserModel.
-   */
+  /// Generates a MonthlyModel from the properties of the UserModel.
   [[nodiscard]] MonthlyModel toMonthlyModel() const;
 
-  /**
-   * Generates an HourlyModel from the properties of the UserModel.
-   */
+  /// Generates an HourlyModel from the properties of the UserModel.
   [[nodiscard]] HourlyModel toHourlyModel() const;
 
-  /**
-   * Indicates whether or not the user model loaded in correctly.
-   */
+  /// Indicates whether or not the user model loaded in correctly.
   [[nodiscard]] bool valid() const noexcept { return _valid; }
 
   // Validation

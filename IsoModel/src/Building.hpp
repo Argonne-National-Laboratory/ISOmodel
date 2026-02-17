@@ -10,26 +10,20 @@ public:
   Building() = default;
   ~Building() = default;
 
-  /**
-   * lighting occupancy sensor dimming fraction (unitless).
-   * Illum controls are set to 1 if there is no control.
-   * See iso 15193 Annex F/G for values.
-   */
+  /// lighting occupancy sensor dimming fraction (unitless).
+  /// Illum controls are set to 1 if there is no control.
+  /// See iso 15193 Annex F/G for values.
   [[nodiscard]] double lightingOccupancySensor() const noexcept {
     return m_lightingOccupancySensor;
   }
   void setLightingOccupancySensor(double value) { m_lightingOccupancySensor = value; }
 
-  /**
-   * Constant illumination control multiplier (unitless).
-   * Illum controls are set to 1 if there is no control.
-   */
+  /// Constant illumination control multiplier (unitless).
+  /// Illum controls are set to 1 if there is no control.
   [[nodiscard]] double constantIllumination() const noexcept { return m_constantIllumination; }
   void setConstantIllumination(double value) { m_constantIllumination = value; }
 
-  /**
-   * Electric appliance power density occupied (W/m2).
-   */
+  /// Electric appliance power density occupied (W/m2).
   [[nodiscard]] double electricApplianceHeatGainOccupied() const noexcept {
     return m_electricApplianceHeatGainOccupied;
   }
@@ -37,9 +31,7 @@ public:
     m_electricApplianceHeatGainOccupied = value;
   }
 
-  /**
-   * Electric appliance power density unoccupied (W/m2).
-   */
+  /// Electric appliance power density unoccupied (W/m2).
   [[nodiscard]] double electricApplianceHeatGainUnoccupied() const noexcept {
     return m_electricApplianceHeatGainUnoccupied;
   }
@@ -47,33 +39,25 @@ public:
     m_electricApplianceHeatGainUnoccupied = value;
   }
 
-  /**
-   * Gas appliance power density occupied (W/m2).
-   */
+  /// Gas appliance power density occupied (W/m2).
   [[nodiscard]] double gasApplianceHeatGainOccupied() const noexcept {
     return m_gasApplianceHeatGainOccupied;
   }
   void setGasApplianceHeatGainOccupied(double value) { m_gasApplianceHeatGainOccupied = value; }
 
-  /**
-   * Gas appliance power density unoccupied (W/m2).
-   */
+  /// Gas appliance power density unoccupied (W/m2).
   [[nodiscard]] double gasApplianceHeatGainUnoccupied() const noexcept {
     return m_gasApplianceHeatGainUnoccupied;
   }
   void setGasApplianceHeatGainUnoccupied(double value) { m_gasApplianceHeatGainUnoccupied = value; }
 
-  /**
-   * Building energy management temperature adjustment (K).
-   */
+  /// Building energy management temperature adjustment (K).
   [[nodiscard]] double buildingEnergyManagement() const noexcept {
     return m_buildingEnergyManagement;
   }
   void setBuildingEnergyManagement(double value) { m_buildingEnergyManagement = value; }
 
-  /**
-   * External equipment energy use (W).
-   */
+  /// External equipment energy use (W).
   [[nodiscard]] double externalEquipment() const noexcept { return m_externalEquipment; }
   void setExternalEquipment(double externalEquipment) { m_externalEquipment = externalEquipment; }
 

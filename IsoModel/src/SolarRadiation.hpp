@@ -1,15 +1,13 @@
-/*
- * SolarRadiation.hpp
- *
- * REFACTORING: PERFORMANCE & MEMORY OPTIMIZATION
- * 1. Memory: Flattened 2D vectors to 1D to reduce heap fragmentation and
- * allocation cost.
- * 2. Lazy Allocation: Statistical vectors are now allocated only when
- * Calculate(true) is called.
- * 3. Physics: Pre-calculation of daily solar geometry.
- * 4. Documentation: Includes equation references to ASHRAE 2013 and Duffie &
- * Beckman.
- */
+// SolarRadiation.hpp
+//
+// REFACTORING: PERFORMANCE & MEMORY OPTIMIZATION
+// 1. Memory: Flattened 2D vectors to 1D to reduce heap fragmentation and
+// allocation cost.
+// 2. Lazy Allocation: Statistical vectors are now allocated only when
+// Calculate(true) is called.
+// 3. Physics: Pre-calculation of daily solar geometry.
+// 4. Documentation: Includes equation references to ASHRAE 2013 and Duffie &
+// Beckman.
 
 #pragma once
 #include "Constants.hpp"

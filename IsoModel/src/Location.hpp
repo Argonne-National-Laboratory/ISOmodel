@@ -12,17 +12,13 @@ public:
   Location() = default;
   ~Location() = default;
 
-  /**
-   * Terrain class (urban/city = 0.8, suburban/some shielding = 0.9,
-   * country/open = 1.0).
-   */
+  /// Terrain class (urban/city = 0.8, suburban/some shielding = 0.9,
+  /// country/open = 1.0).
   [[nodiscard]] double terrain() const noexcept { return m_terrain; }
 
   void setTerrain(double value) { m_terrain = value; }
 
-  /**
-   * Pointer to weather data. Contains data extracted/computed from .epw file.
-   */
+  /// Pointer to weather data. Contains data extracted/computed from .epw file.
   [[nodiscard]] std::shared_ptr<WeatherData> weather() const noexcept { return m_weather; }
 
   void setWeatherData(std::shared_ptr<WeatherData> value) { m_weather = value; }

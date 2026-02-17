@@ -1,13 +1,11 @@
-/*
- * HourlyModel.cpp
- *
- * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE
- * - Renamed A_floor_inv -> invFloorArea
- * - Replaced harmonic mean divisions with multiplication (algebraic
- * simplification).
- * - Removed smallEpsilon where algebra safely handles zero values.
- * - Reused member vectors to eliminate heap allocation in main loop.
- */
+// HourlyModel.cpp
+//
+// REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE
+// - Renamed A_floor_inv -> invFloorArea
+// - Replaced harmonic mean divisions with multiplication (algebraic
+// simplification).
+// - Removed smallEpsilon where algebra safely handles zero values.
+// - Reused member vectors to eliminate heap allocation in main loop.
 
 #include "HourlyModel.hpp"
 

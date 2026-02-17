@@ -6,10 +6,8 @@
 
 namespace openstudio::isomodel {
 
-/**
- * Simple data structure that allows conversion from the hour of the year
- * to a variety of useful times (day of week, month, etc.).
- */
+/// Simple data structure that allows conversion from the hour of the year
+/// to a variety of useful times (day of week, month, etc.).
 class ISOMODEL_API TimeFrame {
 public:
   // Constructor keeps implementation in cpp to populate arrays

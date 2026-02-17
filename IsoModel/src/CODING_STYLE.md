@@ -163,3 +163,35 @@ if constexpr (DEBUG_ISO_MODEL_SIMULATION) {
   std::cerr << "Debug: theta_air = " << theta_air << "\n";
 }
 ```
+
+---
+
+## 9. Comment Style
+
+Use C++ line comments (`//`) everywhere. Do **not** use C-style block comments (`/* ... */`).
+
+| Purpose | Style | Example |
+|---------|-------|---------|
+| Regular comment | `//` | `// Calculate heat transfer coefficient.` |
+| Doxygen doc comment | `///` | `/// Floor area [m²].` |
+| Inline member doc | `///<` | `double m_area; ///< Floor area [m²].` |
+
+For multiline documentation, stack `///` lines:
+
+```cpp
+/// Calculate the solar radiation for a given surface.
+///
+/// @param tilt Surface tilt angle in radians.
+/// @param azimuth Surface azimuth angle in radians.
+/// @return Total solar radiation in W/m².
+double calcSolarRadiation(double tilt, double azimuth);
+```
+
+For file headers, use `//`:
+
+```cpp
+// SolarRadiation.hpp
+//
+// Solar radiation calculations based on ASHRAE Fundamentals 2013
+// and Duffie & Beckman.
+```

@@ -1,15 +1,13 @@
-/*
- * SolarRadiation.cpp
- *
- * REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
- * 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
- * lazy-loaded.
- * 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
- * per year, not checked per hour. This fixes potential day-shift bugs.
- * 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
- * 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
- * Duffie & Beckman.
- */
+// SolarRadiation.cpp
+//
+// REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
+// 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
+// lazy-loaded.
+// 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
+// per year, not checked per hour. This fixes potential day-shift bugs.
+// 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
+// 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
+// Duffie & Beckman.
 
 #include "SolarRadiation.hpp"
 

@@ -1,9 +1,7 @@
-/*
- * solar_debug.cpp
- *
- * Refactored to remove boost dependencies and ensure output prints regardless
- * of global debug flags.
- */
+// solar_debug.cpp
+//
+// Refactored to remove boost dependencies and ensure output prints regardless
+// of global debug flags.
 
 #include "../MonthlyModel.hpp"
 #include "../SolarRadiation.hpp"

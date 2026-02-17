@@ -1,7 +1,5 @@
-/*
- * standalone_main.cpp
- * * Compatible with the Original Interface (std::vector<EndUses>)
- */
+// standalone_main.cpp
+// * Compatible with the Original Interface (std::vector<EndUses>)
 
 #include "HourlyModel.hpp"
 #include "MonthlyModel.hpp"

@@ -64,10 +64,8 @@ MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting &lights,
   return result;
 }
 
-/**
- * Breaks down the solar radiation and temperature data into day, night,
- * weekday and weekend vectors, as appropriate.
- */
+/// Breaks down the solar radiation and temperature data into day, night,
+/// weekday and weekend vectors, as appropriate.
 void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   const Matrix &m_mhEgh = m_location.weather()->mhEghRef();
@@ -133,9 +131,7 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
   }
 }
 
-/**
- * Compute lighting energy use as per prEN 15193:2006.
- */
+/// Compute lighting energy use as per prEN 15193:2006.
 void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   double lpd_occ = m_lights.powerDensityOccupied();
@@ -168,9 +164,7 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   }
 }
 
-/**
- * Compute envelope parameters as per ISO 13790 8.3.
- */
+/// Compute envelope parameters as per ISO 13790 8.3.
 void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   const Vector &v_wall_A = m_structure.wallAreaRef();
@@ -196,9 +190,7 @@ void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   simData.H_tr = H_D + H_g + H_U + H_A;
 }
 
-/*
- * Compute window solar gain per ISO 13790 11.3.
- */
+// Compute window solar gain per ISO 13790 11.3.
 void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: The solar heat gain could be improved
@@ -300,9 +292,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   }
 }
 
-/**
- * Compute internal heat gains and losses.
- */
+/// Compute internal heat gains and losses.
 void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
@@ -337,9 +327,7 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
       (simData.phi_int_avg + simData.phi_plug_avg + simData.phi_illum_avg) * floor_area;
 }
 
-/**
- * Compute unoccupied heat gain.
- */
+/// Compute unoccupied heat gain.
 void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
 
@@ -376,9 +364,7 @@ void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   }
 }
 
-/*
- * Calculate interior temp.
- */
+// Calculate interior temp.
 void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Set the temp differential from the interior heating/cooling setpoint
@@ -492,10 +478,8 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   }
 }
 
-/**
- * Calculate required energy for mechanical m_ventilation based on source EN ISO
- * 13789 C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
- */
+/// Calculate required energy for mechanical m_ventilation based on source EN ISO
+/// 13789 C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
 void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather references
@@ -624,9 +608,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   }
 }
 
-/**
- * Compute monthly m_heating and m_cooling demand.
- */
+/// Compute monthly m_heating and m_cooling demand.
 void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather reference
@@ -720,9 +702,7 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
   }
 }
 
-/**
- * HVAC systems calculations.
- */
+/// HVAC systems calculations.
 void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: Implement (or remove) all the district heating/cooling stuff that is
@@ -730,23 +710,21 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
 
   // From original matlab code. Preserved for future implementation of district
   // heating/cooling. BAA@2015-07-15.
-  /*
-      %% District H/C info
-
-      DH_YesNo =0;  % m_building connected to DH (0=no, 1=yes.  Assume DH is
-     powered by natural gas) n_eta_DH_network = 0.9; % efficiency of DH network.
-     Typical value 0l75-0l9 EN 15316-4-5 n_eta_DH_sys = 0.87; % efficiency of DH
-     m_heating system n_frac_DH_free = 0.000; % fraction of free heat source to DH
-     (0 to 1)
-
-      DC_YesNo = 0;  % m_building connected to DC (0=no, 1=yes)
-      n_eta_DC_network = 0.9;  % efficiency of DC network.
-      n_eta_DC_COP = 5.5;  % COP of DC elec Chillers
-      n_eta_DC_frac_abs = 0;  % fraction of DC chillers that are absorption
-      n_eta_DC_COP_abs = 1;  % COP of DC absorption chillers
-      n_frac_DC_free = 0;  % fraction of free heat source to absorption DC
-     chillers (0 to 1)
-      */
+  // %% District H/C info
+  // 
+  // DH_YesNo =0;  % m_building connected to DH (0=no, 1=yes.  Assume DH is
+  // powered by natural gas) n_eta_DH_network = 0.9; % efficiency of DH network.
+  // Typical value 0l75-0l9 EN 15316-4-5 n_eta_DH_sys = 0.87; % efficiency of DH
+  // m_heating system n_frac_DH_free = 0.000; % fraction of free heat source to DH
+  // (0 to 1)
+  // 
+  // DC_YesNo = 0;  % m_building connected to DC (0=no, 1=yes)
+  // n_eta_DC_network = 0.9;  % efficiency of DC network.
+  // n_eta_DC_COP = 5.5;  % COP of DC elec Chillers
+  // n_eta_DC_frac_abs = 0;  % fraction of DC chillers that are absorption
+  // n_eta_DC_COP_abs = 1;  % COP of DC absorption chillers
+  // n_frac_DC_free = 0;  % fraction of free heat source to absorption DC
+  // chillers (0 to 1)
 
   // From EN 15243-2007 Annex E.
   // HVAC system info table from EN 15243:2007 Table E1.
@@ -851,10 +829,8 @@ Vector MonthlyModel::calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
   return div(mult(v_frac_mode, Q_pumps_mode), frac_total + SAFE_EPSILON);
 }
 
-/**
- * Calculate energy for pumps used in the m_heating/m_cooling systems.
- * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
- */
+/// Calculate energy for pumps used in the m_heating/m_cooling systems.
+/// References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
 void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // TODO: The current implementation is wrong. It either needs to be revised to
@@ -896,18 +872,14 @@ void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
   }
 }
 
-/**
- * Energy Generation
- * NOT INCLUDED YET
- */
+/// Energy Generation
+/// NOT INCLUDED YET
 void MonthlyModel::energyGeneration() const {
   PROFILE_FUNCTION();
 }
 
-/**
- * Calculate domestic hot water (DHW).
- * References: NEN 2916 12.2
- */
+/// Calculate domestic hot water (DHW).
+/// References: NEN 2916 12.2
 void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
 
@@ -988,11 +960,11 @@ std::vector<EndUses> MonthlyModel::simulate() const {
     printVector("v_Q_illum_ext_tot", simData.v_Q_illum_ext_tot);
 
     std::cout << std::endl
-              << "envelopeCalculations: " << std::endl; /*
-v_wall_A = m_structure.wallArea();
-v_win_A = m_structure.windowArea();
-v_wall_U = m_structure.wallUniform();
-Vector v_win_U = m_structure.windowUniform();*/
+              << "envelopeCalculations: " << std::endl;
+    // v_wall_A = m_structure.wallArea();
+    // v_win_A = m_structure.windowArea();
+    // v_wall_U = m_structure.wallUniform();
+    // Vector v_win_U = m_structure.windowUniform();
     printVector("m_structure.wallArea()", m_structure.wallArea());
     printVector("m_structure.windowArea()", m_structure.windowArea());
     printVector("m_structure.wallUniform()", m_structure.wallUniform());

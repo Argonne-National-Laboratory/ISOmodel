@@ -68,18 +68,14 @@ struct MonthlyScheduleData final {
   double frac_hrs_wke_tot = 0.0;
 };
 
-/**
- * Try to load hourly schedules from a CSV file.
- * Returns true on success and fills 'data' with 8760 rows (or resized/resampled as original).
- */
+/// Try to load hourly schedules from a CSV file.
+/// Returns true on success and fills 'data' with 8760 rows (or resized/resampled as original).
 ISOMODEL_API bool loadHourlySchedulesFromFile(const std::string &path,
                                               std::vector<LoadedScheduleData> &data);
 
-/**
- * Build the weekly schedules (24 x 7 arrays) from the given model inputs.
- * This mirrors the original HourlyModel::buildWeeklySchedules implementation
- * but takes the necessary objects as parameters so code can live outside HourlyModel.
- */
+/// Build the weekly schedules (24 x 7 arrays) from the given model inputs.
+/// This mirrors the original HourlyModel::buildWeeklySchedules implementation
+/// but takes the necessary objects as parameters so code can live outside HourlyModel.
 ISOMODEL_API void buildWeeklySchedules(const openstudio::isomodel::Population &pop,
                                        const openstudio::isomodel::Ventilation &ventilation,
                                        const openstudio::isomodel::Building &building,
@@ -88,20 +84,16 @@ ISOMODEL_API void buildWeeklySchedules(const openstudio::isomodel::Population &p
                                        const openstudio::isomodel::Cooling &cooling,
                                        WeeklyScheduleData &sched);
 
-/**
- * Orchestrates the loading or generation of hourly schedule data.
- * Returns a vector of ScheduleDataForHourlyCache, which HourlyModel can then use
- * to populate its HourlyCache.
- */
+/// Orchestrates the loading or generation of hourly schedule data.
+/// Returns a vector of ScheduleDataForHourlyCache, which HourlyModel can then use
+/// to populate its HourlyCache.
 ISOMODEL_API std::vector<ScheduleDataForHourlyCache> getHourlySchedules(
     const std::string &hourlySchedulePath, const openstudio::isomodel::Population &pop,
     const openstudio::isomodel::Ventilation &ventilation,
     const openstudio::isomodel::Building &building, const openstudio::isomodel::Lighting &lights,
     const openstudio::isomodel::Heating &heating, const openstudio::isomodel::Cooling &cooling);
 
-/**
- * Generates schedule and occupancy data for the MonthlyModel.
- */
+/// Generates schedule and occupancy data for the MonthlyModel.
 ISOMODEL_API MonthlyScheduleData getMonthlySchedules(const openstudio::isomodel::Population &pop);
 
 } // namespace openstudio::isomodel::schedules

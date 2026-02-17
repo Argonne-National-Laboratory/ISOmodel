@@ -16,18 +16,14 @@ namespace openstudio::isomodel {
 class EndUses;
 class ISOMODEL_API MonthlyModel : public Simulation {
 public:
-  /**
-   * Creates an empty MonthlyModel. Generally, the MonthlyModel should be
-   * created using the UserModel::toMonthlyModel() method.
-   */
+  /// Creates an empty MonthlyModel. Generally, the MonthlyModel should be
+  /// created using the UserModel::toMonthlyModel() method.
   MonthlyModel();
   ~MonthlyModel() override;
 
-  /**
-   * Runs the ISO Model cacluations using the ISO 13790 monthly method for the
-   * given set of input parameters. returns a vector of EndUses, one EndUses per
-   * month of the year
-   */
+  /// Runs the ISO Model cacluations using the ISO 13790 monthly method for the
+  /// given set of input parameters. returns a vector of EndUses, one EndUses per
+  /// month of the year
   [[nodiscard]] std::vector<EndUses> simulate() const;
 
   struct AnnualLightingHours {
