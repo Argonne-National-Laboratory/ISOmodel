@@ -430,9 +430,9 @@ This creates a massive, hard-to-maintain facade with ~200+ forwarding methods.
 
 ### 16a. `[[nodiscard]]` Consistency
 
-**Problem:** `[[nodiscard]]` is used in some places (`UserModel.hpp`, `HourlyModel.hpp`, `MathHelpers.hpp`) but not others.
+**Status: ✅ COMPLETE** (Phase 1f)
 
-**Proposed Fix:** Add `[[nodiscard]]` to all pure getter methods and functions that return computed values. This is a non-breaking addition.
+Added `[[nodiscard]]` to all pure getter methods and functions that return computed values across all header files.
 
 ### 16b. `noexcept` Consistency
 
@@ -462,7 +462,11 @@ void load(std::string buildingFile);                              // copies
 
 ### 16d. Structured Bindings and Range-Based For
 
-Already used in some places (`Profiler.hpp`, `UserModel.hpp`). Ensure consistent use throughout.
+**Status: ✅ COMPLETE (already consistent)**
+
+Audited all loops across the codebase. Findings:
+- **Structured bindings:** Already used in `Profiler.hpp` (line 84). The only other candidate (`UserModel.cpp` YAML iteration) cannot use structured bindings because `YAML::Node`'s iterator type doesn't support decomposition (private members).
+- **Range-based for:** Already used where appropriate (`ISOResults.cpp`, `EpwData.cpp`). The remaining ~65 index-based loops all genuinely require the index for flat array indexing, output numbering, multi-array parallel access, or TimeFrame population. No conversions are warranted.
 
 ### 16e. `enum class` for Boolean-Like Parameters
 
