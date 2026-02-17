@@ -523,11 +523,11 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - `cmake_install.cmake` is a generated file checked into source
 - `old/` directory contains obsolete source files
 
-**Proposed Fix:**
-- Remove `Makefile` if CMake is the canonical build system
-- Add `cmake_install.cmake` to `.gitignore`
-- Remove or archive the `old/` directory
-- Remove `test_data/old/` directory
+**Status: ✅ COMPLETE**
+- ~~Remove `Makefile` if CMake is the canonical build system~~ — Done: `git rm` from tracking, added to `.gitignore`
+- ~~Add `cmake_install.cmake` to `.gitignore`~~ — Done: `git rm` from tracking, added to `.gitignore`
+- ~~Remove or archive the `old/` directory~~ — Done (Phase 1j)
+- ~~Remove `test_data/old/` directory~~ — Done (Phase 1j)
 
 ---
 
