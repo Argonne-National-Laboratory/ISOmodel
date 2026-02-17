@@ -572,9 +572,9 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 **Scope (revised):** Only standardize the `m_` member variable prefix. ISO equation variable names (e.g., `dT_supp_cl`, `eta_DC_COP`, `H_ve`) are **preserved as-is** — see §1 for rationale.
 
-- [ ] **2a.** Rename `_` prefix members to `m_` prefix in `EndUses.hpp` (`_endUses` → `m_endUses`, `_valid` → `m_valid`) (§5)
-- [ ] **2b.** Rename `_` prefix members to `m_` prefix in `UserModel.hpp` (`_edata` → `m_edata`, `_weather` → `m_weather`, `_weatherFilePath` → `m_weatherFilePath`) (§5)
-- [ ] **2c.** Add `m_` prefix to `Simulation.hpp` protected members (`pop` → `m_pop`, `location` → `m_location`, etc.) and update all references in `UserModel.hpp`/`UserModel.cpp` (§5)
+- [x] **2a.** Rename `_` prefix members to `m_` prefix in `EndUses.hpp` (`_endUses` → `m_endUses`, `_valid` → `m_valid`) (§5)
+- [x] **2b.** Rename `_` prefix members to `m_` prefix in `UserModel.hpp` (`_edata` → `m_edata`, `_weather` → `m_weather`, `_weatherFilePath` → `m_weatherFilePath`) (§5)
+- [x] **2c.** Add `m_` prefix to `Simulation.hpp` protected members (`pop` → `m_pop`, `location` → `m_location`, etc.) and update all references in `UserModel.hpp`/`UserModel.cpp` (§5)
 - [ ] **2d.** Restore `HourlyModel` encapsulation — move public members to private, add const accessors (§9)
 - [ ] **2e.** Add naming convention documentation to this file or a `CODING_STYLE.md`
 - [ ] Run tests ✓

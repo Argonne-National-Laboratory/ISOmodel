@@ -9,7 +9,6 @@
 #include "Population.hpp"
 #include "Structure.hpp"
 #include "Ventilation.hpp"
-// REMOVED: #include "PhysicalQuantities.hpp"
 #include "SimulationSettings.hpp"
 
 #include <memory>
@@ -22,33 +21,29 @@ public:
   virtual ~Simulation() = default;
 
   // Setters for the pointers to the classes that store the .ism parameters.
-  void setPop(const Population &value) { pop = value; }
-  void setLocation(const Location &value) { location = value; }
-  void setLights(const Lighting &value) { lights = value; }
-  void setBuilding(const Building &value) { building = value; }
-  void setStructure(const Structure &value) { structure = value; }
-  void setHeating(const Heating &value) { heating = value; }
-  void setCooling(const Cooling &value) { cooling = value; }
-  void setVentilation(const Ventilation &value) { ventilation = value; }
+  void setPop(const Population &value) { m_pop = value; }
+  void setLocation(const Location &value) { m_location = value; }
+  void setLights(const Lighting &value) { m_lights = value; }
+  void setBuilding(const Building &value) { m_building = value; }
+  void setStructure(const Structure &value) { m_structure = value; }
+  void setHeating(const Heating &value) { m_heating = value; }
+  void setCooling(const Cooling &value) { m_cooling = value; }
+  void setVentilation(const Ventilation &value) { m_ventilation = value; }
 
-  void setEpwData(std::shared_ptr<EpwData> value) { epwData = value; }
-  // REMOVED: void setPhysicalQuantities(const PhysicalQuantities& value) { phys
-  // = value; }
-  void setSimulationSettings(const SimulationSettings &value) { simSettings = value; }
+  void setEpwData(std::shared_ptr<EpwData> value) { m_epwData = std::move(value); }
+  void setSimulationSettings(const SimulationSettings &value) { m_simSettings = value; }
 
 protected:
-  // Pointers/Objects that store the .ism parameters.
-  Population pop;
-  Location location;
-  Lighting lights;
-  Building building;
-  Structure structure;
-  Heating heating;
-  Cooling cooling;
-  Ventilation ventilation;
-  std::shared_ptr<EpwData> epwData;
-  // REMOVED: PhysicalQuantities phys;
-  SimulationSettings simSettings;
+  Population m_pop;
+  Location m_location;
+  Lighting m_lights;
+  Building m_building;
+  Structure m_structure;
+  Heating m_heating;
+  Cooling m_cooling;
+  Ventilation m_ventilation;
+  std::shared_ptr<EpwData> m_epwData;
+  SimulationSettings m_simSettings;
 };
 
 } // namespace openstudio::isomodel

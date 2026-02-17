@@ -70,8 +70,8 @@ MonthlyModel::calculateAnnualLightingOperationalHours(const Lighting &lights,
  */
 void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
-  const Matrix &m_mhEgh = location.weather()->mhEghRef();
-  const Matrix &m_mhdbt = location.weather()->mhdbtRef();
+  const Matrix &m_mhEgh = m_location.weather()->mhEghRef();
+  const Matrix &m_mhdbt = m_location.weather()->mhdbtRef();
   const auto &sched = simData.scheduleData;
 
   double sum_occ = sum(sched.clockHourOccupied);
@@ -138,29 +138,29 @@ void MonthlyModel::solarRadiationBreakdown(MonthlySimulationData &simData) const
  */
 void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
-  double lpd_occ = lights.powerDensityOccupied();
-  double lpd_unocc = lights.powerDensityUnoccupied();
+  double lpd_occ = m_lights.powerDensityOccupied();
+  double lpd_unocc = m_lights.powerDensityUnoccupied();
 
   // Daylight sensor dimming fraction.
-  double F_D = lights.dimmingFraction();
+  double F_D = m_lights.dimmingFraction();
   // Occupancy sensor control fraction.
-  double F_O = building.lightingOccupancySensor();
+  double F_O = m_building.lightingOccupancySensor();
   // Constant illimance control fraction.
-  double F_C = building.constantIllumination();
+  double F_C = m_building.constantIllumination();
 
   // Calculate annual lighting operational hours using the new helper
-  AnnualLightingHours annualHours = calculateAnnualLightingOperationalHours(lights, pop);
+  AnnualLightingHours annualHours = calculateAnnualLightingOperationalHours(m_lights, m_pop);
 
   // Total lighting energy for occupied times (kWh).
-  simData.Q_illum_occ = structure.floorArea() * lpd_occ * F_C * F_O *
+  simData.Q_illum_occ = m_structure.floorArea() * lpd_occ * F_C * F_O *
                         (annualHours.t_lt_D * F_D + annualHours.t_lt_N) * WATTS_TO_KILOWATTS;
   // Total annual lighting energy for unnocupied times (kWh).
   simData.Q_illum_unocc =
-      structure.floorArea() * lpd_unocc * annualHours.t_unocc * WATTS_TO_KILOWATTS;
+      m_structure.floorArea() * lpd_unocc * annualHours.t_unocc * WATTS_TO_KILOWATTS;
   // Total annual lighting energy (kWh).
   simData.Q_illum_tot_yr = simData.Q_illum_occ + simData.Q_illum_unocc;
 
-  double ext_energy_kW = lights.exteriorEnergy() * WATTS_TO_KILOWATTS;
+  double ext_energy_kW = m_lights.exteriorEnergy() * WATTS_TO_KILOWATTS;
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     simData.v_Q_illum_tot[i] = MONTH_FRACTION_OF_YEAR[i] * simData.Q_illum_tot_yr;
@@ -173,10 +173,10 @@ void MonthlyModel::lightingEnergyUse(MonthlySimulationData &simData) const {
  */
 void MonthlyModel::envelopeCalculations(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
-  const Vector &v_wall_A = structure.wallAreaRef();
-  const Vector &v_win_A = structure.windowAreaRef();
-  const Vector &v_wall_U = structure.wallUniformRef();
-  const Vector &v_win_U = structure.windowUniformRef();
+  const Vector &v_wall_A = m_structure.wallAreaRef();
+  const Vector &v_win_A = m_structure.windowAreaRef();
+  const Vector &v_wall_U = m_structure.wallUniformRef();
+  const Vector &v_win_U = m_structure.windowUniformRef();
 
   // Compute direct transmission heat transfer coefficient (H_D)
   double H_D = 0.0;
@@ -213,21 +213,21 @@ void MonthlyModel::windowSolarGain(MonthlySimulationData &simData) const {
   // energy transmittance of transparent element as per 11.4.2 F_f = Frame area
   // fraction.
 
-  const Vector &v_g_gln = structure.windowNormalIncidenceSolarEnergyTransmittanceRef();
-  double win_F_W = structure.win_F_W();
-  double win_ff_base = UNITY_FRACTION - structure.win_ff();
-  double R_sc_ext = structure.R_sc_ext();
+  const Vector &v_g_gln = m_structure.windowNormalIncidenceSolarEnergyTransmittanceRef();
+  double win_F_W = m_structure.win_F_W();
+  double win_ff_base = UNITY_FRACTION - m_structure.win_ff();
+  double R_sc_ext = m_structure.R_sc_ext();
   double hr_factor = ISO_WIN_EXT_RAD_COEFF;
 
-  const Vector &v_win_A = structure.windowAreaRef();
-  const Vector &v_wall_emiss = structure.wallThermalEmissivityRef();
-  const Vector &v_wall_alpha_sc = structure.wallSolarAbsorptionRef();
-  const Vector &v_wall_U = structure.wallUniformRef();
-  const Vector &v_wall_A = structure.wallAreaRef();
+  const Vector &v_win_A = m_structure.windowAreaRef();
+  const Vector &v_wall_emiss = m_structure.wallThermalEmissivityRef();
+  const Vector &v_wall_alpha_sc = m_structure.wallSolarAbsorptionRef();
+  const Vector &v_wall_U = m_structure.wallUniformRef();
+  const Vector &v_wall_A = m_structure.wallAreaRef();
 
   for (int i = 0; i < NUM_TOTAL_SURFACES; ++i) {
     // Window Shading & Solar Area
-    double SDF = WIN_SDF_TABLE[((int)structure.windowShadingDeviceRef()[i]) - 1];
+    double SDF = WIN_SDF_TABLE[((int)m_structure.windowShadingDeviceRef()[i]) - 1];
     double F_shgl = SDF * UNITY_FRACTION;
     double g_gl = v_g_gln[i] * win_F_W;
     simData.v_win_A_sol[i] = F_shgl * g_gl * win_ff_base * v_win_A[i];
@@ -263,15 +263,15 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   // theta_ss.
 
   // Build the combined solar irradiance matrix
-  const Matrix m_I_sol = buildSolarIrradianceMatrix(*location.weather());
+  const Matrix m_I_sol = buildSolarIrradianceMatrix(*m_location.weather());
 
   // Pre-calculate opaque thermal radiation to sky (constant over months)
   // \Phi_r,k = R_se * U_c  * A_c * h_h * \delta\theta_er
   // theta_er is constant ISO_SKY_TEMP_DIFF (11 K)
   double theta_er = ISO_SKY_TEMP_DIFF;
 
-  const Vector &v_wall_U = structure.wallUniformRef();
-  const Vector &v_wall_A = structure.wallAreaRef();
+  const Vector &v_wall_U = m_structure.wallUniformRef();
+  const Vector &v_wall_A = m_structure.wallAreaRef();
 
   Vector v_wall_phi_r(NUM_TOTAL_SURFACES);
   for (int j = 0; j < NUM_TOTAL_SURFACES; ++j) {
@@ -280,7 +280,7 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
   }
 
   // Pre-calculate window shading factors
-  const Vector &v_win_SCF = structure.windowShadingCorrectionFactorRef();
+  const Vector &v_win_SCF = m_structure.windowShadingCorrectionFactorRef();
   const Vector &v_win_A_sol = simData.v_win_A_sol;
   const Vector &v_wall_A_sol = simData.v_wall_A_sol;
 
@@ -306,20 +306,20 @@ void MonthlyModel::solarHeatGain(MonthlySimulationData &simData) const {
 void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Internal heat gains from people (W/m2).
-  double phi_int_occ = pop.heatGainPerPerson() / pop.densityOccupied();
-  double phi_int_unocc = pop.heatGainPerPerson() / pop.densityUnoccupied();
+  double phi_int_occ = m_pop.heatGainPerPerson() / m_pop.densityOccupied();
+  double phi_int_unocc = m_pop.heatGainPerPerson() / m_pop.densityUnoccupied();
   simData.phi_int_avg = std::lerp(phi_int_unocc, phi_int_occ, simData.scheduleData.frac_hrs_wk_day);
 
   // Internal heat gain from appliances (W/m2).
   double phi_plug_occ =
-      building.electricApplianceHeatGainOccupied() + building.gasApplianceHeatGainOccupied();
+      m_building.electricApplianceHeatGainOccupied() + m_building.gasApplianceHeatGainOccupied();
   double phi_plug_unocc =
-      building.electricApplianceHeatGainUnoccupied() + building.gasApplianceHeatGainUnoccupied();
+      m_building.electricApplianceHeatGainUnoccupied() + m_building.gasApplianceHeatGainUnoccupied();
   simData.phi_plug_avg =
       std::lerp(phi_plug_unocc, phi_plug_occ, simData.scheduleData.frac_hrs_wk_day);
 
   // Internal heat gain from illumination (W/m2).
-  double floor_area = structure.floorArea();
+  double floor_area = m_structure.floorArea();
   double inv_area_hours = KILOWATTS_TO_WATTS / (floor_area * HOURS_IN_YEAR);
 
   // phi_illum_occ is unused
@@ -343,7 +343,7 @@ void MonthlyModel::calculateInternalGainComponents(MonthlySimulationData &simDat
 void MonthlyModel::unoccupiedHeatGain(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
 
-  double floor_area = structure.floorArea();
+  double floor_area = m_structure.floorArea();
   double phi_int_wk_nt = simData.phi_int_wk_nt;
   double phi_int_wke_day = simData.phi_int_wke_day;
   double phi_int_wke_nt = simData.phi_int_wke_nt;
@@ -386,32 +386,32 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   // effective heating temp and raising the effective cooling temp during
   // times of control (i.e. during occupancy).
 
-  double T_adj = building.buildingEnergyManagement();
+  double T_adj = m_building.buildingEnergyManagement();
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "BEM Adjustment: " << T_adj << std::endl;
   }
 
   // Adjust the heating set points.
-  double ht_tset_ctrl = heating.temperatureSetPointOccupied() - T_adj;
-  double cl_tset_ctrl = cooling.temperatureSetPointOccupied() + T_adj;
+  double ht_tset_ctrl = m_heating.temperatureSetPointOccupied() - T_adj;
+  double cl_tset_ctrl = m_cooling.temperatureSetPointOccupied() + T_adj;
 
   // During unoccupied times, we use a setback temp and even if we have a BEM
   // it has no effect.
-  double ht_tset_unocc = heating.temperatureSetPointUnoccupied();
-  double cl_tset_unocc = cooling.temperatureSetPointUnoccupied();
+  double ht_tset_unocc = m_heating.temperatureSetPointUnoccupied();
+  double cl_tset_unocc = m_cooling.temperatureSetPointUnoccupied();
 
   // Interior heat capacity (J/k).
-  double Cm_int = structure.interiorHeatCapacity() * structure.floorArea();
+  double Cm_int = m_structure.interiorHeatCapacity() * m_structure.floorArea();
 
   // Envelope heat capacity (J/k).
-  double Cm_env = structure.wallHeatCapacity() * sum(structure.wallAreaRef());
+  double Cm_env = m_structure.wallHeatCapacity() * sum(m_structure.wallAreaRef());
 
   // Total heat capacity (J/k).
   double Cm = Cm_int + Cm_env;
 
   // Total heat transfer coefficient.
-  double H_tot = simData.H_tr + ventilation.H_ve();
+  double H_tot = simData.H_tr + m_ventilation.H_ve();
 
   // Building time constant in hours as pwer ISO 13790 12.2.1.3 eq. 62.
   simData.tau = Cm / H_tot / 3600.0;
@@ -420,8 +420,8 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
   v_ti[0] = v_ti[2] = v_ti[4] = simData.scheduleData.hoursUnoccupiedPerDay;
   v_ti[1] = v_ti[3] = simData.scheduleData.hoursOccupiedPerDay;
 
-  bool do_heating = (heating.T_ht_ctrl_flag() == 1);
-  bool do_cooling = (cooling.T_cl_ctrl_flag() == 1);
+  bool do_heating = (m_heating.T_ht_ctrl_flag() == 1);
+  bool do_cooling = (m_cooling.T_cl_ctrl_flag() == 1);
 
   for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
     double Th_wk_nt_val = ht_tset_ctrl;
@@ -493,25 +493,25 @@ void MonthlyModel::calculateInteriorTemperatures(MonthlySimulationData &simData)
 }
 
 /**
- * Calculate required energy for mechanical ventilation based on source EN ISO
+ * Calculate required energy for mechanical m_ventilation based on source EN ISO
  * 13789 C.3, C.5 and EN 15242:2007 6.7 and EN ISO 13790 Sec 9.2.
  */
 void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather references
-  const Vector &v_mdbt = location.weather()->mdbtRef();
-  const Vector &v_mwind = location.weather()->mwindRef();
+  const Vector &v_mdbt = m_location.weather()->mdbtRef();
+  const Vector &v_mwind = m_location.weather()->mwindRef();
 
   // Ventilation Zone Height (m) with a minimum of 0.1 m.
   double vent_zone_height =
-      std::max(openstudio::isomodel::MIN_VENT_ZONE_HEIGHT, structure.buildingHeight());
+      std::max(openstudio::isomodel::MIN_VENT_ZONE_HEIGHT, m_structure.buildingHeight());
 
   // Vent supply rate m3/h/m2 (input is in in L/s).
   double qv_supp =
-      ventilation.supplyRate() / structure.floorArea() / LITERS_PER_SECOND_TO_METERS3_PER_HOUR;
+      m_ventilation.supplyRate() / m_structure.floorArea() / LITERS_PER_SECOND_TO_METERS3_PER_HOUR;
 
   // Vent exhaust rate m3/h/m2, negative indicates out of building.
-  double qv_ext = -(qv_supp - ventilation.supplyDifference() / structure.floorArea() /
+  double qv_ext = -(qv_supp - m_ventilation.supplyDifference() / m_structure.floorArea() /
                                   LITERS_PER_SECOND_TO_METERS3_PER_HOUR);
 
   // Combustion appliance ventilation rate - not implemented yet but will be
@@ -521,12 +521,12 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   // Difference between air intake and air exhaust including combustion exhaust.
   double qv_diff = qv_supp + qv_ext + qv_comb;
 
-  double vent_ht_recov = ventilation.heatRecoveryEfficiency();
+  double vent_ht_recov = m_ventilation.heatRecoveryEfficiency();
 
-  double vent_outdoor_frac = 1 - ventilation.exhaustAirRecirculated();
+  double vent_outdoor_frac = 1 - m_ventilation.exhaustAirRecirculated();
 
   // Infilatration source EN 15242:2007 Sec 6.7 direct method
-  double tot_env_A = sum(structure.wallArea()) + sum(structure.windowArea());
+  double tot_env_A = sum(m_structure.wallArea()) + sum(m_structure.windowArea());
 
   // Infiltration data from:
   // Tamura, (1976), Studies on exterior wall air tightness and air infiltration
@@ -537,7 +537,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   // HVAC Energy Use.
 
   // Infiltration rate in m3/h/m2 @ 75 Pa based on wall area.
-  double v_Q75pa = structure.infiltrationRate();
+  double v_Q75pa = m_structure.infiltrationRate();
 
   // Convert infiltration to Q@4Pa in m3/h /m2 based on floor area.
   // double v_Q4pa = v_Q75pa * tot_env_A / structure.floorArea() *
@@ -545,7 +545,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   double v_Q4pa = v_Q75pa;
 
   // Effective stack height.
-  double h_stack = ventilation.zone_frac() * vent_zone_height;
+  double h_stack = m_ventilation.zone_frac() * vent_zone_height;
 
   // TODO: Figure out what the comment below is refering to. I don't want to
   // delete it just yet because connecting the code to the sources of the
@@ -564,7 +564,7 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
   // proportionally to population set to 1 to mimic the behavior of the original
   // spreadsheet.
   double vent_op_frac;
-  switch (ventilation.vent_rate_flag()) {
+  switch (m_ventilation.vent_rate_flag()) {
   case 0:
     vent_op_frac = UNITY_FRACTION;
     break;
@@ -572,21 +572,21 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
     vent_op_frac = simData.scheduleData.frac_hrs_wk_day;
     break;
   default:
-    vent_op_frac = std::lerp(pop.densityOccupied() / pop.densityUnoccupied(), 1.0,
+    vent_op_frac = std::lerp(m_pop.densityOccupied() / m_pop.densityUnoccupied(), 1.0,
                              simData.scheduleData.frac_hrs_wk_day);
     break;
   }
 
-  double mve_init = ventilation.ventType() == VentilationType::Natural
+  double mve_init = m_ventilation.ventType() == VentilationType::Natural
                         ? 0
                         : (vent_op_frac * qv_supp * vent_outdoor_frac * (1 - vent_ht_recov));
 
   // OPTIMIZATION: Fused vector operations into a single loop to avoid temporary allocations.
-  double stack_exp = ventilation.stack_exp();
-  double stack_coeff_Q4 = ventilation.stack_coeff() * v_Q4pa;
-  double wind_exp = ventilation.wind_exp();
-  double wind_coeff = ventilation.wind_coeff();
-  double dCp_terrain = ventilation.dCp() * location.terrain();
+  double stack_exp = m_ventilation.stack_exp();
+  double stack_coeff_Q4 = m_ventilation.stack_coeff() * v_Q4pa;
+  double wind_exp = m_ventilation.wind_exp();
+  double wind_coeff = m_ventilation.wind_coeff();
+  double dCp_terrain = m_ventilation.dCp() * m_location.terrain();
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     // Stack Effect Heating
@@ -625,32 +625,32 @@ void MonthlyModel::calculateVentilation(MonthlySimulationData &simData) const {
 }
 
 /**
- * Compute monthly heating and cooling demand.
+ * Compute monthly m_heating and m_cooling demand.
  */
 void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const {
   PROFILE_FUNCTION();
   // Optimization: Cache weather reference
-  const Vector &v_mdbt = location.weather()->mdbtRef();
+  const Vector &v_mdbt = m_location.weather()->mdbtRef();
 
   // Initialize yearly sums
   simData.Qneed_ht_yr = 0.0;
   simData.Qneed_cl_yr = 0.0;
 
   // Constants for loop
-  double floor_area = structure.floorArea();
+  double floor_area = m_structure.floorArea();
   double H_tr = simData.H_tr;
-  double a_H = heating.a_H0() + simData.tau / heating.tau_H0();
+  double a_H = m_heating.a_H0() + simData.tau / m_heating.tau_H0();
 
   // Air Volume constants
-  double T_sup_ht = heating.temperatureSetPointOccupied() + heating.dT_supp_ht();
-  double T_sup_cl = cooling.temperatureSetPointOccupied() - cooling.dT_supp_cl();
+  double T_sup_ht = m_heating.temperatureSetPointOccupied() + m_heating.dT_supp_ht();
+  double T_sup_cl = m_cooling.temperatureSetPointOccupied() - m_cooling.dT_supp_cl();
 
   // Total Air Flow constants
-  double min_flow_rate = ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day *
+  double min_flow_rate = m_ventilation.supplyRate() * simData.scheduleData.frac_hrs_wk_day *
                          (MEGASECONDS_TO_SECONDS / LITERS_TO_M3);
 
   // Fan Energy constants
-  double fan_power_factor = ventilation.fanPower() / KILOJOULE_TO_MEGAJOULE;
+  double fan_power_factor = m_ventilation.fanPower() / KILOJOULE_TO_MEGAJOULE;
   double area_kWh_factor = floor_area * KILOWATTHOURS_TO_MEGAJOULES;
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
@@ -714,8 +714,8 @@ void MonthlyModel::calculateHeatingAndCoolingNeeds(MonthlySimulationData &simDat
     printVector("v_Vair_ht", simData.v_Vair_ht);
     printVector("v_Vair_cl", simData.v_Vair_cl);
     printVector("v_Vair_tot (input to fan calc)", simData.v_Vair_tot);
-    std::cout << "ventilation.fanPower() = " << ventilation.fanPower() << std::endl;
-    std::cout << "structure.floorArea() = " << structure.floorArea() << std::endl;
+    std::cout << "m_ventilation.fanPower() = " << m_ventilation.fanPower() << std::endl;
+    std::cout << "m_structure.floorArea() = " << m_structure.floorArea() << std::endl;
     printVector("v_Qfan_tot (output from fan calc)", simData.v_Qfan_tot);
   }
 }
@@ -733,13 +733,13 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   /*
       %% District H/C info
 
-      DH_YesNo =0;  % building connected to DH (0=no, 1=yes.  Assume DH is
+      DH_YesNo =0;  % m_building connected to DH (0=no, 1=yes.  Assume DH is
      powered by natural gas) n_eta_DH_network = 0.9; % efficiency of DH network.
      Typical value 0l75-0l9 EN 15316-4-5 n_eta_DH_sys = 0.87; % efficiency of DH
-     heating system n_frac_DH_free = 0.000; % fraction of free heat source to DH
+     m_heating system n_frac_DH_free = 0.000; % fraction of free heat source to DH
      (0 to 1)
 
-      DC_YesNo = 0;  % building connected to DC (0=no, 1=yes)
+      DC_YesNo = 0;  % m_building connected to DC (0=no, 1=yes)
       n_eta_DC_network = 0.9;  % efficiency of DC network.
       n_eta_DC_COP = 5.5;  % COP of DC elec Chillers
       n_eta_DC_frac_abs = 0;  % fraction of DC chillers that are absorption
@@ -752,13 +752,13 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   // HVAC system info table from EN 15243:2007 Table E1.
   // The integrated energy efficiency ratio (IEER) is the effective average COP
   // for the system.
-  double IEER = cooling.cop() * cooling.partialLoadValue();
+  double IEER = m_cooling.cop() * m_cooling.partialLoadValue();
 
   // Copy over the HVAC loss/waste factors into local variables with names
   // that match the equations better
-  double f_waste = heating.hotcoldWasteFactor();
-  double a_ht_loss = heating.hvacLossFactor();
-  double a_cl_loss = cooling.hvacLossFactor();
+  double f_waste = m_heating.hotcoldWasteFactor();
+  double a_ht_loss = m_heating.hvacLossFactor();
+  double a_cl_loss = m_cooling.hvacLossFactor();
 
   // Fraction of yearly heating demand with regard to total heating + cooling
   // demand.
@@ -772,21 +772,21 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
   // Overall distrubtion efficiency for cooling.
   double eta_dist_cl = 1.0 / (1.0 + a_cl_loss + f_waste / f_dem_cl);
 
-  double ht_eff = heating.efficiency() + SAFE_EPSILON;
-  double ht_dh_free = 1.0 - heating.frac_DH_free();
-  double ht_dh_sys_net = heating.eta_DH_sys() * heating.eta_DH_network();
-  double cl_dc_frac_abs = 1.0 - cooling.eta_DC_frac_abs();
-  double cl_dc_elec_net = cooling.eta_DC_COP() * cooling.eta_DC_network();
-  double cl_dc_free = 1.0 - cooling.frac_DC_free();
-  double cl_dc_cop_abs = cooling.eta_DC_COP_abs();
-  bool is_ht_elec = (heating.energyType() == FuelType::Electric);
+  double ht_eff = m_heating.efficiency() + SAFE_EPSILON;
+  double ht_dh_free = 1.0 - m_heating.frac_DH_free();
+  double ht_dh_sys_net = m_heating.eta_DH_sys() * m_heating.eta_DH_network();
+  double cl_dc_frac_abs = 1.0 - m_cooling.eta_DC_frac_abs();
+  double cl_dc_elec_net = m_cooling.eta_DC_COP() * m_cooling.eta_DC_network();
+  double cl_dc_free = 1.0 - m_cooling.frac_DC_free();
+  double cl_dc_cop_abs = m_cooling.eta_DC_COP_abs();
+  bool is_ht_elec = (m_heating.energyType() == FuelType::Electric);
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double Qloss_ht_dist = simData.v_Qneed_ht[i] * (1.0 - eta_dist_ht) / eta_dist_ht;
     double Qloss_cl_dist = simData.v_Qneed_cl[i] * (1.0 - eta_dist_cl) / eta_dist_cl;
 
     double Qht_sys, Qht_DH, Qcl_sys, Qcool_DC;
-    if (heating.DH_YesNo() == 1) {
+    if (m_heating.DH_YesNo() == 1) {
       Qht_DH = simData.v_Qneed_ht[i] + Qloss_ht_dist;
       Qht_sys = 0.0;
     } else {
@@ -794,7 +794,7 @@ void MonthlyModel::calculateHVACEnergyUse(MonthlySimulationData &simData) const 
       Qht_DH = 0.0;
     }
 
-    if (cooling.DC_YesNo() == 1) {
+    if (m_cooling.DC_YesNo() == 1) {
       Qcool_DC = simData.v_Qneed_cl[i] + Qloss_cl_dist;
       Qcl_sys = 0.0;
     } else {
@@ -852,7 +852,7 @@ Vector MonthlyModel::calculatePumpEnergyForMode(const Vector &v_Qneed_mode,
 }
 
 /**
- * Calculate energy for pumps used in the heating/cooling systems.
+ * Calculate energy for pumps used in the m_heating/m_cooling systems.
  * References: EPA NR 6.9.7.1 and 6.9.7.2, EN 15243.
  */
 void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
@@ -871,13 +871,13 @@ void MonthlyModel::calculatePumpEnergy(MonthlySimulationData &simData) const {
 
   // Calculate monthly pump energy for heating mode.
   Vector v_Q_pumps_ht =
-      calculatePumpEnergyForMode(simData.v_Qneed_ht, v_Qneed_total, heating.E_pumps(),
-                                 heating.pumpControlReduction(), structure.floorArea());
+      calculatePumpEnergyForMode(simData.v_Qneed_ht, v_Qneed_total, m_heating.E_pumps(),
+                                 m_heating.pumpControlReduction(), m_structure.floorArea());
 
   // Calculate monthly pump energy for cooling mode.
   Vector v_Q_pumps_cl =
-      calculatePumpEnergyForMode(simData.v_Qneed_cl, v_Qneed_total, cooling.E_pumps(),
-                                 cooling.pumpControlReduction(), structure.floorArea());
+      calculatePumpEnergyForMode(simData.v_Qneed_cl, v_Qneed_total, m_cooling.E_pumps(),
+                                 m_cooling.pumpControlReduction(), m_structure.floorArea());
 
   // Total pump operational factor.
   Vector v_frac_tot =
@@ -913,12 +913,12 @@ void MonthlyModel::calculateHeatedWaterEnergy(MonthlySimulationData &simData) co
 
   // Total annual energy demand required for heating DHW (MJ/yr).
   double Q_dhw_yr =
-      heating.hotWaterDemand() * (heating.dhw_tset() - heating.dhw_tsupply()) * RHO_CP_WATER;
+      m_heating.hotWaterDemand() * (m_heating.dhw_tset() - m_heating.dhw_tsupply()) * RHO_CP_WATER;
 
-  double inv_dist_eff = 1.0 / heating.hotWaterDistributionEfficiency();
-  double inv_sys_eff = 1.0 / heating.hotWaterSystemEfficiency();
+  double inv_dist_eff = 1.0 / m_heating.hotWaterDistributionEfficiency();
+  double inv_sys_eff = 1.0 / m_heating.hotWaterSystemEfficiency();
   double inv_KILOWATTHOURS_TO_MEGAJOULES = 1.0 / KILOWATTHOURS_TO_MEGAJOULES;
-  bool is_elec = (heating.hotWaterEnergyType() == FuelType::Electric);
+  bool is_elec = (m_heating.hotWaterEnergyType() == FuelType::Electric);
 
   for (int i = 0; i < MONTHS_IN_YEAR; ++i) {
     double monthlyDemand = DAYS_IN_MONTH[i] * Q_dhw_yr;
@@ -948,7 +948,7 @@ std::vector<EndUses> MonthlyModel::simulate() const {
   PROFILE_FUNCTION();
 
   MonthlySimulationData simData; // Declare the new struct
-  simData.scheduleData = schedules::getMonthlySchedules(pop);
+  simData.scheduleData = schedules::getMonthlySchedules(m_pop);
 
   if (DEBUG_ISO_MODEL_SIMULATION) {
     std::cout << "frac_hrs_wk_day: " << simData.scheduleData.frac_hrs_wk_day << std::endl;
@@ -989,14 +989,14 @@ std::vector<EndUses> MonthlyModel::simulate() const {
 
     std::cout << std::endl
               << "envelopeCalculations: " << std::endl; /*
-v_wall_A = structure.wallArea();
-v_win_A = structure.windowArea();
-v_wall_U = structure.wallUniform();
-Vector v_win_U = structure.windowUniform();*/
-    printVector("structure.wallArea()", structure.wallArea());
-    printVector("structure.windowArea()", structure.windowArea());
-    printVector("structure.wallUniform()", structure.wallUniform());
-    printVector("structure.windowUniform()", structure.windowUniform());
+v_wall_A = m_structure.wallArea();
+v_win_A = m_structure.windowArea();
+v_wall_U = m_structure.wallUniform();
+Vector v_win_U = m_structure.windowUniform();*/
+    printVector("m_structure.wallArea()", m_structure.wallArea());
+    printVector("m_structure.windowArea()", m_structure.windowArea());
+    printVector("m_structure.wallUniform()", m_structure.wallUniform());
+    printVector("m_structure.windowUniform()", m_structure.windowUniform());
   }
   envelopeCalculations(simData);
   if (DEBUG_ISO_MODEL_SIMULATION) {
@@ -1091,7 +1091,7 @@ std::vector<EndUses> MonthlyModel::outputGeneration(const MonthlySimulationData 
   std::vector<EndUses> allResults;
   allResults.reserve(MONTHS_IN_YEAR);
 
-  double floor_area = structure.floorArea();
+  double floor_area = m_structure.floorArea();
   double energy_factor =
       (floor_area > 0) ? (1.0 / (floor_area * KILOWATTHOURS_TO_MEGAJOULES)) : 0.0;
   double area_factor = (floor_area > 0) ? (1.0 / floor_area) : 0.0;
@@ -1099,11 +1099,11 @@ std::vector<EndUses> MonthlyModel::outputGeneration(const MonthlySimulationData 
   // Plug load factors
   double frac_hrs_wk_day = simData.scheduleData.frac_hrs_wk_day;
   double E_plug_elec_avg =
-      building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.electricApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
+      m_building.electricApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      m_building.electricApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
   double E_plug_gas_avg =
-      building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
-      building.gasApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
+      m_building.gasApplianceHeatGainOccupied() * frac_hrs_wk_day +
+      m_building.gasApplianceHeatGainUnoccupied() * (UNITY_FRACTION - frac_hrs_wk_day);
 
   for (int i = 0; i < MONTHS_IN_YEAR; i++) {
     double Eelec_ht = simData.v_Qelec_ht[i] * energy_factor;
