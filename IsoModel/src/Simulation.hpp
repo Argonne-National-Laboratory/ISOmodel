@@ -1,3 +1,15 @@
+/// @file Simulation.hpp
+/// @brief Abstract base class for HourlyModel and MonthlyModel.
+///
+/// Holds shared references to the component property objects (Population,
+/// Location, Building, Structure, etc.) that both simulation engines need.
+/// Provides the common interface for setting up and running simulations.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-06-01
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "Building.hpp"
 #include "Cooling.hpp"

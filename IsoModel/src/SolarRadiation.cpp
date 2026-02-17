@@ -1,14 +1,19 @@
-// SolarRadiation.cpp
-//
-// REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
-// 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
-// lazy-loaded.
-// 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
-// per year, not checked per hour. This fixes potential day-shift bugs.
-// 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
-// 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
-// Duffie & Beckman.
-
+/// @file SolarRadiation.cpp
+/// @brief Solar position and radiation calculations for building surfaces.
+///
+/// Computes hourly solar radiation on tilted surfaces for all 8760 hours
+/// of the year. Implements solar geometry (declination, equation of time,
+/// hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+/// and Duffie & Beckman. Decomposes global horizontal radiation into
+/// beam and diffuse components using the Erbs correlation, then projects
+/// onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #include "SolarRadiation.hpp"
 
 #include "EpwData.hpp"

@@ -1,3 +1,14 @@
+/// @file Schedules.cpp
+/// @brief Hourly and weekly schedule generation and CSV loading.
+///
+/// Builds 24×7 weekly schedule arrays for ventilation, appliances, lighting,
+/// and temperature setpoints from Population and Building properties.
+/// Optionally loads custom hourly schedules from CSV files. Generates
+/// monthly occupancy fractions for the MonthlyModel.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-23
+/// @copyright Copyright Argonne National Laboratory
 #include "Schedules.hpp"
 
 #include "Building.hpp"

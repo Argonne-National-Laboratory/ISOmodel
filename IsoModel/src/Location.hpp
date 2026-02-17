@@ -1,3 +1,15 @@
+/// @file Location.hpp
+/// @brief Site location properties including terrain class and weather data.
+///
+/// Holds the terrain class (urban/suburban/rural wind shielding factor)
+/// and a shared pointer to the WeatherData used by the simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 #include "WeatherData.hpp"

@@ -1,6 +1,15 @@
-// standalone_main.cpp
-// * Compatible with the Original Interface (std::vector<EndUses>)
-
+/// @file standalone_main.cpp
+/// @brief Command-line entry point for running ISOModel simulations.
+///
+/// Loads a building model from YAML/ISM and EPW files, runs both monthly
+/// and hourly simulations, and prints the results to stdout. Demonstrates
+/// the UserModel -> MonthlyModel/HourlyModel workflow.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
 #include "HourlyModel.hpp"
 #include "MonthlyModel.hpp"
 #include "UserModel.hpp"

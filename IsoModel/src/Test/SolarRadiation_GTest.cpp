@@ -1,5 +1,14 @@
-// SolarRadiation_GTest.cpp — Solar position and radiation calculation tests.
-
+/// @file SolarRadiation_GTest.cpp
+/// @brief Tests for solar position and radiation calculations.
+///
+/// Validates sun position (altitude, azimuth), surface radiation values,
+/// and monthly solar totals against hand-calculated reference data.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../SolarRadiation.hpp"

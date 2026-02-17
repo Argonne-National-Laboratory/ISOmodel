@@ -499,7 +499,7 @@ No C-style array declarations remain in headers or implementation files.
 
 ## 17. Documentation Consistency
 
-**Status: ✅ COMPLETE (comment style standardization)**
+**Status: ✅ COMPLETE (comment style + file headers)**
 
 **Problem:** Documentation style varied:
 
@@ -526,6 +526,9 @@ No C-style array declarations remain in headers or implementation files.
 - Converted `/* ... */` inline blocks → `//` in `MonthlyModel.cpp` (district H/C code, debug output)
 - Converted `mainpage.hpp` from `/** \mainpage */` to `/// \mainpage`
 - Added CODING_STYLE.md §9 (Comment Style)
+- Added Doxygen `@file` headers to all 47 source files (25 headers, 10 sources, 12 test files)
+  with `@file`, `@brief`, detailed description, `@author` (from git history), `@date` (first
+  commit date), and `@copyright Copyright Argonne National Laboratory`
 
 **Remaining (future work):** Add units and ISO standard references to undocumented getters
 in `Cooling.hpp`, `Heating.hpp`, `Lighting.hpp`, etc.
@@ -636,7 +639,7 @@ in `Cooling.hpp`, `Heating.hpp`, `Lighting.hpp`, etc.
 - [ ] Run tests ✓
 
 ### Phase 6: Documentation & Polish
-- [x] Standardize documentation style across all files (§17) — comment style done
+- [x] Standardize documentation style across all files (§17) — comment style + file headers done
 - [ ] Add units and ISO references to all physical quantity accessors
 - [ ] Add ISO equation variable cross-reference comments to all ISO-notation accessors
 - [x] Modernize test code (§18)
@@ -681,6 +684,6 @@ in `Cooling.hpp`, `Heating.hpp`, `Lighting.hpp`, etc.
 ---
 
 *Document prepared: 2025-02-16*
-*Last updated: 2026-02-16 — Phase 0 & Phase 1 complete; Phase 2 scope revised*
+*Last updated: 2026-02-17 — Phase 0-2 complete; §17 file headers added to all 47 files*
 *Codebase: ISOModel C++ (C++20, CMake 3.20)*
 *Target: Source-compatible refactoring with deprecation path*

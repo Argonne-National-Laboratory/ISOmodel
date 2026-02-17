@@ -1,5 +1,15 @@
-// HourlyModel_GTest.cpp — Hourly simulation regression tests.
-
+/// @file HourlyModel_GTest.cpp
+/// @brief Regression tests for the hourly simulation model.
+///
+/// Loads a test building, runs HourlyModel::simulate(), and compares
+/// monthly-aggregated results against known-good expected values for
+/// all 13 end-use categories across 12 months.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../ISOResults.hpp"

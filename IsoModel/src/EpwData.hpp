@@ -1,3 +1,17 @@
+/// @file EpwData.hpp
+/// @brief EnergyPlus Weather (EPW) file parser and hourly weather data container.
+///
+/// Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+/// global horizontal radiation, and other meteorological fields. Computes
+/// monthly averages and diurnal profiles for use by the monthly and hourly
+/// simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 

@@ -1,3 +1,14 @@
+/// @file Profiler.hpp
+/// @brief Lightweight scoped function-level profiler for performance analysis.
+///
+/// Provides PROFILE_FUNCTION() and PROFILE_SCOPE() macros that measure
+/// wall-clock time using std::chrono. Results are accumulated per-function
+/// and printed as a sorted table on destruction. Controlled by the
+/// ENABLE_PROFILING compile-time flag.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-26
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 // Master switch for profiling. This will be defined via CMake for specific builds.
 // If PROFILING_ENABLED is not defined or is 0, all profiling code compiles to nothing.

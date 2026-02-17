@@ -1,3 +1,14 @@
+/// @file MathHelpers.hpp
+/// @brief Type aliases (Vector, Matrix) and mathematical utility functions.
+///
+/// Defines Vector (std::vector<double>) and Matrix (std::vector<Vector>)
+/// type aliases used throughout the codebase. Provides helper functions
+/// for vector arithmetic, element-wise operations, summation, and
+/// printing utilities for debug output.
+///
+/// @author Ralph Muehleisen
+/// @date 2025-12-22
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "Constants.hpp"
 

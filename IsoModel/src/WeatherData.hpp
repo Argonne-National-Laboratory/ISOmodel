@@ -1,3 +1,17 @@
+/// @file WeatherData.hpp
+/// @brief Monthly-averaged weather data container for the ISO monthly model.
+///
+/// Stores mean monthly values for global horizontal radiation, dry-bulb
+/// temperature, wind speed, and directional solar radiation on vertical
+/// surfaces. Also holds diurnal (24-hour) temperature and radiation
+/// profiles for each month.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 #include "MathHelpers.hpp"

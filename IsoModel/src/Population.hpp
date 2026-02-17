@@ -1,3 +1,17 @@
+/// @file Population.hpp
+/// @brief Occupancy schedule and people density properties.
+///
+/// Defines occupied/unoccupied hours and days, people density (m²/person),
+/// and metabolic heat gain per person. The schedule defines a rectangular
+/// occupancy block (hoursStart..hoursEnd × daysStart..daysEnd) used by
+/// both monthly and hourly models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 

@@ -1,3 +1,18 @@
+/// @file MonthlyModel.cpp
+/// @brief Monthly energy simulation engine using the ISO 13790 monthly method.
+///
+/// Implements the quasi-steady-state monthly energy balance from ISO 13790.
+/// Computes monthly heating, cooling, lighting, ventilation, and equipment
+/// energy use. Includes envelope heat transfer, solar and internal gains,
+/// utilization factors, and HVAC system efficiency calculations.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Daniel Chopson
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #include "MonthlyModel.hpp"
 // to run main
 #include "UserModel.hpp"

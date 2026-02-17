@@ -1,3 +1,14 @@
+/// @file Constants.hpp
+/// @brief Physical and mathematical constants used throughout the ISO model.
+///
+/// Defines constexpr values for PI, unit conversions (hours, days, months),
+/// physical constants (Stefan-Boltzmann, air density, specific heat),
+/// safe epsilon values, and debug flags. Replaces former preprocessor macros
+/// with type-safe C++20 constexpr constants.
+///
+/// @author Ralph Muehleisen
+/// @date 2025-12-22
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include <array>
 #include <limits>

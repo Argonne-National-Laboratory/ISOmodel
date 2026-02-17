@@ -1,3 +1,16 @@
+/// @file TimeFrame.hpp
+/// @brief Hour-of-year to month, day-of-week, and hour-of-day conversion utility.
+///
+/// Pre-computes lookup tables for converting a linear hour index (0-8759)
+/// to month (0-11), day of month, day of week (0-6), and hour of day
+/// (0-23). Used by HourlyModel and SolarRadiation for time indexing.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"

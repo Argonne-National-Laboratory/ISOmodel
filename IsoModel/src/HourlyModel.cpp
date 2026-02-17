@@ -1,12 +1,18 @@
-// HourlyModel.cpp
-//
-// REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE
-// - Renamed A_floor_inv -> invFloorArea
-// - Replaced harmonic mean divisions with multiplication (algebraic
-// simplification).
-// - Removed smallEpsilon where algebra safely handles zero values.
-// - Reused member vectors to eliminate heap allocation in main loop.
-
+/// @file HourlyModel.cpp
+/// @brief Hourly energy simulation engine using the ISO 13790 hourly method.
+///
+/// Implements the five-resistance-one-capacitance (5R1C) thermal network
+/// model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+/// electrical energy use over 8760 hours. Includes solar gain, internal
+/// gain, ventilation, and HVAC system calculations. Results can be
+/// returned hourly or aggregated by month.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2014-06-20
+/// @copyright Copyright Argonne National Laboratory
 #include "HourlyModel.hpp"
 
 #include "Constants.hpp"

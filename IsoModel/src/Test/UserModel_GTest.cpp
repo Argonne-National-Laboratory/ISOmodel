@@ -1,5 +1,15 @@
-// UserModel_GTest.cpp — UserModel loading and property initialization tests.
-
+/// @file UserModel_GTest.cpp
+/// @brief Tests for UserModel property loading and initialization.
+///
+/// Validates that YAML/ISM file parsing correctly populates all
+/// component properties, tests default value handling, and verifies
+/// optional property override behavior.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"

@@ -1,4 +1,18 @@
-
+/// @file UserModel.cpp
+/// @brief High-level facade for loading building models and creating simulations.
+///
+/// Parses ISM (legacy) and YAML configuration files to populate all
+/// component property objects (Structure, Heating, Cooling, Ventilation,
+/// Lighting, Building, Population, Location, etc.). Provides factory
+/// methods to create configured MonthlyModel and HourlyModel instances.
+/// Supports optional default values and property overrides.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #include "UserModel.hpp"
 
 #include <algorithm> // Required for std::transform in loadBuilding

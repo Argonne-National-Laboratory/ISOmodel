@@ -1,7 +1,13 @@
-// OptimizationCoverage_GTest.cpp
-//
-// Verifies correctness of recent C++20 optimizations and constant replacements.
-
+/// @file OptimizationCoverage_GTest.cpp
+/// @brief Tests verifying C++20 optimization and constant correctness.
+///
+/// Validates that constexpr constants have correct values, solar
+/// radiation math functions produce expected results, EPW parsing
+/// works correctly, and UserModel modern features function properly.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-07
+/// @copyright Copyright Argonne National Laboratory
 #include "../Constants.hpp"
 #include "../EpwData.hpp"
 #include "../SolarRadiation.hpp"

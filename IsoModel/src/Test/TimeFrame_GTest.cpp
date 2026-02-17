@@ -1,5 +1,14 @@
-// TimeFrame_GTest.cpp — TimeFrame calendar calculation tests.
-
+/// @file TimeFrame_GTest.cpp
+/// @brief Tests for TimeFrame hour/day/month conversion lookups.
+///
+/// Verifies that TimeFrame correctly maps hour-of-year indices to
+/// month, day of month, day of week, and hour of day.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"

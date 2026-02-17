@@ -1,3 +1,17 @@
+/// @file EndUses.hpp
+/// @brief Energy end-use category indices for simulation results.
+///
+/// Defines the EndUses enum with indices for heating, cooling, interior
+/// lighting, exterior lighting, interior equipment, exterior equipment,
+/// fans, pumps, hot water, and other fuel types. Used to index into
+/// the result vectors returned by MonthlyModel and HourlyModel.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 

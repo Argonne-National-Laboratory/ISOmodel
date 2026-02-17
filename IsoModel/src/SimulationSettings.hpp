@@ -1,3 +1,14 @@
+/// @file SimulationSettings.hpp
+/// @brief ISO 13790 simulation parameters for the 5R1C thermal network.
+///
+/// Stores the internal/solar heat flow distribution fractions (phi_int_is,
+/// phi_sol_is) and the surface-to-air heat transfer ratios (h_is, h_ms)
+/// used in the hourly 5R1C model. Default values follow ISO 13790 §7.2.2.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-06-12
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 

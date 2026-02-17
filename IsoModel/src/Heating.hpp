@@ -1,3 +1,17 @@
+/// @file Heating.hpp
+/// @brief Heating system properties and fuel type parameters.
+///
+/// Stores heating efficiency, temperature setpoints (occupied and unoccupied),
+/// HVAC loss and waste factors, pump power, hot water demand, and district
+/// heating parameters. Includes fuel type selection for primary energy
+/// calculations per ISO 13790.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"

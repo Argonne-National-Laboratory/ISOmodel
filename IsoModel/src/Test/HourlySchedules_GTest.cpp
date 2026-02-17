@@ -1,5 +1,12 @@
-// HourlySchedules_GTest.cpp — Hourly model with custom schedules regression tests.
-
+/// @file HourlySchedules_GTest.cpp
+/// @brief Regression tests for hourly model with custom CSV schedules.
+///
+/// Same as HourlyModel_GTest but loads custom hourly schedules from
+/// a CSV file to verify schedule-driven simulation results.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-23
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../ISOResults.hpp"

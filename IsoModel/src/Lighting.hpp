@@ -1,3 +1,17 @@
+/// @file Lighting.hpp
+/// @brief Lighting system properties and power density parameters.
+///
+/// Stores interior and exterior lighting power densities, dimming and
+/// occupancy control fractions, parasitic lighting power, and lighting
+/// schedule parameters. Used by MonthlyModel for illumination energy
+/// calculations per ISO 15193.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 

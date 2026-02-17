@@ -1,3 +1,18 @@
+/// @file Ventilation.hpp
+/// @brief Ventilation system properties, infiltration, and heat recovery.
+///
+/// Stores ventilation intake/exhaust rates, heat recovery efficiency,
+/// recirculation fraction, fan power, preheat temperature, and air
+/// leakage parameters. Includes infiltration model coefficients per
+/// ISO 15242 and the overall ventilation heat transfer coefficient
+/// (H_ve) per ISO 13790 §9.3.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"

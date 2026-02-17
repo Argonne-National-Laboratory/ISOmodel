@@ -1,6 +1,13 @@
-// ISOModel_Benchmark.cpp
-// Refactored to ensure standard C++ compatibility while preserving all original
-// benchmark loops.
+/// @file ISOModel_Benchmark.cpp
+/// @brief Performance benchmarks for hourly and monthly simulations.
+///
+/// Runs multiple iterations of both simulation models with profiling
+/// enabled to measure execution time and identify bottlenecks.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-16
+/// @copyright Copyright Argonne National Laboratory
 #include "../HourlyModel.hpp"
 #include "../MonthlyModel.hpp"
 #include "../Profiler.hpp" // Include the new profiler

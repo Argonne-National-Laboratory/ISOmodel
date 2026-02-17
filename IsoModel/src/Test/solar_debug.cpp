@@ -1,8 +1,13 @@
-// solar_debug.cpp
-//
-// Refactored to remove boost dependencies and ensure output prints regardless
-// of global debug flags.
-
+/// @file solar_debug.cpp
+/// @brief Debug utility for solar radiation calculations.
+///
+/// Standalone program that loads a building model and prints detailed
+/// solar radiation intermediate values for debugging and validation.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-03-11
+/// @copyright Copyright Argonne National Laboratory
 #include "../MonthlyModel.hpp"
 #include "../SolarRadiation.hpp"
 #include "../UserModel.hpp"

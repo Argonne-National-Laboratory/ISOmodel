@@ -1,3 +1,16 @@
+/// @file Cooling.hpp
+/// @brief Cooling system properties and HVAC distribution parameters.
+///
+/// Stores COP, partial load value, temperature setpoints (occupied and
+/// unoccupied), HVAC loss factors, pump power, and district cooling
+/// parameters. Properties map to ISO 13790 and EN 15243 cooling calculations.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #pragma once
 #include "ISOModelAPI.hpp"
 
