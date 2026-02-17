@@ -3,6 +3,7 @@
 #include "ISOModelAPI.hpp" // For ISOMODEL_API macro
 #include "MathHelpers.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -32,13 +33,13 @@ struct LoadedScheduleData final {
 
 // Weekly schedule container (moved out of HourlyModel)
 struct WeeklyScheduleData final {
-  double q_ve[24][7];
-  double ext_App[24][7];
-  double int_App[24][7];
-  double ext_L[24][7];
-  double int_L[24][7];
-  double theta_H[24][7]; // Heating setpoint
-  double theta_C[24][7]; // Cooling setpoint
+  std::array<std::array<double, 7>, 24> q_ve{};
+  std::array<std::array<double, 7>, 24> ext_App{};
+  std::array<std::array<double, 7>, 24> int_App{};
+  std::array<std::array<double, 7>, 24> ext_L{};
+  std::array<std::array<double, 7>, 24> int_L{};
+  std::array<std::array<double, 7>, 24> theta_H{}; // Heating setpoint
+  std::array<std::array<double, 7>, 24> theta_C{}; // Cooling setpoint
 };
 
 // NEW: Struct to hold only the schedule-related data for HourlyCache

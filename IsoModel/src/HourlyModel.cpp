@@ -392,7 +392,7 @@ std::vector<EndUses> HourlyModel::processResults(bool aggregateByMonth) {
   if (aggregateByMonth) {
     for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
       EndUses eu;
-      double sums[9] = {0};
+      std::array<double, 9> sums{};
       for (int i = MONTH_END_HOURS[m]; i < MONTH_END_HOURS[m + 1]; ++i) {
         sums[0] += m_phi_H_nd[i];
         sums[1] += m_phi_C_nd[i];

@@ -5,6 +5,7 @@
 #include "../ISOResults.hpp"
 #include "../UserModel.hpp"
 
+#include <array>
 #include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
@@ -20,7 +21,7 @@ TEST_F(ISOModelFixture, HourlyModelScheduleTests) {
   // Expected monthly results from test_bldg_schedules_out.txt (without month column).
   // Format: ElecHeat, ElecCool, ElecIntLights, ElecExtLights, ElecFans, ElecPump, ElecEquipInt,
   // ElecEquipExt, ElectDHW, GasHeat, GasCool, GasEquip, GasDHW
-  double expected[12][13] = {
+  const std::array<std::array<double, 13>, 12> expected = {{
       {0, 0, 3.002, 0.0130693, 16.6916, 0.186, 3.196, 0.0246029, 0, 46.1865, 0, 0, 0},
       {0, 0, 2.716, 0.000594061, 13.4495, 0.168, 2.888, 0.0221614, 0, 37.1344, 0, 0, 0},
       {0, 0.00908381, 3.037, 0, 10.5838, 0.17825, 3.206, 0.0241333, 0, 28.1998, 0, 0, 0},
@@ -32,7 +33,8 @@ TEST_F(ISOModelFixture, HourlyModelScheduleTests) {
       {0, 1.74363, 2.895, 0, 3.3997, 0.1645, 3.09, 0.0239455, 0, 6.85617, 0, 0, 0},
       {0, 0.146357, 3.002, 0.00653467, 6.73004, 0.1605, 3.196, 0.0246029, 0, 16.6229, 0, 0, 0},
       {0, 0.00738007, 2.93, 0.0130693, 10.5665, 0.17175, 3.1, 0.023476, 0, 28.4171, 0, 0, 0},
-      {0, 0, 2.967, 0.0124753, 16.2766, 0.186, 3.186, 0.0250724, 0, 44.7369, 0, 0, 0}};
+      {0, 0, 2.967, 0.0124753, 16.2766, 0.186, 3.186, 0.0250724, 0, 44.7369, 0, 0, 0},
+  }};
 
 
   openstudio::isomodel::UserModel userModel;

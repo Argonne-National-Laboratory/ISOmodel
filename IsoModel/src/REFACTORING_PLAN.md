@@ -479,13 +479,17 @@ int vent_rate_flag() const;     // 0 or 1 — should be bool
 
 ### 16f. Replace C-style Arrays with `std::array`
 
-**Problem:** `SolarRadiation.hpp` uses C-style arrays:
-```cpp
-double m_surfSin[NUM_VERTICAL_SURFACES] = {};
-double m_surfCos[NUM_VERTICAL_SURFACES] = {};
-```
+**Status: ✅ COMPLETE**
 
-**Proposed Fix:** Use `std::array<double, NUM_VERTICAL_SURFACES>`.
+Replaced all C-style arrays with `std::array` across the codebase:
+
+- **SolarRadiation.hpp:** `m_surfSin` and `m_surfCos` already converted to `std::array<double, NUM_VERTICAL_SURFACES>` (done in prior optimization pass)
+- **TimeFrame.hpp:** `YTD`, `Hour`, `DayOfMonth`, `DayOfWeek`, `Month` already converted to `std::array<int, HOURS_IN_YEAR>` (done in prior pass)
+- **Schedules.hpp:** Converted all 7 `WeeklyScheduleData` members from `double name[24][7]` to `std::array<std::array<double, 7>, 24>` (`q_ve`, `ext_App`, `int_App`, `ext_L`, `int_L`, `theta_H`, `theta_C`)
+- **HourlyModel.cpp:** Converted local `double sums[9]` to `std::array<double, 9>`
+- **Test files:** Converted `double expected[12][13]` to `const std::array<std::array<double, 13>, 12>` in `MonthlyModel_GTest.cpp`, `HourlyModel_GTest.cpp`, and `HourlySchedules_GTest.cpp`
+
+No C-style array declarations remain in headers or implementation files.
 
 ---
 
