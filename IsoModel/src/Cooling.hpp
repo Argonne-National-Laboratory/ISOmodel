@@ -9,52 +9,56 @@ public:
   Cooling() = default;
   ~Cooling() = default;
 
-  [[nodiscard]] double temperatureSetPointOccupied() const { return m_temperatureSetPointOccupied; }
+  [[nodiscard]] double temperatureSetPointOccupied() const noexcept {
+    return m_temperatureSetPointOccupied;
+  }
   void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
 
-  [[nodiscard]] double temperatureSetPointUnoccupied() const { return m_temperatureSetPointUnoccupied; }
+  [[nodiscard]] double temperatureSetPointUnoccupied() const noexcept {
+    return m_temperatureSetPointUnoccupied;
+  }
   void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
 
-  [[nodiscard]] double cop() const { return m_cop; }
+  [[nodiscard]] double cop() const noexcept { return m_cop; }
   void setCop(double value) { m_cop = value; }
 
-  [[nodiscard]] double partialLoadValue() const { return m_partialLoadValue; }
+  [[nodiscard]] double partialLoadValue() const noexcept { return m_partialLoadValue; }
   void setPartialLoadValue(double value) { m_partialLoadValue = value; }
 
-  [[nodiscard]] double hvacLossFactor() const { return m_hvacLossFactor; }
+  [[nodiscard]] double hvacLossFactor() const noexcept { return m_hvacLossFactor; }
   void setHvacLossFactor(double value) { m_hvacLossFactor = value; }
 
-  [[nodiscard]] double pumpControlReduction() const { return m_pumpControlReduction; }
+  [[nodiscard]] double pumpControlReduction() const noexcept { return m_pumpControlReduction; }
   void setPumpControlReduction(double value) { m_pumpControlReduction = value; }
 
-  [[nodiscard]] bool forcedAirCooling() const { return m_forcedAirCooling; }
+  [[nodiscard]] bool forcedAirCooling() const noexcept { return m_forcedAirCooling; }
   void setForcedAirCooling(bool value) { m_forcedAirCooling = value; }
 
-  [[nodiscard]] double T_cl_ctrl_flag() const { return m_T_cl_ctrl_flag; }
+  [[nodiscard]] double T_cl_ctrl_flag() const noexcept { return m_T_cl_ctrl_flag; }
   void setT_cl_ctrl_flag(double value) { m_T_cl_ctrl_flag = value; }
 
-  [[nodiscard]] double dT_supp_cl() const { return m_dT_supp_cl; }
+  [[nodiscard]] double dT_supp_cl() const noexcept { return m_dT_supp_cl; }
   void setDT_supp_cl(double value) { m_dT_supp_cl = value; }
 
-  [[nodiscard]] double DC_YesNo() const { return m_DC_YesNo; }
+  [[nodiscard]] double DC_YesNo() const noexcept { return m_DC_YesNo; }
   void setDC_YesNo(double value) { m_DC_YesNo = value; }
 
-  [[nodiscard]] double eta_DC_network() const { return m_eta_DC_network; }
+  [[nodiscard]] double eta_DC_network() const noexcept { return m_eta_DC_network; }
   void setEta_DC_network(double value) { m_eta_DC_network = value; }
 
-  [[nodiscard]] double eta_DC_COP() const { return m_eta_DC_COP; }
+  [[nodiscard]] double eta_DC_COP() const noexcept { return m_eta_DC_COP; }
   void setEta_DC_COP(double value) { m_eta_DC_COP = value; }
 
-  [[nodiscard]] double eta_DC_frac_abs() const { return m_eta_DC_frac_abs; }
+  [[nodiscard]] double eta_DC_frac_abs() const noexcept { return m_eta_DC_frac_abs; }
   void setEta_DC_frac_abs(double value) { m_eta_DC_frac_abs = value; }
 
-  [[nodiscard]] double eta_DC_COP_abs() const { return m_eta_DC_COP_abs; }
+  [[nodiscard]] double eta_DC_COP_abs() const noexcept { return m_eta_DC_COP_abs; }
   void setEta_DC_COP_abs(double value) { m_eta_DC_COP_abs = value; }
 
-  [[nodiscard]] double frac_DC_free() const { return m_frac_DC_free; }
+  [[nodiscard]] double frac_DC_free() const noexcept { return m_frac_DC_free; }
   void setFrac_DC_free(double value) { m_frac_DC_free = value; }
 
-  [[nodiscard]] double E_pumps() const { return m_E_pumps; }
+  [[nodiscard]] double E_pumps() const noexcept { return m_E_pumps; }
   void setE_pumps(double value) { m_E_pumps = value; }
 
 private:

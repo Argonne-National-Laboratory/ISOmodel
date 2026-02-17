@@ -1,6 +1,5 @@
 #pragma once
 #include "ISOModelAPI.hpp"
-
 #include "MathHelpers.hpp"
 
 namespace openstudio::isomodel {
@@ -14,14 +13,14 @@ public:
   /**
    * Floor area (m2).
    */
-  [[nodiscard]] double floorArea() const { return m_floorArea; }
+  [[nodiscard]] double floorArea() const noexcept { return m_floorArea; }
   void setFloorArea(double value) { m_floorArea = value; }
 
   /**
    * Wall and roof area (m2). The order is S, SE, E, NE, N, NW, W, SW, roof.
    */
   [[nodiscard]] Vector wallArea() const { return m_wallArea; }
-  [[nodiscard]] const Vector &wallAreaRef() const { return m_wallArea; }
+  [[nodiscard]] const Vector &wallAreaRef() const noexcept { return m_wallArea; }
   void setWallArea(const Vector &value) { m_wallArea = value; }
   void setWallArea(int index, double value) { m_wallArea[index] = value; }
 
@@ -30,7 +29,7 @@ public:
    * roof.
    */
   [[nodiscard]] Vector windowArea() const { return m_windowArea; }
-  [[nodiscard]] const Vector &windowAreaRef() const { return m_windowArea; }
+  [[nodiscard]] const Vector &windowAreaRef() const noexcept { return m_windowArea; }
   void setWindowArea(const Vector &value) { m_windowArea = value; }
   void setWindowArea(int index, double value) { m_windowArea[index] = value; }
 
@@ -38,7 +37,7 @@ public:
    * Wall and roof U-values (W/m2/K).
    */
   [[nodiscard]] Vector wallUniform() const { return m_wallUniform; }
-  [[nodiscard]] const Vector &wallUniformRef() const { return m_wallUniform; }
+  [[nodiscard]] const Vector &wallUniformRef() const noexcept { return m_wallUniform; }
   void setWallUniform(const Vector &value) { m_wallUniform = value; }
   void setWallUniform(int index, double value) { m_wallUniform[index] = value; }
 
@@ -46,7 +45,7 @@ public:
    * Window and skylight U-values (W/m2/K).
    */
   [[nodiscard]] Vector windowUniform() const { return m_windowUniform; }
-  [[nodiscard]] const Vector &windowUniformRef() const { return m_windowUniform; }
+  [[nodiscard]] const Vector &windowUniformRef() const noexcept { return m_windowUniform; }
   void setWindowUniform(const Vector &value) { m_windowUniform = value; }
   void setWindowUniform(int index, double value) { m_windowUniform[index] = value; }
 
@@ -54,7 +53,9 @@ public:
    * Wall and roof thermal emissivity (0 to 1).
    */
   [[nodiscard]] Vector wallThermalEmissivity() const { return m_wallThermalEmissivity; }
-  [[nodiscard]] const Vector &wallThermalEmissivityRef() const { return m_wallThermalEmissivity; }
+  [[nodiscard]] const Vector &wallThermalEmissivityRef() const noexcept {
+    return m_wallThermalEmissivity;
+  }
   void setWallThermalEmissivity(const Vector &value) { m_wallThermalEmissivity = value; }
   void setWallThermalEmissivity(int index, double value) { m_wallThermalEmissivity[index] = value; }
 
@@ -62,7 +63,9 @@ public:
    * Wall and roof solar absorption coeficient (0 to 1).
    */
   [[nodiscard]] Vector wallSolarAbsorption() const { return m_wallSolarAbsorbtion; }
-  [[nodiscard]] const Vector &wallSolarAbsorptionRef() const { return m_wallSolarAbsorbtion; }
+  [[nodiscard]] const Vector &wallSolarAbsorptionRef() const noexcept {
+    return m_wallSolarAbsorbtion;
+  }
   void setWallSolarAbsorption(const Vector &value) { m_wallSolarAbsorbtion = value; }
   void setWallSolarAbsorption(int index, double value) { m_wallSolarAbsorbtion[index] = value; }
 
@@ -70,7 +73,9 @@ public:
    * Window shading device factors.
    */
   [[nodiscard]] Vector windowShadingDevice() const { return m_windowShadingDevice; }
-  [[nodiscard]] const Vector &windowShadingDeviceRef() const { return m_windowShadingDevice; }
+  [[nodiscard]] const Vector &windowShadingDeviceRef() const noexcept {
+    return m_windowShadingDevice;
+  }
   void setWindowShadingDevice(const Vector &value) { m_windowShadingDevice = value; }
   void setWindowShadingDevice(int index, double value) { m_windowShadingDevice[index] = value; }
 
@@ -80,98 +85,104 @@ public:
   [[nodiscard]] Vector windowNormalIncidenceSolarEnergyTransmittance() const {
     return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
-  [[nodiscard]] const Vector &windowNormalIncidenceSolarEnergyTransmittanceRef() const {
+  [[nodiscard]] const Vector &windowNormalIncidenceSolarEnergyTransmittanceRef() const noexcept {
     return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
   void setWindowNormalIncidenceSolarEnergyTransmittance(const Vector &value) {
     m_windowNormalIncidenceSolarEnergyTransmittance = value;
   }
-  void setWindowNormalIncidenceSolarEnergyTransmittance(int index, double value) {
+  void setWindowNormalIncidenceSolarEnergyTransmittance(int index, double value) noexcept {
     m_windowNormalIncidenceSolarEnergyTransmittance[index] = value;
   }
 
   /**
    * Window solar control factor (external control) (0 to 1).
    */
-  [[nodiscard]] Vector windowShadingCorrectionFactor() const { return m_windowShadingCorrectionFactor; }
-  [[nodiscard]] const Vector &windowShadingCorrectionFactorRef() const { return m_windowShadingCorrectionFactor; }
+  [[nodiscard]] Vector windowShadingCorrectionFactor() const {
+    return m_windowShadingCorrectionFactor;
+  }
+  [[nodiscard]] const Vector &windowShadingCorrectionFactorRef() const noexcept {
+    return m_windowShadingCorrectionFactor;
+  }
   void setWindowShadingCorrectionFactor(const Vector &value) {
     m_windowShadingCorrectionFactor = value;
   }
-  void setWindowShadingCorrectionFactor(int index, double value) {
+  void setWindowShadingCorrectionFactor(int index, double value) noexcept {
     m_windowShadingCorrectionFactor[index] = value;
   }
 
   /**
    * Interior surface heat capacity (J/K/m2).
    */
-  [[nodiscard]] double interiorHeatCapacity() const { return m_interiorHeatCapacity; }
+  [[nodiscard]] double interiorHeatCapacity() const noexcept { return m_interiorHeatCapacity; }
   void setInteriorHeatCapacity(double value) { m_interiorHeatCapacity = value; }
 
   /**
    * Exterior surface (wall) heat capacity (J/K/m2).
    */
-  [[nodiscard]] double wallHeatCapacity() const { return m_wallHeatCapacity; }
+  [[nodiscard]] double wallHeatCapacity() const noexcept { return m_wallHeatCapacity; }
   void setWallHeatCapacity(double value) { m_wallHeatCapacity = value; }
 
   /**
    * Building height (m).
    */
-  [[nodiscard]] double buildingHeight() const { return m_buildingHeight; }
+  [[nodiscard]] double buildingHeight() const noexcept { return m_buildingHeight; }
   void setBuildingHeight(double value) { m_buildingHeight = value; }
 
   /**
    * Infiltration rate occupied (m3/m2/hr, based on surface area).
    */
-  [[nodiscard]] double infiltrationRate() const { return m_infiltrationRate; }
+  [[nodiscard]] double infiltrationRate() const noexcept { return m_infiltrationRate; }
   void setInfiltrationRate(double value) { m_infiltrationRate = value; }
 
   /**
    * External thermal surface resistance (m2*k/W).
    */
-  [[nodiscard]] double R_se() const { return m_R_se; }
+  [[nodiscard]] double R_se() const noexcept { return m_R_se; }
   void setR_se(double R_se) { m_R_se = R_se; }
 
   /**
    * Irradiance at which moveable shading is at maximum use (W).
    */
-  [[nodiscard]] double irradianceForMaxShadingUse() const { return m_irradianceForMaxShadingUse; }
-  void setIrradianceForMaxShadingUse(double irradianceForMaxShadingUse) {
+  [[nodiscard]] double irradianceForMaxShadingUse() const noexcept {
+    return m_irradianceForMaxShadingUse;
+  }
+  void setIrradianceForMaxShadingUse(double irradianceForMaxShadingUse) noexcept {
     m_irradianceForMaxShadingUse = irradianceForMaxShadingUse;
   }
 
   /**
    * Shading factor at max use of moveable shading (unitless).
    */
-  [[nodiscard]] double shadingFactorAtMaxUse() const { return m_shadingFactorAtMaxUse; }
-  void setShadingFactorAtMaxUse(double shadingFactorAtMaxUse) {
+  [[nodiscard]] double shadingFactorAtMaxUse() const noexcept { return m_shadingFactorAtMaxUse; }
+  void setShadingFactorAtMaxUse(double shadingFactorAtMaxUse) noexcept {
     m_shadingFactorAtMaxUse = shadingFactorAtMaxUse;
   }
 
   /**
    * Total interior surface area per floor area (m2/m2).
    */
-  [[nodiscard]] double totalAreaPerFloorArea() const { return m_totalAreaPerFloorArea; }
-  void setTotalAreaPerFloorArea(double totalAreaPerFloorArea) {
+  [[nodiscard]] double totalAreaPerFloorArea() const noexcept { return m_totalAreaPerFloorArea; }
+  void setTotalAreaPerFloorArea(double totalAreaPerFloorArea) noexcept {
     m_totalAreaPerFloorArea = totalAreaPerFloorArea;
   }
 
   /**
    * Window frame factor.
    */
-  [[nodiscard]] double win_ff() const { return m_win_ff; }
+  [[nodiscard]] double win_ff() const noexcept { return m_win_ff; }
   void setWin_ff(double win_ff) { m_win_ff = win_ff; }
 
   /**
    * Correction factor for non-scattering window as per ISO 13790 11.4.2.
    */
-  [[nodiscard]] double win_F_W() const { return m_win_F_W; }
+  [[nodiscard]] double win_F_W() const noexcept { return m_win_F_W; }
   void setWin_F_W(double win_F_W) { m_win_F_W = win_F_W; }
 
   /**
    * Vertical wall external convection surface heat resistance as per ISO 6946.
    */
-  [[nodiscard]] double R_sc_ext() const { return m_R_sc_ext; }
+  [[nodiscard]] double R_sc_ext() const noexcept { return m_R_sc_ext; }
   void setR_sc_ext(double R_sc_ext) { m_R_sc_ext = R_sc_ext; }
 
 private:

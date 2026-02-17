@@ -436,9 +436,18 @@ This creates a massive, hard-to-maintain facade with ~200+ forwarding methods.
 
 ### 16b. `noexcept` Consistency
 
-**Problem:** `noexcept` is used on some methods (`Matrix::size1()`, `HourlyModel` constructor) but not on simple getters that clearly can't throw.
+**Status: ✅ COMPLETE**
 
-**Proposed Fix:** Add `noexcept` to all simple getters (return member by value/reference) and trivial functions.
+Added `noexcept` to all simple getters and setters across 15 header files:
+- Getters returning `double`, `int`, `bool`, enum, `const &`, or `std::shared_ptr` by value → `noexcept`
+- Setters taking scalar types (`double`, `int`, `bool`, enum) → `noexcept`
+- Setters doing indexed assignment (`m_vec[index] = value`) → `noexcept`
+- **Excluded:** Getters returning `std::string`, `Vector`, `Matrix`, or `std::vector<T>` by value (copy can throw `std::bad_alloc`)
+- **Excluded:** Setters taking `const Vector &` (copy assignment can throw)
+
+Files modified: Building.hpp, Cooling.hpp, EndUses.hpp, EpwData.hpp, Heating.hpp, HourlyModel.hpp,
+Lighting.hpp, Location.hpp, Population.hpp, SimulationSettings.hpp, SolarRadiation.hpp,
+Structure.hpp, UserModel.hpp, Ventilation.hpp, WeatherData.hpp
 
 ### 16c. `std::string_view` for String Parameters
 
@@ -504,15 +513,16 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 ## 18. Test Code Modernization
 
-**Problem:**
-- `ISOModelFixture` uses `virtual void SetUp() override` — the `virtual` keyword is redundant with `override`
-- Test fixture uses old GTest patterns
-- Magic numbers in test assertions without named constants
+**Status: ✅ COMPLETE**
 
-**Proposed Fix:**
-- Remove redundant `virtual` keyword when `override` is present
-- Use `EXPECT_DOUBLE_EQ` or `EXPECT_NEAR` consistently
-- Extract test constants into named values
+- ~~Remove redundant `virtual` keyword when `override` is present~~ — Already fixed
+- ~~Use `EXPECT_DOUBLE_EQ` or `EXPECT_NEAR` consistently~~ — Audited, all correct
+- ~~Extract test constants into named values~~ — Done: `constexpr NUM_MONTHS`, `NUM_END_USES`, `REGRESSION_TOLERANCE`
+- ~~Replace stale file headers with correct filenames~~ — Done (all 7 compiled test files)
+- ~~Standardize `#include <gtest/gtest.h>` (system include style)~~ — Done
+- ~~Remove commented-out old expected values in HourlyModel_GTest~~ — Done (~40 lines)
+- ~~Remove unused global, unused includes from ISOModel_GTest~~ — Done
+- ~~Delete dead test files (Properties_GTest.cpp, HourlySchedule_GTest.cpp)~~ — Done
 
 ---
 
@@ -608,7 +618,7 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - [ ] Standardize documentation style across all files (§17)
 - [ ] Add units and ISO references to all physical quantity accessors
 - [ ] Add ISO equation variable cross-reference comments to all ISO-notation accessors
-- [ ] Modernize test code (§18)
+- [x] Modernize test code (§18)
 - [ ] Final `clang-format` pass
 - [ ] Run tests ✓
 

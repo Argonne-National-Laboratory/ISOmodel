@@ -9,6 +9,7 @@
  */
 
 #pragma once
+#include "EndUses.hpp"
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
@@ -23,8 +24,6 @@
 #include <span>
 #include <string>
 #include <vector>
-
-#include "EndUses.hpp"
 
 namespace openstudio::isomodel {
 
@@ -75,7 +74,9 @@ public:
   [[nodiscard]] std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
   // NEW: Accessor for the internal schedule cache
-  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const { return m_hourlyData; }
+  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const noexcept {
+    return m_hourlyData;
+  }
 
   // Setter for pre-loaded schedule data, called by UserModel
   void setPreloadedScheduleData(std::vector<schedules::ScheduleDataForHourlyCache> data);
@@ -170,4 +171,3 @@ private:
   virtual double coolingSetpointSchedule(int, int, int) { return 0; }
 };
 } // namespace openstudio::isomodel
-

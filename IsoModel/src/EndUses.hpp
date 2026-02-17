@@ -16,7 +16,7 @@ public:
     }
   }
 
-  [[nodiscard]] double getEndUse(int index) const {
+  [[nodiscard]] double getEndUse(int index) const noexcept {
     if (index >= 0 && index < static_cast<int>(m_endUses.size())) {
       return m_endUses[index];
     }
@@ -28,4 +28,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-

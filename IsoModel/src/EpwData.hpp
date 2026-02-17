@@ -65,20 +65,19 @@ public:
   // Getters
   [[nodiscard]] std::string location() const { return m_location; }
   [[nodiscard]] std::string stationid() const { return m_stationid; }
-  [[nodiscard]] int timezone() const { return m_timezone; }
-  [[nodiscard]] double latitude() const { return m_latitude; }
-  [[nodiscard]] double longitude() const { return m_longitude; }
+  [[nodiscard]] int timezone() const noexcept { return m_timezone; }
+  [[nodiscard]] double latitude() const noexcept { return m_latitude; }
+  [[nodiscard]] double longitude() const noexcept { return m_longitude; }
 
   // Note: Returning by value (copy) is the original interface.
   // ideally this would return const reference, but we must preserve ABI.
   [[nodiscard]] std::vector<std::vector<double>> data() const { return m_data; }
 
   // Optimization: Return const reference to avoid copy
-  [[nodiscard]] const std::vector<std::vector<double>> &dataRef() const { return m_data; }
+  [[nodiscard]] const std::vector<std::vector<double>> &dataRef() const noexcept { return m_data; }
 
   // new structure for streaming weather data into WeatherData object
   void populateWeatherData(std::shared_ptr<class WeatherData> wd);
 };
 
 } // namespace openstudio::isomodel
-
