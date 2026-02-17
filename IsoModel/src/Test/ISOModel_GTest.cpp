@@ -1,16 +1,6 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// ISOModel_GTest.cpp — GoogleTest main entry point.
 
-#include "../UserModel.hpp"
-#include "gtest/gtest.h"
-
-using namespace openstudio::isomodel;
-
-std::string test_data_path;
+#include <gtest/gtest.h>
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

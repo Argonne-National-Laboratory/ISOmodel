@@ -1,26 +1,22 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// MonthlyModel_GTest.cpp — Monthly simulation regression tests.
 
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 
-TEST_F(ISOModelFixture, MonthlyModelTests) {
-  // the expected values are the results of running the "prior to updated
-  // parameter names and parsing" version and copying the results as they were
-  // printed out to stdout. Consequently these are not "exact" and so we use
-  // EXPECT_NEAR with 0.001 to test.
+// Number of months and end-use categories in the results.
+constexpr int NUM_MONTHS = 12;
+constexpr int NUM_END_USES = 13;
 
-  // These updated expected results are copied from running the model after an
-  // update that changes the results. They are simply to alert us to changes to
-  // the code that affect the results.
+// Tolerance for regression comparisons (results are copied from stdout, not exact).
+constexpr double REGRESSION_TOLERANCE = 0.001;
+
+TEST_F(ISOModelFixture, MonthlyModelTests) {
+  // Expected monthly results — regression baseline to detect unintended changes.
   double expected[12][13] = {{0, 0.01498967975, 2.641326323, 0.2578224281, 9.347675965,
                               0.8179088504, 2.187376303, 0, 0, 53.17565776, 0, 0, 0},
                              {0, 0.02964846487, 2.385714098, 0.1996044604, 7.686021656,
@@ -51,9 +47,9 @@ TEST_F(ISOModelFixture, MonthlyModelTests) {
   auto monthlyModel = userModel.toMonthlyModel();
   auto results = monthlyModel.simulate();
 
-  for (int i = 0; i < 12; ++i) {
-    for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), 0.001)
+  for (int i = 0; i < NUM_MONTHS; ++i) {
+    for (int j = 0; j < NUM_END_USES; ++j) {
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), REGRESSION_TOLERANCE)
           << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
     }
   }

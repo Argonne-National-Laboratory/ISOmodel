@@ -1,26 +1,23 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// HourlySchedules_GTest.cpp — Hourly model with custom schedules regression tests.
 
 #include "ISOModelFixture.hpp"
 
 #include "../ISOResults.hpp"
 #include "../UserModel.hpp"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 
+// Number of months and end-use categories in the results.
+constexpr int NUM_MONTHS = 12;
+constexpr int NUM_END_USES = 13;
+
+// Tolerance for regression comparisons (results are copied from stdout, not exact).
+constexpr double REGRESSION_TOLERANCE = 0.001;
+
 TEST_F(ISOModelFixture, HourlyModelScheduleTests) {
-  // The expected values are the results of running the "prior to updated
-  // parameter names and parsing" version and copying the results as they were
-  // printed out to stdout. Consequently these are not "exact" and so we use
-  // EXPECT_NEAR with 0.001 to test.
-
-
-  // Expected monthly results from test_bldg_schedules_out.txt (without month column)
+  // Expected monthly results from test_bldg_schedules_out.txt (without month column).
   // Format: ElecHeat, ElecCool, ElecIntLights, ElecExtLights, ElecFans, ElecPump, ElecEquipInt,
   // ElecEquipExt, ElectDHW, GasHeat, GasCool, GasEquip, GasDHW
   double expected[12][13] = {
@@ -43,9 +40,9 @@ TEST_F(ISOModelFixture, HourlyModelScheduleTests) {
   HourlyModel hourlyModel = userModel.toHourlyModel();
   auto results = hourlyModel.simulate(true); // aggregateByMonth = true
 
-  for (int i = 0; i < 12; ++i) {
-    for (int j = 0; j < 13; ++j) {
-      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), 0.001)
+  for (int i = 0; i < NUM_MONTHS; ++i) {
+    for (int j = 0; j < NUM_END_USES; ++j) {
+      EXPECT_NEAR(expected[i][j], results[i].getEndUse(j), REGRESSION_TOLERANCE)
           << "Month = " << i << ", End Use = " << endUseNames[j] << "\n";
     }
   }

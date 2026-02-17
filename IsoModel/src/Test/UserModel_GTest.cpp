@@ -1,16 +1,10 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// UserModel_GTest.cpp — UserModel loading and property initialization tests.
 
 #include "ISOModelFixture.hpp"
 
-#include "gtest/gtest.h"
-
-// #include "../Properties.hpp"
 #include "../UserModel.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 

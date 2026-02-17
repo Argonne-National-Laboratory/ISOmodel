@@ -6,6 +6,12 @@
 [Oo]bj/
 msvc/
 
+# CMake generated files
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+
 # Doxygen output folder
 [Dd]oc/
 

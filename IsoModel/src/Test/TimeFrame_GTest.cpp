@@ -1,14 +1,10 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
+// TimeFrame_GTest.cpp — TimeFrame calendar calculation tests.
 
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 

@@ -1,15 +1,11 @@
-/*
- * ISOModel_GTest.cpp
- *
- * Created on: Dec 5, 2014
- * Author: nick
- */
+// SolarRadiation_GTest.cpp — Solar position and radiation calculation tests.
 
 #include "ISOModelFixture.hpp"
 
-#include "../SolarRadiation.hpp" // <--- ADDED: Explicit include required now
+#include "../SolarRadiation.hpp"
 #include "../UserModel.hpp"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 
