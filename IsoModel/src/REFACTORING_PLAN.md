@@ -565,7 +565,7 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - [ ] **1g.** Remove dead code and stale comments (§20) — *deferred by decision*
 - [x] **1h.** Fix C-style arrays → `std::array` in `SolarRadiation.hpp` (§16f)
 - [x] **1i.** Remove all copyright headers (§3) — removed LGPL header from `old/PhysicalQuantities.hpp`; no other files had copyright headers
-- [ ] **1j.** Remove `old/` directory and generated files (§19) — *deferred*
+- [x] **1j.** Remove `old/` directory (15 files) and `test_data/old/` directory (8 files) (§19)
 - [x] All tests pass (18/18) after each sub-task
 
 ### Phase 2: Member Naming Consistency (Internal, No API Change)
