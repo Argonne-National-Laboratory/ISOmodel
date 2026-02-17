@@ -143,7 +143,7 @@ void UserModel::setCoreSimulationProperties(Simulation &sim) const {
   sim.setStructure(structure);
   sim.setVentilation(ventilation);
   sim.setLocation(location);
-  sim.setEpwData(_edata);
+  sim.setEpwData(m_edata);
   sim.setSimulationSettings(simSettings);
   // Removed setPhysicalQuantities, as models now use constants
 }
@@ -159,7 +159,7 @@ HourlyModel UserModel::toHourlyModel() const {
 
   // Orchestrate schedule loading and pass the prepared data to HourlyModel
   std::vector<schedules::ScheduleDataForHourlyCache> scheduleData = schedules::getHourlySchedules(
-      _hourlySchedulePath, pop, ventilation, building, lights, heating, cooling);
+      m_hourlySchedulePath, pop, ventilation, building, lights, heating, cooling);
   sim.setPreloadedScheduleData(std::move(scheduleData));
 
   return sim;
@@ -483,18 +483,18 @@ std::string UserModel::resolveFilename(std::string_view baseFile, std::string_vi
 
 void UserModel::loadWeather() {
   std::string weatherFilename;
-  if (fileExists(_weatherFilePath)) {
-    weatherFilename = _weatherFilePath;
+  if (fileExists(m_weatherFilePath)) {
+    weatherFilename = m_weatherFilePath;
   } else {
-    weatherFilename = resolveFilename(dataFile, _weatherFilePath);
+    weatherFilename = resolveFilename(dataFile, m_weatherFilePath);
     if (!fileExists(weatherFilename)) {
-      failAndInvalidate(*this, "Weather File Not Found", _weatherFilePath);
+      failAndInvalidate(*this, "Weather File Not Found", m_weatherFilePath);
     }
   }
 
-  _edata->loadData(weatherFilename);
+  m_edata->loadData(weatherFilename);
   initializeSolar();
-  location.setWeatherData(_weather);
+  location.setWeatherData(m_weather);
 }
 
 void UserModel::loadAndSetWeather() {
@@ -519,17 +519,17 @@ void UserModel::loadWeather(int block_size, double *weather_data) {
   double lon = weather_data[1];
 
   LatLon latlon = {lat, lon};
-  auto iter = _weather_cache.find(latlon);
-  if (iter == _weather_cache.end()) {
-    _weather = std::make_shared<WeatherData>();
-    _weather_cache.emplace(latlon, _weather);
-    _edata->loadData(block_size, weather_data);
+  auto iter = m_weatherCache.find(latlon);
+  if (iter == m_weatherCache.end()) {
+    m_weather = std::make_shared<WeatherData>();
+    m_weatherCache.emplace(latlon, m_weather);
+    m_edata->loadData(block_size, weather_data);
     initializeSolar();
   } else {
-    _weather = iter->second;
+    m_weather = iter->second;
   }
 
-  location.setWeatherData(_weather);
+  location.setWeatherData(m_weather);
 
   _valid = true;
 }
@@ -537,8 +537,8 @@ void UserModel::loadWeather(int block_size, double *weather_data) {
 // OPTIMIZATION ITEM 1: Direct transfer
 void UserModel::initializeSolar() {
   // Optimization: Direct transfer replaces the CSV parsing logic
-  if (_edata && _weather) {
-    _edata->populateWeatherData(_weather);
+  if (m_edata && m_weather) {
+    m_edata->populateWeatherData(m_weather);
   }
 }
 

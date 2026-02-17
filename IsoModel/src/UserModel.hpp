@@ -84,18 +84,18 @@ public:
   // ------------------------------------------------ //
 
   /// Gets a EpwData property.
-  [[nodiscard]] const std::shared_ptr<EpwData> epwData() const { return _edata; }
+  [[nodiscard]] const std::shared_ptr<EpwData> epwData() const { return m_edata; }
 
   /// Gets a WeatherData property.
-  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() const { return _weather; }
+  [[nodiscard]] const std::shared_ptr<WeatherData> weatherData() const { return m_weather; }
 
   /// Gets a WeatherData property. Property name in .ism file:
   /// "weatherfilepath". Property is required.
-  [[nodiscard]] std::string weatherFilePath() const { return _weatherFilePath; }
+  [[nodiscard]] std::string weatherFilePath() const { return m_weatherFilePath; }
 
   /// Sets a WeatherData property. Property name in .ism file:
   /// "weatherfilepath". Property is required.
-  void setWeatherFilePath(std::string val) { _weatherFilePath = std::move(val); }
+  void setWeatherFilePath(std::string val) { m_weatherFilePath = std::move(val); }
 
   /// Gets a Building property.
   [[nodiscard]] std::string bemType() const {
@@ -1523,11 +1523,11 @@ private:
   std::string resolveFilename(std::string_view baseFile, std::string_view relativeFile);
   void initializeStructure(const YAML::Node &params);
 
-  std::map<LatLon, std::shared_ptr<WeatherData>> _weather_cache;
+  std::map<LatLon, std::shared_ptr<WeatherData>> m_weatherCache;
 
   // In-class initialization
-  std::shared_ptr<WeatherData> _weather = std::make_shared<WeatherData>();
-  std::shared_ptr<EpwData> _edata = std::make_shared<EpwData>();
+  std::shared_ptr<WeatherData> m_weather = std::make_shared<WeatherData>();
+  std::shared_ptr<EpwData> m_edata = std::make_shared<EpwData>();
 
   Population pop;
   Location location;
@@ -1542,12 +1542,12 @@ private:
 
   bool _valid = false;
 
-  std::string _weatherFilePath, _scheduleFilePath, _hourlySchedulePath;
+  std::string m_weatherFilePath, m_scheduleFilePath, m_hourlySchedulePath;
   std::string dataFile;
 
   // Private setter for use by initializeParameters
   void setHourlySchedulePath(std::string hourlySchedulePath) {
-    _hourlySchedulePath = std::move(hourlySchedulePath);
+    m_hourlySchedulePath = std::move(hourlySchedulePath);
   }
 
   void initializeParameters(const YAML::Node &params);
