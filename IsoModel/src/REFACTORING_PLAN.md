@@ -575,9 +575,9 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - [x] **2a.** Rename `_` prefix members to `m_` prefix in `EndUses.hpp` (`_endUses` → `m_endUses`, `_valid` → `m_valid`) (§5)
 - [x] **2b.** Rename `_` prefix members to `m_` prefix in `UserModel.hpp` (`_edata` → `m_edata`, `_weather` → `m_weather`, `_weatherFilePath` → `m_weatherFilePath`) (§5)
 - [x] **2c.** Add `m_` prefix to `Simulation.hpp` protected members (`pop` → `m_pop`, `location` → `m_location`, etc.) and update all references in `UserModel.hpp`/`UserModel.cpp` (§5)
-- [ ] **2d.** Restore `HourlyModel` encapsulation — move public members to private, add const accessors (§9)
-- [ ] **2e.** Add naming convention documentation to this file or a `CODING_STYLE.md`
-- [ ] Run tests ✓
+- [x] **2d.** Restore `HourlyModel` encapsulation — move public members to private, add const accessors (§9)
+- [x] **2e.** Add naming convention documentation — created `CODING_STYLE.md`
+- [x] Run tests ✓ (18/18 pass after each sub-task)
 
 ### Phase 3: Getter/Setter Modernization (Source-Compatible API Changes)
 - [ ] Change return-by-value getters to return `const&` (§6, §7)
