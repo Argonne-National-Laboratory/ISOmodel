@@ -77,12 +77,11 @@ public:
   // NEW: Accessor for the internal schedule cache
   [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const { return m_hourlyData; }
 
-private:
-  void initialize();
-
-public: // Changed from private to public
   // Setter for pre-loaded schedule data, called by UserModel
   void setPreloadedScheduleData(std::vector<schedules::ScheduleDataForHourlyCache> data);
+
+private:
+  void initialize();
 
   // Solar Caching Members
   std::shared_ptr<EpwData> m_lastEpwData;
