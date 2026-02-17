@@ -41,36 +41,38 @@ The codebase has already undergone partial modernization (C++20 standard, `const
 | Pattern | Examples | Files |
 |---------|----------|-------|
 | `camelCase` accessors | `floorArea()`, `temperatureSetPointOccupied()` | `Building.hpp`, `Structure.hpp` |
-| `snake_case` accessors | `dT_supp_cl()`, `T_cl_ctrl_flag()`, `eta_DC_COP()`, `win_ff()`, `p_exp()` | `Cooling.hpp`, `Heating.hpp`, `Ventilation.hpp`, `Structure.hpp` |
-| `UPPER_CASE` accessors | `DC_YesNo()`, `DH_YesNo()`, `E_pumps()`, `H_ve()` | `Cooling.hpp`, `Heating.hpp`, `Ventilation.hpp` |
+| ISO equation notation accessors | `dT_supp_cl()`, `T_cl_ctrl_flag()`, `eta_DC_COP()`, `win_ff()`, `p_exp()`, `H_ve()`, `E_pumps()`, `DC_YesNo()` | `Cooling.hpp`, `Heating.hpp`, `Ventilation.hpp`, `Structure.hpp` |
 | `m_` prefix members | `m_floorArea`, `m_cop` | Most files |
 | `_` prefix members | `_endUses`, `_valid`, `_edata`, `_weather` | `EndUses.hpp`, `UserModel.hpp` |
 | No prefix members | `pop`, `location`, `lights`, `building` | `Simulation.hpp` |
 
-**Proposed Standard:**
-- **Public API methods:** `camelCase()` — e.g., `supplyTemperatureDeltaCooling()` instead of `dT_supp_cl()`
-- **Private member variables:** `m_camelCase` — e.g., `m_supplyTemperatureDeltaCooling`
-- **Constants:** `UPPER_SNAKE_CASE` (already mostly consistent)
+**Revised Naming Convention (decided during Phase 2 discussion):**
+
+The codebase has two legitimate naming conventions that should **coexist**:
+
+1. **Descriptive `camelCase`** — for properties with clear English names: `floorArea()`, `temperatureSetPointOccupied()`, `buildingHeight()`
+2. **ISO equation notation** — for properties that directly correspond to ISO 13790 (and related standard) equation variables: `dT_supp_cl()` (ΔT_supp,cl), `eta_DC_COP()` (η_DC,COP), `H_ve()` (H_ve), `E_pumps()` (E_pumps)
+
+The ISO notation uses underscores as **subscript separators** (not snake_case), and these names should be **preserved** because:
+- They allow direct cross-referencing with the ISO standard documents
+- Renaming them to camelCase would obscure the mathematical meaning
+- Domain experts expect these names
+
+**Naming Standard:**
+- **Descriptive properties:** `camelCase()` methods, `m_camelCase` members
+- **ISO equation variables:** Preserve existing notation (e.g., `dT_supp_cl()`, `eta_DC_COP()`, `H_ve()`)
+- **Member variable prefix:** Standardize on `m_` for all private/protected members
+- **Constants:** `UPPER_SNAKE_CASE` (already consistent)
 - **Enum values:** `PascalCase` (already consistent with `FuelType::Electric`)
 - **Local variables:** `camelCase`
-- **Protected members in `Simulation`:** `m_` prefix to match private convention
 
-**Migration Strategy:**
-For properties with ISO standard notation (like `dT_supp_cl`, `eta_DC_COP`), provide the new `camelCase` name as the primary API and add a comment referencing the ISO variable name:
-
+**Documentation requirement:** All ISO-notation accessors should have a Doxygen comment with the Unicode symbol and ISO reference:
 ```cpp
-/// Supply temperature delta for cooling (ISO: ΔT_supp,cl) [K]
-double supplyTemperatureDeltaCooling() const { return m_supplyTemperatureDeltaCooling; }
+/// Supply temperature delta for cooling (ΔT_supp,cl) [K]. ISO 13790 §C.3.
+[[nodiscard]] double dT_supp_cl() const noexcept { return m_dT_supp_cl; }
 ```
 
-For backward compatibility, keep old names as `[[deprecated]]` inline wrappers during a transition period:
-
-```cpp
-[[deprecated("Use supplyTemperatureDeltaCooling()")]]
-double dT_supp_cl() const { return supplyTemperatureDeltaCooling(); }
-```
-
-**Affected files:** `Cooling.hpp`, `Heating.hpp`, `Ventilation.hpp`, `Structure.hpp`, `Lighting.hpp`, `EndUses.hpp`, `UserModel.hpp`, `Simulation.hpp`, `SolarRadiation.hpp`, `HourlyModel.hpp`
+**Affected files (member prefix only):** `EndUses.hpp`, `UserModel.hpp`, `Simulation.hpp`
 
 ---
 
@@ -547,29 +549,34 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 ## 21. Implementation Phases
 
-### Phase 0: Preparation (Low Risk)
+### Phase 0: Preparation (Low Risk) ✅ COMPLETE
 - [x] Set up CI with the existing test suite to catch regressions
-- [x ] Run all tests, establish baseline
+- [x] Run all tests, establish baseline (18/18 pass)
 - [x] Create a `.clang-format` file encoding the chosen style
-- [x ] Run `clang-format` on all files for whitespace/brace consistency
+- [x] Run `clang-format` on all files for whitespace/brace consistency
 
-### Phase 1: Non-Breaking Cleanup (No API Changes)
-- [x ] Standardize copyright headers (§3)
-- [x ] Fix include guards / adopt `#pragma once` (§2)
-- [x ] Add `const` to all getters (§4)
-- [x ] Add `[[nodiscard]]` and `noexcept` to getters (§16a, §16b)
-- [ ] Remove dead code and stale comments (§20)
-- [x] Remove `#ifdef ISOMODEL_STANDALONE` dead branches (§14)
-- [ ] Remove `old/` directory and generated files (§19)
-- [x ] Replace `#define TIMESLICES` with `HOURS_IN_YEAR` (§8)
-- [ ] Replace `DEBUG_ISO_MODEL_SIMULATION` macro with `constexpr` (§8)
-- [ ] Fix C-style arrays → `std::array` in `SolarRadiation.hpp` (§16f)
-- [ ] Run tests ✓
+### Phase 1: Non-Breaking Cleanup (No API Changes) ✅ COMPLETE (1g, 1i deferred)
+- [x] **1a.** Fix include guards / adopt `#pragma once` (§2)
+- [x] **1b.** Remove `#ifdef ISOMODEL_STANDALONE` dead branches (§14)
+- [x] **1c.** Replace `#define TIMESLICES` with `HOURS_IN_YEAR` (§8)
+- [x] **1d.** Replace `DEBUG_ISO_MODEL_SIMULATION` macro with `constexpr` (§8)
+- [x] **1e.** Add `const` to all getters (§4)
+- [x] **1f.** Add `[[nodiscard]]` to getters (§16a)
+- [ ] **1g.** Remove dead code and stale comments (§20) — *deferred by decision*
+- [x] **1h.** Fix C-style arrays → `std::array` in `SolarRadiation.hpp` (§16f)
+- [ ] **1i.** Standardize copyright headers (§3) — *deferred*
+- [ ] **1j.** Remove `old/` directory and generated files (§19) — *deferred*
+- [x] All tests pass (18/18) after each sub-task
 
 ### Phase 2: Member Naming Consistency (Internal, No API Change)
-- [ ] Rename `_` prefix members to `m_` prefix in `EndUses.hpp`, `UserModel.hpp` (§5)
-- [ ] Add `m_` prefix to `Simulation.hpp` protected members (§5)
-- [ ] Restore `HourlyModel` encapsulation — move public members to private (§9)
+
+**Scope (revised):** Only standardize the `m_` member variable prefix. ISO equation variable names (e.g., `dT_supp_cl`, `eta_DC_COP`, `H_ve`) are **preserved as-is** — see §1 for rationale.
+
+- [ ] **2a.** Rename `_` prefix members to `m_` prefix in `EndUses.hpp` (`_endUses` → `m_endUses`, `_valid` → `m_valid`) (§5)
+- [ ] **2b.** Rename `_` prefix members to `m_` prefix in `UserModel.hpp` (`_edata` → `m_edata`, `_weather` → `m_weather`, `_weatherFilePath` → `m_weatherFilePath`) (§5)
+- [ ] **2c.** Add `m_` prefix to `Simulation.hpp` protected members (`pop` → `m_pop`, `location` → `m_location`, etc.) and update all references in `UserModel.hpp`/`UserModel.cpp` (§5)
+- [ ] **2d.** Restore `HourlyModel` encapsulation — move public members to private, add const accessors (§9)
+- [ ] **2e.** Add naming convention documentation to this file or a `CODING_STYLE.md`
 - [ ] Run tests ✓
 
 ### Phase 3: Getter/Setter Modernization (Source-Compatible API Changes)
@@ -579,10 +586,14 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - [ ] Add `std::string_view` parameters where appropriate (§16c)
 - [ ] Run tests ✓
 
-### Phase 4: Naming Convention Migration (API Extension + Deprecation)
-- [ ] Add `camelCase` versions of `snake_case` accessors (§1)
-- [ ] Mark old `snake_case` / `UPPER_CASE` accessors as `[[deprecated]]` (§1)
+### Phase 4: Type Safety & Flag Cleanup (API Extension + Deprecation)
+
+**Scope (revised):** The original Phase 4 was "Naming Convention Migration" to rename ISO notation to camelCase. That has been **cancelled** — ISO notation is preserved. This phase now focuses on type safety improvements.
+
 - [ ] Change `double` flags to `bool` / `enum class` with deprecated wrappers (§16e)
+  - `DC_YesNo()` / `DH_YesNo()` → `bool` (keep double wrappers as `[[deprecated]]`)
+  - `T_cl_ctrl_flag()` / `T_ht_ctrl_flag()` → `bool` or `enum class`
+  - `vent_rate_flag()` → `bool`
 - [ ] Run tests ✓
 
 ### Phase 5: Structural Refactoring
@@ -596,6 +607,7 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 ### Phase 6: Documentation & Polish
 - [ ] Standardize documentation style across all files (§17)
 - [ ] Add units and ISO references to all physical quantity accessors
+- [ ] Add ISO equation variable cross-reference comments to all ISO-notation accessors
 - [ ] Modernize test code (§18)
 - [ ] Final `clang-format` pass
 - [ ] Run tests ✓
@@ -611,7 +623,8 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Naming convention | `camelCase` methods, `m_camelCase` members | Matches existing majority pattern |
+| Naming convention | Dual: `camelCase` for descriptive names, ISO notation preserved for equation variables | ISO names enable cross-referencing with standards; renaming would obscure meaning |
+| Member prefix | `m_` for all private/protected members | Consistency; `_` prefix and no-prefix variants eliminated |
 | Include guards | `#pragma once` | Simpler, universally supported |
 | Return semantics | `const&` for member data | Avoids unnecessary copies |
 | Error handling | Exceptions for runtime errors | Consistent, modern C++ |
@@ -625,10 +638,11 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 
 | Phase | Risk | Mitigation |
 |-------|------|------------|
-| Phase 1 | Very Low | No API changes, only additions |
-| Phase 2 | Low | Internal only, tests catch issues |
+| Phase 0 | Very Low | Formatting only | ✅ Complete |
+| Phase 1 | Very Low | No API changes, only additions | ✅ Complete |
+| Phase 2 | Low | Internal only (`m_` prefix), tests catch issues |
 | Phase 3 | Medium | `const&` return could change `auto` deduction; audit call sites |
-| Phase 4 | Low | Old names preserved as deprecated |
+| Phase 4 | Low | Type safety with deprecated wrappers |
 | Phase 5 | Medium-High | `TimeFrame` and `MathHelpers` changes touch many files |
 | Phase 6 | Very Low | Documentation only |
 | Phase 7 | High | Breaking change, requires version bump |
@@ -636,5 +650,6 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 ---
 
 *Document prepared: 2025-02-16*
+*Last updated: 2026-02-16 — Phase 0 & Phase 1 complete; Phase 2 scope revised*
 *Codebase: ISOModel C++ (C++20, CMake 3.20)*
 *Target: Source-compatible refactoring with deprecation path*
