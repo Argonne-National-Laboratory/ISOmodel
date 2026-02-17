@@ -564,7 +564,7 @@ double m_surfCos[NUM_VERTICAL_SURFACES] = {};
 - [x] **1f.** Add `[[nodiscard]]` to getters (§16a)
 - [ ] **1g.** Remove dead code and stale comments (§20) — *deferred by decision*
 - [x] **1h.** Fix C-style arrays → `std::array` in `SolarRadiation.hpp` (§16f)
-- [ ] **1i.** Standardize copyright headers (§3) — *deferred*
+- [x] **1i.** Remove all copyright headers (§3) — removed LGPL header from `old/PhysicalQuantities.hpp`; no other files had copyright headers
 - [ ] **1j.** Remove `old/` directory and generated files (§19) — *deferred*
 - [x] All tests pass (18/18) after each sub-task
 
