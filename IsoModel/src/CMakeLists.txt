@@ -222,10 +222,11 @@ add_custom_command(TARGET isomodel_benchmark
 add_executable(solar_debug ${${target_name}_src} ${${target_name}_solar_debug})
 target_link_libraries(solar_debug PRIVATE yaml-cpp::yaml-cpp)
 
-# 5. Shared Library
-add_library(${library_name} SHARED ${${target_name}_src})
+# 5. Static Library
+add_library(${library_name} STATIC ${${target_name}_src})
 target_link_libraries(${library_name} PRIVATE yaml-cpp::yaml-cpp)
 target_compile_options(${library_name} PRIVATE ${PERF_FLAGS})
+set_property(TARGET ${library_name}  PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if (MSVC)
  target_compile_options(${library_name} PRIVATE "-Dopenstudio_isomodel_EXPORTS")
