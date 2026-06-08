@@ -115,6 +115,24 @@ cmake ../src -G "Visual Studio 18 2026"
 ```
 
 
+<<<<<<< Updated upstream
+=======
+
+```
+cmake -G "Visual Studio 18 2026" -A x64 -S .\src -B build
+
+```
+
+
+:: 1. Generate the build files (if not already done)
+cmake -G "Visual Studio 18 2026" -A x64 -S . -B build
+
+:: 2. Compile the project with minimal verbose
+```
+cmake --build build --config Release -- /v:m
+```
+
+>>>>>>> Stashed changes
 ### 4) Compiling the VS files from the command line
 
 To compile from the command line using the VS tools you should open up a VS Studio Command Line.  Add the "-v" option for highly verbose output.  It's a lot, but you at least know the system is still compiling.  Add "-- /v:m" for less verbose output but something lets you see progress happening
