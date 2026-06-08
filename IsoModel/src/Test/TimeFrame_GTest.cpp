@@ -1,15 +1,19 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
-
-#include "gtest/gtest.h"
-
+/// @file TimeFrame_GTest.cpp
+/// @brief Tests for TimeFrame hour/day/month conversion lookups.
+///
+/// Verifies that TimeFrame correctly maps hour-of-year indices to
+/// month, day of month, day of week, and hour of day.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
 #include "../UserModel.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 

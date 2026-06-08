@@ -1,10 +1,18 @@
-/**********************************************************************
- * Copyright (c) 2008-2013, Alliance for Sustainable Energy.
- * All rights reserved.
- **********************************************************************/
-#ifndef ISOMODEL_EPW_DATA_HPP
-#define ISOMODEL_EPW_DATA_HPP
-
+/// @file EpwData.hpp
+/// @brief EnergyPlus Weather (EPW) file parser and hourly weather data container.
+///
+/// Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+/// global horizontal radiation, and other meteorological fields. Computes
+/// monthly averages and diurnal profiles for use by the monthly and hourly
+/// simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
 #include "ISOModelAPI.hpp"
 
 #include <memory>
@@ -32,12 +40,12 @@ enum class EpwDataCol : int {
 constexpr int toIndex(EpwDataCol c) noexcept {
   return static_cast<int>(c);
 }
-constexpr int DBT  = toIndex(EpwDataCol::DBT);
-constexpr int DPT  = toIndex(EpwDataCol::DPT);
-constexpr int RH   = toIndex(EpwDataCol::RH);
-constexpr int EGH  = toIndex(EpwDataCol::EGH);
-constexpr int EB   = toIndex(EpwDataCol::EB);
-constexpr int ED   = toIndex(EpwDataCol::ED);
+constexpr int DBT = toIndex(EpwDataCol::DBT);
+constexpr int DPT = toIndex(EpwDataCol::DPT);
+constexpr int RH = toIndex(EpwDataCol::RH);
+constexpr int EGH = toIndex(EpwDataCol::EGH);
+constexpr int EB = toIndex(EpwDataCol::EB);
+constexpr int ED = toIndex(EpwDataCol::ED);
 constexpr int WSPD = toIndex(EpwDataCol::WSPD);
 
 class ISOMODEL_API EpwData {
@@ -69,28 +77,21 @@ public:
   std::string toISOData();
 
   // Getters
-  std::string location() const { return m_location; }
-  std::string stationid() const { return m_stationid; }
-  int timezone() const { return m_timezone; }
-  double latitude() const { return m_latitude; }
-  double longitude() const { return m_longitude; }
+  [[nodiscard]] std::string location() const { return m_location; }
+  [[nodiscard]] std::string stationid() const { return m_stationid; }
+  [[nodiscard]] int timezone() const noexcept { return m_timezone; }
+  [[nodiscard]] double latitude() const noexcept { return m_latitude; }
+  [[nodiscard]] double longitude() const noexcept { return m_longitude; }
 
   // Note: Returning by value (copy) is the original interface.
   // ideally this would return const reference, but we must preserve ABI.
-  std::vector<std::vector<double>> data() const { return m_data; }
+  [[nodiscard]] std::vector<std::vector<double>> data() const { return m_data; }
 
   // Optimization: Return const reference to avoid copy
-  const std::vector<std::vector<double>> &dataRef() const { return m_data; }
+  [[nodiscard]] const std::vector<std::vector<double>> &dataRef() const noexcept { return m_data; }
 
   // new structure for streaming weather data into WeatherData object
   void populateWeatherData(std::shared_ptr<class WeatherData> wd);
 };
 
 } // namespace openstudio::isomodel
-
-#endif // ISOMODEL_EPW_DATA_HPP
-
-
-
-
-

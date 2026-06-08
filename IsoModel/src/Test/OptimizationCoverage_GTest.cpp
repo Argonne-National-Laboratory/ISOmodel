@@ -1,19 +1,23 @@
-/*
- * OptimizationCoverage_GTest.cpp
- *
- * Verifies correctness of recent C++20 optimizations and constant replacements.
- */
+/// @file OptimizationCoverage_GTest.cpp
+/// @brief Tests verifying C++20 optimization and constant correctness.
+///
+/// Validates that constexpr constants have correct values, solar
+/// radiation math functions produce expected results, EPW parsing
+/// works correctly, and UserModel modern features function properly.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-07
+/// @copyright Copyright Argonne National Laboratory
+#include "../Constants.hpp"
+#include "../EpwData.hpp"
+#include "../SolarRadiation.hpp"
+#include "../UserModel.hpp"
 
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numbers>
 #include <string>
 #include <vector>
-
-#include "../Constants.hpp"
-#include "../EpwData.hpp"
-#include "../SolarRadiation.hpp"
-#include "../UserModel.hpp"
 
 using namespace openstudio::isomodel;
 
@@ -23,13 +27,13 @@ TEST(OptimizationCoverage, Constants_Values) {
   EXPECT_DOUBLE_EQ(PI, std::numbers::pi);
 
   // Check integer constants used in loops
-  EXPECT_EQ(daysInYear, 365);
-  EXPECT_EQ(hoursInYear, 8760);
-  EXPECT_EQ(numVerticalSurfaces, 8);
+  EXPECT_EQ(DAYS_IN_YEAR, 365);
+  EXPECT_EQ(HOURS_IN_YEAR, 8760);
+  EXPECT_EQ(NUM_VERTICAL_SURFACES, 8);
 
   // Check array sizes
-  EXPECT_EQ(winSDFTable.size(), 3);
-  EXPECT_EQ(envFormFactors.size(), 9);
+  EXPECT_EQ(WIN_SDF_TABLE.size(), 3);
+  EXPECT_EQ(ENV_FORM_FACTORS.size(), 9);
 }
 
 // 2. Verify SolarRadiation Math Helpers
@@ -44,7 +48,7 @@ TEST(OptimizationCoverage, SolarRadiation_Math) {
   EXPECT_DOUBLE_EQ(rev0, 0.0);
 
   // Test Revolution Angle for Day 365 (should be 2*PI)
-  // This verifies daysInYear constant is used correctly in division
+  // This verifies DAYS_IN_YEAR constant is used correctly in division
   double rev365 = solar.calculateRevolutionAngle(365);
   EXPECT_DOUBLE_EQ(rev365, 2.0 * PI);
 
@@ -81,8 +85,7 @@ TEST(OptimizationCoverage, EpwData_Parsing) {
 
   // Test Header Parsing
   // Format: LOCATION,City,State,Country,Source,ID,Lat,Lon,TimeZone,Elev
-  std::string header =
-      "LOCATION,Denver,CO,USA,WMO,725650,39.83,-104.65,-7.0,1611";
+  std::string header = "LOCATION,Denver,CO,USA,WMO,725650,39.83,-104.65,-7.0,1611";
   epw.parseHeader(header);
 
   EXPECT_NEAR(epw.latitude(), 39.83, 0.001);
@@ -126,8 +129,8 @@ TEST(OptimizationCoverage, UserModel_ModernFeatures) {
 
   // Test string_view compatible setters (implicit conversion)
   user.setBemType("simple");
-  EXPECT_EQ(user.bemType(), 2.0);
+  EXPECT_EQ(user.bemType(), "simple");
 
   user.setBemType("ADVANCED"); // Case insensitivity check
-  EXPECT_EQ(user.bemType(), 3.0);
+  EXPECT_EQ(user.bemType(), "advanced");
 }

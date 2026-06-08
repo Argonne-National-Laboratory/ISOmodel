@@ -1,7 +1,20 @@
-#ifndef ISOMODEL_BUILDING_HPP
-#define ISOMODEL_BUILDING_HPP
-
+/// @file Building.hpp
+/// @brief Building-level properties for internal gains and controls.
+///
+/// Holds appliance power densities (electric and gas, occupied and unoccupied),
+/// lighting occupancy sensor and constant illumination control multipliers,
+/// building energy management (BEM) temperature adjustment, and external
+/// equipment energy use. Used by both MonthlyModel and HourlyModel.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
 #include "ISOModelAPI.hpp"
+
 
 namespace openstudio::isomodel {
 
@@ -11,105 +24,81 @@ public:
   Building() = default;
   ~Building() = default;
 
-  /**
-   * Lighting occupancy sensor dimming fraction (unitless).
-   * Illum controls are set to 1 if there is no control.
-   * See iso 15193 Annex F/G for values.
-   */
-  double lightingOccupancySensor() const { return m_lightingOccupancySensor; }
-  void setLightingOccupancySensor(double value) {
-    m_lightingOccupancySensor = value;
+  /// lighting occupancy sensor dimming fraction (unitless).
+  /// Illum controls are set to 1 if there is no control.
+  /// See iso 15193 Annex F/G for values.
+  [[nodiscard]] double lightingOccupancySensor() const noexcept {
+    return m_lightingOccupancySensor;
   }
+  void setLightingOccupancySensor(double value) { m_lightingOccupancySensor = value; }
 
-  /**
-   * Constant illumination control multiplier (unitless).
-   * Illum controls are set to 1 if there is no control.
-   */
-  double constantIllumination() const { return m_constantIllumination; }
+  /// Constant illumination control multiplier (unitless).
+  /// Illum controls are set to 1 if there is no control.
+  [[nodiscard]] double constantIllumination() const noexcept { return m_constantIllumination; }
   void setConstantIllumination(double value) { m_constantIllumination = value; }
 
-  /**
-   * Electric appliance power density occupied (W/m2).
-   */
-  double electricApplianceHeatGainOccupied() const {
+  /// Electric appliance power density occupied (W/m2).
+  [[nodiscard]] double electricApplianceHeatGainOccupied() const noexcept {
     return m_electricApplianceHeatGainOccupied;
   }
-  void setElectricApplianceHeatGainOccupied(double value) {
+  void setElectricApplianceHeatGainOccupied(double value) noexcept {
     m_electricApplianceHeatGainOccupied = value;
   }
 
-  /**
-   * Electric appliance power density unoccupied (W/m2).
-   */
-  double electricApplianceHeatGainUnoccupied() const {
+  /// Electric appliance power density unoccupied (W/m2).
+  [[nodiscard]] double electricApplianceHeatGainUnoccupied() const noexcept {
     return m_electricApplianceHeatGainUnoccupied;
   }
-  void setElectricApplianceHeatGainUnoccupied(double value) {
+  void setElectricApplianceHeatGainUnoccupied(double value) noexcept {
     m_electricApplianceHeatGainUnoccupied = value;
   }
 
-  /**
-   * Gas appliance power density occupied (W/m2).
-   */
-  double gasApplianceHeatGainOccupied() const {
+  /// Gas appliance power density occupied (W/m2).
+  [[nodiscard]] double gasApplianceHeatGainOccupied() const noexcept {
     return m_gasApplianceHeatGainOccupied;
   }
-  void setGasApplianceHeatGainOccupied(double value) {
-    m_gasApplianceHeatGainOccupied = value;
-  }
+  void setGasApplianceHeatGainOccupied(double value) { m_gasApplianceHeatGainOccupied = value; }
 
-  /**
-   * Gas appliance power density unoccupied (W/m2).
-   */
-  double gasApplianceHeatGainUnoccupied() const {
+  /// Gas appliance power density unoccupied (W/m2).
+  [[nodiscard]] double gasApplianceHeatGainUnoccupied() const noexcept {
     return m_gasApplianceHeatGainUnoccupied;
   }
-  void setGasApplianceHeatGainUnoccupied(double value) {
-    m_gasApplianceHeatGainUnoccupied = value;
-  }
+  void setGasApplianceHeatGainUnoccupied(double value) { m_gasApplianceHeatGainUnoccupied = value; }
 
-  /**
-   * Building energy management type: none (0), simple (1) or advanced (2).
-   */
-  double buildingEnergyManagement() const { return m_buildingEnergyManagement; }
-  void setBuildingEnergyManagement(double value) {
-    m_buildingEnergyManagement = value;
+  /// Building energy management temperature adjustment (K).
+  [[nodiscard]] double buildingEnergyManagement() const noexcept {
+    return m_buildingEnergyManagement;
   }
+  void setBuildingEnergyManagement(double value) { m_buildingEnergyManagement = value; }
 
-  /**
-   * External equipment energy use (W).
-   */
-  double externalEquipment() const { return m_externalEquipment; }
-  void setExternalEquipment(double externalEquipment) {
-    m_externalEquipment = externalEquipment;
-  }
+  /// External equipment energy use (W).
+  [[nodiscard]] double externalEquipment() const noexcept { return m_externalEquipment; }
+  void setExternalEquipment(double externalEquipment) { m_externalEquipment = externalEquipment; }
 
   // Unused properties preserved for interface compatibility
-  double electricAppliancePowerFixedOccupied() const {
+  [[nodiscard]] double electricAppliancePowerFixedOccupied() const noexcept {
     return m_electricAppliancePowerFixedOccupied;
   }
-  void setElectricAppliancePowerFixedOccupied(double value) {
+  void setElectricAppliancePowerFixedOccupied(double value) noexcept {
     m_electricAppliancePowerFixedOccupied = value;
   }
 
-  double electricAppliancePowerFixedUnoccupied() const {
+  [[nodiscard]] double electricAppliancePowerFixedUnoccupied() const noexcept {
     return m_electricAppliancePowerFixedUnoccupied;
   }
-  void setElectricAppliancePowerFixedUnoccupied(double value) {
+  void setElectricAppliancePowerFixedUnoccupied(double value) noexcept {
     m_electricAppliancePowerFixedUnoccupied = value;
   }
 
-  double gasAppliancePowerFixedOccupied() const {
+  [[nodiscard]] double gasAppliancePowerFixedOccupied() const noexcept {
     return m_gasAppliancePowerFixedOccupied;
   }
-  void setGasAppliancePowerFixedOccupied(double value) {
-    m_gasAppliancePowerFixedOccupied = value;
-  }
+  void setGasAppliancePowerFixedOccupied(double value) { m_gasAppliancePowerFixedOccupied = value; }
 
-  double gasAppliancePowerFixedUnoccupied() const {
+  [[nodiscard]] double gasAppliancePowerFixedUnoccupied() const noexcept {
     return m_gasAppliancePowerFixedUnoccupied;
   }
-  void setGasAppliancePowerFixedUnoccupied(double value) {
+  void setGasAppliancePowerFixedUnoccupied(double value) noexcept {
     m_gasAppliancePowerFixedUnoccupied = value;
   }
 
@@ -131,4 +120,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_BUILDING_HPP

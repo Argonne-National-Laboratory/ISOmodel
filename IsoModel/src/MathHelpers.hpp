@@ -1,5 +1,16 @@
-#ifndef ISOMODEL_MATHHELPERS_HPP
-#define ISOMODEL_MATHHELPERS_HPP
+/// @file MathHelpers.hpp
+/// @brief Type aliases (Vector, Matrix) and mathematical utility functions.
+///
+/// Defines Vector (std::vector<double>) and Matrix (std::vector<Vector>)
+/// type aliases used throughout the codebase. Provides helper functions
+/// for vector arithmetic, element-wise operations, summation, and
+/// printing utilities for debug output.
+///
+/// @author Ralph Muehleisen
+/// @date 2025-12-22
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
+#include "Constants.hpp"
 
 #include <algorithm>
 #include <array>
@@ -34,8 +45,7 @@ public:
   Matrix &operator=(Matrix &&) noexcept = default;
   ~Matrix() = default;
 
-  Matrix(size_t r, size_t c, double val = 0.0)
-      : m_rows(r), m_cols(c), m_data(r * c, val) {}
+  Matrix(size_t r, size_t c, double val = 0.0) : m_rows(r), m_cols(c), m_data(r * c, val) {}
 
   [[nodiscard]] size_t size1() const noexcept { return m_rows; }
   [[nodiscard]] size_t size2() const noexcept { return m_cols; }
@@ -47,13 +57,9 @@ public:
     m_data.assign(r * c, 0.0);
   }
 
-  double &operator()(size_t r, size_t c) noexcept {
-    return m_data[r * m_cols + c];
-  }
+  double &operator()(size_t r, size_t c) noexcept { return m_data[r * m_cols + c]; }
 
-  const double &operator()(size_t r, size_t c) const noexcept {
-    return m_data[r * m_cols + c];
-  }
+  const double &operator()(size_t r, size_t c) const noexcept { return m_data[r * m_cols + c]; }
 
 private:
   size_t m_rows = 0;
@@ -66,12 +72,6 @@ private:
 // ==========================================
 } // namespace openstudio
 namespace openstudio::isomodel {
-
-// Note: Ensure DEBUG_ISO_MODEL_SIMULATION is defined before including this,
-// or passed as a template/argument.
-#ifndef DEBUG_ISO_MODEL_SIMULATION
-#define DEBUG_ISO_MODEL_SIMULATION false
-#endif
 
 // --- Printing Utilities ---
 
@@ -90,9 +90,7 @@ inline void printVector(const char *vecName, const Vector &vec) noexcept {
 
 inline void printMatrix(const char *matName, const Matrix &mat) noexcept {
   if (DEBUG_ISO_MODEL_SIMULATION) {
-    std::cout << matName << "(" << mat.size1() << ", " << mat.size2()
-              << "): " << std::endl
-              << "\t";
+    std::cout << matName << "(" << mat.size1() << ", " << mat.size2() << "): " << std::endl << "\t";
     for (unsigned int j = 0; j < mat.size2(); j++) {
       std::cout << "," << j;
     }
@@ -113,9 +111,13 @@ inline void vectorInit(Vector &vec, double val) noexcept {
   std::fill(vec.begin(), vec.end(), val);
 }
 
-inline void zero(Vector &vec) noexcept { vectorInit(vec, 0); }
+inline void zero(Vector &vec) noexcept {
+  vectorInit(vec, 0);
+}
 
-inline void one(Vector &vec) noexcept { vectorInit(vec, 1); }
+inline void one(Vector &vec) noexcept {
+  vectorInit(vec, 1);
+}
 
 // --- Matrix Math ---
 
@@ -153,8 +155,7 @@ inline void one(Vector &vec) noexcept { vectorInit(vec, 1); }
 
 // --- Scalar/Vector Math ---
 
-[[nodiscard]] inline Vector mult(const double *v1, const double s1,
-                                 int size) noexcept {
+[[nodiscard]] inline Vector mult(const double *v1, const double s1, int size) noexcept {
   Vector vp(size);
   for (int i = 0; i < size; i++)
     vp[i] = v1[i] * s1;
@@ -162,8 +163,8 @@ inline void one(Vector &vec) noexcept { vectorInit(vec, 1); }
 }
 
 template <size_t N>
-[[nodiscard]] inline Vector mult(const std::array<double, N> &v1,
-                                 const double s1, int size) noexcept {
+[[nodiscard]] inline Vector mult(const std::array<double, N> &v1, const double s1,
+                                 int size) noexcept {
   return mult(v1.data(), s1, size);
 }
 
@@ -182,8 +183,7 @@ template <size_t N>
 }
 
 template <size_t N>
-[[nodiscard]] inline Vector mult(const Vector &v1,
-                                 const std::array<double, N> &v2) noexcept {
+[[nodiscard]] inline Vector mult(const Vector &v1, const std::array<double, N> &v2) noexcept {
   return mult(v1, v2.data());
 }
 [[nodiscard]] inline Vector mult(const Vector &v1, const Vector &v2) noexcept {
@@ -207,9 +207,8 @@ template <size_t N>
 [[nodiscard]] inline Vector div(const double s1, const Vector &v1) noexcept {
   Vector vp(v1.size());
   for (size_t i = 0; i < v1.size(); i++) {
-    vp[i] = (std::fabs(v1[i]) < std::numeric_limits<double>::epsilon())
-                ? std::numeric_limits<double>::infinity()
-                : (s1 / v1[i]);
+    vp[i] =
+        (std::fabs(v1[i]) < SAFE_EPSILON) ? std::numeric_limits<double>::infinity() : (s1 / v1[i]);
   }
   return vp;
 }
@@ -217,16 +216,15 @@ template <size_t N>
 [[nodiscard]] inline Vector div(const Vector &v1, const Vector &v2) noexcept {
   Vector vp(v1.size());
   for (size_t i = 0; i < v1.size(); i++) {
-    vp[i] = (std::fabs(v2[i]) < std::numeric_limits<double>::epsilon())
-                ? std::numeric_limits<double>::infinity()
-                : (v1[i] / v2[i]);
+    vp[i] = (std::fabs(v2[i]) < SAFE_EPSILON) ? std::numeric_limits<double>::infinity()
+                                              : (v1[i] / v2[i]);
   }
   return vp;
 }
 
 // Variadic sum for vectors (C++17 fold expression)
 template <typename... Args>
-[[nodiscard]] inline Vector sum(const Vector &v1, const Vector &v2, const Args&... args) noexcept {
+[[nodiscard]] inline Vector sum(const Vector &v1, const Vector &v2, const Args &...args) noexcept {
   Vector vs(v1.size());
   for (size_t i = 0; i < v1.size(); i++)
     vs[i] = v1[i] + v2[i] + (args[i] + ... + 0.0);
@@ -276,8 +274,7 @@ inline double sum(const Vector &v1) {
   return max_val;
 }
 
-[[nodiscard]] inline Vector maximum(const Vector &v1,
-                                    const Vector &v2) noexcept {
+[[nodiscard]] inline Vector maximum(const Vector &v1, const Vector &v2) noexcept {
   Vector vx(v1.size());
   for (size_t i = 0; i < v1.size(); i++)
     vx[i] = std::max(v1[i], v2[i]);
@@ -324,9 +321,8 @@ inline double sum(const Vector &v1) {
   return std::cbrt(x * x);
 }
 
-[[nodiscard]] inline Matrix
-toMatrix(const std::vector<std::vector<double>> &source, size_t rows,
-         size_t cols) noexcept {
+[[nodiscard]] inline Matrix toMatrix(const std::vector<std::vector<double>> &source, size_t rows,
+                                     size_t cols) noexcept {
   Matrix mat(rows, cols);
   for (size_t r = 0; r < rows; ++r) {
     for (size_t c = 0; c < cols; ++c) {
@@ -343,4 +339,3 @@ toMatrix(const std::vector<std::vector<double>> &source, size_t rows,
 
 } // namespace openstudio::isomodel
 
-#endif // ISOMODEL_MATHHELPERS_HPP

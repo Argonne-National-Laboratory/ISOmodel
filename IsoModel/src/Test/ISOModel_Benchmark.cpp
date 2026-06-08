@@ -1,12 +1,18 @@
-/*
- * ISOModel_Benchmark.cpp
- * Refactored to ensure standard C++ compatibility while preserving all original
- * benchmark loops.
- */
+/// @file ISOModel_Benchmark.cpp
+/// @brief Performance benchmarks for hourly and monthly simulations.
+///
+/// Runs multiple iterations of both simulation models with profiling
+/// enabled to measure execution time and identify bottlenecks.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-16
+/// @copyright Copyright Argonne National Laboratory
 #include "../HourlyModel.hpp"
 #include "../MonthlyModel.hpp"
-#include "../UserModel.hpp"
 #include "../Profiler.hpp" // Include the new profiler
+#include "../UserModel.hpp"
+
 #include <chrono>
 #include <iostream>
 #include <numeric>
@@ -50,10 +56,9 @@ int main(int argc, char **argv) {
   }
   auto monthEnd = std::chrono::steady_clock::now();
   double monthlyTime =
-      std::chrono::duration<double, std::micro>(monthEnd - monthStart).count() /
-      iterations;
-  std::cout << "Monthly simulation ran in " << monthlyTime
-            << " us, average over " << iterations << " loops." << std::endl;
+      std::chrono::duration<double, std::micro>(monthEnd - monthStart).count() / iterations;
+  std::cout << "Monthly simulation ran in " << monthlyTime << " us, average over " << iterations
+            << " loops." << std::endl;
 
   // 2. Hourly Benchmark (Static Model)
   auto hourStart = std::chrono::steady_clock::now();
@@ -62,10 +67,9 @@ int main(int argc, char **argv) {
   }
   auto hourEnd = std::chrono::steady_clock::now();
   double hourlyTime =
-      std::chrono::duration<double, std::micro>(hourEnd - hourStart).count() /
-      iterations;
-  std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over "
-            << iterations << " loops." << std::endl;
+      std::chrono::duration<double, std::micro>(hourEnd - hourStart).count() / iterations;
+  std::cout << "Hourly simulation ran in " << hourlyTime << " us, average over " << iterations
+            << " loops." << std::endl;
 
   // 3. Loop with Property Modification (RESTORING THIS LOOP)
   std::cout << "Benchmark: Updating .ism properties with UserModel setters, "
@@ -103,16 +107,14 @@ int main(int argc, char **argv) {
   monthEnd = std::chrono::steady_clock::now();
 
   monthlyTime =
-      std::chrono::duration<double, std::micro>(monthEnd - monthStart).count() /
-      iterations;
-  std::cout << "Monthly simulation including modifying properties ran in "
-            << monthlyTime << " us, average over " << iterations << " loops."
-            << std::endl;
+      std::chrono::duration<double, std::micro>(monthEnd - monthStart).count() / iterations;
+  std::cout << "Monthly simulation including modifying properties ran in " << monthlyTime
+            << " us, average over " << iterations << " loops." << std::endl;
 
-  #if PROFILING_ENABLED
-    // Print the profiling results to the console
-    openstudio::isomodel::profiler::Profiler::getInstance().printResults(std::cout);
-  #endif
+#if PROFILING_ENABLED
+  // Print the profiling results to the console
+  openstudio::isomodel::profiler::Profiler::getInstance().printResults(std::cout);
+#endif
 
   std::cout << "Done!" << std::endl;
   return 0;

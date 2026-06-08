@@ -1,16 +1,20 @@
-/*
- * HourlyModel.hpp
- *
- * REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
- * - Renamed A_floor_inv -> invFloorArea
- * - Added static optimization members (win_floor_ratio, invFloorArea)
- * - Added persistent result vectors to reduce heap allocation overhead
- * - Marked helper functions as inline for loop performance
- */
-
-#ifndef ISOMODEL_HOURLYMODEL_HPP
-#define ISOMODEL_HOURLYMODEL_HPP
-
+/// @file HourlyModel.hpp
+/// @brief Hourly energy simulation engine using the ISO 13790 hourly method.
+///
+/// Implements the five-resistance-one-capacitance (5R1C) thermal network
+/// model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+/// electrical energy use over 8760 hours. Includes solar gain, internal
+/// gain, ventilation, and HVAC system calculations. Results can be
+/// returned hourly or aggregated by month.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2014-06-20
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
+#include "EndUses.hpp"
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
@@ -18,6 +22,7 @@
 #include "Schedules.hpp"
 #include "Simulation.hpp"
 #include "TimeFrame.hpp"
+
 #include <array>
 #include <cmath>
 #include <memory>
@@ -25,19 +30,12 @@
 #include <string>
 #include <vector>
 
-#ifdef ISOMODEL_STANDALONE
-#include "EndUses.hpp"
-#else
-#include "../utilities/data/EndUses.hpp"
-#endif
-
 namespace openstudio::isomodel {
 
 class EpwData;
 
 // Compressed Data Structure (Array of Structures)
-struct HourlyCache
-    final { // Use final for structs that are not intended for inheritance
+struct HourlyCache final { // Use final for structs that are not intended for inheritance
   // Schedules (0.0 - 1.0)
   float sched_q_ve_mech = 0.0f;   // Mechanical ventilation schedule
   float sched_phi_int_App = 0.0f; // Appliances gain schedule
@@ -81,16 +79,15 @@ public:
   [[nodiscard]] std::vector<EndUses> simulate(bool aggregateByMonth = false);
 
   // NEW: Accessor for the internal schedule cache
-  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const {
+  [[nodiscard]] const std::vector<HourlyCache> &getCachedSchedules() const noexcept {
     return m_hourlyData;
   }
 
-private:
-  void initialize();
-
-public: // Changed from private to public
   // Setter for pre-loaded schedule data, called by UserModel
   void setPreloadedScheduleData(std::vector<schedules::ScheduleDataForHourlyCache> data);
+
+private:
+  void initialize();
 
   // Solar Caching Members
   std::shared_ptr<EpwData> m_lastEpwData;
@@ -108,28 +105,27 @@ public: // Changed from private to public
   std::vector<double> m_phi_dhw;
 
   // Refactored Helpers - Inlined for performance
-  [[nodiscard]] inline AirFlowResult
-  calculateAirFlows(double theta_air, const HourlyCache &cache) noexcept;
+  [[nodiscard]] inline AirFlowResult calculateAirFlows(double theta_air,
+                                                       const HourlyCache &cache) noexcept;
 
-  [[nodiscard]] inline GainsResult
-  calculateGains(std::span<const double> curSolar, const HourlyCache &cache,
-                 double phi_int_App) noexcept;
+  [[nodiscard]] inline GainsResult calculateGains(std::span<const double> curSolar,
+                                                  const HourlyCache &cache,
+                                                  double phi_int_App) noexcept;
 
-  [[nodiscard]] inline double
-  solveThermalBalance(double theta_e, double theta_ent, double phi_ia,
-                      double phi_int, double phi_sol, double H_ve,
-                      double H_tr_1, double theta_H_set, double theta_C_set,
-                      double &theta_m_prev, double &theta_air) noexcept;
+  [[nodiscard]] inline double solveThermalBalance(double theta_e, double theta_ent, double phi_ia,
+                                                  double phi_int, double phi_sol, double H_ve,
+                                                  double H_tr_1, double theta_H_set,
+                                                  double theta_C_set, double &theta_m_prev,
+                                                  double &theta_air) noexcept;
 
   std::vector<EndUses> processResults(bool aggregateByMonth);
 
-  inline void structureCalculations(double SHGC, double A_wall, double A_win,
-                                    double U_wall, double U_win,
-                                    double alpha_wall, double F_sh_with,
+  inline void structureCalculations(double SHGC, double A_wall, double A_win, double U_wall,
+                                    double U_win, double alpha_wall, double F_sh_with,
                                     double F_sh_without, int direction);
 
   // Constants
-  double invFloorArea, rhoCpAir_277, f_ve_mech_sup, q_ve_4Pa, H_z;
+  double invFloorArea, RHO_CP_AIR_277, f_ve_mech_sup, q_ve_4Pa, H_z;
   double A_m, C_m, f_sh_use, f_A_nat, f_L_max;
   double I_lux_nat, H_zone, h_ms, h_is, H_tr_is, H_tr_w;
   double p_rs, p_rs_int, p_rs_sol, p_rm, p_rm_int, p_rm_sol, H_ms, H_op, H_em;
@@ -180,5 +176,3 @@ public: // Changed from private to public
   virtual double coolingSetpointSchedule(int, int, int) { return 0; }
 };
 } // namespace openstudio::isomodel
-
-#endif

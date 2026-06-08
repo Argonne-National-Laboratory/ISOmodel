@@ -1,6 +1,18 @@
-#ifndef ISOMODEL_LIGHTING_HPP
-#define ISOMODEL_LIGHTING_HPP
-
+/// @file Lighting.hpp
+/// @brief Lighting system properties and power density parameters.
+///
+/// Stores interior and exterior lighting power densities, dimming and
+/// occupancy control fractions, parasitic lighting power, and lighting
+/// schedule parameters. Used by MonthlyModel for illumination energy
+/// calculations per ISO 15193.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -11,77 +23,69 @@ public:
   Lighting() = default;
   ~Lighting() = default;
 
-  double powerDensityOccupied() const { return m_powerDensityOccupied; }
+  [[nodiscard]] double powerDensityOccupied() const noexcept { return m_powerDensityOccupied; }
   void setPowerDensityOccupied(double value) { m_powerDensityOccupied = value; }
 
-  double powerDensityUnoccupied() const { return m_powerDensityUnoccupied; }
-  void setPowerDensityUnoccupied(double value) {
-    m_powerDensityUnoccupied = value;
-  }
+  [[nodiscard]] double powerDensityUnoccupied() const noexcept { return m_powerDensityUnoccupied; }
+  void setPowerDensityUnoccupied(double value) { m_powerDensityUnoccupied = value; }
 
-  double dimmingFraction() const { return m_dimmingFraction; }
+  [[nodiscard]] double dimmingFraction() const noexcept { return m_dimmingFraction; }
   void setDimmingFraction(double value) { m_dimmingFraction = value; }
 
-  double exteriorEnergy() const { return m_exteriorEnergy; }
+  [[nodiscard]] double exteriorEnergy() const noexcept { return m_exteriorEnergy; }
   void setExteriorEnergy(double value) { m_exteriorEnergy = value; }
 
-  double n_day_start() const { return m_n_day_start; }
+  [[nodiscard]] double n_day_start() const noexcept { return m_n_day_start; }
   void setN_day_start(double value) { m_n_day_start = value; }
 
-  double n_day_end() const { return m_n_day_end; }
+  [[nodiscard]] double n_day_end() const noexcept { return m_n_day_end; }
   void setN_day_end(double value) { m_n_day_end = value; }
 
-  double n_weeks() const { return m_n_weeks; }
+  [[nodiscard]] double n_weeks() const noexcept { return m_n_weeks; }
   void setN_weeks(double value) { m_n_weeks = value; }
 
-  double elecInternalGains() const { return m_elecInternalGains; }
+  [[nodiscard]] double elecInternalGains() const noexcept { return m_elecInternalGains; }
   void setElecInternalGains(double value) { m_elecInternalGains = value; }
 
-  double permLightPowerDensity() const { return m_permLightPowerDensity; }
-  void setPermLightPowerDensity(double value) {
-    m_permLightPowerDensity = value;
-  }
+  [[nodiscard]] double permLightPowerDensity() const noexcept { return m_permLightPowerDensity; }
+  void setPermLightPowerDensity(double value) { m_permLightPowerDensity = value; }
 
-  double presenceSensorAd() const { return m_presenceSensorAd; }
+  [[nodiscard]] double presenceSensorAd() const noexcept { return m_presenceSensorAd; }
   void setPresenceSensorAd(double value) { m_presenceSensorAd = value; }
 
-  double automaticAd() const { return m_automaticAd; }
+  [[nodiscard]] double automaticAd() const noexcept { return m_automaticAd; }
   void setAutomaticAd(double value) { m_automaticAd = value; }
 
-  double presenceAutoAd() const { return m_presenceAutoAd; }
+  [[nodiscard]] double presenceAutoAd() const noexcept { return m_presenceAutoAd; }
   void setPresenceAutoAd(double value) { m_presenceAutoAd = value; }
 
-  double manualSwitchAd() const { return m_manualSwitchAd; }
+  [[nodiscard]] double manualSwitchAd() const noexcept { return m_manualSwitchAd; }
   void setManualSwitchAd(double value) { m_manualSwitchAd = value; }
 
-  double presenceSensorLux() const { return m_presenceSensorLux; }
+  [[nodiscard]] double presenceSensorLux() const noexcept { return m_presenceSensorLux; }
   void setPresenceSensorLux(double value) { m_presenceSensorLux = value; }
 
-  double automaticLux() const { return m_automaticLux; }
+  [[nodiscard]] double automaticLux() const noexcept { return m_automaticLux; }
   void setAutomaticLux(double value) { m_automaticLux = value; }
 
-  double presenceAutoLux() const { return m_presenceAutoLux; }
+  [[nodiscard]] double presenceAutoLux() const noexcept { return m_presenceAutoLux; }
   void setPresenceAutoLux(double value) { m_presenceAutoLux = value; }
 
-  double manualSwitchLux() const { return m_manualSwitchLux; }
+  [[nodiscard]] double manualSwitchLux() const noexcept { return m_manualSwitchLux; }
   void setManualSwitchLux(double value) { m_manualSwitchLux = value; }
 
-  double naturallyLightedArea() const { return m_naturallyLightedArea; }
+  [[nodiscard]] double naturallyLightedArea() const noexcept { return m_naturallyLightedArea; }
   void setNaturallyLightedArea(double value) { m_naturallyLightedArea = value; }
 
-  double lightingPowerFixedOccupied() const {
+  [[nodiscard]] double lightingPowerFixedOccupied() const noexcept {
     return m_lightingPowerFixedOccupied;
   }
-  void setLightingPowerFixedOccupied(double value) {
-    m_lightingPowerFixedOccupied = value;
-  }
+  void setLightingPowerFixedOccupied(double value) { m_lightingPowerFixedOccupied = value; }
 
-  double lightingPowerFixedUnoccupied() const {
+  [[nodiscard]] double lightingPowerFixedUnoccupied() const noexcept {
     return m_lightingPowerFixedUnoccupied;
   }
-  void setLightingPowerFixedUnoccupied(double value) {
-    m_lightingPowerFixedUnoccupied = value;
-  }
+  void setLightingPowerFixedUnoccupied(double value) { m_lightingPowerFixedUnoccupied = value; }
 
 private:
   // In-class initialization for safety
@@ -114,4 +118,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_LIGHTING_HPP

@@ -1,0 +1,1243 @@
+========================================================================
+FILE: Building.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Building-level properties for internal gains and controls.
+DETAILED: Holds appliance power densities (electric and gas, occupied and unoccupied),
+lighting occupancy sensor and constant illumination control multipliers,
+building energy management (BEM) temperature adjustment, and external
+equipment energy use. Used by both MonthlyModel and HourlyModel.
+
+PROPOSED HEADER:
+/// @file Building.hpp
+/// @brief Building-level properties for internal gains and controls.
+///
+/// Holds appliance power densities (electric and gas, occupied and unoccupied),
+/// lighting occupancy sensor and constant illumination control multipliers,
+/// building energy management (BEM) temperature adjustment, and external
+/// equipment energy use. Used by both MonthlyModel and HourlyModel.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Constants.hpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2025-12-22
+BRIEF: Physical and mathematical constants used throughout the ISO model.
+DETAILED: Defines constexpr values for PI, unit conversions (hours, days, months),
+physical constants (Stefan-Boltzmann, air density, specific heat),
+safe epsilon values, and debug flags. Replaces former preprocessor macros
+with type-safe C++20 constexpr constants.
+
+PROPOSED HEADER:
+/// @file Constants.hpp
+/// @brief Physical and mathematical constants used throughout the ISO model.
+///
+/// Defines constexpr values for PI, unit conversions (hours, days, months),
+/// physical constants (Stefan-Boltzmann, air density, specific heat),
+/// safe epsilon values, and debug flags. Replaces former preprocessor macros
+/// with type-safe C++20 constexpr constants.
+///
+/// @author Ralph Muehleisen
+/// @date 2025-12-22
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Cooling.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Cooling system properties and HVAC distribution parameters.
+DETAILED: Stores COP, partial load value, temperature setpoints (occupied and
+unoccupied), HVAC loss factors, pump power, and district cooling
+parameters. Properties map to ISO 13790 and EN 15243 cooling calculations.
+
+PROPOSED HEADER:
+/// @file Cooling.hpp
+/// @brief Cooling system properties and HVAC distribution parameters.
+///
+/// Stores COP, partial load value, temperature setpoints (occupied and
+/// unoccupied), HVAC loss factors, pump power, and district cooling
+/// parameters. Properties map to ISO 13790 and EN 15243 cooling calculations.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: EndUses.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Energy end-use category indices for simulation results.
+DETAILED: Defines the EndUses enum with indices for heating, cooling, interior
+lighting, exterior lighting, interior equipment, exterior equipment,
+fans, pumps, hot water, and other fuel types. Used to index into
+the result vectors returned by MonthlyModel and HourlyModel.
+
+PROPOSED HEADER:
+/// @file EndUses.hpp
+/// @brief Energy end-use category indices for simulation results.
+///
+/// Defines the EndUses enum with indices for heating, cooling, interior
+/// lighting, exterior lighting, interior equipment, exterior equipment,
+/// fans, pumps, hot water, and other fuel types. Used to index into
+/// the result vectors returned by MonthlyModel and HourlyModel.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: EpwData.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: EnergyPlus Weather (EPW) file parser and hourly weather data container.
+DETAILED: Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+global horizontal radiation, and other meteorological fields. Computes
+monthly averages and diurnal profiles for use by the monthly and hourly
+simulation models.
+
+PROPOSED HEADER:
+/// @file EpwData.hpp
+/// @brief EnergyPlus Weather (EPW) file parser and hourly weather data container.
+///
+/// Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+/// global horizontal radiation, and other meteorological fields. Computes
+/// monthly averages and diurnal profiles for use by the monthly and hourly
+/// simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Heating.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Heating system properties and fuel type parameters.
+DETAILED: Stores heating efficiency, temperature setpoints (occupied and unoccupied),
+HVAC loss and waste factors, pump power, hot water demand, and district
+heating parameters. Includes fuel type selection for primary energy
+calculations per ISO 13790.
+
+PROPOSED HEADER:
+/// @file Heating.hpp
+/// @brief Heating system properties and fuel type parameters.
+///
+/// Stores heating efficiency, temperature setpoints (occupied and unoccupied),
+/// HVAC loss and waste factors, pump power, hot water demand, and district
+/// heating parameters. Includes fuel type selection for primary energy
+/// calculations per ISO 13790.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: HourlyModel.hpp
+AUTHORS: Brian Craig, Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2014-06-20
+BRIEF: Hourly energy simulation engine using the ISO 13790 hourly method.
+DETAILED: Implements the five-resistance-one-capacitance (5R1C) thermal network
+model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+electrical energy use over 8760 hours. Includes solar gain, internal
+gain, ventilation, and HVAC system calculations. Results can be
+returned hourly or aggregated by month.
+
+PROPOSED HEADER:
+/// @file HourlyModel.hpp
+/// @brief Hourly energy simulation engine using the ISO 13790 hourly method.
+///
+/// Implements the five-resistance-one-capacitance (5R1C) thermal network
+/// model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+/// electrical energy use over 8760 hours. Includes solar gain, internal
+/// gain, ventilation, and HVAC system calculations. Results can be
+/// returned hourly or aggregated by month.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2014-06-20
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// HourlyModel.hpp
+//
+// REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE OPTIMIZATION
+// - Renamed A_floor_inv -> invFloorArea
+// - Added static optimization members (win_floor_ratio, invFloorArea)
+// - Added persistent result vectors to reduce heap allocation overhead
+// - Marked helper functions as inline for loop performance
+
+========================================================================
+FILE: ISOModelAPI.hpp
+AUTHORS: Brian Craig, Nick Collier, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: DLL export/import macros for the ISOModel shared library.
+DETAILED: Defines the ISOMODEL_API macro for Windows DLL builds. On non-Windows
+platforms, the macro expands to nothing.
+
+PROPOSED HEADER:
+/// @file ISOModelAPI.hpp
+/// @brief DLL export/import macros for the ISOModel shared library.
+///
+/// Defines the ISOMODEL_API macro for Windows DLL builds. On non-Windows
+/// platforms, the macro expands to nothing.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: ISOResults.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Simulation result container for monthly energy totals.
+DETAILED: Holds the vector of EndUses results returned by MonthlyModel::simulate()
+and HourlyModel::simulate().
+
+PROPOSED HEADER:
+/// @file ISOResults.hpp
+/// @brief Simulation result container for monthly energy totals.
+///
+/// Holds the vector of EndUses results returned by MonthlyModel::simulate()
+/// and HourlyModel::simulate().
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Lighting.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Lighting system properties and power density parameters.
+DETAILED: Stores interior and exterior lighting power densities, dimming and
+occupancy control fractions, parasitic lighting power, and lighting
+schedule parameters. Used by MonthlyModel for illumination energy
+calculations per ISO 15193.
+
+PROPOSED HEADER:
+/// @file Lighting.hpp
+/// @brief Lighting system properties and power density parameters.
+///
+/// Stores interior and exterior lighting power densities, dimming and
+/// occupancy control fractions, parasitic lighting power, and lighting
+/// schedule parameters. Used by MonthlyModel for illumination energy
+/// calculations per ISO 15193.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Location.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Site location properties including terrain class and weather data.
+DETAILED: Holds the terrain class (urban/suburban/rural wind shielding factor)
+and a shared pointer to the WeatherData used by the simulation models.
+
+PROPOSED HEADER:
+/// @file Location.hpp
+/// @brief Site location properties including terrain class and weather data.
+///
+/// Holds the terrain class (urban/suburban/rural wind shielding factor)
+/// and a shared pointer to the WeatherData used by the simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: mainpage.hpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2015-09-20
+BRIEF: Doxygen main page documentation for the ISOModel library.
+
+PROPOSED HEADER:
+/// @file mainpage.hpp
+/// @brief Doxygen main page documentation for the ISOModel library.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-09-20
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: MathHelpers.hpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2025-12-22
+BRIEF: Type aliases (Vector, Matrix) and mathematical utility functions.
+DETAILED: Defines Vector (std::vector<double>) and Matrix (std::vector<Vector>)
+type aliases used throughout the codebase. Provides helper functions
+for vector arithmetic, element-wise operations, summation, and
+printing utilities for debug output.
+
+PROPOSED HEADER:
+/// @file MathHelpers.hpp
+/// @brief Type aliases (Vector, Matrix) and mathematical utility functions.
+///
+/// Defines Vector (std::vector<double>) and Matrix (std::vector<Vector>)
+/// type aliases used throughout the codebase. Provides helper functions
+/// for vector arithmetic, element-wise operations, summation, and
+/// printing utilities for debug output.
+///
+/// @author Ralph Muehleisen
+/// @date 2025-12-22
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: MonthlyModel.hpp
+AUTHORS: Brian Craig, Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Monthly energy simulation engine using the ISO 13790 monthly method.
+DETAILED: Implements the quasi-steady-state monthly energy balance from ISO 13790.
+Computes monthly heating, cooling, lighting, ventilation, and equipment
+energy use. Includes envelope heat transfer, solar and internal gains,
+utilization factors, and HVAC system efficiency calculations.
+
+PROPOSED HEADER:
+/// @file MonthlyModel.hpp
+/// @brief Monthly energy simulation engine using the ISO 13790 monthly method.
+///
+/// Implements the quasi-steady-state monthly energy balance from ISO 13790.
+/// Computes monthly heating, cooling, lighting, ventilation, and equipment
+/// energy use. Includes envelope heat transfer, solar and internal gains,
+/// utilization factors, and HVAC system efficiency calculations.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Population.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Occupancy schedule and people density properties.
+DETAILED: Defines occupied/unoccupied hours and days, people density (m²/person),
+and metabolic heat gain per person. The schedule defines a rectangular
+occupancy block (hoursStart..hoursEnd × daysStart..daysEnd) used by
+both monthly and hourly models.
+
+PROPOSED HEADER:
+/// @file Population.hpp
+/// @brief Occupancy schedule and people density properties.
+///
+/// Defines occupied/unoccupied hours and days, people density (m²/person),
+/// and metabolic heat gain per person. The schedule defines a rectangular
+/// occupancy block (hoursStart..hoursEnd × daysStart..daysEnd) used by
+/// both monthly and hourly models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Profiler.hpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2026-01-26
+BRIEF: Lightweight scoped function-level profiler for performance analysis.
+DETAILED: Provides PROFILE_FUNCTION() and PROFILE_SCOPE() macros that measure
+wall-clock time using std::chrono. Results are accumulated per-function
+and printed as a sorted table on destruction. Controlled by the
+ENABLE_PROFILING compile-time flag.
+
+PROPOSED HEADER:
+/// @file Profiler.hpp
+/// @brief Lightweight scoped function-level profiler for performance analysis.
+///
+/// Provides PROFILE_FUNCTION() and PROFILE_SCOPE() macros that measure
+/// wall-clock time using std::chrono. Results are accumulated per-function
+/// and printed as a sorted table on destruction. Controlled by the
+/// ENABLE_PROFILING compile-time flag.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-26
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Schedules.hpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2026-01-23
+BRIEF: Hourly and weekly schedule generation and CSV loading.
+DETAILED: Builds 24×7 weekly schedule arrays for ventilation, appliances, lighting,
+and temperature setpoints from Population and Building properties.
+Optionally loads custom hourly schedules from CSV files. Generates
+monthly occupancy fractions for the MonthlyModel.
+
+PROPOSED HEADER:
+/// @file Schedules.hpp
+/// @brief Hourly and weekly schedule generation and CSV loading.
+///
+/// Builds 24×7 weekly schedule arrays for ventilation, appliances, lighting,
+/// and temperature setpoints from Population and Building properties.
+/// Optionally loads custom hourly schedules from CSV files. Generates
+/// monthly occupancy fractions for the MonthlyModel.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-23
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// C++ Schedules.hpp
+
+========================================================================
+FILE: Simulation.hpp
+AUTHORS: Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2015-06-01
+BRIEF: Abstract base class for HourlyModel and MonthlyModel.
+DETAILED: Holds shared references to the component property objects (Population,
+Location, Building, Structure, etc.) that both simulation engines need.
+Provides the common interface for setting up and running simulations.
+
+PROPOSED HEADER:
+/// @file Simulation.hpp
+/// @brief Abstract base class for HourlyModel and MonthlyModel.
+///
+/// Holds shared references to the component property objects (Population,
+/// Location, Building, Structure, etc.) that both simulation engines need.
+/// Provides the common interface for setting up and running simulations.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-06-01
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: SimulationSettings.hpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2015-06-12
+BRIEF: ISO 13790 simulation parameters for the 5R1C thermal network.
+DETAILED: Stores the internal/solar heat flow distribution fractions (phi_int_is,
+phi_sol_is) and the surface-to-air heat transfer ratios (h_is, h_ms)
+used in the hourly 5R1C model. Default values follow ISO 13790 §7.2.2.
+
+PROPOSED HEADER:
+/// @file SimulationSettings.hpp
+/// @brief ISO 13790 simulation parameters for the 5R1C thermal network.
+///
+/// Stores the internal/solar heat flow distribution fractions (phi_int_is,
+/// phi_sol_is) and the surface-to-air heat transfer ratios (h_is, h_ms)
+/// used in the hourly 5R1C model. Default values follow ISO 13790 §7.2.2.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-06-12
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: SolarRadiation.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Solar position and radiation calculations for building surfaces.
+DETAILED: Computes hourly solar radiation on tilted surfaces for all 8760 hours
+of the year. Implements solar geometry (declination, equation of time,
+hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+and Duffie & Beckman. Decomposes global horizontal radiation into
+beam and diffuse components using the Erbs correlation, then projects
+onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+
+PROPOSED HEADER:
+/// @file SolarRadiation.hpp
+/// @brief Solar position and radiation calculations for building surfaces.
+///
+/// Computes hourly solar radiation on tilted surfaces for all 8760 hours
+/// of the year. Implements solar geometry (declination, equation of time,
+/// hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+/// and Duffie & Beckman. Decomposes global horizontal radiation into
+/// beam and diffuse components using the Erbs correlation, then projects
+/// onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// SolarRadiation.hpp
+//
+// REFACTORING: PERFORMANCE & MEMORY OPTIMIZATION
+// 1. Memory: Flattened 2D vectors to 1D to reduce heap fragmentation and
+// allocation cost.
+// 2. Lazy Allocation: Statistical vectors are now allocated only when
+// Calculate(true) is called.
+// 3. Physics: Pre-calculation of daily solar geometry.
+// 4. Documentation: Includes equation references to ASHRAE 2013 and Duffie &
+// Beckman.
+
+========================================================================
+FILE: Structure.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Building envelope properties: areas, U-values, SHGC, and thermal mass.
+DETAILED: Stores wall/window/roof areas, U-values, solar heat gain coefficients,
+thermal emissivity, solar absorption, shading device factors, interior
+and exterior heat capacities, building height, and infiltration rate.
+Properties are organized as 9-element arrays for the 8 cardinal/
+intercardinal orientations plus the roof.
+
+PROPOSED HEADER:
+/// @file Structure.hpp
+/// @brief Building envelope properties: areas, U-values, SHGC, and thermal mass.
+///
+/// Stores wall/window/roof areas, U-values, solar heat gain coefficients,
+/// thermal emissivity, solar absorption, shading device factors, interior
+/// and exterior heat capacities, building height, and infiltration rate.
+/// Properties are organized as 9-element arrays for the 8 cardinal/
+/// intercardinal orientations plus the roof.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: TimeFrame.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Hour-of-year to month, day-of-week, and hour-of-day conversion utility.
+DETAILED: Pre-computes lookup tables for converting a linear hour index (0–8759)
+to month (0–11), day of month, day of week (0–6), and hour of day
+(0–23). Used by HourlyModel and SolarRadiation for time indexing.
+
+PROPOSED HEADER:
+/// @file TimeFrame.hpp
+/// @brief Hour-of-year to month, day-of-week, and hour-of-day conversion utility.
+///
+/// Pre-computes lookup tables for converting a linear hour index (0–8759)
+/// to month (0–11), day of month, day of week (0–6), and hour of day
+/// (0–23). Used by HourlyModel and SolarRadiation for time indexing.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: UserModel.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: High-level facade for loading building models and creating simulations.
+DETAILED: Parses ISM (legacy) and YAML configuration files to populate all
+component property objects (Structure, Heating, Cooling, Ventilation,
+Lighting, Building, Population, Location, etc.). Provides factory
+methods to create configured MonthlyModel and HourlyModel instances.
+Supports optional default values and property overrides.
+
+PROPOSED HEADER:
+/// @file UserModel.hpp
+/// @brief High-level facade for loading building models and creating simulations.
+///
+/// Parses ISM (legacy) and YAML configuration files to populate all
+/// component property objects (Structure, Heating, Cooling, Ventilation,
+/// Lighting, Building, Population, Location, etc.). Provides factory
+/// methods to create configured MonthlyModel and HourlyModel instances.
+/// Supports optional default values and property overrides.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Ventilation.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Ventilation system properties, infiltration, and heat recovery.
+DETAILED: Stores ventilation intake/exhaust rates, heat recovery efficiency,
+recirculation fraction, fan power, preheat temperature, and air
+leakage parameters. Includes infiltration model coefficients per
+ISO 15242 and the overall ventilation heat transfer coefficient
+(H_ve) per ISO 13790 §9.3.
+
+PROPOSED HEADER:
+/// @file Ventilation.hpp
+/// @brief Ventilation system properties, infiltration, and heat recovery.
+///
+/// Stores ventilation intake/exhaust rates, heat recovery efficiency,
+/// recirculation fraction, fan power, preheat temperature, and air
+/// leakage parameters. Includes infiltration model coefficients per
+/// ISO 15242 and the overall ventilation heat transfer coefficient
+/// (H_ve) per ISO 13790 §9.3.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: WeatherData.hpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Monthly-averaged weather data container for the ISO monthly model.
+DETAILED: Stores mean monthly values for global horizontal radiation, dry-bulb
+temperature, wind speed, and directional solar radiation on vertical
+surfaces. Also holds diurnal (24-hour) temperature and radiation
+profiles for each month.
+
+PROPOSED HEADER:
+/// @file WeatherData.hpp
+/// @brief Monthly-averaged weather data container for the ISO monthly model.
+///
+/// Stores mean monthly values for global horizontal radiation, dry-bulb
+/// temperature, wind speed, and directional solar radiation on vertical
+/// surfaces. Also holds diurnal (24-hour) temperature and radiation
+/// profiles for each month.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: EpwData.cpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: EnergyPlus Weather (EPW) file parser and hourly weather data container.
+DETAILED: Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+global horizontal radiation, and other meteorological fields. Computes
+monthly averages and diurnal profiles for use by the monthly and hourly
+simulation models.
+
+PROPOSED HEADER:
+/// @file EpwData.cpp
+/// @brief EnergyPlus Weather (EPW) file parser and hourly weather data container.
+///
+/// Parses .epw files to extract hourly dry-bulb temperature, wind speed,
+/// global horizontal radiation, and other meteorological fields. Computes
+/// monthly averages and diurnal profiles for use by the monthly and hourly
+/// simulation models.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: HourlyModel.cpp
+AUTHORS: Brian Craig, Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2014-06-20
+BRIEF: Hourly energy simulation engine using the ISO 13790 hourly method.
+DETAILED: Implements the five-resistance-one-capacitance (5R1C) thermal network
+model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+electrical energy use over 8760 hours. Includes solar gain, internal
+gain, ventilation, and HVAC system calculations. Results can be
+returned hourly or aggregated by month.
+
+PROPOSED HEADER:
+/// @file HourlyModel.cpp
+/// @brief Hourly energy simulation engine using the ISO 13790 hourly method.
+///
+/// Implements the five-resistance-one-capacitance (5R1C) thermal network
+/// model from ISO 13790 Annex C. Computes hourly heating, cooling, and
+/// electrical energy use over 8760 hours. Includes solar gain, internal
+/// gain, ventilation, and HVAC system calculations. Results can be
+/// returned hourly or aggregated by month.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2014-06-20
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// HourlyModel.cpp
+//
+// REFACTORING: ISO STANDARD ALIGNMENT & PERFORMANCE
+// - Renamed A_floor_inv -> invFloorArea
+// - Replaced harmonic mean divisions with multiplication (algebraic
+// simplification).
+// - Removed smallEpsilon where algebra safely handles zero values.
+// - Reused member vectors to eliminate heap allocation in main loop.
+
+========================================================================
+FILE: ISOResults.cpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Simulation result container for monthly energy totals.
+DETAILED: Holds the vector of EndUses results returned by MonthlyModel::simulate()
+and HourlyModel::simulate().
+
+PROPOSED HEADER:
+/// @file ISOResults.cpp
+/// @brief Simulation result container for monthly energy totals.
+///
+/// Holds the vector of EndUses results returned by MonthlyModel::simulate()
+/// and HourlyModel::simulate().
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: MonthlyModel.cpp
+AUTHORS: Brian Craig, Brendan Albano, Nick Collier, Daniel Chopson, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Monthly energy simulation engine using the ISO 13790 monthly method.
+DETAILED: Implements the quasi-steady-state monthly energy balance from ISO 13790.
+Computes monthly heating, cooling, lighting, ventilation, and equipment
+energy use. Includes envelope heat transfer, solar and internal gains,
+utilization factors, and HVAC system efficiency calculations.
+
+PROPOSED HEADER:
+/// @file MonthlyModel.cpp
+/// @brief Monthly energy simulation engine using the ISO 13790 monthly method.
+///
+/// Implements the quasi-steady-state monthly energy balance from ISO 13790.
+/// Computes monthly heating, cooling, lighting, ventilation, and equipment
+/// energy use. Includes envelope heat transfer, solar and internal gains,
+/// utilization factors, and HVAC system efficiency calculations.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Daniel Chopson
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Schedules.cpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2026-01-23
+BRIEF: Hourly and weekly schedule generation and CSV loading.
+DETAILED: Builds 24×7 weekly schedule arrays for ventilation, appliances, lighting,
+and temperature setpoints from Population and Building properties.
+Optionally loads custom hourly schedules from CSV files. Generates
+monthly occupancy fractions for the MonthlyModel.
+
+PROPOSED HEADER:
+/// @file Schedules.cpp
+/// @brief Hourly and weekly schedule generation and CSV loading.
+///
+/// Builds 24×7 weekly schedule arrays for ventilation, appliances, lighting,
+/// and temperature setpoints from Population and Building properties.
+/// Optionally loads custom hourly schedules from CSV files. Generates
+/// monthly occupancy fractions for the MonthlyModel.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-23
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: SolarRadiation.cpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Solar position and radiation calculations for building surfaces.
+DETAILED: Computes hourly solar radiation on tilted surfaces for all 8760 hours
+of the year. Implements solar geometry (declination, equation of time,
+hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+and Duffie & Beckman. Decomposes global horizontal radiation into
+beam and diffuse components using the Erbs correlation, then projects
+onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+
+PROPOSED HEADER:
+/// @file SolarRadiation.cpp
+/// @brief Solar position and radiation calculations for building surfaces.
+///
+/// Computes hourly solar radiation on tilted surfaces for all 8760 hours
+/// of the year. Implements solar geometry (declination, equation of time,
+/// hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+/// and Duffie & Beckman. Decomposes global horizontal radiation into
+/// beam and diffuse components using the Erbs correlation, then projects
+/// onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// SolarRadiation.cpp
+//
+// REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
+// 1. Memory: Removed HEAVY allocations from Constructor. Vectors are now
+// lazy-loaded.
+// 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
+// per year, not checked per hour. This fixes potential day-shift bugs.
+// 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
+// 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
+// Duffie & Beckman.
+
+========================================================================
+FILE: standalone_main.cpp
+AUTHORS: Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2014-12-05
+BRIEF: Command-line entry point for running ISOModel simulations.
+DETAILED: Loads a building model from YAML/ISM and EPW files, runs both monthly
+and hourly simulations, and prints the results to stdout. Demonstrates
+the UserModel → MonthlyModel/HourlyModel workflow.
+
+PROPOSED HEADER:
+/// @file standalone_main.cpp
+/// @brief Command-line entry point for running ISOModel simulations.
+///
+/// Loads a building model from YAML/ISM and EPW files, runs both monthly
+/// and hourly simulations, and prints the results to stdout. Demonstrates
+/// the UserModel → MonthlyModel/HourlyModel workflow.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// standalone_main.cpp
+// * Compatible with the Original Interface (std::vector<EndUses>)
+
+========================================================================
+FILE: Structure.cpp
+AUTHORS: Brian Craig, Nick Collier, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Building envelope properties: areas, U-values, SHGC, and thermal mass.
+DETAILED: Stores wall/window/roof areas, U-values, solar heat gain coefficients,
+thermal emissivity, solar absorption, shading device factors, interior
+and exterior heat capacities, building height, and infiltration rate.
+Properties are organized as 9-element arrays for the 8 cardinal/
+intercardinal orientations plus the roof.
+
+PROPOSED HEADER:
+/// @file Structure.cpp
+/// @brief Building envelope properties: areas, U-values, SHGC, and thermal mass.
+///
+/// Stores wall/window/roof areas, U-values, solar heat gain coefficients,
+/// thermal emissivity, solar absorption, shading device factors, interior
+/// and exterior heat capacities, building height, and infiltration rate.
+/// Properties are organized as 9-element arrays for the 8 cardinal/
+/// intercardinal orientations plus the roof.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: TimeFrame.cpp
+AUTHORS: Brian Craig, Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: Hour-of-year to month, day-of-week, and hour-of-day conversion utility.
+DETAILED: Pre-computes lookup tables for converting a linear hour index (0–8759)
+to month (0–11), day of month, day of week (0–6), and hour of day
+(0–23). Used by HourlyModel and SolarRadiation for time indexing.
+
+PROPOSED HEADER:
+/// @file TimeFrame.cpp
+/// @brief Hour-of-year to month, day-of-week, and hour-of-day conversion utility.
+///
+/// Pre-computes lookup tables for converting a linear hour index (0–8759)
+/// to month (0–11), day of month, day of week (0–6), and hour of day
+/// (0–23). Used by HourlyModel and SolarRadiation for time indexing.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: UserModel.cpp
+AUTHORS: Brian Craig, Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2013-11-05
+BRIEF: High-level facade for loading building models and creating simulations.
+DETAILED: Parses ISM (legacy) and YAML configuration files to populate all
+component property objects (Structure, Heating, Cooling, Ventilation,
+Lighting, Building, Population, Location, etc.). Provides factory
+methods to create configured MonthlyModel and HourlyModel instances.
+Supports optional default values and property overrides.
+
+PROPOSED HEADER:
+/// @file UserModel.cpp
+/// @brief High-level facade for loading building models and creating simulations.
+///
+/// Parses ISM (legacy) and YAML configuration files to populate all
+/// component property objects (Structure, Heating, Cooling, Ventilation,
+/// Lighting, Building, Population, Location, etc.). Provides factory
+/// methods to create configured MonthlyModel and HourlyModel instances.
+/// Supports optional default values and property overrides.
+///
+/// @author Brian Craig
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Test/HourlyModel_GTest.cpp
+AUTHORS: Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2015-07-16
+BRIEF: Regression tests for the hourly simulation model.
+DETAILED: Loads a test building, runs HourlyModel::simulate(), and compares
+monthly-aggregated results against known-good expected values for
+all 13 end-use categories across 12 months.
+
+PROPOSED HEADER:
+/// @file HourlyModel_GTest.cpp
+/// @brief Regression tests for the hourly simulation model.
+///
+/// Loads a test building, runs HourlyModel::simulate(), and compares
+/// monthly-aggregated results against known-good expected values for
+/// all 13 end-use categories across 12 months.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// HourlyModel_GTest.cpp — Hourly simulation regression tests.
+
+========================================================================
+FILE: Test/HourlySchedules_GTest.cpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2026-01-23
+BRIEF: Regression tests for hourly model with custom CSV schedules.
+DETAILED: Same as HourlyModel_GTest but loads custom hourly schedules from
+a CSV file to verify schedule-driven simulation results.
+
+PROPOSED HEADER:
+/// @file HourlySchedules_GTest.cpp
+/// @brief Regression tests for hourly model with custom CSV schedules.
+///
+/// Same as HourlyModel_GTest but loads custom hourly schedules from
+/// a CSV file to verify schedule-driven simulation results.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-23
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// HourlySchedules_GTest.cpp — Hourly model with custom schedules regression tests.
+
+========================================================================
+FILE: Test/ISOModel_Benchmark.cpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2014-12-16
+BRIEF: Performance benchmarks for hourly and monthly simulations.
+DETAILED: Runs multiple iterations of both simulation models with profiling
+enabled to measure execution time and identify bottlenecks.
+
+PROPOSED HEADER:
+/// @file ISOModel_Benchmark.cpp
+/// @brief Performance benchmarks for hourly and monthly simulations.
+///
+/// Runs multiple iterations of both simulation models with profiling
+/// enabled to measure execution time and identify bottlenecks.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-16
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// ISOModel_Benchmark.cpp
+// Refactored to ensure standard C++ compatibility while preserving all original
+// benchmark loops.
+
+========================================================================
+FILE: Test/ISOModel_GTest.cpp
+AUTHORS: Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2014-12-05
+BRIEF: Top-level Google Test entry point.
+DETAILED: Includes the test fixture and serves as the main compilation unit
+for the test suite.
+
+PROPOSED HEADER:
+/// @file ISOModel_GTest.cpp
+/// @brief Top-level Google Test entry point.
+///
+/// Includes the test fixture and serves as the main compilation unit
+/// for the test suite.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// ISOModel_GTest.cpp — GoogleTest main entry point.
+
+========================================================================
+FILE: Test/ISOModelFixture.cpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2015-09-20
+BRIEF: Google Test fixture with shared UserModel setup.
+DETAILED: Loads the test building YAML and EPW files once in SetUpTestSuite()
+and provides the configured UserModel to all test cases.
+
+PROPOSED HEADER:
+/// @file ISOModelFixture.cpp
+/// @brief Google Test fixture with shared UserModel setup.
+///
+/// Loads the test building YAML and EPW files once in SetUpTestSuite()
+/// and provides the configured UserModel to all test cases.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-09-20
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Test/ISOModelFixture.hpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2015-09-20
+BRIEF: Google Test fixture with shared UserModel setup.
+DETAILED: Loads the test building YAML and EPW files once in SetUpTestSuite()
+and provides the configured UserModel to all test cases.
+
+PROPOSED HEADER:
+/// @file ISOModelFixture.hpp
+/// @brief Google Test fixture with shared UserModel setup.
+///
+/// Loads the test building YAML and EPW files once in SetUpTestSuite()
+/// and provides the configured UserModel to all test cases.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-09-20
+/// @copyright Copyright Argonne National Laboratory
+
+
+========================================================================
+FILE: Test/MonthlyModel_GTest.cpp
+AUTHORS: Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2015-07-16
+BRIEF: Regression tests for the monthly simulation model.
+DETAILED: Loads a test building, runs MonthlyModel::simulate(), and compares
+results against known-good expected values for all 13 end-use
+categories across 12 months.
+
+PROPOSED HEADER:
+/// @file MonthlyModel_GTest.cpp
+/// @brief Regression tests for the monthly simulation model.
+///
+/// Loads a test building, runs MonthlyModel::simulate(), and compares
+/// results against known-good expected values for all 13 end-use
+/// categories across 12 months.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// MonthlyModel_GTest.cpp — Monthly simulation regression tests.
+
+========================================================================
+FILE: Test/OptimizationCoverage_GTest.cpp
+AUTHORS: Ralph Muehleisen
+CREATED: 2026-01-07
+BRIEF: Tests verifying C++20 optimization and constant correctness.
+DETAILED: Validates that constexpr constants have correct values, solar
+radiation math functions produce expected results, EPW parsing
+works correctly, and UserModel modern features function properly.
+
+PROPOSED HEADER:
+/// @file OptimizationCoverage_GTest.cpp
+/// @brief Tests verifying C++20 optimization and constant correctness.
+///
+/// Validates that constexpr constants have correct values, solar
+/// radiation math functions produce expected results, EPW parsing
+/// works correctly, and UserModel modern features function properly.
+///
+/// @author Ralph Muehleisen
+/// @date 2026-01-07
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// OptimizationCoverage_GTest.cpp
+//
+// Verifies correctness of recent C++20 optimizations and constant replacements.
+
+========================================================================
+FILE: Test/solar_debug.cpp
+AUTHORS: Brendan Albano, Ralph Muehleisen
+CREATED: 2015-03-11
+BRIEF: Debug utility for solar radiation calculations.
+DETAILED: Standalone program that loads a building model and prints detailed
+solar radiation intermediate values for debugging and validation.
+
+PROPOSED HEADER:
+/// @file solar_debug.cpp
+/// @brief Debug utility for solar radiation calculations.
+///
+/// Standalone program that loads a building model and prints detailed
+/// solar radiation intermediate values for debugging and validation.
+///
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2015-03-11
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// solar_debug.cpp
+//
+// Refactored to remove boost dependencies and ensure output prints regardless
+// of global debug flags.
+
+========================================================================
+FILE: Test/SolarRadiation_GTest.cpp
+AUTHORS: Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2015-07-16
+BRIEF: Tests for solar position and radiation calculations.
+DETAILED: Validates sun position (altitude, azimuth), surface radiation values,
+and monthly solar totals against hand-calculated reference data.
+
+PROPOSED HEADER:
+/// @file SolarRadiation_GTest.cpp
+/// @brief Tests for solar position and radiation calculations.
+///
+/// Validates sun position (altitude, azimuth), surface radiation values,
+/// and monthly solar totals against hand-calculated reference data.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// SolarRadiation_GTest.cpp — Solar position and radiation calculation tests.
+
+========================================================================
+FILE: Test/TimeFrame_GTest.cpp
+AUTHORS: Brendan Albano, Nick Collier, Ralph Muehleisen
+CREATED: 2015-07-16
+BRIEF: Tests for TimeFrame hour/day/month conversion lookups.
+DETAILED: Verifies that TimeFrame correctly maps hour-of-year indices to
+month, day of month, day of week, and hour of day.
+
+PROPOSED HEADER:
+/// @file TimeFrame_GTest.cpp
+/// @brief Tests for TimeFrame hour/day/month conversion lookups.
+///
+/// Verifies that TimeFrame correctly maps hour-of-year indices to
+/// month, day of month, day of week, and hour of day.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// TimeFrame_GTest.cpp — TimeFrame calendar calculation tests.
+
+========================================================================
+FILE: Test/UserModel_GTest.cpp
+AUTHORS: Nick Collier, Brendan Albano, Ralph Muehleisen
+CREATED: 2014-12-05
+BRIEF: Tests for UserModel property loading and initialization.
+DETAILED: Validates that YAML/ISM file parsing correctly populates all
+component properties, tests default value handling, and verifies
+optional property override behavior.
+
+PROPOSED HEADER:
+/// @file UserModel_GTest.cpp
+/// @brief Tests for UserModel property loading and initialization.
+///
+/// Validates that YAML/ISM file parsing correctly populates all
+/// component properties, tests default value handling, and verifies
+/// optional property override behavior.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
+
+EXISTING HEADER:
+// UserModel_GTest.cpp — UserModel loading and property initialization tests.
+

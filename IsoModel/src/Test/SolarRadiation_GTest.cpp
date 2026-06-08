@@ -1,15 +1,20 @@
-/*
- * ISOModel_GTest.cpp
- *
- * Created on: Dec 5, 2014
- * Author: nick
- */
-
-#include "gtest/gtest.h"
-
-#include "../SolarRadiation.hpp" // <--- ADDED: Explicit include required now
-#include "../UserModel.hpp"
+/// @file SolarRadiation_GTest.cpp
+/// @brief Tests for solar position and radiation calculations.
+///
+/// Validates sun position (altitude, azimuth), surface radiation values,
+/// and monthly solar totals against hand-calculated reference data.
+///
+/// @author Brendan Albano
+/// @author Nick Collier
+/// @author Ralph Muehleisen
+/// @date 2015-07-16
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
+
+#include "../SolarRadiation.hpp"
+#include "../UserModel.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 
@@ -69,60 +74,53 @@ TEST_F(ISOModelFixture, SunPositionAndRadiationTests) {
   EXPECT_NEAR(175.0, diffuseIrradiance, 0.0001);
 
   // Test the sun position methods.
-  auto revolution =
-      solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
+  auto revolution = solarRadiation.calculateRevolutionAngle(frame.YTD[hourOfYear]);
   EXPECT_NEAR(0.34428412642079925, revolution, 0.0001);
 
   auto equationOfTime = solarRadiation.calculateEquationOfTime(revolution);
   EXPECT_NEAR(-10.602150196429877, equationOfTime, 0.0001);
 
-  auto apparentSolarTime = solarRadiation.calculateApparentSolarTime(
-      frame.Hour[hourOfYear], equationOfTime);
+  auto apparentSolarTime =
+      solarRadiation.calculateApparentSolarTime(frame.Hour[hourOfYear], equationOfTime);
   EXPECT_NEAR(11.961964163392835, apparentSolarTime, 0.0001);
 
   auto solarDeclination = solarRadiation.calculateSolarDeclination(revolution);
   EXPECT_NEAR(-0.35056553686581415, solarDeclination, 0.0001);
 
-  auto solarHourAngle =
-      solarRadiation.calculateSolarHourAngle(apparentSolarTime);
+  auto solarHourAngle = solarRadiation.calculateSolarHourAngle(apparentSolarTime);
   EXPECT_NEAR(-0.009957758738184193, solarHourAngle, 0.0001);
 
-  auto solarAltitudeAngle =
-      solarRadiation.calculateSolarAltitude(solarDeclination, solarHourAngle);
+  auto solarAltitudeAngle = solarRadiation.calculateSolarAltitude(solarDeclination, solarHourAngle);
   EXPECT_NEAR(0.4875023918786105, solarAltitudeAngle, 0.0001);
 
-  auto solarAzimuthSin = solarRadiation.calculateSolarAzimuthSin(
-      solarDeclination, solarHourAngle, solarAltitudeAngle);
+  auto solarAzimuthSin =
+      solarRadiation.calculateSolarAzimuthSin(solarDeclination, solarHourAngle, solarAltitudeAngle);
   EXPECT_NEAR(-0.010585060645453042, solarAzimuthSin, 0.0001);
 
-  auto solarAzimuthCos = solarRadiation.calculateSolarAzimuthCos(
-      solarDeclination, solarHourAngle, solarAltitudeAngle);
+  auto solarAzimuthCos =
+      solarRadiation.calculateSolarAzimuthCos(solarDeclination, solarHourAngle, solarAltitudeAngle);
   EXPECT_NEAR(0.9999439766762598, solarAzimuthCos, 0.0001);
 
-  auto solarAzimuth =
-      solarRadiation.calculateSolarAzimuth(solarAzimuthSin, solarAzimuthCos);
+  auto solarAzimuth = solarRadiation.calculateSolarAzimuth(solarAzimuthSin, solarAzimuthCos);
   EXPECT_NEAR(-0.010585258319975917, solarAzimuth, 0.0001);
 
   // Test the radiation methods.
 
-  auto groundReflectedIrradiance =
-      solarRadiation.calculateGroundReflectedIrradiance(
-          directBeamIrradiance, diffuseIrradiance,
-          solarRadiation.groundReflectance(), solarAltitudeAngle,
-          solarRadiation.surfaceTilt());
+  auto groundReflectedIrradiance = solarRadiation.calculateGroundReflectedIrradiance(
+      directBeamIrradiance, diffuseIrradiance, solarRadiation.groundReflectance(),
+      solarAltitudeAngle, solarRadiation.surfaceTilt());
   EXPECT_NEAR(22.742623699187682, groundReflectedIrradiance, 0.0001);
 
   auto surfaceSolarAzimuth =
       solarRadiation.calculateSurfaceSolarAzimuth(solarAzimuth, surfaceAzimuth);
   EXPECT_NEAR(0.010585258319975917, surfaceSolarAzimuth, 0.0001);
 
-  auto angleOfIncidence = solarRadiation.calculateAngleOfIncidence(
-      solarAltitudeAngle, solarAzimuth, solarRadiation.surfaceTilt());
+  auto angleOfIncidence = solarRadiation.calculateAngleOfIncidence(solarAltitudeAngle, solarAzimuth,
+                                                                   solarRadiation.surfaceTilt());
   EXPECT_NEAR(0.4876080490062035, angleOfIncidence, 0.0001);
 
   auto totalDirectBeamIrradiance =
-      solarRadiation.calculateTotalDirectBeamIrradiance(directBeamIrradiance,
-                                                        angleOfIncidence);
+      solarRadiation.calculateTotalDirectBeamIrradiance(directBeamIrradiance, angleOfIncidence);
   EXPECT_NEAR(282.7059351987666, totalDirectBeamIrradiance, 0.0001);
 
   auto diffuseAngleOfIncidenceFactor =
@@ -130,12 +128,10 @@ TEST_F(ISOModelFixture, SunPositionAndRadiationTests) {
   EXPECT_NEAR(1.1803650987552168, diffuseAngleOfIncidenceFactor, 0.0001);
 
   auto totalDiffuseIrradiance = solarRadiation.calculateTotalDiffuseIrradiance(
-      diffuseIrradiance, diffuseAngleOfIncidenceFactor,
-      solarRadiation.surfaceTilt());
+      diffuseIrradiance, diffuseAngleOfIncidenceFactor, solarRadiation.surfaceTilt());
   EXPECT_NEAR(206.56389228216293, totalDiffuseIrradiance, 0.0001);
 
   auto totalIrradiance = solarRadiation.calculateTotalIrradiance(
-      totalDirectBeamIrradiance, totalDiffuseIrradiance,
-      groundReflectedIrradiance);
+      totalDirectBeamIrradiance, totalDiffuseIrradiance, groundReflectedIrradiance);
   EXPECT_NEAR(512.0124511801172, totalIrradiance, 0.0001);
 }

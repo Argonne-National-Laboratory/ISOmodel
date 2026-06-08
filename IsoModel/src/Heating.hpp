@@ -1,6 +1,19 @@
-#ifndef ISOMODEL_HEATING_HPP
-#define ISOMODEL_HEATING_HPP
-
+/// @file Heating.hpp
+/// @brief Heating system properties and fuel type parameters.
+///
+/// Stores heating efficiency, temperature setpoints (occupied and unoccupied),
+/// HVAC loss and waste factors, pump power, hot water demand, and district
+/// heating parameters. Includes fuel type selection for primary energy
+/// calculations per ISO 13790.
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
+#include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 
 namespace openstudio::isomodel {
@@ -11,87 +24,81 @@ public:
   Heating() = default;
   ~Heating() = default;
 
-  double temperatureSetPointOccupied() const {
+  [[nodiscard]] double temperatureSetPointOccupied() const noexcept {
     return m_temperatureSetPointOccupied;
   }
-  void setTemperatureSetPointOccupied(double value) {
-    m_temperatureSetPointOccupied = value;
-  }
+  void setTemperatureSetPointOccupied(double value) { m_temperatureSetPointOccupied = value; }
 
-  double temperatureSetPointUnoccupied() const {
+  [[nodiscard]] double temperatureSetPointUnoccupied() const noexcept {
     return m_temperatureSetPointUnoccupied;
   }
-  void setTemperatureSetPointUnoccupied(double value) {
-    m_temperatureSetPointUnoccupied = value;
-  }
+  void setTemperatureSetPointUnoccupied(double value) { m_temperatureSetPointUnoccupied = value; }
 
-  double hvacLossFactor() const { return m_hvacLossFactor; }
+  [[nodiscard]] double hvacLossFactor() const noexcept { return m_hvacLossFactor; }
   void setHvacLossFactor(double value) { m_hvacLossFactor = value; }
 
-  double hotcoldWasteFactor() const { return m_hotcoldWasteFactor; }
+  [[nodiscard]] double hotcoldWasteFactor() const noexcept { return m_hotcoldWasteFactor; }
   void setHotcoldWasteFactor(double value) { m_hotcoldWasteFactor = value; }
 
-  double efficiency() const { return m_efficiency; }
+  [[nodiscard]] double efficiency() const noexcept { return m_efficiency; }
   void setEfficiency(double value) { m_efficiency = value; }
 
-  double energyType() const { return m_energyType; }
-  void setEnergyType(double value) { m_energyType = value; }
+  [[nodiscard]] FuelType energyType() const noexcept { return m_energyType; }
+  void setEnergyType(FuelType value) { m_energyType = value; }
 
-  double pumpControlReduction() const { return m_pumpControlReduction; }
+  [[nodiscard]] double pumpControlReduction() const noexcept { return m_pumpControlReduction; }
   void setPumpControlReduction(double value) { m_pumpControlReduction = value; }
 
-  double hotWaterDemand() const { return m_hotWaterDemand; }
+  [[nodiscard]] double hotWaterDemand() const noexcept { return m_hotWaterDemand; }
   void setHotWaterDemand(double value) { m_hotWaterDemand = value; }
 
-  double hotWaterDistributionEfficiency() const {
+  [[nodiscard]] double hotWaterDistributionEfficiency() const noexcept {
     return m_hotWaterDistributionEfficiency;
   }
-  void setHotWaterDistributionEfficiency(double value) {
-    m_hotWaterDistributionEfficiency = value;
+  void setHotWaterDistributionEfficiency(double value) { m_hotWaterDistributionEfficiency = value; }
+
+  [[nodiscard]] double hotWaterSystemEfficiency() const noexcept {
+    return m_hotWaterSystemEfficiency;
   }
+  void setHotWaterSystemEfficiency(double value) { m_hotWaterSystemEfficiency = value; }
 
-  double hotWaterSystemEfficiency() const { return m_hotWaterSystemEfficiency; }
-  void setHotWaterSystemEfficiency(double value) {
-    m_hotWaterSystemEfficiency = value;
-  }
+  [[nodiscard]] FuelType hotWaterEnergyType() const noexcept { return m_hotWaterEnergyType; }
+  void setHotWaterEnergyType(FuelType value) { m_hotWaterEnergyType = value; }
 
-  double hotWaterEnergyType() const { return m_hotWaterEnergyType; }
-  void setHotWaterEnergyType(double value) { m_hotWaterEnergyType = value; }
-
-  double dT_supp_ht() const { return m_dT_supp_ht; }
+  [[nodiscard]] double dT_supp_ht() const noexcept { return m_dT_supp_ht; }
   void setDT_supp_ht(double value) { m_dT_supp_ht = value; }
 
-  bool forcedAirHeating() const { return m_forcedAirHeating; }
+  [[nodiscard]] bool forcedAirHeating() const noexcept { return m_forcedAirHeating; }
   void setForcedAirHeating(bool value) { m_forcedAirHeating = value; }
 
-  double E_pumps() const { return m_E_pumps; }
+  [[nodiscard]] double E_pumps() const noexcept { return m_E_pumps; }
   void setE_pumps(double value) { m_E_pumps = value; }
 
-  double T_ht_ctrl_flag() const { return m_T_ht_ctrl_flag; }
+  [[nodiscard]] double T_ht_ctrl_flag() const noexcept { return m_T_ht_ctrl_flag; }
   void setT_ht_ctrl_flag(double value) { m_T_ht_ctrl_flag = value; }
 
-  double a_H0() const { return m_a_H0; }
+  [[nodiscard]] double a_H0() const noexcept { return m_a_H0; }
   void setA_H0(double value) { m_a_H0 = value; }
 
-  double tau_H0() const { return m_tau_H0; }
+  [[nodiscard]] double tau_H0() const noexcept { return m_tau_H0; }
   void setTau_H0(double value) { m_tau_H0 = value; }
 
-  double DH_YesNo() const { return m_DH_YesNo; }
+  [[nodiscard]] double DH_YesNo() const noexcept { return m_DH_YesNo; }
   void setDH_YesNo(double value) { m_DH_YesNo = value; }
 
-  double eta_DH_network() const { return m_eta_DH_network; }
+  [[nodiscard]] double eta_DH_network() const noexcept { return m_eta_DH_network; }
   void setEta_DH_network(double value) { m_eta_DH_network = value; }
 
-  double eta_DH_sys() const { return m_eta_DH_sys; }
+  [[nodiscard]] double eta_DH_sys() const noexcept { return m_eta_DH_sys; }
   void setEta_DH_sys(double value) { m_eta_DH_sys = value; }
 
-  double frac_DH_free() const { return m_frac_DH_free; }
+  [[nodiscard]] double frac_DH_free() const noexcept { return m_frac_DH_free; }
   void setFrac_DH_free(double value) { m_frac_DH_free = value; }
 
-  double dhw_tset() const { return m_dhw_tset; }
+  [[nodiscard]] double dhw_tset() const noexcept { return m_dhw_tset; }
   void setDhw_tset(double value) { m_dhw_tset = value; }
 
-  double dhw_tsupply() const { return m_dhw_tsupply; }
+  [[nodiscard]] double dhw_tsupply() const noexcept { return m_dhw_tsupply; }
   void setDhw_tsupply(double value) { m_dhw_tsupply = value; }
 
 private:
@@ -100,12 +107,12 @@ private:
   double m_temperatureSetPointUnoccupied = 0.0;
   double m_hvacLossFactor = 0.0;
   double m_efficiency = 0.0;
-  double m_energyType = 0.0;
+  FuelType m_energyType = FuelType::Unspecified;
   double m_pumpControlReduction = 0.0;
   double m_hotWaterDemand = 0.0;
   double m_hotWaterDistributionEfficiency = 0.0;
   double m_hotWaterSystemEfficiency = 0.0;
-  double m_hotWaterEnergyType = 0.0;
+  FuelType m_hotWaterEnergyType = FuelType::Unspecified;
   double m_hotcoldWasteFactor = 0.0;
 
   // Default values preserved
@@ -124,4 +131,3 @@ private:
 };
 
 } // namespace openstudio::isomodel
-#endif // ISOMODEL_HEATING_HPP

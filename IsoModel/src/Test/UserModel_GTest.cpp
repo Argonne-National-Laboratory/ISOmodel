@@ -1,23 +1,26 @@
-/*
- * ISOModel_GTest.cpp
- *
- *  Created on: Dec 5, 2014
- *      Author: nick
- */
-
-#include "gtest/gtest.h"
-
+/// @file UserModel_GTest.cpp
+/// @brief Tests for UserModel property loading and initialization.
+///
+/// Validates that YAML/ISM file parsing correctly populates all
+/// component properties, tests default value handling, and verifies
+/// optional property override behavior.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
 #include "ISOModelFixture.hpp"
 
-// #include "../Properties.hpp"
 #include "../UserModel.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace openstudio::isomodel;
 
 TEST_F(ISOModelFixture, UserModelInitializationTests) {
   UserModel userModel;
-  userModel.load(test_data_path +
-                 "/ism_props_for_testing_umodel_init_v2_ism.yaml");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml");
 
   EXPECT_DOUBLE_EQ(0.366569597990189, userModel.terrainClass());
   EXPECT_DOUBLE_EQ(0.13797878192703, userModel.floorArea());
@@ -33,18 +36,14 @@ TEST_F(ISOModelFixture, UserModelInitializationTests) {
   EXPECT_DOUBLE_EQ(0.0182141291000549, userModel.coolingOccupiedSetpoint());
   EXPECT_DOUBLE_EQ(0.47279017381788, userModel.coolingUnoccupiedSetpoint());
   EXPECT_DOUBLE_EQ(0.0159043563230605, userModel.elecPowerAppliancesOccupied());
-  EXPECT_DOUBLE_EQ(0.877197046873451,
-                   userModel.elecPowerAppliancesUnoccupied());
+  EXPECT_DOUBLE_EQ(0.877197046873451, userModel.elecPowerAppliancesUnoccupied());
   EXPECT_DOUBLE_EQ(0.413231779700794, userModel.gasPowerAppliancesOccupied());
   EXPECT_DOUBLE_EQ(0.735954395099727, userModel.gasPowerAppliancesUnoccupied());
-  EXPECT_DOUBLE_EQ(0.827607402688993,
-                   userModel.lightingPowerIntensityOccupied());
-  EXPECT_DOUBLE_EQ(0.210627783574828,
-                   userModel.lightingPowerIntensityUnoccupied());
+  EXPECT_DOUBLE_EQ(0.827607402688993, userModel.lightingPowerIntensityOccupied());
+  EXPECT_DOUBLE_EQ(0.210627783574828, userModel.lightingPowerIntensityUnoccupied());
   EXPECT_DOUBLE_EQ(0.688613300586997, userModel.exteriorLightingPower());
   EXPECT_DOUBLE_EQ(0.952066322499152, userModel.daylightSensorSystem());
-  EXPECT_DOUBLE_EQ(0.191200546809349,
-                   userModel.lightingOccupancySensorSystem());
+  EXPECT_DOUBLE_EQ(0.191200546809349, userModel.lightingOccupancySensorSystem());
   EXPECT_DOUBLE_EQ(0.295905191092175, userModel.constantIlluminationControl());
   EXPECT_DOUBLE_EQ(0.977647331541828, userModel.coolingSystemCOP());
   EXPECT_DOUBLE_EQ(0.86953551426846, userModel.coolingSystemIPLVToCOPRatio());
@@ -62,7 +61,7 @@ TEST_F(ISOModelFixture, UserModelInitializationTests) {
   // and the variable
   // EXPECT_DOUBLE_EQ(0.791092991177229, userModel.dhwDistributionSystem());
   EXPECT_DOUBLE_EQ(2, userModel.dhwEnergyCarrier());
-  EXPECT_DOUBLE_EQ(3, userModel.bemType());
+  EXPECT_EQ("advanced", userModel.bemType());
   EXPECT_DOUBLE_EQ(0.590020871911987, userModel.interiorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.256509943938684, userModel.specificFanPower());
   EXPECT_DOUBLE_EQ(0.171213718831364, userModel.fanFlowControlFactor());
@@ -200,18 +199,14 @@ TEST_F(ISOModelFixture, UserModelDefaultsTests) {
   EXPECT_DOUBLE_EQ(0.0182141291000549, userModel.coolingOccupiedSetpoint());
   EXPECT_DOUBLE_EQ(0.47279017381788, userModel.coolingUnoccupiedSetpoint());
   EXPECT_DOUBLE_EQ(0.0159043563230605, userModel.elecPowerAppliancesOccupied());
-  EXPECT_DOUBLE_EQ(0.877197046873451,
-                   userModel.elecPowerAppliancesUnoccupied());
+  EXPECT_DOUBLE_EQ(0.877197046873451, userModel.elecPowerAppliancesUnoccupied());
   EXPECT_DOUBLE_EQ(0.413231779700794, userModel.gasPowerAppliancesOccupied());
   EXPECT_DOUBLE_EQ(0.735954395099727, userModel.gasPowerAppliancesUnoccupied());
-  EXPECT_DOUBLE_EQ(0.827607402688993,
-                   userModel.lightingPowerIntensityOccupied());
-  EXPECT_DOUBLE_EQ(0.210627783574828,
-                   userModel.lightingPowerIntensityUnoccupied());
+  EXPECT_DOUBLE_EQ(0.827607402688993, userModel.lightingPowerIntensityOccupied());
+  EXPECT_DOUBLE_EQ(0.210627783574828, userModel.lightingPowerIntensityUnoccupied());
   EXPECT_DOUBLE_EQ(0.688613300586997, userModel.exteriorLightingPower());
   EXPECT_DOUBLE_EQ(0.952066322499152, userModel.daylightSensorSystem());
-  EXPECT_DOUBLE_EQ(0.191200546809349,
-                   userModel.lightingOccupancySensorSystem());
+  EXPECT_DOUBLE_EQ(0.191200546809349, userModel.lightingOccupancySensorSystem());
   EXPECT_DOUBLE_EQ(0.295905191092175, userModel.constantIlluminationControl());
   EXPECT_DOUBLE_EQ(0.977647331541828, userModel.coolingSystemCOP());
   EXPECT_DOUBLE_EQ(0.86953551426846, userModel.coolingSystemIPLVToCOPRatio());
@@ -229,7 +224,7 @@ TEST_F(ISOModelFixture, UserModelDefaultsTests) {
   // and the variable
   // EXPECT_DOUBLE_EQ(0.791092991177229, userModel.dhwDistributionSystem());
   EXPECT_DOUBLE_EQ(2, userModel.dhwEnergyCarrier());
-  EXPECT_DOUBLE_EQ(3, userModel.bemType());
+  EXPECT_EQ("advanced", userModel.bemType());
   EXPECT_DOUBLE_EQ(0.590020871911987, userModel.interiorHeatCapacity());
   EXPECT_DOUBLE_EQ(0.256509943938684, userModel.specificFanPower());
   EXPECT_DOUBLE_EQ(0.171213718831364, userModel.fanFlowControlFactor());
@@ -346,8 +341,7 @@ TEST_F(ISOModelFixture, UserModelDefaultsTests) {
 
 TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
   UserModel userModel;
-  userModel.load(test_data_path +
-                 "/ism_props_for_testing_umodel_init_v2_ism.yaml");
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml");
 
   // Expect to find the default values hardcoded into the various Building,
   // Cooling, etc. classes.
@@ -388,8 +382,8 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
   EXPECT_DOUBLE_EQ(300.0, userModel.presenceAutoLux());
   EXPECT_DOUBLE_EQ(500.0, userModel.manualSwitchLux());
   EXPECT_DOUBLE_EQ(0.0, userModel.naturallyLightedArea());
-  // EXPECT_DOUBLE_EQ(1.22521 * 0.001012, userModel.rhoCpAir());
-  // EXPECT_DOUBLE_EQ(4.1813, userModel.rhoCpWater());
+  // EXPECT_DOUBLE_EQ(1.22521 * 0.001012, userModel.RHO_CP_AIR());
+  // EXPECT_DOUBLE_EQ(4.1813, userModel.RHO_CP_WATER());
   EXPECT_DOUBLE_EQ(0.04, userModel.R_se());
   EXPECT_DOUBLE_EQ(500, userModel.irradianceForMaxShadingUse());
   EXPECT_DOUBLE_EQ(0.5, userModel.shadingFactorAtMaxUse());
@@ -420,8 +414,7 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesDefaultsTests) {
 
 TEST_F(ISOModelFixture, UserModelOptionalPropertiesOverrideTests) {
   UserModel userModel;
-  userModel.load(test_data_path +
-                     "/ism_props_for_testing_umodel_init_v2_ism.yaml",
+  userModel.load(test_data_path + "/ism_props_for_testing_umodel_init_v2_ism.yaml",
                  test_data_path + "/optional_defaults_override_ism.yaml");
 
   // Expect to find the value set in optional_defaults_override.ism.
@@ -462,8 +455,8 @@ TEST_F(ISOModelFixture, UserModelOptionalPropertiesOverrideTests) {
   EXPECT_DOUBLE_EQ(301.0, userModel.presenceAutoLux());
   EXPECT_DOUBLE_EQ(501.0, userModel.manualSwitchLux());
   EXPECT_DOUBLE_EQ(1.0, userModel.naturallyLightedArea());
-  // EXPECT_DOUBLE_EQ(2.2252099999999997, userModel.rhoCpAir());
-  // EXPECT_DOUBLE_EQ(5.1813, userModel.rhoCpWater());
+  // EXPECT_DOUBLE_EQ(2.2252099999999997, userModel.RHO_CP_AIR());
+  // EXPECT_DOUBLE_EQ(5.1813, userModel.RHO_CP_WATER());
   EXPECT_DOUBLE_EQ(1.04, userModel.R_se());
   EXPECT_DOUBLE_EQ(501.0, userModel.irradianceForMaxShadingUse());
   EXPECT_DOUBLE_EQ(1.5, userModel.shadingFactorAtMaxUse());

@@ -1,11 +1,19 @@
-/*
- * standalone_main.cpp
- * * Compatible with the Original Interface (std::vector<EndUses>)
- */
-
+/// @file standalone_main.cpp
+/// @brief Command-line entry point for running ISOModel simulations.
+///
+/// Loads a building model from YAML/ISM and EPW files, runs both monthly
+/// and hourly simulations, and prints the results to stdout. Demonstrates
+/// the UserModel -> MonthlyModel/HourlyModel workflow.
+///
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2014-12-05
+/// @copyright Copyright Argonne National Laboratory
 #include "HourlyModel.hpp"
 #include "MonthlyModel.hpp"
 #include "UserModel.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -16,21 +24,19 @@ using namespace openstudio;
 
 // Helper to show usage
 void printUsage(const char *execName) {
-  std::cout
-      << "Usage: " << execName
-      << " <ismfilepath> [defaultsfilepath] [options]\n"
-      << "Options:\n"
-      << "  -i, --ismfilepath <path>      Path to ism file.\n"
-      << "  -d, --defaultsfilepath <path> Path to defaults ism file.\n"
-      << "  -m, --monthly                 Run the monthly simulation "
-         "(default).\n"
-      << "  -h, --hourlyByMonth           Run the hourly simulation (results "
-         "aggregated by month).\n"
-      << "  -H, --hourlyByHour            Run the hourly simulation (results "
-         "for each hour).\n"
-      << "  -p                            Run the hourly version and print "
-         "schedules to the screen.\n"
-      << "  -c, --compare <md|csv>        Run monthly/hourly comparison.\n";
+  std::cout << "Usage: " << execName << " <ismfilepath> [defaultsfilepath] [options]\n"
+            << "Options:\n"
+            << "  -i, --ismfilepath <path>      Path to ism file.\n"
+            << "  -d, --defaultsfilepath <path> Path to defaults ism file.\n"
+            << "  -m, --monthly                 Run the monthly simulation "
+               "(default).\n"
+            << "  -h, --hourlyByMonth           Run the hourly simulation (results "
+               "aggregated by month).\n"
+            << "  -H, --hourlyByHour            Run the hourly simulation (results "
+               "for each hour).\n"
+            << "  -p                            Run the hourly version and print "
+               "schedules to the screen.\n"
+            << "  -c, --compare <md|csv>        Run monthly/hourly comparison.\n";
 }
 
 void runMonthlySimulation(const UserModel &umodel) {
@@ -43,8 +49,7 @@ void runMonthlySimulation(const UserModel &umodel) {
   for (int i = 0; i < 12; i++) {
     std::cout << i + 1;
     for (int j = 0; j < 13; j++) {
-      std::cout << ", " << std::setprecision(10)
-                << monthlyResults[i].getEndUse(j);
+      std::cout << ", " << std::setprecision(10) << monthlyResults[i].getEndUse(j);
     }
     std::cout << std::endl;
   }
@@ -57,11 +62,10 @@ void runHourlySimulation(const UserModel &umodel, bool aggregateByMonth) {
   std::string monthOrHour = aggregateByMonth ? "month" : "hour";
   // hourlyResults is std::vector<EndUses>, so .size() works directly
 
-  std::cout
-      << "Hourly results by " << monthOrHour << ":\n"
-      << monthOrHour
-      << ",ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,"
-         "ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW\n";
+  std::cout << "Hourly results by " << monthOrHour << ":\n"
+            << monthOrHour
+            << ",ElecHeat,ElecCool,ElecIntLights,ElecExtLights,ElecFans,ElecPump,"
+               "ElecEquipInt,ElecEquipExt,ElectDHW,GasHeat,GasCool,GasEquip,GasDHW\n";
 
   for (size_t i = 0; i < hourlyResults.size(); i++) {
     std::cout << i + 1;
@@ -83,14 +87,12 @@ void printSchedules(const UserModel &umodel) {
 
   const auto &schedules = hourly.getCachedSchedules();
 
-  std::cout
-      << "Hour,MechVent,IntApp,IntLight,ExtLight,ExtEquip,HeatSet,CoolSet\n";
+  std::cout << "Hour,MechVent,IntApp,IntLight,ExtLight,ExtEquip,HeatSet,CoolSet\n";
 
   for (size_t i = 0; i < schedules.size(); ++i) {
     const auto &s = schedules[i];
-    std::cout << (i + 1) << ", " << s.sched_q_ve_mech << ", "
-              << s.sched_phi_int_App << ", " << s.sched_phi_int_L << ", "
-              << s.sched_ext_light << ", " << s.sched_ext_equip << ", "
+    std::cout << (i + 1) << ", " << s.sched_q_ve_mech << ", " << s.sched_phi_int_App << ", "
+              << s.sched_phi_int_L << ", " << s.sched_ext_light << ", " << s.sched_ext_equip << ", "
               << s.sched_theta_H_set << ", " << s.sched_theta_C_set << "\n";
   }
 }
@@ -111,8 +113,8 @@ void compare(const UserModel &umodel, bool markdown = false) {
   for (auto endUse = 0; endUse != 13; ++endUse) {
     if (markdown)
       std::cout << "| ";
-    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim
-              << "Hourly " << endUseNames[endUse] << delim << "Difference";
+    std::cout << "Month" << delim << "Monthly " << endUseNames[endUse] << delim << "Hourly "
+              << endUseNames[endUse] << delim << "Difference";
     if (markdown)
       std::cout << " |";
     std::cout << "\n";
@@ -124,13 +126,12 @@ void compare(const UserModel &umodel, bool markdown = false) {
       // We use getEndUse(index).
       // Note: If hourlyResults doesn't have 13 indices, getEndUse typically
       // returns 0 or handles it. Based on previous code, 0-9 are populated.
-      double hourlyResult =
-          (endUse < 10) ? hourlyResults[month].getEndUse(endUse) : 0.0;
+      double hourlyResult = (endUse < 10) ? hourlyResults[month].getEndUse(endUse) : 0.0;
 
       if (markdown)
         std::cout << "| ";
-      std::cout << month << delim << monthlyResult << delim << hourlyResult
-                << delim << monthlyResult - hourlyResult;
+      std::cout << month << delim << monthlyResult << delim << hourlyResult << delim
+                << monthlyResult - hourlyResult;
       if (markdown)
         std::cout << " |";
       std::cout << "\n";
@@ -146,8 +147,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::string ismPath, defaultsPath, compareType;
-  bool runMonthly = false, runHourlyByMonth = false, runHourlyByHour = false,
-       runCompare = false;
+  bool runMonthly = false, runHourlyByMonth = false, runHourlyByHour = false, runCompare = false;
   bool runPrintSched = false;
 
   // Simple manual parser

@@ -1,18 +1,23 @@
-/*
- * SolarRadiation.cpp
- *
- * REFACTORING: PERFORMANCE OPTIMIZATION & DOCUMENTATION
- * 1. Memory: Removed heavy allocations from Constructor. Vectors are now
- * lazy-loaded.
- * 2. Pre-calculation: Daily solar geometry (Declination/EOT) is computed once
- * per year, not checked per hour. This fixes potential day-shift bugs.
- * 3. Flat Arrays: Replaced vector<vector> with flat vectors for cache locality.
- * 4. Documentation: Added equation references to ASHRAE Fundamentals 2013 and
- * Duffie & Beckman.
- */
-
+/// @file SolarRadiation.cpp
+/// @brief Solar position and radiation calculations for building surfaces.
+///
+/// Computes hourly solar radiation on tilted surfaces for all 8760 hours
+/// of the year. Implements solar geometry (declination, equation of time,
+/// hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+/// and Duffie & Beckman. Decomposes global horizontal radiation into
+/// beam and diffuse components using the Erbs correlation, then projects
+/// onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
 #include "SolarRadiation.hpp"
+
 #include "EpwData.hpp"
+
 #include <algorithm> // for std::clamp, std::max
 #include <array>
 #include <cmath>
@@ -34,13 +39,13 @@ SolarRadiation::SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt)
   m_sinLat = std::sin(m_latitude);
   m_cosLat = std::cos(m_latitude);
 
-  for (int i = 0; i < numVerticalSurfaces; ++i) {
-    m_surfSin[i] = std::sin(SurfaceAzimuths[i]);
-    m_surfCos[i] = std::cos(SurfaceAzimuths[i]);
+  for (int i = 0; i < NUM_VERTICAL_SURFACES; ++i) {
+    m_surfSin[i] = std::sin(SURFACE_AZIMUTHS[i]);
+    m_surfCos[i] = std::cos(SURFACE_AZIMUTHS[i]);
   }
 
   // Only allocate the essential output vector
-  m_eglobeFlat.assign(hoursInYear * numVerticalSurfaces, 0.0);
+  m_eglobeFlat.assign(HOURS_IN_YEAR * NUM_VERTICAL_SURFACES, 0.0);
 
   // OPTIMIZATION: Do NOT allocate the monthly/hourly average vectors here.
   // They are often unused by HourlyModel, saving 20+ malloc calls per object.
@@ -49,12 +54,12 @@ SolarRadiation::SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt)
 // Destructor is defaulted in header
 
 // Legacy support: Reconstructs 2D vector from flat storage
-std::vector<std::vector<double>> SolarRadiation::eglobe() {
-  std::vector<std::vector<double>> legacy(
-      hoursInYear, std::vector<double>(numVerticalSurfaces, 0.0));
-  for (int i = 0; i < hoursInYear; ++i) {
-    for (int s = 0; s < numVerticalSurfaces; ++s) {
-      legacy[i][s] = m_eglobeFlat[i * numVerticalSurfaces + s];
+std::vector<std::vector<double>> SolarRadiation::eglobe() const {
+  std::vector<std::vector<double>> legacy(HOURS_IN_YEAR,
+                                          std::vector<double>(NUM_VERTICAL_SURFACES, 0.0));
+  for (int i = 0; i < HOURS_IN_YEAR; ++i) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s) {
+      legacy[i][s] = m_eglobeFlat[i * NUM_VERTICAL_SURFACES + s];
     }
   }
   return legacy;
@@ -75,11 +80,11 @@ void SolarRadiation::calculateSurfaceSolarRadiation() {
   // OPTIMIZATION: Pre-calculate daily solar geometry for all 365 days.
   // This removes the "if (newDay)" branch and math from the 8760 loop.
   // We initialize 0-366 to safely handle both 0-based and 1-based YTD indices.
-  std::array<double, daysInYear + 2> dailyEqTime = {};
-  std::array<double, daysInYear + 2> dailySinDec = {};
-  std::array<double, daysInYear + 2> dailyCosDec = {};
+  std::array<double, DAYS_IN_YEAR + 2> dailyEqTime = {};
+  std::array<double, DAYS_IN_YEAR + 2> dailySinDec = {};
+  std::array<double, DAYS_IN_YEAR + 2> dailyCosDec = {};
 
-  for (int d = 0; d <= daysInYear + 1; ++d) {
+  for (int d = 0; d <= DAYS_IN_YEAR + 1; ++d) {
     // Revolution Angle (B): Duffie & Beckman Eq 1.4.2
     double rev = calculateRevolutionAngle(d);
     // Equation of Time: ASHRAE Fundamentals 2013 Ch 14 Eq 1
@@ -97,11 +102,10 @@ void SolarRadiation::calculateSurfaceSolarRadiation() {
   // Flattened loop access
   double *pOutput = m_eglobeFlat.data();
 
-  for (int i = 0; i < hoursInYear; i++) {
+  for (int i = 0; i < HOURS_IN_YEAR; i++) {
 
     // Fast lookup for daily values
-    int currentDay =
-        m_frame->YTD[i]; // 1-365 (or 0-365 depending on implementation)
+    int currentDay = m_frame->YTD[i]; // 1-365 (or 0-365 depending on implementation)
     double eq = dailyEqTime[currentDay];
     double sinDec = dailySinDec[currentDay];
     double cosDec = dailyCosDec[currentDay];
@@ -148,20 +152,18 @@ void SolarRadiation::calculateSurfaceSolarRadiation() {
     double ed_i = vecED[i];
 
     // Vectorization-friendly loop (no branches)
-    for (int s = 0; s < numVerticalSurfaces; s++) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
 
       // Incidence Angle (Theta): ASHRAE Fundamentals 2013 Ch 14 Eq 8
       // Optimized: Uses pre-calculated terms
-      double cosTheta =
-          termCos * m_surfCos[s] + termSin * m_surfSin[s] + termConstant;
+      double cosTheta = termCos * m_surfCos[s] + termSin * m_surfSin[s] + termConstant;
 
       // Direct Beam: ASHRAE Fundamentals 2013 Ch 14 Eq 9
       double direct = eb_i * std::max(0.0, cosTheta);
 
       // Diffuse Angle of Incidence Factor (Y): ASHRAE Fundamentals 2013 Ch 14
       // Eq 22 Specific polynomial for vertical surface diffuse correction
-      double Y =
-          std::max(0.45, 0.55 + 0.437 * cosTheta + 0.313 * cosTheta * cosTheta);
+      double Y = std::max(0.45, 0.55 + 0.437 * cosTheta + 0.313 * cosTheta * cosTheta);
 
       // Total Diffuse: ASHRAE Fundamentals 2013 Ch 14 Eq 21
       double diff;
@@ -182,32 +184,30 @@ void SolarRadiation::calculateAverages() {
   // Only allocate these vectors if this function is actually called.
   // This saves significant memory/time for short-lived objects.
   if (m_monthlyDryBulbTemp.empty()) {
-    m_monthlyDryBulbTemp.assign(monthsInYear, 0.0);
-    m_monthlyDewPointTemp.assign(monthsInYear, 0.0);
-    m_monthlyRelativeHumidity.assign(monthsInYear, 0.0);
-    m_monthlyWindspeed.assign(monthsInYear, 0.0);
-    m_monthlyGlobalHorizontalRadiation.assign(monthsInYear, 0.0);
+    m_monthlyDryBulbTemp.assign(MONTHS_IN_YEAR, 0.0);
+    m_monthlyDewPointTemp.assign(MONTHS_IN_YEAR, 0.0);
+    m_monthlyRelativeHumidity.assign(MONTHS_IN_YEAR, 0.0);
+    m_monthlyWindspeed.assign(MONTHS_IN_YEAR, 0.0);
+    m_monthlyGlobalHorizontalRadiation.assign(MONTHS_IN_YEAR, 0.0);
 
     // Flattened allocations
-    m_monthlySolarRadiation.assign(monthsInYear * numVerticalSurfaces, 0.0);
-    m_hourlyDryBulbTemp.assign(monthsInYear * hoursInDay, 0.0);
-    m_hourlyDewPointTemp.assign(monthsInYear * hoursInDay, 0.0);
-    m_hourlyGlobalHorizontalRadiation.assign(monthsInYear * hoursInDay, 0.0);
+    m_monthlySolarRadiation.assign(MONTHS_IN_YEAR * NUM_VERTICAL_SURFACES, 0.0);
+    m_hourlyDryBulbTemp.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
+    m_hourlyDewPointTemp.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
+    m_hourlyGlobalHorizontalRadiation.assign(MONTHS_IN_YEAR * HOURS_IN_DAY, 0.0);
   } else {
     // Reset if reused
     std::fill(m_monthlyDryBulbTemp.begin(), m_monthlyDryBulbTemp.end(), 0.0);
     std::fill(m_monthlyDewPointTemp.begin(), m_monthlyDewPointTemp.end(), 0.0);
-    std::fill(m_monthlyRelativeHumidity.begin(),
-              m_monthlyRelativeHumidity.end(), 0.0);
+    std::fill(m_monthlyRelativeHumidity.begin(), m_monthlyRelativeHumidity.end(), 0.0);
     std::fill(m_monthlyWindspeed.begin(), m_monthlyWindspeed.end(), 0.0);
-    std::fill(m_monthlyGlobalHorizontalRadiation.begin(),
-              m_monthlyGlobalHorizontalRadiation.end(), 0.0);
-    std::fill(m_monthlySolarRadiation.begin(), m_monthlySolarRadiation.end(),
+    std::fill(m_monthlyGlobalHorizontalRadiation.begin(), m_monthlyGlobalHorizontalRadiation.end(),
               0.0);
+    std::fill(m_monthlySolarRadiation.begin(), m_monthlySolarRadiation.end(), 0.0);
     std::fill(m_hourlyDryBulbTemp.begin(), m_hourlyDryBulbTemp.end(), 0.0);
     std::fill(m_hourlyDewPointTemp.begin(), m_hourlyDewPointTemp.end(), 0.0);
-    std::fill(m_hourlyGlobalHorizontalRadiation.begin(),
-              m_hourlyGlobalHorizontalRadiation.end(), 0.0);
+    std::fill(m_hourlyGlobalHorizontalRadiation.begin(), m_hourlyGlobalHorizontalRadiation.end(),
+              0.0);
   }
 
   const auto &dataMap = m_epwData->data();
@@ -221,7 +221,7 @@ void SolarRadiation::calculateAverages() {
 
   int month = 0, midx = -1, cnt = 0;
 
-  for (int i = 0; i < hoursInYear; i++, cnt++) {
+  for (int i = 0; i < HOURS_IN_YEAR; i++, cnt++) {
     if (m_frame->Month[i] != month) {
       if (midx >= 0)
         calculateMonthAvg(midx, cnt);
@@ -238,15 +238,15 @@ void SolarRadiation::calculateAverages() {
 
     int h = m_frame->Hour[i];
     // Flat Indexing: month * 24 + h
-    int hourIdx = midx * hoursInDay + h;
+    int hourIdx = midx * HOURS_IN_DAY + h;
     m_hourlyDryBulbTemp[hourIdx] += dbt[i];
     m_hourlyDewPointTemp[hourIdx] += dpt[i];
     m_hourlyGlobalHorizontalRadiation[hourIdx] += egh[i];
 
-    for (int s = 0; s < numVerticalSurfaces; s++) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
       // Flat Indexing: month * numSurfaces + s
-      m_monthlySolarRadiation[midx * numVerticalSurfaces + s] +=
-          m_eglobeFlat[i * numVerticalSurfaces + s];
+      m_monthlySolarRadiation[midx * NUM_VERTICAL_SURFACES + s] +=
+          m_eglobeFlat[i * NUM_VERTICAL_SURFACES + s];
     }
   }
   calculateMonthAvg(midx, cnt);
@@ -260,15 +260,15 @@ void SolarRadiation::calculateMonthAvg(int midx, int cnt) {
   m_monthlyWindspeed[midx] *= inv;
   m_monthlyGlobalHorizontalRadiation[midx] *= inv;
 
-  for (int s = 0; s < numVerticalSurfaces; s++) {
-    m_monthlySolarRadiation[midx * numVerticalSurfaces + s] *= inv;
+  for (int s = 0; s < NUM_VERTICAL_SURFACES; s++) {
+    m_monthlySolarRadiation[midx * NUM_VERTICAL_SURFACES + s] *= inv;
   }
 
   double days = m_frame->monthLength(midx + 1);
   double dayInv = 1.0 / days;
 
-  int baseIdx = midx * hoursInDay;
-  for (int h = 0; h < hoursInDay; h++) {
+  int baseIdx = midx * HOURS_IN_DAY;
+  for (int h = 0; h < HOURS_IN_DAY; h++) {
     m_hourlyDryBulbTemp[baseIdx + h] *= dayInv;
     m_hourlyDewPointTemp[baseIdx + h] *= dayInv;
     m_hourlyGlobalHorizontalRadiation[baseIdx + h] *= dayInv;
@@ -281,46 +281,41 @@ void SolarRadiation::clearMonthlyAvg(int midx) {
 
 // --- Legacy Getters Re-implementation for Flat Vectors ---
 
-std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() {
-  std::vector<std::vector<double>> ret(
-      monthsInYear, std::vector<double>(numVerticalSurfaces));
-  for (int m = 0; m < monthsInYear; ++m) {
-    for (int s = 0; s < numVerticalSurfaces; ++s) {
-      ret[m][s] = m_monthlySolarRadiation[m * numVerticalSurfaces + s];
+std::vector<std::vector<double>> SolarRadiation::monthlySolarRadiation() const {
+  std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(NUM_VERTICAL_SURFACES));
+  for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
+    for (int s = 0; s < NUM_VERTICAL_SURFACES; ++s) {
+      ret[m][s] = m_monthlySolarRadiation[m * NUM_VERTICAL_SURFACES + s];
     }
   }
   return ret;
 }
 
-std::vector<std::vector<double>> SolarRadiation::hourlyDryBulbTemp() {
-  std::vector<std::vector<double>> ret(monthsInYear,
-                                       std::vector<double>(hoursInDay));
-  for (int m = 0; m < monthsInYear; ++m) {
-    for (int h = 0; h < hoursInDay; ++h) {
-      ret[m][h] = m_hourlyDryBulbTemp[m * hoursInDay + h];
+std::vector<std::vector<double>> SolarRadiation::hourlyDryBulbTemp() const {
+  std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
+  for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
+    for (int h = 0; h < HOURS_IN_DAY; ++h) {
+      ret[m][h] = m_hourlyDryBulbTemp[m * HOURS_IN_DAY + h];
     }
   }
   return ret;
 }
 
-std::vector<std::vector<double>> SolarRadiation::hourlyDewPointTemp() {
-  std::vector<std::vector<double>> ret(monthsInYear,
-                                       std::vector<double>(hoursInDay));
-  for (int m = 0; m < monthsInYear; ++m) {
-    for (int h = 0; h < hoursInDay; ++h) {
-      ret[m][h] = m_hourlyDewPointTemp[m * hoursInDay + h];
+std::vector<std::vector<double>> SolarRadiation::hourlyDewPointTemp() const {
+  std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
+  for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
+    for (int h = 0; h < HOURS_IN_DAY; ++h) {
+      ret[m][h] = m_hourlyDewPointTemp[m * HOURS_IN_DAY + h];
     }
   }
   return ret;
 }
 
-std::vector<std::vector<double>>
-SolarRadiation::hourlyGlobalHorizontalRadiation() {
-  std::vector<std::vector<double>> ret(monthsInYear,
-                                       std::vector<double>(hoursInDay));
-  for (int m = 0; m < monthsInYear; ++m) {
-    for (int h = 0; h < hoursInDay; ++h) {
-      ret[m][h] = m_hourlyGlobalHorizontalRadiation[m * hoursInDay + h];
+std::vector<std::vector<double>> SolarRadiation::hourlyGlobalHorizontalRadiation() const {
+  std::vector<std::vector<double>> ret(MONTHS_IN_YEAR, std::vector<double>(HOURS_IN_DAY));
+  for (int m = 0; m < MONTHS_IN_YEAR; ++m) {
+    for (int h = 0; h < HOURS_IN_DAY; ++h) {
+      ret[m][h] = m_hourlyGlobalHorizontalRadiation[m * HOURS_IN_DAY + h];
     }
   }
   return ret;

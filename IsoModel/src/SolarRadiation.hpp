@@ -1,22 +1,24 @@
-/*
- * SolarRadiation.hpp
- *
- * REFACTORING: PERFORMANCE & MEMORY OPTIMIZATION
- * 1. Memory: Flattened 2D vectors to 1D to reduce heap fragmentation and
- * allocation cost.
- * 2. Lazy Allocation: Statistical vectors are now allocated only when
- * Calculate(true) is called.
- * 3. Physics: Pre-calculation of daily solar geometry.
- * 4. Documentation: Includes equation references to ASHRAE 2013 and Duffie &
- * Beckman.
- */
-
-#ifndef ISOMODEL_SOLAR_RADIATION_HPP
-#define ISOMODEL_SOLAR_RADIATION_HPP
-
+/// @file SolarRadiation.hpp
+/// @brief Solar position and radiation calculations for building surfaces.
+///
+/// Computes hourly solar radiation on tilted surfaces for all 8760 hours
+/// of the year. Implements solar geometry (declination, equation of time,
+/// hour angle, altitude, azimuth) per ASHRAE Fundamentals 2013 Ch. 14
+/// and Duffie & Beckman. Decomposes global horizontal radiation into
+/// beam and diffuse components using the Erbs correlation, then projects
+/// onto 9 building surfaces (8 cardinal/intercardinal walls + roof).
+///
+/// @author Brian Craig
+/// @author Nick Collier
+/// @author Brendan Albano
+/// @author Ralph Muehleisen
+/// @date 2013-11-05
+/// @copyright Copyright Argonne National Laboratory
+#pragma once
 #include "Constants.hpp"
 #include "ISOModelAPI.hpp"
 #include "TimeFrame.hpp"
+
 #include <array>
 #include <cmath>
 #include <vector>
@@ -36,7 +38,7 @@ protected:
   double m_localMeridian = 0.0;
   double m_longitude = 0.0;
   double m_latitude = 0.0;
-  double m_groundReflectance = defaultGroundReflectance;
+  double m_groundReflectance = DEFAULT_GROUND_REFLECTANCE;
 
   // Optimization: Pre-calculated Latitude Trig
   double m_sinLat = 0.0;
@@ -46,7 +48,7 @@ protected:
   std::vector<double> m_eglobeFlat;
 
   // Averages (Lazy Allocated - Empty by default)
-  // Flattened 2D vectors to 1D for performance (Stride = numVerticalSurfaces or
+  // Flattened 2D vectors to 1D for performance (Stride = NUM_VERTICAL_SURFACES or
   // 24 hours)
   std::vector<double> m_monthlyDryBulbTemp;
   std::vector<double> m_monthlyDewPointTemp;
@@ -65,8 +67,8 @@ protected:
   // Performance caches
   double m_sinTilt = 0.0;
   double m_cosTilt = 0.0;
-  double m_surfSin[numVerticalSurfaces] = {};
-  double m_surfCos[numVerticalSurfaces] = {};
+  std::array<double, NUM_VERTICAL_SURFACES> m_surfSin{};
+  std::array<double, NUM_VERTICAL_SURFACES> m_surfCos{};
 
 public:
   SolarRadiation(TimeFrame *frame, EpwData *wdata, double tilt = PI);
@@ -85,14 +87,14 @@ public:
 
   // Calculates the revolution angle in radians of the earth around the sun.
   // Ref: Duffie & Beckman Eq 1.4.2 (approx)
-  double calculateRevolutionAngle(int dayOfYear) {
-    return 2.0 * PI * dayOfYear / daysInYear;
+  [[nodiscard]] double calculateRevolutionAngle(int dayOfYear) const noexcept {
+    return 2.0 * PI * dayOfYear / DAYS_IN_YEAR;
   }
 
   // Calculates the equation of time (EOT) in minutes.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 1
   // Ref: Duffie & Beckman Eq 1.5.3 (Spencer 1971)
-  double calculateEquationOfTime(double B) {
+  [[nodiscard]] double calculateEquationOfTime(double B) const noexcept {
     return 2.2918 * (0.0075 + 0.1868 * std::cos(B) - 3.2077 * std::sin(B) -
                      1.4615 * std::cos(2 * B) - 4.089 * std::sin(2 * B));
   }
@@ -100,8 +102,8 @@ public:
   // Calculates the apparent Solar Time (AST) in hours.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 3
   // Ref: Duffie & Beckman Eq 1.5.2
-  double calculateApparentSolarTime(int localStandardTime,
-                                    double equationOfTime) {
+  [[nodiscard]] double calculateApparentSolarTime(int localStandardTime,
+                                                  double equationOfTime) const noexcept {
     return localStandardTime + equationOfTime / 60.0 +
            (m_longitude - m_localMeridian) * (12.0 / PI);
   }
@@ -109,7 +111,7 @@ public:
   // Calculates the solar declination (delta) in radians.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 5
   // Ref: Duffie & Beckman Eq 1.6.1b (Spencer 1971)
-  double calculateSolarDeclination(double B) {
+  [[nodiscard]] double calculateSolarDeclination(double B) const noexcept {
     return 0.006918 - 0.399912 * std::cos(B) + 0.070257 * std::sin(B) -
            0.006758 * std::cos(2.0 * B) + 0.000907 * std::sin(2.0 * B) -
            0.002697 * std::cos(3.0 * B) + 0.00148 * std::sin(3.0 * B);
@@ -118,14 +120,14 @@ public:
   // Calculates the solar hour angle (H) in radians.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 4
   // Ref: Duffie & Beckman Eq 1.6.4 (15 degrees per hour from solar noon)
-  double calculateSolarHourAngle(double ast) {
+  [[nodiscard]] double calculateSolarHourAngle(double ast) const noexcept {
     return (ast - 12) * (PI / 12.0);
   }
 
   // Calculates the solar altitude angle (beta) in radians.
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 6
   // Ref: Duffie & Beckman Eq 1.6.5
-  double calculateSolarAltitude(double dec, double sha) {
+  [[nodiscard]] double calculateSolarAltitude(double dec, double sha) const noexcept {
     return std::asin(std::cos(m_latitude) * std::cos(dec) * std::cos(sha) +
                      std::sin(m_latitude) * std::sin(dec));
   }
@@ -133,93 +135,93 @@ public:
   // Solar azimuth helpers
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 7
   // Ref: Duffie & Beckman Eq 1.6.6
-  double calculateSolarAzimuthSin(double dec, double H, double beta) {
+  [[nodiscard]] double calculateSolarAzimuthSin(double dec, double H, double beta) const noexcept {
     return std::sin(H) * std::cos(dec) / std::cos(beta);
   }
-  double calculateSolarAzimuthCos(double dec, double H, double beta) {
+  [[nodiscard]] double calculateSolarAzimuthCos(double dec, double H, double beta) const noexcept {
     return (std::cos(H) * std::cos(dec) * std::sin(m_latitude) -
             std::sin(dec) * std::cos(m_latitude)) /
            std::cos(beta);
   }
-  double calculateSolarAzimuth(double sina, double cosa) {
+  [[nodiscard]] double calculateSolarAzimuth(double sina, double cosa) const noexcept {
     return std::atan2(sina, cosa);
   }
 
   // Ground reflected radiation (Isotropic Model)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 23
   // Ref: Duffie & Beckman Eq 2.15.1
-  double calculateGroundReflectedIrradiance(double eb, double ed, double rho,
-                                            double beta, double tilt) {
+  [[nodiscard]] double calculateGroundReflectedIrradiance(double eb, double ed, double rho,
+                                                          double beta, double tilt) const noexcept {
     return (eb * std::sin(beta) + ed) * rho * (1 - std::cos(tilt)) / 2;
   }
 
   // Surface solar azimuth
-  double calculateSurfaceSolarAzimuth(double solAz, double surfAz) {
+  [[nodiscard]] double calculateSurfaceSolarAzimuth(double solAz, double surfAz) const noexcept {
     return std::fabs(solAz - surfAz);
   }
 
   // Angle of incidence (theta)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 8
   // Ref: Duffie & Beckman Eq 1.6.2
-  double calculateAngleOfIncidence(double beta, double gamma, double tilt) {
+  [[nodiscard]] double calculateAngleOfIncidence(double beta, double gamma,
+                                                 double tilt) const noexcept {
     return std::acos(std::cos(beta) * std::cos(gamma) * std::sin(tilt) +
                      std::sin(beta) * std::cos(tilt));
   }
 
   // Direct beam irradiance on surface
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 9
-  double calculateTotalDirectBeamIrradiance(double eb, double theta) {
+  [[nodiscard]] double calculateTotalDirectBeamIrradiance(double eb, double theta) const noexcept {
     return eb * std::max(std::cos(theta), 0.0);
   }
 
   // Diffuse angle of incidence factor (Y)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 22
-  double calculateDiffuseAngleOfIncidenceFactor(double theta) {
-    return std::max(0.45, 0.55 + 0.437 * std::cos(theta) +
-                              0.313 * std::pow(std::cos(theta), 2.0));
+  [[nodiscard]] double calculateDiffuseAngleOfIncidenceFactor(double theta) const noexcept {
+    return std::max(0.45, 0.55 + 0.437 * std::cos(theta) + 0.313 * std::pow(std::cos(theta), 2.0));
   }
 
   // Total diffuse irradiance (Surface Diffuse)
   // Ref: ASHRAE Fundamentals 2013, Ch 14, Eq 21 & 22
-  double calculateTotalDiffuseIrradiance(double ed, double Y, double tilt) {
-    return (tilt > PI / 2) ? ed * Y * std::sin(tilt)
-                           : ed * (Y * std::sin(tilt) + std::cos(tilt));
+  [[nodiscard]] double calculateTotalDiffuseIrradiance(double ed, double Y,
+                                                       double tilt) const noexcept {
+    return (tilt > PI / 2) ? ed * Y * std::sin(tilt) : ed * (Y * std::sin(tilt) + std::cos(tilt));
   }
 
   // Total irradiance (Global Surface)
-  double calculateTotalIrradiance(double dir, double diff, double ground) {
+  [[nodiscard]] double calculateTotalIrradiance(double dir, double diff,
+                                                double ground) const noexcept {
     return dir + diff + ground;
   }
 
   // --- Getters with Legacy Interface Support ---
 
-  double surfaceTilt() { return m_surfaceTilt; }
-  double localMeridian() { return m_localMeridian; }
-  double lon() { return m_longitude; }
-  double lat() { return m_latitude; }
-  double groundReflectance() { return m_groundReflectance; }
+  [[nodiscard]] double surfaceTilt() const noexcept { return m_surfaceTilt; }
+  [[nodiscard]] double localMeridian() const noexcept { return m_localMeridian; }
+  [[nodiscard]] double lon() const noexcept { return m_longitude; }
+  [[nodiscard]] double lat() const noexcept { return m_latitude; }
+  [[nodiscard]] double groundReflectance() const noexcept { return m_groundReflectance; }
 
   // Reconstructs 2D vector on demand for legacy support
-  std::vector<std::vector<double>> eglobe();
+  [[nodiscard]] std::vector<std::vector<double>> eglobe() const;
 
-  const std::vector<double> &eglobeFlat() const { return m_eglobeFlat; }
+  [[nodiscard]] const std::vector<double> &eglobeFlat() const noexcept { return m_eglobeFlat; }
 
-  std::vector<double> monthlyDryBulbTemp() { return m_monthlyDryBulbTemp; }
-  std::vector<double> monthlyDewPointTemp() { return m_monthlyDewPointTemp; }
-  std::vector<double> monthlyRelativeHumidity() {
+  [[nodiscard]] std::vector<double> monthlyDryBulbTemp() const { return m_monthlyDryBulbTemp; }
+  [[nodiscard]] std::vector<double> monthlyDewPointTemp() const { return m_monthlyDewPointTemp; }
+  [[nodiscard]] std::vector<double> monthlyRelativeHumidity() const {
     return m_monthlyRelativeHumidity;
   }
-  std::vector<double> monthlyWindspeed() { return m_monthlyWindspeed; }
-  std::vector<double> monthlyGlobalHorizontalRadiation() {
+  [[nodiscard]] std::vector<double> monthlyWindspeed() const { return m_monthlyWindspeed; }
+  [[nodiscard]] std::vector<double> monthlyGlobalHorizontalRadiation() const {
     return m_monthlyGlobalHorizontalRadiation;
   }
 
   // Legacy getters that reconstruct 2D vectors from flat storage
-  std::vector<std::vector<double>> monthlySolarRadiation();
-  std::vector<std::vector<double>> hourlyDryBulbTemp();
-  std::vector<std::vector<double>> hourlyDewPointTemp();
-  std::vector<std::vector<double>> hourlyGlobalHorizontalRadiation();
+  [[nodiscard]] std::vector<std::vector<double>> monthlySolarRadiation() const;
+  [[nodiscard]] std::vector<std::vector<double>> hourlyDryBulbTemp() const;
+  [[nodiscard]] std::vector<std::vector<double>> hourlyDewPointTemp() const;
+  [[nodiscard]] std::vector<std::vector<double>> hourlyGlobalHorizontalRadiation() const;
 };
 
 } // namespace openstudio::isomodel
-#endif
