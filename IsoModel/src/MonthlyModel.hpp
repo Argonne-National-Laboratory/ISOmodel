@@ -24,6 +24,8 @@
 #include "ISOModelAPI.hpp"
 #include "ISOResults.hpp"
 #include "MathHelpers.hpp"
+#include "Schedules.hpp"
+#include "Constants.hpp"
 
 #ifdef ISOMODEL_STANDALONE
 #include "EndUses.hpp"
@@ -55,104 +57,168 @@ public:
    */
   std::vector<EndUses> simulate() const;
 
+  // Public helper structs, moved from private for accessibility
+  struct WindowShadingComponents {
+    Vector v_win_ff;
+    Vector v_win_F_shgl;
+  };
+
+  struct AnnualLightingHours {
+    double t_lt_D;
+    double t_lt_N;
+    double t_unocc;
+  };
+
+  struct PlugLoads {
+    Vector v_Q_plug_elec;
+    Vector v_Q_plug_gas;
+  };
+
+private:
+  // Struct to hold all intermediate simulation data for MonthlyModel::simulate
+  struct MonthlySimulationData {
+    // From schedules::getMonthlySchedules
+    schedules::MonthlyScheduleData scheduleData{};
+
+    // From solarRadiationBreakdown
+    Vector v_hrs_sun_down_mo = Vector(monthsInYear);
+    Vector frac_Pgh_wk_nt = Vector(monthsInYear);
+    Vector frac_Pgh_wke_day = Vector(monthsInYear);
+    Vector frac_Pgh_wke_nt = Vector(monthsInYear);
+    Vector v_Tdbt_nt = Vector(monthsInYear);
+    Vector v_Tdbt_day = Vector(monthsInYear);
+
+    // From lightingEnergyUse
+    double Q_illum_occ = 0.0;
+    double Q_illum_unocc = 0.0;
+    double Q_illum_tot_yr = 0.0;
+    Vector v_Q_illum_tot = Vector(monthsInYear);
+    Vector v_Q_illum_ext_tot = Vector(monthsInYear);
+
+    // From envelopCalculations
+    Vector v_win_A = Vector(numTotalSurfaces);
+    Vector v_wall_emiss = Vector(numTotalSurfaces);
+    Vector v_wall_alpha_sc = Vector(numTotalSurfaces);
+    Vector v_wall_U = Vector(numTotalSurfaces);
+    Vector v_wall_A = Vector(numTotalSurfaces);
+    double H_tr = 0.0;
+
+    // From windowSolarGain
+    Vector v_wall_A_sol = Vector(numTotalSurfaces);
+    Vector v_win_hr = Vector(numTotalSurfaces);
+    Vector v_wall_R_sc = Vector(numTotalSurfaces);
+    Vector v_win_A_sol = Vector(numTotalSurfaces);
+
+    // From solarHeatGain
+    Vector v_E_sol = Vector(monthsInYear);
+
+    // From heatGainsAndLosses
+    double phi_int_avg = 0.0;
+    double phi_plug_avg = 0.0;
+    double phi_illum_avg = 0.0;
+    double phi_int_wke_nt = 0.0;
+    double phi_int_wke_day = 0.0;
+    double phi_int_wk_nt = 0.0;
+
+    // From internalHeatGain
+    double phi_I_tot = 0.0;
+
+    // From unoccupiedHeatGain
+    Vector v_P_tot_wke_day = Vector(monthsInYear);
+    Vector v_P_tot_wk_nt = Vector(monthsInYear);
+    Vector v_P_tot_wke_nt = Vector(monthsInYear);
+
+    // From interiorTemp
+    Vector v_Th_avg = Vector(monthsInYear);
+    Vector v_Tc_avg = Vector(monthsInYear);
+    double tau = 0.0;
+
+    // From ventilationCalc
+    Vector v_Hve_ht = Vector(monthsInYear);
+    Vector v_Hve_cl = Vector(monthsInYear);
+
+    // From heatingAndCooling
+    Vector v_Qfan_tot = Vector(monthsInYear);
+    Vector v_Qneed_ht = Vector(monthsInYear);
+    Vector v_Qneed_cl = Vector(monthsInYear);
+    double Qneed_ht_yr = 0.0;
+    double Qneed_cl_yr = 0.0;
+
+    // From hvac
+    Vector v_Qelec_ht = Vector(monthsInYear);
+    Vector v_Qgas_ht = Vector(monthsInYear);
+    Vector v_Qcl_elec_tot = Vector(monthsInYear);
+    Vector v_Qcl_gas_tot = Vector(monthsInYear);
+
+    // Intermediate HVAC loads
+    Vector v_Qht_sys = Vector(monthsInYear);
+    Vector v_Qht_DH = Vector(monthsInYear);
+    Vector v_Qcl_sys = Vector(monthsInYear);
+    Vector v_Qcool_DC = Vector(monthsInYear);
+
+    // From pump
+    Vector v_Q_pump_tot = Vector(monthsInYear);
+
+    // From calculateAirVolumes
+    Vector v_Vair_ht = Vector(monthsInYear);
+    Vector v_Vair_cl = Vector(monthsInYear);
+
+    // From calculateTotalAirFlow
+    Vector v_Vair_tot = Vector(monthsInYear);
+
+    // From heatedWater
+    Vector v_Q_dhw_elec = Vector(monthsInYear);
+    Vector v_Q_dhw_gas = Vector(monthsInYear);
+  };
+
 private:
   // Simulation functions.
-  void scheduleAndOccupancy(
-      Vector &weekdayOccupiedMegaseconds, Vector &weekdayUnoccupiedMegaseconds,
-      Vector &weekendOccupiedMegaseconds, Vector &weekendUnoccupiedMegaseconds,
-      Vector &clockHourOccupied, Vector &clockHourUnoccupied,
-      double &frac_hrs_wk_day, double &hoursUnoccupiedPerDay,
-      double &hoursOccupiedPerDay, double &frac_hrs_wk_nt,
-      double &frac_hrs_wke_tot) const;
+  void solarRadiationBreakdown(MonthlySimulationData &simData) const;
+  void lightingEnergyUse(MonthlySimulationData &simData) const;
+  void envelopeCalculations(MonthlySimulationData &simData) const;
+  void windowSolarGain(MonthlySimulationData &simData) const;
+  void solarHeatGain(MonthlySimulationData &simData) const;
+  void calculateInternalGainComponents(MonthlySimulationData &simData) const;
+  void unoccupiedHeatGain(MonthlySimulationData &simData) const;
+  void calculateInteriorTemperatures(MonthlySimulationData &simData) const;
+  static double calculateBEMAdjustment(const Building& building);
 
-  void solarRadiationBreakdown(const Vector &weekdayOccupiedMegaseconds,
-                               const Vector &weekdayUnoccupiedMegaseconds,
-                               const Vector &weekendOccupiedMegaseconds,
-                               const Vector &weekendUnoccupiedMegaseconds,
-                               const Vector &clockHourOccupied,
-                               const Vector &clockHourUnoccupied,
-                               Vector &v_hrs_sun_down_mo,
-                               Vector &frac_Pgh_wk_nt, Vector &frac_Pgh_wke_day,
-                               Vector &frac_Pgh_wke_nt, Vector &v_Tdbt_nt,
-                               Vector &v_Tdbt_Day) const;
-  void lightingEnergyUse(const Vector &v_hrs_sun_down_mo, double &Q_illum_occ,
-                         double &Q_illum_unocc, double &Q_illum_tot_yr,
-                         Vector &v_Q_illum_tot,
-                         Vector &v_Q_illum_ext_tot) const;
+  static void calculateWeekendTemperatures(
+      const Vector &v_decay_start_base, const Vector &v_limit_start_col0, double tset_unocc,
+      double tau, const Vector &v_ti, const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_day,
+      const Vector &v_P_tot_wke_nt, const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day, double H_tot,
+      Vector &v_wke_avg, Vector &v_wk_nt);
 
-  void envelopCalculations(Vector &v_win_A, Vector &v_wall_emiss,
-                           Vector &v_wall_alpha_sc, Vector &v_wall_U,
-                           Vector &v_wall_A, double &H_tr) const;
+  static WindowShadingComponents calculateWindowShadingComponents(const Structure& structure);
 
-  void windowSolarGain(const Vector &v_win_A, const Vector &v_wall_emiss,
-                       const Vector &v_wall_alpha_sc, const Vector &v_wall_U,
-                       const Vector &v_wall_A, Vector &v_wall_A_sol,
-                       Vector &v_win_hr, Vector &v_wall_R_sc,
-                       Vector &v_win_A_sol) const;
+  static void calculateSunHours(const Matrix &m_mhEgh, Vector &v_hrs_sun_down_mo);
 
-  void solarHeatGain(const Vector &v_win_A_sol, const Vector &v_wall_R_sc,
-                     const Vector &v_wall_U, const Vector &v_wall_A,
-                     const Vector &v_win_hr, const Vector &v_wall_A_sol,
-                     Vector &v_E_sol) const;
+  void calculateVentilation(MonthlySimulationData &simData) const;
+  void calculateHeatingAndCoolingNeeds(MonthlySimulationData &simData) const;
+  void calculateHVACEnergyUse(MonthlySimulationData &simData) const;
+  void calculatePumpEnergy(MonthlySimulationData &simData) const;
 
-  void heatGainsAndLosses(double frac_hrs_wk_day, double Q_illum_occ,
-                          double Q_illum_unocc, double Q_illum_tot_yr,
-                          double &phi_int_avg, double &phi_plug_avg,
-                          double &phi_illum_avg, double &phi_int_wke_nt,
-                          double &phi_int_wke_day, double &phi_int_wk_nt) const;
-
-  void internalHeatGain(double phi_int_avg, double phi_plug_avg,
-                        double phi_illum_avg, double &phi_I_tot) const;
-
-  void unoccupiedHeatGain(double phi_int_wk_nt, double phi_int_wke_day,
-                          double phi_int_wke_nt,
-                          const Vector &weekdayUnoccupiedMegaseconds,
-                          const Vector &weekendOccupiedMegaseconds,
-                          const Vector &weekendUnoccupiedMegaseconds,
-                          const Vector &frac_Pgh_wk_nt,
-                          const Vector &frac_Pgh_wke_day,
-                          const Vector &frac_Pgh_wke_nt, const Vector &v_E_sol,
-                          Vector &v_P_tot_wke_day, Vector &v_P_tot_wk_nt,
-                          Vector &v_P_tot_wke_nt) const;
-
-  void interiorTemp(const Vector &v_wall_A, const Vector &v_P_tot_wke_day,
-                    const Vector &v_P_tot_wk_nt, const Vector &v_P_tot_wke_nt,
-                    const Vector &v_Tdbt_nt, const Vector &v_Tdbt_day,
-                    double H_tr, double hoursUnoccupiedPerDay,
-                    double hoursOccupiedPerDay, double frac_hrs_wk_day,
-                    double frac_hrs_wk_nt, double frac_hrs_wke_tot,
-                    Vector &v_Th_avg, Vector &v_Tc_avg, double &tau) const;
-
-  void ventilationCalc(const Vector &v_Th_avg, const Vector &v_Tc_avg,
-                       double frac_hrs_wk_day, Vector &v_Hve_ht,
-                       Vector &v_Hve_cl) const;
-
-  void heatingAndCooling(const Vector &v_E_sol, const Vector &v_Th_avg,
-                         const Vector &v_Hve_ht, const Vector &v_Tc_avg,
-                         const Vector &v_Hve_cl, double tau, double H_tr,
-                         double phi_I_tot, double frac_hrs_wk_day,
-                         Vector &v_Qfan_tot, Vector &v_Qneed_ht,
-                         Vector &v_Qneed_cl, double &Qneed_ht_yr,
-                         double &Qneed_cl_yr) const;
-
-  void hvac(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-            double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Qelec_ht,
-            Vector &v_Qgas_ht, Vector &v_Qcl_elec_tot,
-            Vector &v_Qcl_gas_tot) const;
-  void pump(const Vector &v_Qneed_ht, const Vector &v_Qneed_cl,
-            double Qneed_ht_yr, double Qneed_cl_yr, Vector &v_Q_pump_tot) const;
+  // Helper for lighting energy use
+  static AnnualLightingHours calculateAnnualLightingOperationalHours(const Lighting& lights, const Population& pop);
 
   void energyGeneration() const;
 
-  void heatedWater(Vector &v_Q_dhw_elec, Vector &v_Q_dhw_gas) const;
+  void calculateHeatedWaterEnergy(MonthlySimulationData &simData) const;
 
-  std::vector<EndUses>
-  outputGeneration(const Vector &v_Qelec_ht, const Vector &v_Qcl_elec_tot,
-                   const Vector &v_Q_illum_tot, const Vector &v_Q_illum_ext_tot,
-                   const Vector &v_Qfan_tot, const Vector &v_Q_pump_tot,
-                   const Vector &v_Q_dhw_elec, const Vector &v_Qgas_ht,
-                   const Vector &v_Qcl_gas_tot, const Vector &v_Q_dhw_gas,
-                   double frac_hrs_wk_day) const;
+  static Matrix buildSolarIrradianceMatrix(const WeatherData& weather);
+  static Vector calculateGlazingSolarHeatGain(const Matrix &m_I_sol, const Vector &v_win_A_sol, const Structure& structure);
+  static Vector calculateOpaqueSolarHeatGain(const Matrix &m_I_sol, const Vector &v_wall_A_sol, const Vector &v_wall_phi_r);
+
+  // Helper for heatGainsAndLosses
+  static double calculatePeopleHeatGain(const Population &pop, bool occupied);
+  static double calculateApplianceHeatGain(const Building &building, bool occupied);
+  static double calculateIlluminationHeatGain(double Q_illum_val, double hours_fraction, double floor_area);
+  static double calculateAverageIlluminationHeatGain(double Q_illum_tot_yr, double floor_area);
+
+  // Helper for outputGeneration
+  static PlugLoads calculatePlugLoads(const Building& building, double frac_hrs_wk_day);
+
+  std::vector<EndUses> outputGeneration(const MonthlySimulationData &simData) const;
 
 #ifdef _OPENSTUDIOS
   REGISTER_LOGGER("openstudio.isomodel.MonthlyModel");

@@ -223,10 +223,13 @@ template <size_t N>
   }
   return vp;
 }
-[[nodiscard]] inline Vector sum(const Vector &v1, const Vector &v2) noexcept {
+
+// Variadic sum for vectors (C++17 fold expression)
+template <typename... Args>
+[[nodiscard]] inline Vector sum(const Vector &v1, const Vector &v2, const Args&... args) noexcept {
   Vector vs(v1.size());
   for (size_t i = 0; i < v1.size(); i++)
-    vs[i] = v1[i] + v2[i];
+    vs[i] = v1[i] + v2[i] + (args[i] + ... + 0.0);
   return vs;
 }
 

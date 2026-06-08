@@ -34,6 +34,7 @@ public:
    * Wall and roof area (m2). The order is S, SE, E, NE, N, NW, W, SW, roof.
    */
   Vector wallArea() const { return m_wallArea; }
+  const Vector& wallAreaRef() const { return m_wallArea; }
   void setWallArea(const Vector &value) { m_wallArea = value; }
   void setWallArea(int index, double value) { m_wallArea[index] = value; }
 
@@ -42,6 +43,7 @@ public:
    * roof.
    */
   Vector windowArea() const { return m_windowArea; }
+  const Vector& windowAreaRef() const { return m_windowArea; }
   void setWindowArea(const Vector &value) { m_windowArea = value; }
   void setWindowArea(int index, double value) { m_windowArea[index] = value; }
 
@@ -49,6 +51,7 @@ public:
    * Wall and roof U-values (W/m2/K).
    */
   Vector wallUniform() const { return m_wallUniform; }
+  const Vector& wallUniformRef() const { return m_wallUniform; }
   void setWallUniform(const Vector &value) { m_wallUniform = value; }
   void setWallUniform(int index, double value) { m_wallUniform[index] = value; }
 
@@ -56,6 +59,7 @@ public:
    * Window and skylight U-values (W/m2/K).
    */
   Vector windowUniform() const { return m_windowUniform; }
+  const Vector& windowUniformRef() const { return m_windowUniform; }
   void setWindowUniform(const Vector &value) { m_windowUniform = value; }
   void setWindowUniform(int index, double value) {
     m_windowUniform[index] = value;
@@ -65,6 +69,7 @@ public:
    * Wall and roof thermal emissivity (0 to 1).
    */
   Vector wallThermalEmissivity() const { return m_wallThermalEmissivity; }
+  const Vector& wallThermalEmissivityRef() const { return m_wallThermalEmissivity; }
   void setWallThermalEmissivity(const Vector &value) {
     m_wallThermalEmissivity = value;
   }
@@ -76,6 +81,7 @@ public:
    * Wall and roof solar absorption coeficient (0 to 1).
    */
   Vector wallSolarAbsorption() const { return m_wallSolarAbsorbtion; }
+  const Vector& wallSolarAbsorptionRef() const { return m_wallSolarAbsorbtion; }
   void setWallSolarAbsorption(const Vector &value) {
     m_wallSolarAbsorbtion = value;
   }
@@ -87,6 +93,9 @@ public:
    * Window shading device factors.
    */
   Vector windowShadingDevice() const { return m_windowShadingDevice; }
+  const Vector& windowShadingDeviceRef() const {
+    return m_windowShadingDevice;
+  }
   void setWindowShadingDevice(const Vector &value) {
     m_windowShadingDevice = value;
   }
@@ -98,6 +107,9 @@ public:
    * Window solar heat gain coeficcient (0 to 1).
    */
   Vector windowNormalIncidenceSolarEnergyTransmittance() const {
+    return m_windowNormalIncidenceSolarEnergyTransmittance;
+  }
+  const Vector& windowNormalIncidenceSolarEnergyTransmittanceRef() const {
     return m_windowNormalIncidenceSolarEnergyTransmittance;
   }
   void setWindowNormalIncidenceSolarEnergyTransmittance(const Vector &value) {
@@ -112,6 +124,9 @@ public:
    * Window solar control factor (external control) (0 to 1).
    */
   Vector windowShadingCorrectionFactor() const {
+    return m_windowShadingCorrectionFactor;
+  }
+  const Vector& windowShadingCorrectionFactorRef() const {
     return m_windowShadingCorrectionFactor;
   }
   void setWindowShadingCorrectionFactor(const Vector &value) {

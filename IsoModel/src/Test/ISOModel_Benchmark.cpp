@@ -6,6 +6,7 @@
 #include "../HourlyModel.hpp"
 #include "../MonthlyModel.hpp"
 #include "../UserModel.hpp"
+#include "../Profiler.hpp" // Include the new profiler
 #include <chrono>
 #include <iostream>
 #include <numeric>
@@ -107,6 +108,11 @@ int main(int argc, char **argv) {
   std::cout << "Monthly simulation including modifying properties ran in "
             << monthlyTime << " us, average over " << iterations << " loops."
             << std::endl;
+
+  #if PROFILING_ENABLED
+    // Print the profiling results to the console
+    openstudio::isomodel::profiler::Profiler::getInstance().printResults(std::cout);
+  #endif
 
   std::cout << "Done!" << std::endl;
   return 0;
