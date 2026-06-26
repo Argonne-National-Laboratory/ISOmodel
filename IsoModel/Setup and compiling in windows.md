@@ -46,8 +46,8 @@ Open a command prompt that has cmake in the path.  If you want to compile from t
 Go to isomodel directory root (e.g. c:\git\isomodel\isomodel\) and make a bin directory for the binaries
 ```
 cd C:\git\isomodel\isomodel
-mkdir bin
-cd bin
+mkdir build
+cd build
 ```
 
 Now, if you are lucky, cmake will autodetect Visual Studio 26 and you can create the Visual Studio 2026 project files with the command line:
@@ -56,7 +56,7 @@ Now, if you are lucky, cmake will autodetect Visual Studio 26 and you can create
 cmake ../src
 ```
 
-If all goes well things will run, print some output, a couple warnings but then finally end with the following lines (times will differ on your machine)
+If all goes well things will run, find the compiler, print some output, a maybe couple warnings about not finding python, and then finally end with the following lines (times will differ on your machine)
 
 ```
 -- Configuring done (73.1s)
@@ -124,12 +124,13 @@ cd ..
 
 cmake --build bin --config Release -v
 ```
-or 
+or for less verbose output
 ```
 cmake --build bin --config Release -- /v:m
 ```
 
-The compiled code (isomodel.dll, isomodel.lib isomodel_benchmark.exe isomodel_standalone.exe, isomodel_unit_tests.exe, etc) is in the build/Release directory.
+Most of the compiled code (isomodel.dll, isomodel.lib isomodel_benchmark.exe isomodel_standalone.exe, isomodel_unit_tests.exe, etc) is in the build/Release directory.
+The libisomodel.so is in the build directory
 
 
 # Running code
