@@ -129,7 +129,7 @@ or for less verbose output
 cmake --build bin --config Release -- /v:m
 ```
 
-Most of the compiled code (isomodel.dll, isomodel.lib isomodel_benchmark.exe isomodel_standalone.exe, isomodel_unit_tests.exe, etc) is in the build/Release directory.
+Most of the compiled code (isomodel.dll, isomodel.lib isomodel_benchmark.exe isomodel_standalone.exe, isomodel_unit_tests.exe, etc) is in the bin/Release directory.
 
 
 
